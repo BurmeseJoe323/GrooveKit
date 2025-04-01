@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "JUCE/extras/Build",
+		"source" : "C:/Users/ikera/tracktion_engine/modules/juce/extras/Build"
+	}
+}

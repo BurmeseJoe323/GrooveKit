@@ -1,0 +1,9 @@
+"C:\Program Files\JetBrains\CLion 2024.3.5\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=C:/Program Files/JetBrains/CLion 2024.3.5/bin/ninja/win/x64/ninja.exe" -G Ninja -S C:\Users\ikera\repos\groovekit -B C:\Users\ikera\repos\groovekit\cmake-build-debug-visual-studio
+-- Configuring juceaide
+-- Building juceaide
+-- Exporting juceaide
+-- Testing juceaide
+-- Finished setting up juceaide
+-- Configuring done (2.7s)
+-- Generating done (0.3s)
+-- Build files have been written to: C:/Users/ikera/repos/groovekit/cmake-build-debug-visual-studio
