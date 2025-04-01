@@ -9,6 +9,7 @@
 
 # Ignore CMake build directories
 cmake-build-debug/
+cmake-build-debug-visual-studio/
 CMakeBuild/
 out/build/
 build/
