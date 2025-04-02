@@ -27,11 +27,11 @@ juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_graph)
 # Add Tracktion Engine
 juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_engine)
 
-# Add your executable
 add_executable(GrooveKit
         src/main.cpp
+        src/MainComponent.h
+        src/MainComponent.cpp
 )
-
 # Compile definitions
 target_compile_definitions(GrooveKit PRIVATE
         JUCE_WEB_BROWSER=0

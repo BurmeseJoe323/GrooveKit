@@ -1,25 +1,45 @@
-#include <iostream>
+#include <juce_gui_basics/juce_gui_basics.h>
+#include "MainComponent.h"
 
-// TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-int main() {
-    // TIP Press <shortcut actionId="RenameElement"/> when your caret is at the
-    // <b>lang</b> variable name to see how CLion can help you rename it.
-    auto lang = "C++";
-    std::cout << "Hello and welcome to " << lang << "!\n";
-
-    for (int i = 1; i <= 5; i++) {
-        // TIP Press <shortcut actionId="Debug"/> to start debugging your code.
-        // We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/>
-        // breakpoint for you, but you can always add more by pressing
-        // <shortcut actionId="ToggleLineBreakpoint"/>.
-        std::cout << "i = " << i << std::endl;
+class MainWindow : public juce::DocumentWindow
+{
+public:
+    MainWindow(juce::String name)
+        : juce::DocumentWindow(name,
+                                juce::Desktop::getInstance().getDefaultLookAndFeel()
+                                    .findColour(juce::ResizableWindow::backgroundColourId),
+                                juce::DocumentWindow::allButtons)
+    {
+        setUsingNativeTitleBar(true);
+        setContentOwned(new MainComponent(), true);
+        centreWithSize(getWidth(), getHeight());
+        setVisible(true);
     }
 
-    return 0;
-}
+    void closeButtonPressed() override
+    {
+        juce::JUCEApplication::getInstance()->systemRequestedQuit();
+    }
+};
 
-// TIP See CLion help at <a
-// href="https://www.jetbrains.com/help/clion/">jetbrains.com/help/clion/</a>.
-//  Also, you can try interactive lessons for CLion by selecting
-//  'Help | Learn IDE Features' from the main menu.
+class GrooveKitApplication : public juce::JUCEApplication
+{
+public:
+    const juce::String getApplicationName() override       { return "GrooveKit"; }
+    const juce::String getApplicationVersion() override    { return "1.0.0"; }
+
+    void initialise(const juce::String&) override
+    {
+        mainWindow.reset(new MainWindow(getApplicationName()));
+    }
+
+    void shutdown() override
+    {
+        mainWindow = nullptr;
+    }
+
+private:
+    std::unique_ptr<MainWindow> mainWindow;
+};
+
+START_JUCE_APPLICATION(GrooveKitApplication)
