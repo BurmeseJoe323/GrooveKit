@@ -1,5 +1,6 @@
 #include <juce_gui_basics/juce_gui_basics.h>
-#include "TestComponent.h"
+
+#include "UI/TestComponent.h"
 
 
 class MainWindow : public juce::DocumentWindow

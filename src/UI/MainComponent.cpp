@@ -4,7 +4,9 @@
 #include <corecrt_io.h>
 #endif
 
+
 #include "TrackView.h"
+
 
 MainComponent::MainComponent()
 {
@@ -26,6 +28,7 @@ void MainComponent::paint(juce::Graphics& g)
 
 void MainComponent::resized()
 {
+
     openTrackView.setBounds(getWidth() - 176, getHeight() - 60, 120, 32);
     // layout child components here
 }
@@ -36,4 +39,6 @@ void MainComponent::showTrackView() {
     trackView->setBounds(getLocalBounds());
     openTrackView.setVisible(false);
 }
+
+    // layout child components here
 

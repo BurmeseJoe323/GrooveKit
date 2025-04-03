@@ -20,4 +20,3 @@ private:
 
     void showTrackView();
 };
-

@@ -27,8 +27,10 @@ juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_graph)
 # Add Tracktion Engine
 juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_engine)
 
+
 # Build based on platform
 if (WIN32)
+    #Windows: Build as GUI app (uses WinMain via JUCE)
     add_executable(GrooveKit WIN32
             src/main.cpp
             src/UI/MainComponent.h
@@ -44,6 +46,7 @@ if (WIN32)
             src/AudioEngine/AudioEngine.cpp
     )
 elseif (APPLE)
+    # macOS: Build as console app (uses main via JUCE)
     add_executable(GrooveKit
             src/main.cpp
             src/UI/MainComponent.h
@@ -59,6 +62,7 @@ elseif (APPLE)
             src/AudioEngine/AudioEngine.cpp
     )
 endif()
+
 # Compile definitions
 target_compile_definitions(GrooveKit PRIVATE
         JUCE_WEB_BROWSER=0

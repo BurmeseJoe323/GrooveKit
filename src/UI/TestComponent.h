@@ -1,4 +1,4 @@
-#include "AppEngine/AppEngine.h"
+#include "../AppEngine/AppEngine.h"
 #include <vector>
 
 class TestComponent : public juce::Component
@@ -6,8 +6,8 @@ class TestComponent : public juce::Component
 public:
     TestComponent()
     {
-        startButton.setButtonText("Play MIDI");
-        startButton.onClick = [this] { engine.start(); };
+        playButton.setButtonText("Play MIDI");
+        playButton.onClick = [this] { engine.play(); };
 
         stopButton.setButtonText("Stop MIDI");
         stopButton.onClick = [this] { engine.stop(); };
@@ -22,7 +22,7 @@ public:
             repaint();              // Trigger UI redraw
         };
 
-        addAndMakeVisible(startButton);
+        addAndMakeVisible(playButton);
         addAndMakeVisible(stopButton);
         addAndMakeVisible(addTrackButton);
         addAndMakeVisible(addClipButton);
@@ -33,7 +33,7 @@ public:
     void resized() override
     {
         auto area = getLocalBounds().reduced(20);
-        startButton.setBounds(area.removeFromTop(40).reduced(0, 5));
+        playButton.setBounds(area.removeFromTop(40).reduced(0, 5));
         stopButton.setBounds(area.removeFromTop(40).reduced(0, 5));
         addTrackButton.setBounds(area.removeFromTop(40).reduced(0, 5));
         addClipButton.setBounds(area.removeFromTop(40).reduced(0, 5));
@@ -53,7 +53,7 @@ public:
 
 private:
     AppEngine engine;
-    juce::TextButton startButton;
+    juce::TextButton playButton;
     juce::TextButton stopButton;
     juce::TextButton addTrackButton;
     juce::TextButton addClipButton;

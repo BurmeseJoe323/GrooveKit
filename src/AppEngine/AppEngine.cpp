@@ -15,6 +15,7 @@ AppEngine::AppEngine()
     createOrLoadEdit();
 
     midiEngine = std::make_unique<MIDIEngine>(*edit);
+    audioEngine = std::make_unique<AudioEngine>(*edit);
 }
 
 AppEngine::~AppEngine() = default;
@@ -39,30 +40,11 @@ void AppEngine::createOrLoadEdit()
 
 void AppEngine::play()
 {
-    if (edit)
-    {
-        auto& transport = edit->getTransport();
-        transport.setPosition(0s);
-        transport.setLoopRange(tracktion::TimeRange::between(0s, 4s));
-        transport.looping = true;
-        transport.play(false);
-    }
+    audioEngine->play();
 }
 void AppEngine::stop()
 {
-    if (edit)
-    {
-        edit->getTransport().stop(false, false);
-    }
-}
-
-void AppEngine::start()
-{
-    if (midiEngine) {
-        midiEngine->addMidiTrack();
-        midiEngine->addMidiClipToTrack(0);
-    }
-    play();
+    audioEngine->stop();
 }
 
 void AppEngine::addMidiTrack()
