@@ -32,19 +32,19 @@ if (WIN32)
     #Windows: Build as GUI app (uses WinMain via JUCE)
     add_executable(GrooveKit WIN32
             src/main.cpp
-            src/MainComponent.h
-            src/MainComponent.cpp
-            src/TrackView.cpp
-            src/TrackView.h
+            src/UI/MainComponent.h
+            src/UI/MainComponent.cpp
+            src/UI/TrackView.cpp
+            src/UI/TrackView.h
     )
 elseif (APPLE)
     # macOS: Build as console app (uses main via JUCE)
     add_executable(GrooveKit
             src/main.cpp
-            src/MainComponent.h
-            src/MainComponent.cpp
-            src/TrackView.cpp
-            src/TrackView.h
+            src/UI/MainComponent.h
+            src/UI/MainComponent.cpp
+            src/UI/TrackView.cpp
+            src/UI/TrackView.h
     )
 endif()
 
