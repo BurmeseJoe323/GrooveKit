@@ -33,10 +33,10 @@ public:
     void resized() override
     {
         auto area = getLocalBounds().reduced(20);
-        playButton.setBounds(area.removeFromTop(40).reduced(0, 5));
-        stopButton.setBounds(area.removeFromTop(40).reduced(0, 5));
         addTrackButton.setBounds(area.removeFromTop(40).reduced(0, 5));
         addClipButton.setBounds(area.removeFromTop(40).reduced(0, 5));
+        playButton.setBounds(area.removeFromTop(40).reduced(0, 5));
+        stopButton.setBounds(area.removeFromTop(40).reduced(0, 5));
     }
 
     void paint(juce::Graphics& g) override
