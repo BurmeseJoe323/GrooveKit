@@ -1,5 +1,6 @@
 #include <juce_gui_basics/juce_gui_basics.h>
-#include "UI/MainComponent.h"
+#include "TestComponent.h"
+
 
 class MainWindow : public juce::DocumentWindow
 {
@@ -11,7 +12,7 @@ public:
                                 juce::DocumentWindow::allButtons)
     {
         setUsingNativeTitleBar(true);
-        setContentOwned(new MainComponent(), true);
+        setContentOwned(new TestComponent(), true);
         centreWithSize(getWidth(), getHeight());
         setVisible(true);
     }
