@@ -11,19 +11,11 @@
 MainComponent::MainComponent() {
     view = std::make_unique<WelcomeView>();
     addAndMakeVisible(view.get());
-    // view->setBounds(getLocalBounds());
 
     setSize(600, 400);
 }
 
 MainComponent::~MainComponent() = default;
-
-void MainComponent::showAppView() {
-    removeAllChildren();
-    view = std::make_unique<AppView>();
-    addAndMakeVisible(view.get());
-    view->setBounds(getLocalBounds());
-}
 
 void MainComponent::showTrackView() {
     removeAllChildren();
