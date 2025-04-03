@@ -15,7 +15,7 @@ public:
     void paint(juce::Graphics&) override;
     void resized() override;
 private:
-    juce::TextButton openTrackView {TRANS ("OPEN TRACKVIEW")};
+    TextButton openTrackView {"OPEN TRACKVIEW"};
     std::unique_ptr<TrackView> trackView;
 
     void showTrackView();
