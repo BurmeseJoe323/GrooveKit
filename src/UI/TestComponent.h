@@ -1,29 +1,64 @@
-#pragma once
-
 #include "AppEngine/AppEngine.h"
-#include <juce_gui_basics/juce_gui_basics.h>
-
+#include <vector>
 
 class TestComponent : public juce::Component
 {
 public:
     TestComponent()
     {
-        startButton.setButtonText("Start MIDI");
+        startButton.setButtonText("Play MIDI");
         startButton.onClick = [this] { engine.start(); };
 
+        stopButton.setButtonText("Stop MIDI");
+        stopButton.onClick = [this] { engine.stop(); };
+
+        addTrackButton.setButtonText("Add MIDI Track");
+        addTrackButton.onClick = [this] { engine.addMidiTrack(); };
+
+        addClipButton.setButtonText("Add MIDI Clip");
+        addClipButton.onClick = [this] {
+            engine.addMidiClipToTrack(0);   // Actually adds a clip
+            clipCount++;            // Keep track of visual clips
+            repaint();              // Trigger UI redraw
+        };
+
         addAndMakeVisible(startButton);
-        setSize(400, 200);
+        addAndMakeVisible(stopButton);
+        addAndMakeVisible(addTrackButton);
+        addAndMakeVisible(addClipButton);
+
+        setSize(400, 300);
     }
 
     void resized() override
     {
-        startButton.setBounds(getLocalBounds().reduced(50));
+        auto area = getLocalBounds().reduced(20);
+        startButton.setBounds(area.removeFromTop(40).reduced(0, 5));
+        stopButton.setBounds(area.removeFromTop(40).reduced(0, 5));
+        addTrackButton.setBounds(area.removeFromTop(40).reduced(0, 5));
+        addClipButton.setBounds(area.removeFromTop(40).reduced(0, 5));
+    }
+
+    void paint(juce::Graphics& g) override
+    {
+        // Draw each MIDI clip as a colored rectangle
+        for (int i = 0; i < clipCount; ++i)
+        {
+            g.setColour(juce::Colours::skyblue);
+            g.fillRect(40, 150 + i * 30, 200, 20); // (x, y, width, height)
+            g.setColour(juce::Colours::black);
+            g.drawText("MIDI Clip " + juce::String(i + 1), 45, 150 + i * 30, 200, 20, juce::Justification::centredLeft);
+        }
     }
 
 private:
     AppEngine engine;
     juce::TextButton startButton;
+    juce::TextButton stopButton;
+    juce::TextButton addTrackButton;
+    juce::TextButton addClipButton;
+
+    int clipCount = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TestComponent)
 };

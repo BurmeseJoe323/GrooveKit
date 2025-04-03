@@ -14,6 +14,9 @@ public:
     void stop();
     void start();
 
+    void addMidiTrack();
+    void addMidiClipToTrack(int trackIndex = 0);
+
 private:
     std::unique_ptr<tracktion::engine::Engine> engine;
     std::unique_ptr<tracktion::engine::Edit> edit;

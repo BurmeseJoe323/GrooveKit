@@ -64,3 +64,13 @@ void AppEngine::start()
     }
     play();
 }
+
+void AppEngine::addMidiTrack()
+{
+    midiEngine->addMidiTrack();
+}
+
+void AppEngine::addMidiClipToTrack(int trackIndex)
+{
+    midiEngine->addMidiClipToTrack(trackIndex);
+}
