@@ -34,6 +34,8 @@ if (WIN32)
             src/main.cpp
             src/MainComponent.h
             src/MainComponent.cpp
+            src/TrackView.cpp
+            src/TrackView.h
     )
 elseif (APPLE)
     # macOS: Build as console app (uses main via JUCE)
@@ -41,6 +43,8 @@ elseif (APPLE)
             src/main.cpp
             src/MainComponent.h
             src/MainComponent.cpp
+            src/TrackView.cpp
+            src/TrackView.h
     )
 endif()
 

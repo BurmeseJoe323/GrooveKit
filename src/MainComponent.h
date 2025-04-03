@@ -5,7 +5,7 @@
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
-
+#include "TrackView.h"
 class MainComponent : public juce::Component
 {
 public:
@@ -14,4 +14,10 @@ public:
 
     void paint(juce::Graphics&) override;
     void resized() override;
+private:
+    juce::TextButton openTrackView {TRANS ("OPEN TRACKVIEW")};
+    std::unique_ptr<TrackView> trackView;
+
+    void showTrackView();
 };
+

@@ -1,8 +1,15 @@
 #include "MainComponent.h"
 
+#include <corecrt_io.h>
+
+#include "TrackView.h"
+
 MainComponent::MainComponent()
 {
     setSize(600, 400);
+
+    openTrackView.onClick = [this]() { showTrackView(); };
+    addAndMakeVisible(openTrackView);
 }
 
 MainComponent::~MainComponent() = default;
@@ -17,5 +24,14 @@ void MainComponent::paint(juce::Graphics& g)
 
 void MainComponent::resized()
 {
+    openTrackView.setBounds(getWidth() - 176, getHeight() - 60, 120, 32);
     // layout child components here
 }
+
+void MainComponent::showTrackView() {
+    trackView = std::make_unique<TrackView>();
+    addAndMakeVisible(trackView.get());
+    trackView->setBounds(getLocalBounds());
+    openTrackView.setVisible(false);
+}
+
