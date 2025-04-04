@@ -17,6 +17,7 @@ public:
     void stop();
 
     void addMidiTrack();
+    void deleteMidiTrack(int index);
     void addMidiClipToTrack(int trackIndex);
 
 private:

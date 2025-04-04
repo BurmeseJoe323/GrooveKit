@@ -55,6 +55,10 @@ void AppEngine::addMidiTrack()
     trackManager->addMidiTrack();
 }
 
+void AppEngine::deleteMidiTrack(int index) {
+    trackManager->deleteTrack(index);
+}
+
 void AppEngine::addMidiClipToTrack(int trackIndex)
 {
     midiEngine->addMidiClipToTrack(trackIndex);

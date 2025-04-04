@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../AppEngine/AppEngine.h"
 #include <vector>
 
@@ -13,52 +15,72 @@ public:
         stopButton.onClick = [this] { engine.stop(); };
 
         addTrackButton.setButtonText("Add MIDI Track");
-        addTrackButton.onClick = [this] { engine.addMidiTrack(); };
-        addClipButton.setButtonText("Add MIDI Clip");
-        addClipButton.onClick = [this] {
-            engine.addMidiClipToTrack(0);   // Actually adds a clip
-            clipCount++;            // Keep track of visual clips
-            repaint();              // Trigger UI redraw
+        addTrackButton.onClick = [this] {
+            engine.addMidiTrack();
+            createTrackHeader(trackCount++);
+            resized();
+            repaint();
         };
 
         addAndMakeVisible(playButton);
         addAndMakeVisible(stopButton);
         addAndMakeVisible(addTrackButton);
-        addAndMakeVisible(addClipButton);
 
-        setSize(400, 300);
+        setSize(500, 400);
     }
 
     void resized() override
     {
         auto area = getLocalBounds().reduced(20);
         addTrackButton.setBounds(area.removeFromTop(40).reduced(0, 5));
-        addClipButton.setBounds(area.removeFromTop(40).reduced(0, 5));
         playButton.setBounds(area.removeFromTop(40).reduced(0, 5));
         stopButton.setBounds(area.removeFromTop(40).reduced(0, 5));
+
+        // Layout track headers
+        int y = area.getY();
+        for (auto& [trackLabel, plusButton] : trackHeaders)
+        {
+            trackLabel->setBounds(20, y, 200, 30);
+            plusButton->setBounds(230, y, 30, 30);
+            y += 40;
+        }
     }
 
     void paint(juce::Graphics& g) override
     {
-        // Draw each MIDI clip as a colored rectangle
-        for (int i = 0; i < clipCount; ++i)
-        {
-            g.setColour(juce::Colours::skyblue);
-            g.fillRect(40, 150 + i * 30, 200, 20); // (x, y, width, height)
-            g.setColour(juce::Colours::black);
-            g.drawText("MIDI Clip " + juce::String(i + 1), 45, 150 + i * 30, 200, 20, juce::Justification::centredLeft);
-        }
+        g.fillAll(juce::Colours::darkgrey);
     }
 
 private:
     AppEngine engine;
-    juce::TextButton playButton;
-    juce::TextButton stopButton;
-    juce::TextButton addTrackButton;
-    juce::TextButton addClipButton;
+    juce::TextButton playButton, stopButton, addTrackButton;
 
-    std::vector<juce::TextButton> trackButtons;
-    int clipCount = 0;
+    int trackCount = 0;
+
+    // Track header: pair of label and plus button
+    std::vector<std::pair<std::unique_ptr<juce::Label>, std::unique_ptr<juce::TextButton>>> trackHeaders;
+
+    void createTrackHeader(int trackIndex)
+    {
+        auto label = std::make_unique<juce::Label>("TrackLabel", "Track " + juce::String(trackIndex + 1));
+        label->setFont(juce::Font(16.0f));
+        label->setColour(juce::Label::textColourId, juce::Colours::white);
+        addAndMakeVisible(label.get());
+
+        auto addClipButton = std::make_unique<juce::TextButton>("+");
+        addClipButton->onClick = [this, trackIndex] {
+            engine.addMidiClipToTrack(trackIndex);
+        };
+        addAndMakeVisible(addClipButton.get());
+
+        auto deleteTrackButton = std::make_unique<juce::TextButton>("Delete Track");
+        deleteTrackButton->onClick = [this, trackIndex] {
+            engine.deleteMidiTrack()
+        };
+        addAndMakeVisible(deleteTrackButton.get());
+
+        trackHeaders.emplace_back(std::move(label), std::move(plusButton));
+    }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TestComponent)
 };
