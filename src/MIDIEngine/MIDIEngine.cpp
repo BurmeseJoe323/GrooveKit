@@ -18,29 +18,25 @@ void MIDIEngine::addMidiTrack()
 
 void MIDIEngine::addMidiClipToTrack(int trackIndex)
 {
-    auto audioTracks = te::getAudioTracks(edit);
+    auto audioTracks = getAudioTracks(edit);
     if (trackIndex < 0 || trackIndex >= audioTracks.size())
         return;
 
     auto track = audioTracks[trackIndex];
 
-    // Define a time range of one bar
     te::TimeRange oneBar(0s, edit.tempoSequence.toTime({1, te::BeatDuration()}));
 
-    // Insert a new MIDI clip
     auto clip = track->insertNewClip(te::TrackItem::Type::midi, "Midi Clip", oneBar, nullptr);
     auto midiClip = dynamic_cast<te::MidiClip*>(clip);
 
     if (midiClip == nullptr)
         return;
 
-    // Add four notes: C, E, G, High C
     midiClip->getSequence().addNote(60, 0_bp, 0.5_bd, 100, 0, nullptr);
     midiClip->getSequence().addNote(64, 1_bp, 0.5_bd, 100, 0, nullptr);
     midiClip->getSequence().addNote(67, 2_bp, 0.5_bd, 100, 0, nullptr);
     midiClip->getSequence().addNote(72, 3_bp, 0.5_bd, 100, 0, nullptr);
 
-    // Insert a built-in plugin to play the MIDI notes
     auto plugin = edit.getPluginCache().createNewPlugin(te::FourOscPlugin::xmlTypeName, {}).get();
     if (plugin)
         track->pluginList.insertPlugin(*plugin, 0, nullptr);

@@ -130,6 +130,8 @@ elseif (APPLE)
             src/UI/TrackView-UI/TrackClip.h
             src/UI/TrackView-UI/EditComponent.cpp
             src/UI/TrackView-UI/EditComponent.h
+            src/AppEngine/TrackManager.h
+            src/AppEngine/TrackManager.cpp
     )
 endif()
 
