@@ -22,7 +22,7 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
     if (trackIndex < 0 || trackIndex >= audioTracks.size())
         return;
 
-    auto track = te::getAudioTracks(edit)[trackIndex];
+    auto track = audioTracks[trackIndex];
 
     // Define a time range of one bar
     te::TimeRange oneBar(0s, edit.tempoSequence.toTime({1, te::BeatDuration()}));
