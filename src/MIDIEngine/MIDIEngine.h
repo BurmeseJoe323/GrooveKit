@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../AppEngine/TrackManager.h"
 #include <tracktion_engine/tracktion_engine.h>
 
 
@@ -22,6 +23,8 @@ public:
 
 private:
     tracktion::engine::Edit& edit;
+    std::unique_ptr<TrackManager> trackManager;
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MIDIEngine)
 };

@@ -14,7 +14,6 @@ public:
 
         addTrackButton.setButtonText("Add MIDI Track");
         addTrackButton.onClick = [this] { engine.addMidiTrack(); };
-
         addClipButton.setButtonText("Add MIDI Clip");
         addClipButton.onClick = [this] {
             engine.addMidiClipToTrack(0);   // Actually adds a clip
@@ -58,6 +57,7 @@ private:
     juce::TextButton addTrackButton;
     juce::TextButton addClipButton;
 
+    std::vector<juce::TextButton> trackButtons;
     int clipCount = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TestComponent)
