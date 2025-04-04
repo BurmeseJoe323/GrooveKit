@@ -67,19 +67,13 @@ private:
         label->setColour(juce::Label::textColourId, juce::Colours::white);
         addAndMakeVisible(label.get());
 
-        auto addClipButton = std::make_unique<juce::TextButton>("+");
-        addClipButton->onClick = [this, trackIndex] {
+        auto plusButton = std::make_unique<juce::TextButton>("+");
+        plusButton->onClick = [this, trackIndex] {
             engine.addMidiClipToTrack(trackIndex);
         };
-        addAndMakeVisible(addClipButton.get());
+        addAndMakeVisible(plusButton.get());
 
-        auto deleteTrackButton = std::make_unique<juce::TextButton>("Delete Track");
-        deleteTrackButton->onClick = [this, trackIndex] {
-
-        };
-        addAndMakeVisible(deleteTrackButton.get());
-
-        
+        trackHeaders.emplace_back(std::move(label), std::move(plusButton));
     }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TestComponent)
