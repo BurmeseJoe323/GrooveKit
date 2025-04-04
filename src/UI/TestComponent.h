@@ -75,11 +75,11 @@ private:
 
         auto deleteTrackButton = std::make_unique<juce::TextButton>("Delete Track");
         deleteTrackButton->onClick = [this, trackIndex] {
-            engine.deleteMidiTrack()
+
         };
         addAndMakeVisible(deleteTrackButton.get());
 
-        trackHeaders.emplace_back(std::move(label), std::move(plusButton));
+        
     }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TestComponent)
