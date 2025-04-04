@@ -22,7 +22,7 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
     if (trackIndex < 0 || trackIndex >= audioTracks.size())
         return;
 
-    auto track = audioTracks[trackIndex];
+    auto track = te::getAudioTracks(edit)[trackIndex];
 
     te::TimeRange oneBar(0s, edit.tempoSequence.toTime({1, te::BeatDuration()}));
 
@@ -31,13 +31,19 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
 
     if (midiClip == nullptr)
         return;
+    int offset = trackIndex + 20;
 
-    midiClip->getSequence().addNote(60, 0_bp, 0.5_bd, 100, 0, nullptr);
-    midiClip->getSequence().addNote(64, 1_bp, 0.5_bd, 100, 0, nullptr);
-    midiClip->getSequence().addNote(67, 2_bp, 0.5_bd, 100, 0, nullptr);
-    midiClip->getSequence().addNote(72, 3_bp, 0.5_bd, 100, 0, nullptr);
+    midiClip->getSequence().addNote(60 + offset, 0_bp, 0.5_bd, 100, 0, nullptr);
+    midiClip->getSequence().addNote(64 + offset, 1_bp, 0.5_bd, 100, 0, nullptr);
+    midiClip->getSequence().addNote(67 + offset, 2_bp, 0.5_bd, 100, 0, nullptr);
+    midiClip->getSequence().addNote(72 + offset, 3_bp, 0.5_bd, 100, 0, nullptr);
 
-    auto plugin = edit.getPluginCache().createNewPlugin(te::FourOscPlugin::xmlTypeName, {}).get();
-    if (plugin)
-        track->pluginList.insertPlugin(*plugin, 0, nullptr);
+
+    if (track->pluginList.size() == 0)
+    {
+        auto plugin = edit.getPluginCache().createNewPlugin(te::FourOscPlugin::xmlTypeName, {}).get();
+        if (plugin)
+            track->pluginList.insertPlugin(*plugin, 0, nullptr);
+        juce::Component* pluginUI = plugin->createEditor();
+    }
 }
