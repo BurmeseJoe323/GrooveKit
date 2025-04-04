@@ -44,6 +44,6 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
         auto plugin = edit.getPluginCache().createNewPlugin(te::FourOscPlugin::xmlTypeName, {}).get();
         if (plugin)
             track->pluginList.insertPlugin(*plugin, 0, nullptr);
-        juce::Component* pluginUI = plugin->createEditor();
+        std::unique_ptr<juce::Component> pluginUI = plugin->createEditor();
     }
 }
