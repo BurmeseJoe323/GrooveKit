@@ -18,4 +18,6 @@ public:
 private:
     TextButton PlayButton {"Play"}, StopButton {"Stop"};
     TextButton* buttons[2] = {&PlayButton, &StopButton};
+    Label track {"This will be the Tracks"};
+    Label menu {"This is the menu bar"};
 };
