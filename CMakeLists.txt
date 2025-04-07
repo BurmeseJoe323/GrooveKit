@@ -60,6 +60,8 @@ elseif (APPLE)
             src/MIDIEngine/MIDIEngine.cpp
             src/AudioEngine/AudioEngine.h
             src/AudioEngine/AudioEngine.cpp
+            src/UI/Trackview-Components/TrackComponent.cpp
+            src/UI/Trackview-Components/TrackComponent.h
     )
 endif()
 
