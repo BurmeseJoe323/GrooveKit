@@ -5,10 +5,10 @@
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
+#include "Trackview-Components/TrackComponent.h"
 
 using namespace juce;
-class TrackView : public juce::Component
-{
+class TrackView : public juce::Component {
 public:
     TrackView();
     ~TrackView() override;
@@ -20,4 +20,5 @@ private:
     TextButton* buttons[2] = {&PlayButton, &StopButton};
     Label track {"This will be the Tracks"};
     Label menu {"This is the menu bar"};
+    TrackComponent trackComponent;
 };

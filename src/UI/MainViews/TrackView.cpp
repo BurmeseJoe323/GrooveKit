@@ -9,6 +9,7 @@ TrackView::TrackView() {
     track.setColour(Label::textColourId, juce::Colours::red);
     addAndMakeVisible(menu);
     addAndMakeVisible(track);
+    addAndMakeVisible(trackComponent);
 
 
     // for (auto* button : buttons) {
@@ -35,10 +36,9 @@ void TrackView::resized()
     auto trackHeight = 50;
     track.setBounds(area.removeFromTop(trackHeight));
 
+    auto trackComponentHeight = 100;
+    trackComponent.setBounds(area.removeFromTop(trackComponentHeight));
 
-    /*
-     * Maybe use for Transport buttons on transport component Saving for later uses
-     * /
     // This is the Flex Box object for Buttons
     // FlexBox fb;
     // fb.flexWrap = juce::FlexBox::Wrap::wrap;
