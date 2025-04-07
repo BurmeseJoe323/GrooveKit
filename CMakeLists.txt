@@ -44,6 +44,8 @@ if (WIN32)
             src/MIDIEngine/MIDIEngine.cpp
             src/AudioEngine/AudioEngine.h
             src/AudioEngine/AudioEngine.cpp
+            src/UI/Trackview-Components/TrackComponent.cpp
+            src/UI/Trackview-Components/TrackComponent.h
     )
 elseif (APPLE)
     # macOS: Build as console app (uses main via JUCE)
@@ -60,6 +62,8 @@ elseif (APPLE)
             src/MIDIEngine/MIDIEngine.cpp
             src/AudioEngine/AudioEngine.h
             src/AudioEngine/AudioEngine.cpp
+            src/UI/Trackview-Components/TrackComponent.cpp
+            src/UI/Trackview-Components/TrackComponent.h
     )
 endif()
 
