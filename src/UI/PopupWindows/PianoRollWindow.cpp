@@ -2,7 +2,6 @@
 // Created by Joseph Rockwell on 4/8/25.
 //
 
-#include "PianoRollWindow.h"
 #include "../MainViews/AppView.h"
 
 PianoRollWindow::PianoRollWindow() : DocumentWindow("Piano Roll Editor", juce::Colours::darkblue,
@@ -17,6 +16,6 @@ PianoRollWindow::PianoRollWindow() : DocumentWindow("Piano Roll Editor", juce::C
 PianoRollWindow::~PianoRollWindow() = default;
 
 void PianoRollWindow::closeButtonPressed() {
-    delete this;
+    setVisible(false);
 }
 
