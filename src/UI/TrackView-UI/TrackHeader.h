@@ -10,7 +10,9 @@
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
+
 using namespace juce;
+
 class TrackHeader : public Component{
 public:
     class Listener {

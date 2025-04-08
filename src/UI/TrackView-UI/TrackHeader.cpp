@@ -66,4 +66,3 @@ void TrackHeader::resized() {
   // Perform layout
   mainFB.performLayout(area);
 }
-

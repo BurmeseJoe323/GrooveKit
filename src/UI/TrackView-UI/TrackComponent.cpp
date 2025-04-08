@@ -4,13 +4,19 @@
 
 #include "TrackComponent.h"
 
+#include <tracktion_engine/utilities/tracktion_Identifiers.h>
+
 using namespace juce;
-TrackComponent::TrackComponent(AppEngine& engine, int index) : appEngine(engine), trackIndex(index){
-    addAndMakeVisible(trackClip);
+
+TrackComponent::TrackComponent()
+{
+    addAndMakeVisible(trackHeader);
 }
 
-TrackComponent::~TrackComponent() {
-};
+TrackComponent::TrackComponent(AppEngine& engine, int index) : appEngine(engine), trackIndex(index){ addAndMakeVisible(trackClip);
+}
+
+TrackComponent::~TrackComponent() = default;
 
 void TrackComponent::paint(juce::Graphics &g) {
     g.fillAll(juce::Colours::grey);
@@ -47,7 +53,5 @@ void TrackComponent::onDeleteTrackClicked() {
     if (onRequestDeleteTrack)
         onRequestDeleteTrack(trackIndex);
 }
-
-
 
 

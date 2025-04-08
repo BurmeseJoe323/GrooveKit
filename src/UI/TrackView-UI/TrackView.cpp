@@ -59,4 +59,3 @@ void TrackView::resized()
 
 
 
-
