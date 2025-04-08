@@ -35,9 +35,10 @@ if (WIN32)
             src/main.cpp
             src/UI/MainComponent.h
             src/UI/MainComponent.cpp
+            src/UI/TestComponent.h
+            src/UI/TrackView-UI/TrackView.cpp
+            src/UI/TrackView-UI/TrackView.h
             src/UI/MainViews/AppView.h
-            src/UI/MainViews/TrackView.cpp
-            src/UI/MainViews/TrackView.h
             src/AppEngine/AppEngine.h
             src/AppEngine/AppEngine.cpp
             src/MIDIEngine/MIDIEngine.h
@@ -68,6 +69,10 @@ if (WIN32)
             src/UI/PopupWindows/PianoRollComponents/NoteModel.h
             src/UI/PopupWindows/PianoRollComponents/PianoRollMainComponent.cpp
             src/UI/PopupWindows/PianoRollComponents/PianoRollMainComponent.h
+            src/UI/TrackView-UI/TrackComponent.cpp
+            src/UI/TrackView-UI/TrackComponent.h
+            src/UI/TrackView-UI/TrackHeader.cpp
+            src/UI/TrackView-UI/TrackHeader.h
     )
 elseif (APPLE)
     # macOS: Build as console app (uses main via JUCE)
@@ -75,9 +80,10 @@ elseif (APPLE)
             src/main.cpp
             src/UI/MainComponent.h
             src/UI/MainComponent.cpp
+            src/UI/TestComponent.h
+            src/UI/TrackView-UI/TrackView.cpp
+            src/UI/TrackView-UI/TrackView.h
             src/UI/MainViews/AppView.h
-            src/UI/MainViews/TrackView.cpp
-            src/UI/MainViews/TrackView.h
             src/AppEngine/AppEngine.h
             src/AppEngine/AppEngine.cpp
             src/MIDIEngine/MIDIEngine.h
@@ -108,6 +114,10 @@ elseif (APPLE)
             src/UI/PopupWindows/PianoRollComponents/NoteModel.h
             src/UI/PopupWindows/PianoRollComponents/PianoRollMainComponent.cpp
             src/UI/PopupWindows/PianoRollComponents/PianoRollMainComponent.h
+            src/UI/TrackView-UI/TrackComponent.cpp
+            src/UI/TrackView-UI/TrackComponent.h
+            src/UI/TrackView-UI/TrackHeader.cpp
+            src/UI/TrackView-UI/TrackHeader.h
     )
 endif()
 

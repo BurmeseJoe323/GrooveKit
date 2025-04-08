@@ -5,6 +5,7 @@
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
+#include "TrackView-UI/TrackView.h"
 
 class MainComponent : public juce::Component
 {
@@ -20,4 +21,3 @@ private:
 
     void showTrackView();
 };
-

@@ -2,16 +2,10 @@
 
 TrackView::TrackView() {
     setSize(800, 600);
-
-    menu.setColour(Label::backgroundColourId, juce::Colours::white);
-    track.setColour(Label::backgroundColourId, juce::Colours::blue);
-    menu.setColour(Label::textColourId, juce::Colours::red);
-    track.setColour(Label::textColourId, juce::Colours::red);
-    addAndMakeVisible(menu);
-    addAndMakeVisible(track);
     addAndMakeVisible(trackComponent);
 
 
+    // could use this later
     // for (auto* button : buttons) {
     //     addAndMakeVisible(button);
     // }
@@ -30,11 +24,6 @@ void TrackView::paint(juce::Graphics& g)
 void TrackView::resized()
 {
     auto area = getLocalBounds();
-    auto menuHeight = 20;
-    menu.setBounds(area.removeFromTop(menuHeight));
-
-    auto trackHeight = 50;
-    track.setBounds(area.removeFromTop(trackHeight));
 
     auto trackComponentHeight = 100;
     trackComponent.setBounds(area.removeFromTop(trackComponentHeight));
@@ -51,4 +40,9 @@ void TrackView::resized()
     // fb.performLayout(getLocalBounds());
     // layout child components here
 }
+
+void TrackView::onAddClipClicked() {
+    // TODO:: make this add a clip using the engine.
+}
+
 
