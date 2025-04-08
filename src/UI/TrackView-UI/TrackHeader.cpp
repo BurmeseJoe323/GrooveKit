@@ -10,6 +10,12 @@ TrackHeader::TrackHeader() {
   // add everything to view
   addAndMakeVisible(addClip);
   addAndMakeVisible(trackNameLabel);
+
+  addClip.onClick = [this]() {
+    // this is the listener for when the add clip button is clicked.
+    listeners.call([](Listener& l) { l.onAddClipClicked(); });
+  };
+
   // setup trackNameLabel
   trackNameLabel.setFont(juce::Font(15.0f));
   trackNameLabel.setColour(juce::Label::textColourId, juce::Colours::black);
@@ -26,14 +32,14 @@ void TrackHeader::paint(juce::Graphics &g) {
 void TrackHeader::resized() {
   // this will be the main layout
   // set as vertical layout
-  juce::FlexBox mainFb;
-  mainFb.flexDirection = juce::FlexBox::Direction::column;
-  mainFb.alignItems = juce::FlexBox::AlignItems::stretch;
+  juce::FlexBox mainFB;
+  mainFB.flexDirection = juce::FlexBox::Direction::column;
+  mainFB.alignItems = juce::FlexBox::AlignItems::stretch;
 
   auto area = getLocalBounds().reduced(5);
 
   // Row 1: Track name
-  mainFb.items.add(juce::FlexItem(trackNameLabel)
+  mainFB.items.add(juce::FlexItem(trackNameLabel)
     .withWidth(50)
     .withHeight(30)
     .withAlignSelf(juce::FlexItem::AlignSelf::flexStart));
@@ -48,9 +54,9 @@ void TrackHeader::resized() {
         .withHeight(30));
 
   // Add the button row as a FlexItem to the main layout
-  mainFb.items.add(juce::FlexItem(buttonRowFB)
+  mainFB.items.add(juce::FlexItem(buttonRowFB)
       .withHeight(30)); // Fixed height for the button row
 
   // Perform layout
-  mainFb.performLayout(area);
+  mainFB.performLayout(area);
 }

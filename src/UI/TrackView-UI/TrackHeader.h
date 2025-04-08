@@ -13,6 +13,15 @@
 
 class TrackHeader : public juce::Component{
 public:
+    class Listener {
+    public:
+        virtual ~Listener() = default;
+        virtual void onAddClipClicked() = 0;
+    };
+
+    void addListener(Listener* listener) {listeners.add(listener);}
+    void removeListener(Listener* listener) {listeners.remove(listener);}
+
     TrackHeader();
     ~TrackHeader();
 
@@ -21,6 +30,8 @@ public:
 private:
     juce::TextButton addClip {"Add"};
     juce::Label trackNameLabel {"Track"};
+
+    juce::ListenerList<Listener> listeners;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackHeader)
 };
 

@@ -25,9 +25,5 @@ private:
     TextButton PlayButton {"Play"}, StopButton {"Stop"}; // maybe remove later
     TextButton* buttons[2] = {&PlayButton, &StopButton}; // maybe Remove Later
 
-    /// Adds a clip to the edit object
-    /// for sound
-    void onAddClipClicked();
-
     TrackComponent trackComponent;
 };
