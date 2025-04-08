@@ -14,22 +14,20 @@
 class MainComponent : public juce::Component
 {
 public:
-    MainComponent(AppEngine& engine);
+    MainComponent();
     ~MainComponent() override;
 
-    void paint(juce::Graphics&) override;
-    void resized() override;
-private:
-    TextButton openTrackView {"OPEN TRACKVIEW"};
-    TextButton openTrackViewTut {"TrackView Tutorial"};
-    TextButton openInstTutorial {"Instrument Tutorial"};
-    TextButton selectCompletedTutorials {"See completed Tutorials"};
-    std::unique_ptr<TrackView> trackView;
-    std::unique_ptr<TrackViewTut> trackViewTut;
-    std::unique_ptr<InstrumentTutorial> instTutorial;
-    AppEngine& appEngine;
-    DatabaseManager databaseManager;
     void showTrackView();
+    void showWelcomeView();
     void showTrackViewTutorial();
     void showInstrumentTutorial();
+
+    void reportDatabaseSize();
+
+private:
+    std::unique_ptr<Component> view;
+
+    std::unique_ptr<AppEngine> engine;
+
+    DatabaseManager databaseManager;
 };

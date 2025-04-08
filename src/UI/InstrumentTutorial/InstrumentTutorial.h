@@ -11,7 +11,7 @@ public:
 
     void paint(juce::Graphics&) override;
     void resized() override;
-    std::function<void()> onFinishTutorial;
+    void onFinishTutorial();
 
 private:
     DatabaseManager& db;

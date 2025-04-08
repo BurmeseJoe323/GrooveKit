@@ -63,3 +63,7 @@ void AppEngine::addMidiClipToTrack(int trackIndex)
 {
     midiEngine->addMidiClipToTrack(trackIndex);
 }
+
+int AppEngine::getNumTracks() {
+    return tracktion::getAudioTracks(*edit).size();
+}

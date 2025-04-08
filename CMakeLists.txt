@@ -42,7 +42,7 @@ if (WIN32)
             src/main.cpp
             src/UI/MainComponent.h
             src/UI/MainComponent.cpp
-            src/UI/TestComponent.h
+            src/UI/MainViews/AppView.h
             src/UI/TrackView-UI/TrackView.cpp
             src/UI/TrackView-UI/TrackView.h
             src/AppEngine/AppEngine.h
@@ -51,6 +51,11 @@ if (WIN32)
             src/MIDIEngine/MIDIEngine.cpp
             src/AudioEngine/AudioEngine.h
             src/AudioEngine/AudioEngine.cpp
+            src/UI/MainViews/AppView.cpp
+            src/UI/MainViews/WelcomeView.cpp
+            src/UI/MainViews/WelcomeView.h
+            src/UI/PopupWindows/PianoRollWindow.cpp
+            src/UI/PopupWindows/PianoRollWindow.h
             src/UI/TrackView-UI/TrackComponent.cpp
             src/UI/TrackView-UI/TrackComponent.h
             src/UI/TrackView-UI/TrackHeader.cpp
@@ -75,7 +80,7 @@ elseif (APPLE)
             src/main.cpp
             src/UI/MainComponent.h
             src/UI/MainComponent.cpp
-            src/UI/TestComponent.h
+            src/UI/MainViews/AppView.h
             src/UI/TrackView-UI/TrackView.cpp
             src/UI/TrackView-UI/TrackView.h
             src/AppEngine/AppEngine.h
@@ -84,6 +89,11 @@ elseif (APPLE)
             src/MIDIEngine/MIDIEngine.cpp
             src/AudioEngine/AudioEngine.h
             src/AudioEngine/AudioEngine.cpp
+            src/UI/MainViews/AppView.cpp
+            src/UI/MainViews/WelcomeView.cpp
+            src/UI/MainViews/WelcomeView.h
+            src/UI/PopupWindows/PianoRollWindow.cpp
+            src/UI/PopupWindows/PianoRollWindow.h
             src/UI/TrackView-UI/TrackComponent.cpp
             src/UI/TrackView-UI/TrackComponent.h
             src/UI/TrackView-UI/TrackHeader.cpp
