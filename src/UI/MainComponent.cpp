@@ -5,7 +5,7 @@
 #endif
 
 
-#include "TrackView.h"
+#include "TrackView-UI/TrackView.h"
 
 
 MainComponent::MainComponent()

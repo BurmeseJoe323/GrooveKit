@@ -5,7 +5,7 @@
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
-#include "TrackView.h"
+#include "TrackView-UI/TrackView.h"
 class MainComponent : public juce::Component
 {
 public:
