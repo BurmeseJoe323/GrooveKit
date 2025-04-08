@@ -52,7 +52,8 @@ void AppEngine::stop()
 
 void AppEngine::addMidiTrack()
 {
-    trackManager->addMidiTrack();
+    juce::Logger::outputDebugString("Track added");
+    trackManager->addTrack();
 }
 
 void AppEngine::deleteMidiTrack(int index) {

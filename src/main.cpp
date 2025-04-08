@@ -16,6 +16,7 @@ public:
         setContentOwned(new MainComponent(), true);
         centreWithSize(getWidth(), getHeight());
         setVisible(true);
+        juce::Logger::outputDebugString("== APP STARTED ==");
     }
 
     void closeButtonPressed() override

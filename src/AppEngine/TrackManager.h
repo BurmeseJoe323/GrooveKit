@@ -1,5 +1,6 @@
 #pragma once
 #include <tracktion_engine/tracktion_engine.h>
+#include "../MIDIEngine/MIDIEngine.h"
 namespace te = tracktion;
 class TrackManager
 {
@@ -12,10 +13,10 @@ public:
     te::AudioTrack* getTrack(int index);
 
     //te::AudioTrack* addAudioTrack();
-    te::AudioTrack* addMidiTrack();
+    te::AudioTrack* addTrack();
 
     void deleteTrack(int index);
-    //void clearAllTracks(); // Optional
+    //void clearAllTracks();
 
 private:
     te::Edit& edit;
