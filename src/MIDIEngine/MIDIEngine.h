@@ -11,11 +11,6 @@ public:
     ~MIDIEngine() = default;
 
     /**
-     * Adds a Midi track to the project
-     */
-    void addMidiTrack();
-
-    /**
      * Adds a Midi clip to a specific track
      * @param trackIndex the index of the track to add the clip to.
      */
@@ -23,7 +18,7 @@ public:
 
 private:
     tracktion::engine::Edit& edit;
-    std::unique_ptr<TrackManager> trackManager;
+
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MIDIEngine)

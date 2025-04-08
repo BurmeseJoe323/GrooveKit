@@ -16,8 +16,10 @@ public:
 
         addTrackButton.setButtonText("Add MIDI Track");
         addTrackButton.onClick = [this] {
+            juce::Logger::outputDebugString("Add MIDI Track clicked");
             engine.addMidiTrack();
-            createTrackHeader(trackCount++);
+            trackCount++;
+            createTrackHeader(trackCount);
             resized();
             repaint();
         };

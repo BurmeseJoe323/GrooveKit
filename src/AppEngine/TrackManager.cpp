@@ -16,12 +16,24 @@ te::AudioTrack* TrackManager::getTrack(int index) {
     return track;
 }
 
-te::AudioTrack *TrackManager::addMidiTrack() {
-    edit.ensureNumberOfAudioTracks(getNumTracks() + 1);
-    auto* newTrack = getAudioTracks(edit).getLast();
-    if (newTrack)
-        newTrack->setName("MIDI Track " + getNumTracks());
-    return newTrack;
+te::AudioTrack *TrackManager::addTrack() {
+    juce::Logger::outputDebugString("Track added");
+    int currentNumTracks = te::getAudioTracks(edit).size();
+    edit.ensureNumberOfAudioTracks(currentNumTracks + 1);
+
+    auto track = te::getAudioTracks(edit)[currentNumTracks];
+
+    auto plugin = edit.getPluginCache().createNewPlugin(te::FourOscPlugin::xmlTypeName, {}).get();
+    if (plugin){
+        track->pluginList.insertPlugin(*plugin, 0, nullptr);
+        te::PluginInitialisationInfo info;
+        info.sampleRate = edit.engine.getDeviceManager().getSampleRate();
+        info.blockSizeSamples = edit.engine.getDeviceManager().getBlockSize();
+
+        plugin->initialise(info);
+
+        DBG("Plugin on track: " << plugin->getName());
+    }
 }
 
 void TrackManager::deleteTrack(int index) {

@@ -9,13 +9,6 @@ MIDIEngine::MIDIEngine(te::Edit& editRef)
 {
 }
 
-void MIDIEngine::addMidiTrack()
-
-{
-    int currentNumTracks = getAudioTracks(edit).size();
-    edit.ensureNumberOfAudioTracks(currentNumTracks + 1);
-}
-
 void MIDIEngine::addMidiClipToTrack(int trackIndex)
 {
     auto audioTracks = getAudioTracks(edit);
@@ -28,22 +21,18 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
 
     auto clip = track->insertNewClip(te::TrackItem::Type::midi, "Midi Clip", oneBar, nullptr);
     auto midiClip = dynamic_cast<te::MidiClip*>(clip);
+    DBG("Clip added to track: " << trackIndex);
 
     if (midiClip == nullptr)
         return;
-    int offset = trackIndex + 20;
+    int offset = 0 + trackIndex;
 
     midiClip->getSequence().addNote(60 + offset, 0_bp, 0.5_bd, 100, 0, nullptr);
     midiClip->getSequence().addNote(64 + offset, 1_bp, 0.5_bd, 100, 0, nullptr);
     midiClip->getSequence().addNote(67 + offset, 2_bp, 0.5_bd, 100, 0, nullptr);
     midiClip->getSequence().addNote(72 + offset, 3_bp, 0.5_bd, 100, 0, nullptr);
 
+    edit.restartPlayback();
 
-    if (track->pluginList.size() == 0)
-    {
-        auto plugin = edit.getPluginCache().createNewPlugin(te::FourOscPlugin::xmlTypeName, {}).get();
-        if (plugin)
-            track->pluginList.insertPlugin(*plugin, 0, nullptr);
-        std::unique_ptr<juce::Component> pluginUI = plugin->createEditor();
-    }
+
 }
