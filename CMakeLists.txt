@@ -35,15 +35,20 @@ if (WIN32)
             src/main.cpp
             src/UI/MainComponent.h
             src/UI/MainComponent.cpp
-            src/UI/TestComponent.h
-            src/UI/TrackView.cpp
-            src/UI/TrackView.h
+            src/UI/MainViews/AppView.h
+            src/UI/MainViews/TrackView.cpp
+            src/UI/MainViews/TrackView.h
             src/AppEngine/AppEngine.h
             src/AppEngine/AppEngine.cpp
             src/MIDIEngine/MIDIEngine.h
             src/MIDIEngine/MIDIEngine.cpp
             src/AudioEngine/AudioEngine.h
             src/AudioEngine/AudioEngine.cpp
+            src/UI/MainViews/AppView.cpp
+            src/UI/MainViews/WelcomeView.cpp
+            src/UI/MainViews/WelcomeView.h
+            src/UI/PopupWindows/PianoRollWindow.cpp
+            src/UI/PopupWindows/PianoRollWindow.h
     )
 elseif (APPLE)
     # macOS: Build as console app (uses main via JUCE)
@@ -51,15 +56,20 @@ elseif (APPLE)
             src/main.cpp
             src/UI/MainComponent.h
             src/UI/MainComponent.cpp
-            src/UI/TestComponent.h
-            src/UI/TrackView.cpp
-            src/UI/TrackView.h
+            src/UI/MainViews/AppView.h
+            src/UI/MainViews/TrackView.cpp
+            src/UI/MainViews/TrackView.h
             src/AppEngine/AppEngine.h
             src/AppEngine/AppEngine.cpp
             src/MIDIEngine/MIDIEngine.h
             src/MIDIEngine/MIDIEngine.cpp
             src/AudioEngine/AudioEngine.h
             src/AudioEngine/AudioEngine.cpp
+            src/UI/MainViews/AppView.cpp
+            src/UI/MainViews/WelcomeView.cpp
+            src/UI/MainViews/WelcomeView.h
+            src/UI/PopupWindows/PianoRollWindow.cpp
+            src/UI/PopupWindows/PianoRollWindow.h
     )
 endif()
 

@@ -16,6 +16,7 @@ public:
 
     void addMidiTrack();
     void addMidiClipToTrack(int trackIndex = 0);
+    int getNumTracks();
 
 private:
     std::unique_ptr<tracktion::engine::Engine> engine;
