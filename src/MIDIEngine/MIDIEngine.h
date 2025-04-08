@@ -18,7 +18,7 @@ public:
 
 private:
     tracktion::engine::Edit& edit;
-    std::unique_ptr<TrackManager> trackManager;
+
 
 
 
