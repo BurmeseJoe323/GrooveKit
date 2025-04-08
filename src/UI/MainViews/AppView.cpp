@@ -59,8 +59,10 @@ void AppView::paint (juce::Graphics& g) {
 }
 
 void AppView::openPianoRoll() {
-    if (pianoRollWindow.get() == nullptr) {
+    if (pianoRollWindow == nullptr) {
         pianoRollWindow = std::make_unique<PianoRollWindow>();
+    } else {
+        pianoRollWindow->setVisible(true);
     }
 }
 
