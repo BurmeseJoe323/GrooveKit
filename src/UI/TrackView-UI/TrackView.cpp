@@ -41,8 +41,6 @@ void TrackView::resized()
     // layout child components here
 }
 
-void TrackView::onAddClipClicked() {
-    // TODO:: make this add a clip using the engine.
-}
+
 
 
