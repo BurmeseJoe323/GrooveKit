@@ -47,7 +47,7 @@ void TrackComponent::resized() {
         .withMargin(itemMargin));
 
     mainFB.items.add(FlexItem(trackClip)
-        .withWidth(100)
+        .withWidth(300)
         .withHeight(getHeight() - itemMargin.top - itemMargin.bottom)
         .withMargin(itemMargin));
 
@@ -59,6 +59,7 @@ void TrackComponent::onAddClipClicked() {
     // TODO: fix onAddClipclicked()
     DBG("clicked add clip");
 }
+
 
 
 
