@@ -9,7 +9,7 @@ PianoRollWindow::PianoRollWindow() : DocumentWindow("Piano Roll Editor", juce::C
     centreWithSize(800, 450);
     setUsingNativeTitleBar(true);
     setResizable(true, false);
-    setContentOwned(new PianoRoll(), true);
+    setContentOwned(new PianoRollEditor(), true);
     setVisible(true);
 }
 
