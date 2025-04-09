@@ -49,8 +49,12 @@ if (WIN32)
             src/UI/MainViews/WelcomeView.h
             src/UI/PopupWindows/PianoRollWindow.cpp
             src/UI/PopupWindows/PianoRollWindow.h
-            src/UI/PopupWindows/PianoRollComponents/PianoRoll.cpp
-            src/UI/PopupWindows/PianoRollComponents/PianoRoll.h
+            src/UI/PopupWindows/PianoRollComponents/PianoRollEditor.cpp
+            src/UI/PopupWindows/PianoRollComponents/PianoRollEditor.h
+            src/UI/PopupWindows/PianoRollComponents/KeyboardComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/KeyboardComponent.h
+            src/UI/PopupWindows/PianoRollComponents/NoteGridComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/NoteGridComponent.h
     )
 elseif (APPLE)
     # macOS: Build as console app (uses main via JUCE)
@@ -72,8 +76,12 @@ elseif (APPLE)
             src/UI/MainViews/WelcomeView.h
             src/UI/PopupWindows/PianoRollWindow.cpp
             src/UI/PopupWindows/PianoRollWindow.h
-            src/UI/PopupWindows/PianoRollComponents/PianoRoll.cpp
-            src/UI/PopupWindows/PianoRollComponents/PianoRoll.h
+            src/UI/PopupWindows/PianoRollComponents/PianoRollEditor.cpp
+            src/UI/PopupWindows/PianoRollComponents/PianoRollEditor.h
+            src/UI/PopupWindows/PianoRollComponents/KeyboardComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/KeyboardComponent.h
+            src/UI/PopupWindows/PianoRollComponents/NoteGridComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/NoteGridComponent.h
     )
 endif()
 

@@ -6,7 +6,7 @@
 #define PIANOROLLWINDOW_H
 #include <memory>
 #include <juce_gui_basics/juce_gui_basics.h>
-#include "PianoRollComponents/PianoRoll.h"
+#include "PianoRollComponents/PianoRollEditor.h"
 
 
 class PianoRollWindow : public juce::DocumentWindow {
@@ -16,7 +16,7 @@ public:
 
     void closeButtonPressed() override;
 private:
-    std::unique_ptr<PianoRoll> pianoRoll;
+    std::unique_ptr<PianoRollEditor> pianoRoll;
 };
 
 
