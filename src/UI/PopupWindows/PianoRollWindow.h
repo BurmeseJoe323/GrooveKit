@@ -6,6 +6,7 @@
 #define PIANOROLLWINDOW_H
 #include <memory>
 #include <juce_gui_basics/juce_gui_basics.h>
+#include "PianoRollComponents/PianoRoll.h"
 
 
 class PianoRollWindow : public juce::DocumentWindow {
@@ -14,16 +15,6 @@ public:
     ~PianoRollWindow() override;
 
     void closeButtonPressed() override;
-    class PianoRoll : public juce::Component {
-    public:
-        PianoRoll() {}
-        ~PianoRoll() override = default;
-        void paint(juce::Graphics& g) override {
-            g.setColour(juce::Colours::darkseagreen);
-        }
-    private:
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PianoRoll)
-    };
 private:
     std::unique_ptr<PianoRoll> pianoRoll;
 };
