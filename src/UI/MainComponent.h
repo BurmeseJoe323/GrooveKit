@@ -10,7 +10,7 @@
 class MainComponent : public juce::Component
 {
 public:
-    MainComponent(AppEngine& engine);
+    MainComponent();
     ~MainComponent() override;
 
     void paint(juce::Graphics&) override;

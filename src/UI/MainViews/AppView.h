@@ -2,7 +2,7 @@
 #define APPVIEW_H
 
 #include "../../AppEngine/AppEngine.h"
-#include "TrackView.h"
+#include "../TrackView-UI/TrackView.h"
 #include <vector>
 
 #include "../PopupWindows/PianoRollWindow.h"
