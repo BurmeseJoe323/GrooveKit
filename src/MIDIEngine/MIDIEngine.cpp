@@ -32,6 +32,7 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
     midiClip->getSequence().addNote(67 + offset, 2_bp, 0.5_bd, 100, 0, nullptr);
     midiClip->getSequence().addNote(72 + offset, 3_bp, 0.5_bd, 100, 0, nullptr);
 
+    edit.getTransport().ensureContextAllocated();
     edit.restartPlayback();
 
 

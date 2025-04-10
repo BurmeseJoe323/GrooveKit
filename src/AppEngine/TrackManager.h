@@ -8,11 +8,9 @@ public:
     explicit TrackManager(te::Edit& editRef);
     ~TrackManager();
 
-    // Track access
     int getNumTracks() const;
     te::AudioTrack* getTrack(int index);
 
-    //te::AudioTrack* addAudioTrack();
     te::AudioTrack* addTrack();
 
     void deleteTrack(int index);
