@@ -12,6 +12,8 @@ TrackView::TrackView() {
     addAndMakeVisible(newTrackButton);
     addAndMakeVisible(deleteButton);
 
+    editComponent = std::make_unique<EditComponent>();
+    addAndMakeVisible(editComponent.get());
     setSize(800, 600);
 }
 

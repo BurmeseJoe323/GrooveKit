@@ -22,7 +22,9 @@ private:
     // juce::TextButton addClip {"simpl"};
     // juce::Label trackNameLabel {"Track"};
 
-    void buildTracks();
+    void addNewTrack();
+    // void removeSelectedTracks();
+    // bool keyPressed(const KeyPress& key) override;
 
     OwnedArray<TrackComponent> tracks;
     OwnedArray<TrackHeader> headers;

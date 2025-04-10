@@ -2,110 +2,78 @@
 // Created by ikera on 4/9/2025.
 //
 
+#pragma once
 #include "EditComponent.h"
 
 #include <tracktion_engine/audio_files/formats/tracktion_FFmpegEncoderAudioFormat.h>
 
 EditComponent::EditComponent() {
-
+    //Add initial track pair
+    addNewTrack();
+    setWantsKeyboardFocus(true);
 }
 
 // this is the destructor
 EditComponent::~EditComponent() = default;
 
 void EditComponent::paint(juce::Graphics &g) {
-    g.fillAll (juce::Colours::maroon);
+    g.fillAll (juce::Colours::black);
 }
 
 void EditComponent::resized() {
+    FlexBox mainFlex;
+    mainFlex.flexDirection = FlexBox::Direction::column;
 
-    const int trackHeight = 50, trackGap = 2;
-    // const int headerWidth = editViewState.showHeaders ? 150 : 0;
-    // const int footerWidth = editViewState.showFooters ? 150 : 0;
+    const int headerWidth = 100;
+    const int trackHeight = 100;
+    const int margin = 2;
 
-    const int headerWidth = 150;
-    const int footerWidth = 150;
+    auto bounds = getLocalBounds();
+    bounds.removeFromBottom(30); // Space for add button
 
-    // playhead.setBounds (getLocalBounds().withTrimmedLeft (headerWidth).withTrimmedRight (footerWidth));
+    for (int i = 0; i < headers.size(); ++i) {
+        // Header on left, track on right in same row
+        auto row = bounds.removeFromTop(trackHeight);
 
-    // int y = roundToInt (editViewState.viewY.get());
-
-    int y = 100;
-    for (int i = 0; i < jmin (headers.size(), tracks.size()); i++)
-    {
-        auto h = headers[i];
-        auto t = tracks[i];
-        // auto f = footers[i];
-
-        h->setBounds (0, y, headerWidth, trackHeight);
-        t->setBounds (headerWidth, y, getWidth() - headerWidth - footerWidth, trackHeight);
-        // f->setBounds (getWidth() - footerWidth, y, footerWidth, trackHeight);
-
-        y += trackHeight + trackGap;
+        headers[i]->setBounds(row.removeFromLeft(headerWidth).reduced(margin));
+        tracks[i]->setBounds(row.reduced(margin));
     }
-
-    for (auto t : tracks)
-        t->resized();
 }
 
+void EditComponent::addNewTrack() {
+    auto* header = new TrackHeader();
+    auto* newTrack = new TrackComponent();
 
-void EditComponent::buildTracks() {
-    tracks.clear();
-    headers.clear();
-    // footers.clear();
+    // Connect header's add clip button to track
+    header->addListener(newTrack);
 
-    for (auto t : tracks)
-    {
-        TrackComponent* c = nullptr;
+    headers.add(header);
+    tracks.add(newTrack);
 
-        c = new TrackComponent();
-
-        // if (t->isMasterTrack())
-        // {
-        //     if (editViewState.showMasterTrack)
-        //         c = new TrackComponent (editViewState, t);
-        // }
-        // else if (t->isTempoTrack())
-        // {
-        //     if (editViewState.showGlobalTrack)
-        //         c = new TrackComponent (editViewState, t);
-        // }
-        // else if (t->isMarkerTrack())
-        // {
-        //     if (editViewState.showMarkerTrack)
-        //         c = new TrackComponent (editViewState, t);
-        // }
-        // else if (t->isChordTrack())
-        // {
-        //     if (editViewState.showChordTrack)
-        //         c = new TrackComponent (editViewState, t);
-        // }
-        // else if (t->isArrangerTrack())
-        // {
-        //     if (editViewState.showArrangerTrack)
-        //         c = new TrackComponent (editViewState, t);
-        // }
-        // else
-        // {
-        //     c = new TrackComponent (editViewState, t);
-        // }
-
-        if (c != nullptr)
-        {
-            tracks.add (c);
-            addAndMakeVisible (c);
-
-            auto h = new TrackHeader();
-            headers.add (h);
-            addAndMakeVisible (h);
-
-            // auto f = new TrackFooterComponent (editViewState, t);
-            // footers.add (f);
-            // addAndMakeVisible (f);
-        }
-    }
-    // playhead.toFront (false);
+    addAndMakeVisible(header);
+    addAndMakeVisible(newTrack);
     resized();
 }
 
+// bool EditComponent::keyPressed(const KeyPress& key) {
+//     if (key == KeyPress::deleteKey) {
+//         removeSelectedTracks();
+//         return true;
+//     }
+//     return false;
+// }
+
+// void EditComponent::removeSelectedTracks() {
+//     // Remove in reverse order to avoid index issues
+//     for (int i = headers.size() - 1; i >= 0; --i) {
+//         if (headers[i]->isSelected()) {
+//             removeChildComponent(headers[i]);
+//             removeChildComponent(tracks[i]);
+//
+//             headers.remove(i);
+//             tracks.remove(i);
+//         }
+//     }
+//     resized();
+// }
 
