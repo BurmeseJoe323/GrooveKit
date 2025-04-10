@@ -5,10 +5,18 @@
 #include "PianoRollEditor.h"
 
 PianoRollEditor::PianoRollEditor() {
-    setBounds(getBoundsInParent());
+    setSize(800, 600);
+
+    // Setup note grid
+    // TODO: add to viewport to be scrollable
+    addAndMakeVisible(noteGrid);
+
+    // Setup keyboard
+    // TODO: add to viewport to be scrollable
+    addAndMakeVisible(keyboard);
+
 }
 
 void PianoRollEditor::paint(juce::Graphics &g) {
-    g.setColour(juce::Colours::darkolivegreen);
-    g.drawText("This is a text.", getLocalBounds(), juce::Justification::centred);
+    g.fillAll(juce::Colours::darkgrey.darker());
 }

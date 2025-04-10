@@ -6,16 +6,16 @@
 #define KEYBOARDCOMPONENT_H
 
 #include <juce_gui_basics/juce_gui_basics.h>
-#include <vector>
+#include <set>
 
 class KeyboardComponent : public juce::Component {
 public:
 
     KeyboardComponent ();
-    void paint (juce::Graphics & g);
+    void paint (juce::Graphics & g) override;
 
 private:
-    std::vector<int> blackPitches;
+    juce::Array<int> blackPitches;
 
 };
 #endif //KEYBOARDCOMPONENT_H
