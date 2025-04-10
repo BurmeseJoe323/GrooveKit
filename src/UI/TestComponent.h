@@ -78,22 +78,13 @@ private:
         addAndMakeVisible(header.label.get());
 
         header.addClipButton = std::make_unique<juce::TextButton>("+");
-        header.addClipButton->onClick = [this, trackIndex] {
-            engine.addMidiClipToTrack(trackIndex);
-        };
         addAndMakeVisible(header.addClipButton.get());
 
         header.deleteButton = std::make_unique<juce::TextButton>("-");
-        header.deleteButton->onClick = [this, trackIndex] {
-            engine.deleteMidiTrack(trackIndex);
-            trackHeaders.erase(trackHeaders.begin() + trackIndex);
-            updateTrackHeaderLabels(); // relabel buttons
-            resized();
-            repaint();
-        };
         addAndMakeVisible(header.deleteButton.get());
 
         trackHeaders.push_back(std::move(header));
+        updateTrackHeaderLabels(); // Ensure labels and lambdas are correct
     }
 
     void updateTrackHeaderLabels()
@@ -102,12 +93,15 @@ private:
         {
             trackHeaders[i].label->setText("Track " + juce::String(i + 1), juce::dontSendNotification);
 
-            // Update lambdas with new track index
             trackHeaders[i].addClipButton->onClick = [this, i] {
                 engine.addMidiClipToTrack(i);
             };
+
             trackHeaders[i].deleteButton->onClick = [this, i] {
                 engine.deleteMidiTrack(i);
+                removeChildComponent(trackHeaders[i].label.get());
+                removeChildComponent(trackHeaders[i].addClipButton.get());
+                removeChildComponent(trackHeaders[i].deleteButton.get());
                 trackHeaders.erase(trackHeaders.begin() + i);
                 updateTrackHeaderLabels();
                 resized();
