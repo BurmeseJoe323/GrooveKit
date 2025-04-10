@@ -14,7 +14,7 @@
 class MainComponent : public juce::Component
 {
 public:
-    MainComponent(AppEngine& engine);
+    MainComponent();
     ~MainComponent() override;
 
     void showTrackView();
