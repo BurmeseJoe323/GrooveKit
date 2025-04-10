@@ -8,7 +8,8 @@
 #include "TrackView-UI/TrackView.h"
 
 
-MainComponent::MainComponent()
+MainComponent::MainComponent(AppEngine& engine)
+    : appEngine(engine)
 {
     setSize(600, 400);
 
@@ -34,7 +35,8 @@ void MainComponent::resized()
 }
 
 void MainComponent::showTrackView() {
-    trackView = std::make_unique<TrackView>();
+    trackView = std::make_unique<TrackView>(appEngine);
+    auto view = std::make_unique<TrackView>(appEngine);
     addAndMakeVisible(trackView.get());
     trackView->setBounds(getLocalBounds());
     openTrackView.setVisible(false);

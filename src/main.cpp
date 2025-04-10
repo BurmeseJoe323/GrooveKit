@@ -2,6 +2,7 @@
 
 #include "UI/MainComponent.h"
 #include "UI/TestComponent.h"
+#include "AppEngine/AppEngine.h"
 
 
 class MainWindow : public juce::DocumentWindow
@@ -14,7 +15,11 @@ public:
                                 juce::DocumentWindow::allButtons)
     {
         setUsingNativeTitleBar(true);
-        setContentOwned(new MainComponent(), true);
+
+        appEngine = std::make_unique<AppEngine>();
+
+        setContentOwned(new MainComponent(*appEngine), true);
+
         centreWithSize(getWidth(), getHeight());
         setVisible(true);
         juce::Logger::outputDebugString("== APP STARTED ==");
@@ -24,6 +29,9 @@ public:
     {
         juce::JUCEApplication::getInstance()->systemRequestedQuit();
     }
+
+private:
+    std::unique_ptr<AppEngine> appEngine;
 };
 
 class GrooveKitApplication : public juce::JUCEApplication
@@ -44,6 +52,7 @@ public:
 
 private:
     std::unique_ptr<MainWindow> mainWindow;
+    std::unique_ptr<AppEngine> appEngine;
 };
 
 START_JUCE_APPLICATION(GrooveKitApplication)

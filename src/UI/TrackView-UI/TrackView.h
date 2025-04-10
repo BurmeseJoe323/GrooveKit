@@ -6,6 +6,7 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "EditComponent.h"
+#include "../../AppEngine/AppEngine.h"
 
 using namespace juce;
 /// TrackView will provide all of the necessary UI features of a
@@ -16,14 +17,15 @@ using namespace juce;
 ///     - TrackComponent
 class TrackView : public juce::Component {
 public:
-    TrackView();
+    explicit TrackView(AppEngine& engine);
     ~TrackView() override;
 
     void paint(juce::Graphics&) override;
     void resized() override;
 private:
-    TextButton newEditButton { "New" }, playPauseButton {"Play"}, deleteButton { "Delete" },
+    TextButton newEditButton { "New" }, playPauseButton {"Play"}, stopButton {"Stop"}, deleteButton { "Delete" },
                openEditButton {"Open Edit"}, newTrackButton { "New Track" }, recordButton { "Record" };
 
     std::unique_ptr<EditComponent> editComponent;
+    AppEngine& appEngine;
 };

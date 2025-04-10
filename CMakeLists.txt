@@ -60,6 +60,18 @@ if (WIN32)
 elseif (APPLE)
     # macOS: Build as console app (uses main via JUCE)
     add_executable(GrooveKit
+            src/main.cpp
+            src/UI/MainComponent.h
+            src/UI/MainComponent.cpp
+            src/UI/TestComponent.h
+            src/UI/TrackView-UI/TrackView.cpp
+            src/UI/TrackView-UI/TrackView.h
+            src/AppEngine/AppEngine.h
+            src/AppEngine/AppEngine.cpp
+            src/MIDIEngine/MIDIEngine.h
+            src/MIDIEngine/MIDIEngine.cpp
+            src/AudioEngine/AudioEngine.h
+            src/AudioEngine/AudioEngine.cpp
             src/UI/TrackView-UI/TrackComponent.cpp
             src/UI/TrackView-UI/TrackComponent.h
             src/UI/TrackView-UI/TrackHeader.cpp

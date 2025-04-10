@@ -7,11 +7,15 @@
 TrackHeader::TrackHeader() {
   // add everything to view
   addAndMakeVisible(addClip);
+  addAndMakeVisible(deleteTrackButton);
   addAndMakeVisible(trackNameLabel);
 
   addClip.onClick = [this]() {
-    // this is the listener for when the add clip button is clicked.
     listeners.call([](Listener& l) { l.onAddClipClicked(); });
+  };
+
+  deleteTrackButton.onClick = [this]() {
+    listeners.call([](Listener& l) { l.onDeleteTrackClicked(); });
   };
 
   // setup trackNameLabel
@@ -48,6 +52,10 @@ void TrackHeader::resized() {
   buttonRowFB.justifyContent = juce::FlexBox::JustifyContent::flexEnd;
 
   buttonRowFB.items.add(juce::FlexItem(addClip)
+        .withWidth(50)
+        .withHeight(30));
+
+  buttonRowFB.items.add(juce::FlexItem(deleteTrackButton)
         .withWidth(50)
         .withHeight(30));
 

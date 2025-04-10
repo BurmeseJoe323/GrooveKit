@@ -84,7 +84,7 @@ private:
         addAndMakeVisible(header.deleteButton.get());
 
         trackHeaders.push_back(std::move(header));
-        updateTrackHeaderLabels(); // Ensure labels and lambdas are correct
+        updateTrackHeaderLabels();
     }
 
     void updateTrackHeaderLabels()

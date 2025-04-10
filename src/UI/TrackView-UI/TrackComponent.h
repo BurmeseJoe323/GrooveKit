@@ -11,22 +11,32 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "TrackHeader.h"
 #include "TrackClip.h"
+#include "../../AppEngine/AppEngine.h"
 
 ///TrackComponent provides track UI element that contains the following
 ///   - TrackHeader Component
 ///   - TrackClips Component
-class TrackComponent : public juce::Component, public TrackHeader::Listener{
+class TrackComponent : public juce::Component, public TrackHeader::Listener {
 public:
-    TrackComponent();
-    ~TrackComponent();
+    TrackComponent(AppEngine& engine, int trackIndex);
+    ~TrackComponent() override;
 
-    /// adds a clip component to the UI.
     void onAddClipClicked() override;
+    void onDeleteTrackClicked() override;
+
     void paint(juce::Graphics& g) override;
     void resized() override;
+
+    std::function<void(int)> onRequestDeleteTrack;
+
 private:
+    AppEngine& appEngine;
+    int trackIndex;
+
     TrackClip trackClip;
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackComponent)
+    TrackHeader trackHeader;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TrackComponent)
 };
 
 
