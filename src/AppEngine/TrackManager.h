@@ -11,7 +11,7 @@ public:
     int getNumTracks() const;
     te::AudioTrack* getTrack(int index);
 
-    te::AudioTrack* addTrack();
+    int addTrack();
 
     void deleteTrack(int index);
     //void clearAllTracks();

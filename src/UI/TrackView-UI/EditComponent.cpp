@@ -41,8 +41,7 @@ void EditComponent::resized() {
     }
 }
 
-void EditComponent::addNewTrack() {
-    int index = tracks.size();
+void EditComponent::addNewTrack(int index) {
     auto* header = new TrackHeader();
     auto* newTrack = new TrackComponent(appEngine, index);
 

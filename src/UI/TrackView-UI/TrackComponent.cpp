@@ -5,12 +5,11 @@
 #include "TrackComponent.h"
 
 using namespace juce;
-TrackComponent::TrackComponent(AppEngine& engine, int index) : appEngine(engine), trackIndex(index){
+TrackComponent::TrackComponent(std::shared_ptr<AppEngine> engine, int index) : appEngine(engine), trackIndex(index){
     addAndMakeVisible(trackClip);
 }
 
-TrackComponent::~TrackComponent() {
-};
+TrackComponent::~TrackComponent() {};
 
 void TrackComponent::paint(juce::Graphics &g) {
     g.fillAll(juce::Colours::grey);
@@ -39,7 +38,7 @@ void TrackComponent::resized() {
 
 void TrackComponent::onAddClipClicked() {
     DBG("Add Clip clicked for track index: " << trackIndex);
-    appEngine.addMidiClipToTrack(trackIndex);
+    appEngine->addMidiClipToTrack(trackIndex);
 }
 
 void TrackComponent::onDeleteTrackClicked() {

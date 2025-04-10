@@ -18,7 +18,7 @@ public:
 
     void paint(juce::Graphics& g) override;
     void resized() override;
-    void addNewTrack();
+    void addNewTrack(int index);
 private:
     // below are examples of creating buttons and labels
     // juce::TextButton addClip {"simpl"};
