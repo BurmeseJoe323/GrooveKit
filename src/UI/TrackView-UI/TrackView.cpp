@@ -1,14 +1,18 @@
 #include "TrackView.h"
+#include "../../AppEngine/AppEngine.h"
 
 TrackView::TrackView() {
+    // playButton.onClick = [this]() { engine.play(); };
+    // stopButton.onClick = [this]() { engine.stop(); };
+
+    addAndMakeVisible(newEditButton);
+    addAndMakeVisible(playPauseButton);
+    addAndMakeVisible(recordButton);
+    addAndMakeVisible(openEditButton);
+    addAndMakeVisible(newTrackButton);
+    addAndMakeVisible(deleteButton);
+
     setSize(800, 600);
-    addAndMakeVisible(trackComponent);
-
-
-    // could use this later
-    // for (auto* button : buttons) {
-    //     addAndMakeVisible(button);
-    // }
 }
 
 TrackView::~TrackView() = default;
@@ -23,22 +27,18 @@ void TrackView::paint(juce::Graphics& g)
 
 void TrackView::resized()
 {
-    auto area = getLocalBounds();
+    auto r = getLocalBounds();
+    int w = r.getWidth() / 6;
+    auto topR = r.removeFromTop(30);
+    newEditButton.setBounds(topR.removeFromLeft(w).reduced(2));
+    playPauseButton.setBounds(topR.removeFromLeft(w).reduced(2));
+    recordButton.setBounds(topR.removeFromLeft(w).reduced(2));
+    openEditButton.setBounds(topR.removeFromLeft(w).reduced(2));
+    newTrackButton.setBounds(topR.removeFromLeft(w).reduced(2));
+    deleteButton.setBounds(topR.removeFromLeft(w).reduced(2));
 
-    auto trackComponentHeight = 100;
-    trackComponent.setBounds(area.removeFromTop(trackComponentHeight));
-
-    // This is the Flex Box object for Buttons
-    // FlexBox fb;
-    // fb.flexWrap = juce::FlexBox::Wrap::wrap;
-    // fb.justifyContent = juce::FlexBox::JustifyContent::center;
-    // fb.alignContent = juce::FlexBox::AlignContent::center;
-    // for (auto *b :buttons) {
-    //     fb.items.add (juce::FlexItem(*b).withMinWidth(50.0f).withMinHeight(50.0f));
-    // }
-
-    // fb.performLayout(getLocalBounds());
-    // layout child components here
+    if (editComponent != nullptr)
+        editComponent->setBounds(r);
 }
 
 
