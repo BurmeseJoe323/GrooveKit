@@ -54,22 +54,12 @@ if (WIN32)
             src/UI/TrackView-UI/TrackClip.h
             src/UI/TrackView-UI/EditComponent.cpp
             src/UI/TrackView-UI/EditComponent.h
+            src/AppEngine/TrackManager.h
+            src/AppEngine/TrackManager.cpp
     )
 elseif (APPLE)
     # macOS: Build as console app (uses main via JUCE)
     add_executable(GrooveKit
-            src/main.cpp
-            src/UI/MainComponent.h
-            src/UI/MainComponent.cpp
-            src/UI/TestComponent.h
-            src/UI/TrackView-UI/TrackView.cpp
-            src/UI/TrackView-UI/TrackView.h
-            src/AppEngine/AppEngine.h
-            src/AppEngine/AppEngine.cpp
-            src/MIDIEngine/MIDIEngine.h
-            src/MIDIEngine/MIDIEngine.cpp
-            src/AudioEngine/AudioEngine.h
-            src/AudioEngine/AudioEngine.cpp
             src/UI/TrackView-UI/TrackComponent.cpp
             src/UI/TrackView-UI/TrackComponent.h
             src/UI/TrackView-UI/TrackHeader.cpp
@@ -80,6 +70,8 @@ elseif (APPLE)
             src/UI/TrackView-UI/TrackClip.h
             src/UI/TrackView-UI/EditComponent.cpp
             src/UI/TrackView-UI/EditComponent.h
+            src/AppEngine/TrackManager.h
+            src/AppEngine/TrackManager.cpp
     )
 endif()
 
