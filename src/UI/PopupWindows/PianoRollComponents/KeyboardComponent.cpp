@@ -6,9 +6,23 @@
 
 KeyboardComponent::KeyboardComponent() {
     blackPitches = {1, 3, 6, 8, 10};
-    setSize(50, 15);
+    setSize(getParentWidth() * 0.15, getParentHeight() * 1.2);
 }
 
-void KeyboardComponent::paint (juce::Graphics & g) {
+void KeyboardComponent::paint(juce::Graphics &g) {
     const float noteCompHeight = getHeight() / 128.0;
+    float line = 0; // noteCompHeight;
+
+    for (int i = 127; i >= 0; i--) {
+        const int pitch = i % 12;
+        g.setColour(blackPitches.contains(pitch) ? (juce::Colours::black) : juce::Colours::white.darker());
+
+        // Explicit cast to int otherwise matching function error
+        g.fillRect(0, (int) line, getWidth(), (int) noteCompHeight);
+
+        line += noteCompHeight;
+
+        g.setColour(juce::Colours::black);
+        g.drawLine(0, line, getWidth(), line);
+    }
 }
