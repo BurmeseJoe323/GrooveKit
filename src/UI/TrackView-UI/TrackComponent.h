@@ -18,7 +18,7 @@
 ///   - TrackClips Component
 class TrackComponent : public juce::Component, public TrackHeader::Listener {
 public:
-    TrackComponent(AppEngine& engine, int trackIndex);
+    TrackComponent(std::shared_ptr<AppEngine> engine, int trackIndex);
     ~TrackComponent() override;
 
     void onAddClipClicked() override;
@@ -30,7 +30,7 @@ public:
     std::function<void(int)> onRequestDeleteTrack;
 
 private:
-    AppEngine& appEngine;
+    std::shared_ptr<AppEngine> appEngine;
     int trackIndex;
 
     TrackClip trackClip;

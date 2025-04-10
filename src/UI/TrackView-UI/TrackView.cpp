@@ -8,9 +8,10 @@ TrackView::TrackView()
     appEngine = std::make_shared<AppEngine>();
 
     newTrackButton.onClick = [this]() {
-        appEngine->addMidiTrack();          // 🔧 Backend update
-        if (editComponent != nullptr)
-            editComponent->addNewTrack();  // 🖼️ UI update
+        if (editComponent != nullptr) {
+            int index = appEngine->addMidiTrack();
+            editComponent->addNewTrack(index);
+        }
     };
 
     playPauseButton.onClick = [this]() {
