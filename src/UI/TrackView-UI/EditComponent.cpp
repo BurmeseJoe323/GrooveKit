@@ -14,7 +14,7 @@ EditComponent::EditComponent() {
 EditComponent::~EditComponent() = default;
 
 void EditComponent::paint(juce::Graphics &g) {
-    g.fillAll (juce::Colours::black);
+    g.fillAll (juce::Colours::maroon);
 }
 
 void EditComponent::resized() {
