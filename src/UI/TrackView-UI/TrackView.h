@@ -22,8 +22,8 @@ public:
     void paint(juce::Graphics&) override;
     void resized() override;
 private:
-    TextButton PlayButton {"Play"}, StopButton {"Stop"}; // maybe remove later
-    TextButton* buttons[2] = {&PlayButton, &StopButton}; // maybe Remove Later
+    TextButton newEditButton { "New" }, playPauseButton {"Play"}, deleteButton { "Delete" },
+               openEditButton {"Open Edit"}, newTrackButton { "New Track" }, recordButton { "Record" };
 
-    TrackComponent trackComponent;
+    std::unique_ptr<EditComponent> editComponent;
 };
