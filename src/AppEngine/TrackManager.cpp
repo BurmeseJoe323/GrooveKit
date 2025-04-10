@@ -34,6 +34,8 @@ te::AudioTrack *TrackManager::addTrack() {
 
         DBG("Plugin on track: " << plugin->getName());
     }
+    edit.getTransport().ensureContextAllocated();
+    edit.restartPlayback(); 
 }
 
 void TrackManager::deleteTrack(int index) {
