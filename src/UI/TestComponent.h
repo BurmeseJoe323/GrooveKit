@@ -18,8 +18,7 @@ public:
         addTrackButton.onClick = [this] {
             juce::Logger::outputDebugString("Add MIDI Track clicked");
             engine.addMidiTrack();
-            trackCount++;
-            createTrackHeader(trackCount);
+            createTrackHeader();
             resized();
             repaint();
         };
@@ -38,12 +37,13 @@ public:
         playButton.setBounds(area.removeFromTop(40).reduced(0, 5));
         stopButton.setBounds(area.removeFromTop(40).reduced(0, 5));
 
-        // Layout track headers
         int y = area.getY();
-        for (auto& [trackLabel, plusButton] : trackHeaders)
+        for (int i = 0; i < trackHeaders.size(); ++i)
         {
-            trackLabel->setBounds(20, y, 200, 30);
-            plusButton->setBounds(230, y, 30, 30);
+            auto& header = trackHeaders[i];
+            header.label->setBounds(20, y, 200, 30);
+            header.addClipButton->setBounds(230, y, 30, 30);
+            header.deleteButton->setBounds(270, y, 30, 30);
             y += 40;
         }
     }
@@ -57,25 +57,63 @@ private:
     AppEngine engine;
     juce::TextButton playButton, stopButton, addTrackButton;
 
-    int trackCount = 0;
-
-    // Track header: pair of label and plus button
-    std::vector<std::pair<std::unique_ptr<juce::Label>, std::unique_ptr<juce::TextButton>>> trackHeaders;
-
-    void createTrackHeader(int trackIndex)
+    struct TrackHeader
     {
-        auto label = std::make_unique<juce::Label>("TrackLabel", "Track " + juce::String(trackIndex + 1));
-        label->setFont(juce::Font(16.0f));
-        label->setColour(juce::Label::textColourId, juce::Colours::white);
-        addAndMakeVisible(label.get());
+        std::unique_ptr<juce::Label> label;
+        std::unique_ptr<juce::TextButton> addClipButton;
+        std::unique_ptr<juce::TextButton> deleteButton;
+    };
 
-        auto plusButton = std::make_unique<juce::TextButton>("+");
-        plusButton->onClick = [this, trackIndex] {
+    std::vector<TrackHeader> trackHeaders;
+
+    void createTrackHeader()
+    {
+        int trackIndex = static_cast<int>(trackHeaders.size());
+        TrackHeader header;
+
+        header.label = std::make_unique<juce::Label>();
+        header.label->setText("Track " + juce::String(trackIndex + 1), juce::dontSendNotification);
+        header.label->setFont(juce::Font(16.0f));
+        header.label->setColour(juce::Label::textColourId, juce::Colours::white);
+        addAndMakeVisible(header.label.get());
+
+        header.addClipButton = std::make_unique<juce::TextButton>("+");
+        header.addClipButton->onClick = [this, trackIndex] {
             engine.addMidiClipToTrack(trackIndex);
         };
-        addAndMakeVisible(plusButton.get());
+        addAndMakeVisible(header.addClipButton.get());
 
-        trackHeaders.emplace_back(std::move(label), std::move(plusButton));
+        header.deleteButton = std::make_unique<juce::TextButton>("-");
+        header.deleteButton->onClick = [this, trackIndex] {
+            engine.deleteMidiTrack(trackIndex);
+            trackHeaders.erase(trackHeaders.begin() + trackIndex);
+            updateTrackHeaderLabels(); // relabel buttons
+            resized();
+            repaint();
+        };
+        addAndMakeVisible(header.deleteButton.get());
+
+        trackHeaders.push_back(std::move(header));
+    }
+
+    void updateTrackHeaderLabels()
+    {
+        for (int i = 0; i < trackHeaders.size(); ++i)
+        {
+            trackHeaders[i].label->setText("Track " + juce::String(i + 1), juce::dontSendNotification);
+
+            // Update lambdas with new track index
+            trackHeaders[i].addClipButton->onClick = [this, i] {
+                engine.addMidiClipToTrack(i);
+            };
+            trackHeaders[i].deleteButton->onClick = [this, i] {
+                engine.deleteMidiTrack(i);
+                trackHeaders.erase(trackHeaders.begin() + i);
+                updateTrackHeaderLabels();
+                resized();
+                repaint();
+            };
+        }
     }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TestComponent)
