@@ -50,10 +50,9 @@ void AppEngine::stop()
     audioEngine->stop();
 }
 
-void AppEngine::addMidiTrack()
+int AppEngine::addMidiTrack()
 {
-    juce::Logger::outputDebugString("Track added");
-    trackManager->addTrack();
+    return trackManager->addTrack();
 }
 
 void AppEngine::deleteMidiTrack(int index) {

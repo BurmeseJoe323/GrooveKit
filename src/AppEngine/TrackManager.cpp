@@ -16,7 +16,7 @@ te::AudioTrack* TrackManager::getTrack(int index) {
     return track;
 }
 
-te::AudioTrack *TrackManager::addTrack() {
+int TrackManager::addTrack() {
     juce::Logger::outputDebugString("Track added");
     int currentNumTracks = te::getAudioTracks(edit).size();
     edit.ensureNumberOfAudioTracks(currentNumTracks + 1);
@@ -35,6 +35,8 @@ te::AudioTrack *TrackManager::addTrack() {
         DBG("Plugin on track: " << plugin->getName());
     }
     edit.restartPlayback();
+
+    return currentNumTracks;
 }
 
 void TrackManager::deleteTrack(int index) {

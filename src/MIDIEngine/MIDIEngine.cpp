@@ -25,22 +25,20 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
 
     if (midiClip == nullptr)
         return;
-    int offset = 0 + trackIndex;
-    int patternIndex = trackIndex % 4;
-    switch (patternIndex)
+
+    switch (trackIndex)
     {
-        DBG("Pattern index: " << patternIndex);
-        case 0:  // Bass
+        case 1:  // Bass
             midiClip->getSequence().addNote(36, 0_bp, 1_bd, 100, 0, nullptr);
         midiClip->getSequence().addNote(40, 1_bp, 1_bd, 100, 0, nullptr);
         midiClip->getSequence().addNote(43, 2_bp, 1_bd, 100, 0, nullptr);
         break;
-        case 1:  // Chords
+        case 2:  // Chords
             midiClip->getSequence().addNote(60, 0_bp, 1_bd, 100, 0, nullptr);
         midiClip->getSequence().addNote(64, 0_bp, 1_bd, 100, 0, nullptr);
         midiClip->getSequence().addNote(67, 0_bp, 1_bd, 100, 0, nullptr);
         break;
-        case 2:  // melody
+        case 3:  // melody
             midiClip->getSequence().addNote(76, 0_bp, 0.5_bd, 100, 0, nullptr);
         midiClip->getSequence().addNote(79, 1_bp, 0.5_bd, 100, 0, nullptr);
         midiClip->getSequence().addNote(81, 2_bp, 0.5_bd, 100, 0, nullptr);

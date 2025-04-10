@@ -6,9 +6,10 @@ TrackView::TrackView(AppEngine& engine) : appEngine(engine) {
     // stopButton.onClick = [this]() { engine.stop(); };
 
     newTrackButton.onClick = [this]() {
-        appEngine.addMidiTrack();          // 🔧 Backend update
-        if (editComponent != nullptr)
-            editComponent->addNewTrack();  // 🖼️ UI update
+        if (editComponent != nullptr) {
+            int index = appEngine.addMidiTrack();
+            editComponent->addNewTrack(index);
+        }
     };
 
     playPauseButton.onClick = [this]() {
