@@ -10,8 +10,8 @@
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
-
-class TrackHeader : public juce::Component{
+using namespace juce;
+class TrackHeader : public Component{
 public:
     class Listener {
     public:
@@ -25,11 +25,21 @@ public:
     TrackHeader();
     ~TrackHeader();
 
-    void paint(juce::Graphics& g) override;
+    //selection control
+    // void mouseDown(const MouseEvent& event) override;
+    void setSelected(bool shouldBeSelected);
+    // bool isSelected() const;
+
+    void paint(Graphics& g) override;
     void resized() override;
+    // void mouseDown(const MouseEvent& event) override;
+    // void setSelected(bool shouldBeSelected);
+    // bool isSelected() const;
+
 private:
     juce::TextButton addClip {"Add"};
     juce::Label trackNameLabel {"Track"};
+    bool selected = false;
 
     juce::ListenerList<Listener> listeners;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackHeader)

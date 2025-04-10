@@ -4,8 +4,6 @@
 
 #include "TrackHeader.h"
 
-#include <tracktion_engine/utilities/tracktion_Identifiers.h>
-
 TrackHeader::TrackHeader() {
   // add everything to view
   addAndMakeVisible(addClip);
@@ -60,3 +58,4 @@ void TrackHeader::resized() {
   // Perform layout
   mainFB.performLayout(area);
 }
+
