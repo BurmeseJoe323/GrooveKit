@@ -25,7 +25,6 @@ public:
     void paint(juce::Graphics& g) override;
     void resized() override;
 private:
-    TrackHeader trackHeader;
     TrackClip trackClip;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackComponent)
 };

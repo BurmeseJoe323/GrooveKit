@@ -52,6 +52,8 @@ if (WIN32)
             Resources/exampleGUISetup.h
             src/UI/TrackView-UI/TrackClip.cpp
             src/UI/TrackView-UI/TrackClip.h
+            src/UI/TrackView-UI/EditComponent.cpp
+            src/UI/TrackView-UI/EditComponent.h
     )
 elseif (APPLE)
     # macOS: Build as console app (uses main via JUCE)
@@ -76,6 +78,8 @@ elseif (APPLE)
             Resources/exampleGUISetup.h
             src/UI/TrackView-UI/TrackClip.cpp
             src/UI/TrackView-UI/TrackClip.h
+            src/UI/TrackView-UI/EditComponent.cpp
+            src/UI/TrackView-UI/EditComponent.h
     )
 endif()
 
