@@ -10,6 +10,7 @@
 EditComponent::EditComponent() {
     //Add initial track pair
     addNewTrack();
+    addNewTrack();
     setWantsKeyboardFocus(true);
 }
 
