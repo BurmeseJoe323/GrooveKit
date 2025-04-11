@@ -6,13 +6,13 @@
 
 KeyboardComponent::KeyboardComponent() {
     blackPitches = {1, 3, 6, 8, 10};
-    setSize(getParentWidth() * 0.15, getParentHeight() * 1.2);
 }
 
 void KeyboardComponent::paint(juce::Graphics &g) {
     const float noteCompHeight = getHeight() / 128.0;
     float line = 0; // noteCompHeight;
 
+    // Draw keys first
     for (int i = 127; i >= 0; i--) {
         const int pitch = i % 12;
         g.setColour(blackPitches.contains(pitch) ? (juce::Colours::black) : juce::Colours::white.darker(0.1));
@@ -26,6 +26,7 @@ void KeyboardComponent::paint(juce::Graphics &g) {
         // g.drawLine(0, line, getWidth(), line);
     }
 
+    // Draw lines in between keys
     line = 0;
     for (int i = 127; i >= 0; i--) {
         g.setColour(juce::Colours::black);

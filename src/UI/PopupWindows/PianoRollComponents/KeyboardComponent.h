@@ -10,12 +10,10 @@
 
 class KeyboardComponent : public juce::Component {
 public:
-
     KeyboardComponent ();
     void paint (juce::Graphics & g) override;
 
 private:
     juce::Array<int> blackPitches;
-
 };
 #endif //KEYBOARDCOMPONENT_H

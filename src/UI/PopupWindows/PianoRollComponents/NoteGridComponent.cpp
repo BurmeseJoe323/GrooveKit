@@ -5,9 +5,8 @@
 #include "NoteGridComponent.h"
 
 
-NoteGridComponent::NoteGridComponent() {
+NoteGridComponent::NoteGridComponent(GridStyleSheet &sheet) : styleSheet(sheet) {
     blackPitches = {1, 3, 6, 8, 10};
-    setSize(getParentWidth() * 0.85, getParentHeight() * 1.2);
 
     // addChildComponent(&selectorBox);
     // addKeyListener(this);
@@ -31,14 +30,11 @@ NoteGridComponent::~NoteGridComponent() {
 void NoteGridComponent::paint(juce::Graphics &g) {
     g.fillAll(juce::Colours::darkgrey);
 
-    const float noteCompHeight = getHeight() / 128.0;
     // Roughly controls the "width" of each cell
-    const float pixelsPerBar = 300; // TODO: get this value from parent or other component
-    const int totalBars = (getWidth() / noteCompHeight) + 1;
-
+    const int totalBars = (getWidth() / pixelsPerBar) + 1;
 
     // Draw the background first
-    float line = 0; //noteCompHeight;
+    float line = 0;
 
     for (int i = 127; i >= 0; i--) {
         const int pitch = i % 12;
@@ -88,3 +84,28 @@ void NoteGridComponent::resized() {
     //     component->setBounds(xPos, yPos, len, noteCompHeight);
     // }
 }
+
+void NoteGridComponent::setupGrid(float pixelsPerBar, float compHeight, const int bars) {
+    this->pixelsPerBar = pixelsPerBar;
+    noteCompHeight = compHeight;
+    setSize(pixelsPerBar * bars, compHeight * 128); //we have 128 slots for notes
+}
+
+void NoteGridComponent::setQuantisation(const int val) {
+    if (val >= 0 && val < PRE::eQuantisationValueTotal) {
+        currentQValue = PRE::quantisedDivisionValues[val];
+    }
+    // NOTE: again... should probably do something else here rather than jassertfalse
+    else {
+        jassertfalse;
+    }
+}
+
+float NoteGridComponent::getNoteCompHeight() const {
+    return noteCompHeight;
+}
+
+float NoteGridComponent::getPixelsPerBar() const {
+    return pixelsPerBar;
+}
+

@@ -7,9 +7,12 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
+#include "GridStyleSheet.h"
+#include "PConstants.h"
+
 class NoteGridComponent : public juce::Component {
 public:
-    NoteGridComponent();
+    NoteGridComponent(GridStyleSheet &sheet);
     ~NoteGridComponent() override;
 
     void paint (juce::Graphics & g) override;
@@ -30,40 +33,39 @@ public:
     // void mouseDrag  (const MouseEvent&) override;
     // void mouseUp    (const MouseEvent&) override;
     // void mouseDoubleClick (const MouseEvent&) override;
-    //
-    // void setupGrid (float pixelsPerBar, float compHeight, const int bars);
-    // void setQuantisation (const int val);
-    //
-    //
+
+    void setupGrid (float pixelsPerBar, float compHeight, const int bars);
+    void setQuantisation (const int val);
+
+
     // bool keyPressed (const KeyPress& key, Component* originatingComponent) override;
     // void deleteAllSelected ();
     //
     // // From here you could convert this into MIDI or any other custom musical encoding.
     // PRESequence getSequence ();
     // void loadSequence (PRESequence sq);
-    //
-    // float getNoteCompHeight ();
-    // float getPixelsPerBar ();
-    //
+
+    float getNoteCompHeight() const;
+    float getPixelsPerBar() const;
+
     // std::vector<NoteModel *> getSelectedModels ();
     //
     // std::function<void(int note,int velocity)> sendChange;
     // std::function<void()> onEdit;
 private:
     // void sendEdit ();
-    //
-    // NoteGridStyleSheet & styleSheet;
+
+    GridStyleSheet &styleSheet;
     // SelectionBox selectorBox;
     // std::vector<PNoteComponent *> noteComps;
 
     juce::Array<int> blackPitches;
 
-
-    // float noteCompHeight;
-    // float pixelsPerBar;
-    // st_int ticksPerTimeSignature;
-    // st_int currentQValue;
-    // st_int lastNoteLength;
+    float noteCompHeight;
+    float pixelsPerBar;
+    st_int ticksPerTimeSignature;
+    st_int currentQValue;
+    st_int lastNoteLength;
     // bool firstDrag;
     // bool firstCall;
     // int lastTrigger;
