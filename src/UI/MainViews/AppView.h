@@ -15,7 +15,7 @@ public:
     void resized() override;
 
     void paint(juce::Graphics& g) override;
-    void closePianoRoll();
+    // void closePianoRoll();
 
 private:
     std::unique_ptr<TrackView> trackView;
