@@ -9,6 +9,7 @@
 
 #include "KeyboardComponent.h"
 #include "NoteGridComponent.h"
+#include "TimelineComponent.h"
 
 class PianoRollEditor : public juce::Component {
 public:
@@ -20,11 +21,13 @@ public:
 
 private:
     /* The three primary components of the piano roll:
-     * the keyboard visualizer, the piano roll grid, and the timeline
+     * the keyboard visualizer, the piano roll grid,
+     * and the timeline
      */
     // TODO: implement timeline component
-    KeyboardComponent keyboard; // keyboard visualizer
-    NoteGridComponent noteGrid; // piano roll interface where notes will be set
+    KeyboardComponent keyboard; // Keyboard visualizer
+    NoteGridComponent noteGrid; // Piano roll interface where notes will be set
+    TimelineComponent timeline; // Piano roll interface where notes will be set
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PianoRollEditor)
 };
