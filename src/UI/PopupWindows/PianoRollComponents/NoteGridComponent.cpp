@@ -55,22 +55,22 @@ void NoteGridComponent::paint(juce::Graphics &g) {
 
     // Draw bar lines
     // NOTE: currently assuming 4/4, should be made adjustable in the future
-    const float increment = pixelsPerBar / 16;
-    line = 0;
-    g.setColour(juce::Colours::black);
-    for (int i = 0; line < getWidth(); i++) {
-        float lineThickness = 1.0;
-            // Bar marker
-        if (i % 16 == 0) {
-            lineThickness = 3.0;
-        } else if (i % 4 == 0) {
-            // Quarter-note div
-            lineThickness = 2.0;
-        }
-        g.drawLine(line, 0, line, getHeight(), lineThickness);
-
-        line += increment;
-    }
+    // const float increment = pixelsPerBar / 16;
+    // line = 0;
+    // g.setColour(juce::Colours::black);
+    // for (int i = 0; line < getWidth(); i++) {
+    //     float lineThickness = 1.0;
+    //         // Bar marker
+    //     if (i % 16 == 0) {
+    //         lineThickness = 3.0;
+    //     } else if (i % 4 == 0) {
+    //         // Quarter-note div
+    //         lineThickness = 2.0;
+    //     }
+    //     g.drawLine(line, 0, line, getHeight(), lineThickness);
+    //
+    //     line += increment;
+    // }
 }
 
 void NoteGridComponent::resized() {
