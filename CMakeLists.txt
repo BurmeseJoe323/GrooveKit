@@ -57,6 +57,11 @@ if (WIN32)
             src/UI/PopupWindows/PianoRollComponents/NoteGridComponent.h
             src/UI/PopupWindows/PianoRollComponents/TimelineComponent.cpp
             src/UI/PopupWindows/PianoRollComponents/TimelineComponent.h
+            src/UI/PopupWindows/PianoRollComponents/GridControlPanel.cpp
+            src/UI/PopupWindows/PianoRollComponents/GridControlPanel.h
+            src/UI/PopupWindows/PianoRollComponents/GridStyleSheet.cpp
+            src/UI/PopupWindows/PianoRollComponents/GridStyleSheet.h
+            src/UI/PopupWindows/PianoRollComponents/PConstants.h
     )
 elseif (APPLE)
     # macOS: Build as console app (uses main via JUCE)
@@ -86,6 +91,11 @@ elseif (APPLE)
             src/UI/PopupWindows/PianoRollComponents/NoteGridComponent.h
             src/UI/PopupWindows/PianoRollComponents/TimelineComponent.cpp
             src/UI/PopupWindows/PianoRollComponents/TimelineComponent.h
+            src/UI/PopupWindows/PianoRollComponents/GridControlPanel.cpp
+            src/UI/PopupWindows/PianoRollComponents/GridControlPanel.h
+            src/UI/PopupWindows/PianoRollComponents/GridStyleSheet.cpp
+            src/UI/PopupWindows/PianoRollComponents/GridStyleSheet.h
+            src/UI/PopupWindows/PianoRollComponents/PConstants.h
     )
 endif()
 
