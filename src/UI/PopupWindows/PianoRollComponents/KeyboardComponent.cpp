@@ -15,14 +15,22 @@ void KeyboardComponent::paint(juce::Graphics &g) {
 
     for (int i = 127; i >= 0; i--) {
         const int pitch = i % 12;
-        g.setColour(blackPitches.contains(pitch) ? (juce::Colours::black) : juce::Colours::white.darker());
+        g.setColour(blackPitches.contains(pitch) ? (juce::Colours::black) : juce::Colours::white.darker(0.1));
 
-        // Explicit cast to int otherwise matching function error
-        g.fillRect(0, (int) line, getWidth(), (int) noteCompHeight);
+        // "Cast" to int using JUCE's floorAsInt function
+        g.fillRect(0, juce::detail::floorAsInt(line), getWidth(), juce::detail::floorAsInt(noteCompHeight));
 
         line += noteCompHeight;
 
+        // g.setColour(juce::Colours::black);
+        // g.drawLine(0, line, getWidth(), line);
+    }
+
+    line = 0;
+    for (int i = 127; i >= 0; i--) {
         g.setColour(juce::Colours::black);
-        g.drawLine(0, line, getWidth(), line);
+        g.drawLine(0, floor(line), getWidth(), floor(line)); // Floor these values to be consistent with keys
+
+        line += noteCompHeight;
     }
 }
