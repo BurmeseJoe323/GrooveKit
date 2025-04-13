@@ -30,9 +30,6 @@ NoteGridComponent::~NoteGridComponent() {
 void NoteGridComponent::paint(juce::Graphics &g) {
     g.fillAll(juce::Colours::darkgrey);
 
-    // Roughly controls the "width" of each cell
-    const int totalBars = (getWidth() / pixelsPerBar) + 1;
-
     // Draw the background first
     float line = 0;
 
@@ -49,24 +46,29 @@ void NoteGridComponent::paint(juce::Graphics &g) {
         g.drawLine(0, floor(line),getWidth(), floor(line));
     }
 
+    // TODO: add to TODO document
+    // Currently assuming 4/4, should be made adjustable in the future.
+    // Probably the best way to make this adjustable is to make the timeline have more control over where the
+    // bar and note lines in the grid are drawn, and be able to change where those lines appear. Also
+    // quantisation should be drawn into the grid
+
     // Draw bar lines
-    // NOTE: currently assuming 4/4, should be made adjustable in the future
-    // const float increment = pixelsPerBar / 16;
-    // line = 0;
-    // g.setColour(juce::Colours::black);
-    // for (int i = 0; line < getWidth(); i++) {
-    //     float lineThickness = 1.0;
-    //         // Bar marker
-    //     if (i % 16 == 0) {
-    //         lineThickness = 3.0;
-    //     } else if (i % 4 == 0) {
-    //         // Quarter-note div
-    //         lineThickness = 2.0;
-    //     }
-    //     g.drawLine(line, 0, line, getHeight(), lineThickness);
-    //
-    //     line += increment;
-    // }
+    const float increment = pixelsPerBar / 16;
+    line = 0;
+    g.setColour(juce::Colours::black);
+    for (int i = 0; line < getWidth(); i++) {
+        float lineThickness = 1.0;
+            // Bar marker
+        if (i % 16 == 0) {
+            lineThickness = 3.0;
+        } else if (i % 4 == 0) {
+            // Quarter-note div
+            lineThickness = 2.0;
+        }
+        g.drawLine(line, 0, line, getHeight(), lineThickness);
+
+        line += increment;
+    }
 }
 
 void NoteGridComponent::resized() {

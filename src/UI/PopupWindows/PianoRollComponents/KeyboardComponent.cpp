@@ -21,9 +21,6 @@ void KeyboardComponent::paint(juce::Graphics &g) {
         g.fillRect(0, juce::detail::floorAsInt(line), getWidth(), juce::detail::floorAsInt(noteCompHeight));
 
         line += noteCompHeight;
-
-        // g.setColour(juce::Colours::black);
-        // g.drawLine(0, line, getWidth(), line);
     }
 
     // Draw lines in between keys

@@ -6,7 +6,7 @@
 
 PianoRollWindow::PianoRollWindow() : DocumentWindow("Piano Roll Editor", juce::Colours::darkblue,
                                                     DocumentWindow::closeButton, true) {
-    setSize(800, 600);
+    centreWithSize(800, 600);
     setUsingNativeTitleBar(true);
     setResizable(true, false);
     pianoRoll = std::make_unique<PianoRollEditor>();

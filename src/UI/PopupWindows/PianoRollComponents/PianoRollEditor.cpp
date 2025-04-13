@@ -15,9 +15,9 @@ PianoRollEditor::PianoRollEditor() : noteGrid(gridStyleSheet), controlPanel(note
     gridView.setScrollBarThickness(10);
 
     // Setup timeline
-    // addAndMakeVisible(timelineView);
-    // timelineView.setViewedComponent(&timeline, false);
-    // timelineView.setScrollBarsShown(false, false);
+    addAndMakeVisible(timelineView);
+    timelineView.setViewedComponent(&timeline, false);
+    timelineView.setScrollBarsShown(false, false);
 
     // Setup keyboard
     addAndMakeVisible(keyboardView);
@@ -59,13 +59,13 @@ void PianoRollEditor::showControlPanel(bool state) {
 
 void PianoRollEditor::resized() {
     gridView.setBounds(80, 50, getWidth() - 90, controlPanel.isVisible() ? getHeight() - 180 : getHeight() - 55);
-    // timelineView.setBounds(gridView.getX(), 5, gridView.getWidth() - 10, gridView.getY() - 5);
+    timelineView.setBounds(gridView.getX(), 5, gridView.getWidth() - 10, gridView.getY() - 5);
     keyboardView.setBounds(5, gridView.getY(), 70, gridView.getHeight() - 10);
 
     noteGrid.setBounds(0, 0, 4000, 20 * 127);
     noteGrid.setupGrid(900, 20, 10);
-    // timeline.setBounds(0, 0, 100, timelineView.getHeight());
-    // timeline.setup(10, 900);
+    timeline.setBounds(0, 0, 100, timelineView.getHeight());
+    timeline.setup(10, 900);
     keyboard.setBounds(0, 0, keyboardView.getWidth(), noteGrid.getHeight());
 
     controlPanel.setBounds(5, gridView.getBottom() + 5, getWidth() - 10, 140);
