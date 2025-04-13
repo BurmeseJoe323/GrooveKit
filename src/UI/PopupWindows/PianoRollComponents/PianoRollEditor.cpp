@@ -44,9 +44,6 @@ void PianoRollEditor::paint(juce::Graphics &g) {
     g.fillAll(juce::Colours::darkgrey.darker());
 }
 
-void PianoRollEditor::resized() {
-}
-
 void PianoRollEditor::showControlPanel(bool state) {
    controlPanel.setVisible(state);
 }
@@ -59,31 +56,22 @@ void PianoRollEditor::showControlPanel(bool state) {
 //     g.setColour(Colours::greenyellow);
 //     g.drawLine(x - xAbsolute, 0, x - xAbsolute, getHeight(), 5.0);
 // }
-// void PianoRollEditorComponent::resized()
-// {
-//     viewportGrid.setBounds(80, 50, getWidth()-90, controlPanel.isVisible() ? getHeight()-180 : getHeight() - 55);
-//     viewportTimeline.setBounds(viewportGrid.getX(), 5, viewportGrid.getWidth()-10, viewportGrid.getY() - 5);
-//     viewportPiano.setBounds(5, viewportGrid.getY(), 70, viewportGrid.getHeight()- 10);
-//
-//     noteGrid.setBounds(0,0,4000, 20*127);
-//     noteGrid.setupGrid(900, 20, 10);
-//     timelineComp.setBounds(0, 0, 100, viewportTimeline.getHeight());
-//     timelineComp.setup(10, 900);
-//     keyboardComp.setBounds(0, 0, viewportPiano.getWidth(), noteGrid.getHeight());
-//
-//     controlPanel.setBounds(5, viewportGrid.getBottom() + 5, getWidth() - 10, 140);
-//
-//
-// }
-//
-// void PianoRollEditorComponent::showControlPanel (bool state)
-// {
-//     controlPanel.setVisible(state);
-// }
-// //void PianoRollEditorComponent::setStyleSheet (NoteGridStyleSheet style)
-// //{
-// //
-// //}
+
+void PianoRollEditor::resized() {
+    gridView.setBounds(80, 50, getWidth() - 90, controlPanel.isVisible() ? getHeight() - 180 : getHeight() - 55);
+    // timelineView.setBounds(gridView.getX(), 5, gridView.getWidth() - 10, gridView.getY() - 5);
+    keyboardView.setBounds(5, gridView.getY(), 70, gridView.getHeight() - 10);
+
+    noteGrid.setBounds(0, 0, 4000, 20 * 127);
+    noteGrid.setupGrid(900, 20, 10);
+    // timeline.setBounds(0, 0, 100, timelineView.getHeight());
+    // timeline.setup(10, 900);
+    keyboard.setBounds(0, 0, keyboardView.getWidth(), noteGrid.getHeight());
+
+    controlPanel.setBounds(5, gridView.getBottom() + 5, getWidth() - 10, 140);
+}
+
+void PianoRollEditor::setStyleSheet(GridStyleSheet style) {}
 
 void PianoRollEditor::setup (const int bars, const int pixelsPerBar, const int noteHeight)
 {

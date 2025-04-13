@@ -20,7 +20,7 @@ void TimelineComponent::setup(const int barsToDraw, const int pixelsPerBar) {
 
     this->barsToDraw = barsToDraw;
     this->pixelsPerBar = pixelsPerBar;
-    setup(pixelsPerBar * barsToDraw, getHeight()); //height is set externally.
+    setSize(pixelsPerBar * barsToDraw, getHeight()); //height is set externally.
 }
 
 void TimelineComponent::paint(juce::Graphics &g) {

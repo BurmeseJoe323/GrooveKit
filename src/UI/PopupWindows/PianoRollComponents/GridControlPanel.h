@@ -31,7 +31,7 @@ private:
     juce::TextButton render;
     juce::ToggleButton drawMIDINotes, drawMIDIText, drawVelocity;
 
-    juce::ComboBox quantisationVlaue;
+    juce::ComboBox quantisationValue;
 };
 
 
