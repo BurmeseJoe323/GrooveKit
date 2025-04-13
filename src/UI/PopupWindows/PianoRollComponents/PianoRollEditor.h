@@ -17,7 +17,7 @@
  */
 class CustomViewport : public juce::Viewport {
 public:
-    void visibleAreaChanged(const juce::Rectangle<int> &newVisibleArea) {
+    void visibleAreaChanged(const juce::Rectangle<int> &newVisibleArea) override {
         Viewport::visibleAreaChanged(newVisibleArea);
         if (positionMoved) {
             positionMoved(getViewPositionX(), getViewPositionY());
@@ -45,6 +45,7 @@ public:
     void showControlPanel(bool state);
 
     void setPlaybackMarkerPosition (const st_int ticks, bool isVisible = true);
+    void setStyleSheet(GridStyleSheet styleSheet);
 
 private:
     // Style sheet for the grid

@@ -55,15 +55,15 @@ GridControlPanel::GridControlPanel(NoteGridComponent &component, GridStyleSheet 
     };
     drawVelocity.onClick = drawMIDINotes.onClick = drawMIDIText.onClick;
 
-    addAndMakeVisible(quantisationVlaue);
-    quantisationVlaue.addItem("1/64", PRE::eQuantisationValueNone + 1);
-    quantisationVlaue.addItem("1/32", PRE::eQuantisationValue1_32 + 1);
-    quantisationVlaue.addItem("1/16", PRE::eQuantisationValue1_16 + 1);
-    quantisationVlaue.addItem("1/8", PRE::eQuantisationValue1_8 + 1);
-    quantisationVlaue.setSelectedItemIndex(1);
+    addAndMakeVisible(quantisationValue);
+    quantisationValue.addItem("1/64", PRE::eQuantisationValueNone + 1);
+    quantisationValue.addItem("1/32", PRE::eQuantisationValue1_32 + 1);
+    quantisationValue.addItem("1/16", PRE::eQuantisationValue1_16 + 1);
+    quantisationValue.addItem("1/8", PRE::eQuantisationValue1_8 + 1);
+    quantisationValue.setSelectedItemIndex(1);
 
-    quantisationVlaue.onChange = [this]() {
-        noteGrid.setQuantisation(quantisationVlaue.getSelectedItemIndex());
+    quantisationValue.onChange = [this]() {
+        noteGrid.setQuantisation(quantisationValue.getSelectedItemIndex());
     };
 }
 
@@ -71,7 +71,7 @@ GridControlPanel::~GridControlPanel() {
 }
 
 void GridControlPanel::setQuantisation(PRE::eQuantisationValue value) {
-    quantisationVlaue.setSelectedItemIndex(value);
+    quantisationValue.setSelectedItemIndex(value);
 }
 
 void GridControlPanel::resized() {
@@ -88,7 +88,7 @@ void GridControlPanel::resized() {
     drawVelocity.setBounds(pixelsPerBar.getRight() + 5, drawMIDIText.getBottom() + 5, 200, drawMIDINotes.getHeight());
 
     render.setBounds(getWidth() - 100, 5, 95, 40);
-    quantisationVlaue.setBounds(drawMIDINotes.getRight() + 5, 5, 200, drawMIDINotes.getHeight());
+    quantisationValue.setBounds(drawMIDINotes.getRight() + 5, 5, 200, drawMIDINotes.getHeight());
 }
 
 void GridControlPanel::paint(juce::Graphics &g) {
