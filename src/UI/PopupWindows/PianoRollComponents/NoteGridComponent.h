@@ -37,7 +37,6 @@ public:
     void setupGrid (float pixelsPerBar, float compHeight, const int bars);
     void setQuantisation (const int val);
 
-
     // bool keyPressed (const KeyPress& key, Component* originatingComponent) override;
     // void deleteAllSelected ();
     //
