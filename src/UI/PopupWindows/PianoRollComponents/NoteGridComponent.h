@@ -55,7 +55,7 @@ public:
 
     // From here you could convert this into MIDI or any other custom musical encoding.
     PRESequence getSequence ();
-    void loadSequence (PRESequence sq);
+    void loadSequence (PRESequence sequence);
 
     float getNoteCompHeight() const;
     float getPixelsPerBar() const;

@@ -8,8 +8,7 @@
 #endif
 
 
-MainComponent::MainComponent()
-{
+MainComponent::MainComponent() {
     view = std::make_unique<WelcomeView>();
     addAndMakeVisible(view.get());
     // view->setBounds(getLocalBounds());

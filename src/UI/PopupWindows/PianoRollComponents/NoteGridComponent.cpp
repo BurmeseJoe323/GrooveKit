@@ -44,14 +44,10 @@ void NoteGridComponent::paint(juce::Graphics &g) {
 
         line += noteCompHeight;
         g.setColour(juce::Colours::black);
-        g.drawLine(0, floor(line),getWidth(), floor(line));
+        g.drawLine(0, floor(line), getWidth(), floor(line));
     }
 
-    // TODO: add to TODO document
-    // Currently assuming 4/4, should be made adjustable in the future.
-    // Probably the best way to make this adjustable is to make the timeline have more control over where the
-    // bar and note lines in the grid are drawn, and be able to change where those lines appear. Also
-    // quantisation should be drawn into the grid
+    // NOTE: Currently assuming 4/4, should be made adjustable in the future
 
     // Draw bar lines
     const float increment = pixelsPerBar / 16;
@@ -59,7 +55,7 @@ void NoteGridComponent::paint(juce::Graphics &g) {
     g.setColour(juce::Colours::black);
     for (int i = 0; line < getWidth(); i++) {
         float lineThickness = 1.0;
-            // Bar marker
+        // Bar marker
         if (i % 16 == 0) {
             lineThickness = 3.0;
         } else if (i % 4 == 0) {
@@ -104,63 +100,60 @@ void NoteGridComponent::setQuantisation(const int val) {
     }
 }
 
-void NoteGridComponent::noteCompSelected (NoteComponent * nc, const juce::MouseEvent& e)
-{
+void NoteGridComponent::noteCompSelected(NoteComponent *noteComponent, const juce::MouseEvent &e) {
     RETURN_IF_EDITING_DISABLED
 
     int dragMove = 0;
-    for (auto component : noteComps) {
+    for (auto component: noteComps) {
         if (component->isMultiDrag) {
             dragMove++;
         }
     }
-//    std::cout << "Drag: " << dragMove << "\n";
+    //    std::cout << "Drag: " << dragMove << "\n";
 
-    for (auto component : noteComps) {
-        if (component == nc) {
+    for (auto component: noteComps) {
+        if (component == noteComponent) {
             component->setState(NoteComponent::eSelected);
             component->toFront(true);
         }
         /*
-         This complicated if statement exists because if the user is dragging multiple notes around we don't want to clear the selection.
-         We only want so switch the selected note when the user selects another note
+         This complicated if statement exists because if the user is dragging multiple notes around
+         we don't want to clear the selection. We only want so switch the selected note when
+         the user selects another note
          */
         else if (component->getState() == NoteComponent::eSelected && !e.mods.isShiftDown() && !dragMove) {
             component->setState(NoteComponent::eNone);
         }
     }
-    // need to reset the multidrag
-    for (auto component : noteComps) {
+    // Need to reset the multidrag
+    for (auto component: noteComps) {
         if (component->isMultiDrag) {
             component->isMultiDrag = false;
         }
     }
     sendEdit();
 }
-void NoteGridComponent::noteCompPositionMoved (NoteComponent * comp, bool callResize)
-{
+
+void NoteGridComponent::noteCompPositionMoved(NoteComponent *comp, bool callResize) {
     RETURN_IF_EDITING_DISABLED
 
     if (!firstDrag) {
-
         firstDrag = true;
         // we want to move all the components...
-        for (auto n : noteComps) {
+        for (auto n: noteComps) {
             if (n != comp && n->getState() == NoteComponent::eSelected) {
                 noteCompPositionMoved(n, false);
             }
         }
         firstDrag = false;
-
     }
 
-//could do with refactoring this code here..
-    int xPos = (comp->getX() / ((float)pixelsPerBar)) * ticksPerTimeSignature;
+    //could do with refactoring this code here..
+    int xPos = (comp->getX() / ((float) pixelsPerBar)) * ticksPerTimeSignature;
     int note = 127 - (comp->getY() / noteCompHeight);
     if (note > 127) {
         note = 127;
-    }
-    else if (note < 0) {
+    } else if (note < 0) {
         note = 0;
     }
 
@@ -168,7 +161,7 @@ void NoteGridComponent::noteCompPositionMoved (NoteComponent * comp, bool callRe
         xPos = 0;
     }
 
-    const int len = (comp->getWidth() / ((float)pixelsPerBar)) * ticksPerTimeSignature;
+    const int len = (comp->getWidth() / ((float) pixelsPerBar)) * ticksPerTimeSignature;
     NoteModel nm = comp->getModel();
     nm.setNote(note);
     nm.setStartTime(xPos);
@@ -176,7 +169,7 @@ void NoteGridComponent::noteCompPositionMoved (NoteComponent * comp, bool callRe
     nm.quantiseModel(currentQValue, true, true);
     nm.sendChange = sendChange;
 
-    //todo: could make this toggleable behaviour
+    // TODO: could make this toggleable behaviour
     lastNoteLength = nm.getNoteLength();
 
     comp->startY = -1;
@@ -188,11 +181,10 @@ void NoteGridComponent::noteCompPositionMoved (NoteComponent * comp, bool callRe
     sendEdit();
 }
 
-void NoteGridComponent::noteCompLengthChanged (NoteComponent * original, int diff)
-{
+void NoteGridComponent::noteCompLengthChanged(NoteComponent *original, int diff) {
     RETURN_IF_EDITING_DISABLED
 
-    for (auto n : noteComps) {
+    for (auto n: noteComps) {
         if (n->getState() == NoteComponent::eSelected || n == original) {
             if (n->startWidth == -1) {
                 n->startWidth = n->getWidth();
@@ -200,30 +192,26 @@ void NoteGridComponent::noteCompLengthChanged (NoteComponent * original, int dif
             }
 
             const int newWidth = n->startWidth - diff;
-            // todo: this seems arbitary..
+            // TODO: this seems arbitary..
             if (newWidth > 20) {
                 n->setSize(newWidth, n->getHeight());
             }
-
-
         }
     }
     sendEdit();
 }
 
-void NoteGridComponent::noteCompDragging (NoteComponent* original, const juce::MouseEvent& event)
-{
+void NoteGridComponent::noteCompDragging(NoteComponent *original, const juce::MouseEvent &event) {
     RETURN_IF_EDITING_DISABLED
 
-    for (auto n : noteComps) {
-        if (n->getState() == NoteComponent::eSelected && n != original) {
-
-            const int movedX = event.getDistanceFromDragStartX();// (event.getx - original->startX);
+    for (auto note: noteComps) {
+        if (note->getState() == NoteComponent::eSelected && note != original) {
+            const int movedX = event.getDistanceFromDragStartX(); // (event.getx - original->startX);
             const int movedY = event.getDistanceFromDragStartY(); //(original->getY() - original->startY);
 
-            if (n->startY == -1) {
-                n->startX = n->getX();
-                n->startY = n->getY();
+            if (note->startY == -1) {
+                note->startX = note->getX();
+                note->startY = note->getY();
             }
 
             /*
@@ -231,22 +219,21 @@ void NoteGridComponent::noteCompDragging (NoteComponent* original, const juce::M
             std::cout << n->getBounds().toString() << "\n";
              */
 
-            const int newX = n->startX + movedX;
-            const int newY = n->startY + movedY;
-            const int xDif = abs(newX - n->startX);
-            const int yDif = abs(newY - n->startY);
-            if (xDif > 2 || yDif > 2) { //ingnore a small amount of jitter.
-                n->setTopLeftPosition(newX, newY);
-                n->isMultiDrag = true;
+            const int newX = note->startX + movedX;
+            const int newY = note->startY + movedY;
+            const int xDif = abs(newX - note->startX);
+            const int yDif = abs(newY - note->startY);
+            if (xDif > 2 || yDif > 2) {
+                //ingnore a small amount of jitter.
+                note->setTopLeftPosition(newX, newY);
+                note->isMultiDrag = true;
             }
 
             /*
             std::cout << "Moved: " << movedX << " : " << movedY << " -- " << n->getX() << " : " << n->getY() <<  "\n" ;
             std::cout << n->getBounds().toString() << "\n \n" ;
              */
-
         }
-
     }
 
 
@@ -254,30 +241,27 @@ void NoteGridComponent::noteCompDragging (NoteComponent* original, const juce::M
      This enables the notes to be triggered while dragging.
      */
     int note = 127 - (original->getY() / noteCompHeight);
-    if (note > 127) { note = 127; }
-    else if (note < 0) { note = 0; }
+    if (note > 127) { note = 127; } else if (note < 0) { note = 0; }
     if (note != lastTrigger) {
         original->getModel().trigger(note, 100);
         lastTrigger = note;
     }
-
 }
-void NoteGridComponent::setPositions ()
-{
+
+void NoteGridComponent::setPositions() {
     //unused..
 }
 
-void NoteGridComponent::mouseDown (const juce::MouseEvent&)
-{
+void NoteGridComponent::mouseDown(const juce::MouseEvent &) {
     RETURN_IF_EDITING_DISABLED
 
-    for (NoteComponent * component : noteComps) {
+    for (NoteComponent *component: noteComps) {
         component->setState(NoteComponent::eNone);
     }
     sendEdit();
 }
-void NoteGridComponent::mouseDrag (const juce::MouseEvent& e)
-{
+
+void NoteGridComponent::mouseDrag(const juce::MouseEvent &e) {
     RETURN_IF_EDITING_DISABLED
 
     if (!selectorBox.isVisible()) {
@@ -287,91 +271,88 @@ void NoteGridComponent::mouseDrag (const juce::MouseEvent& e)
         selectorBox.setTopLeftPosition(e.getPosition());
         selectorBox.startX = e.getPosition().x;
         selectorBox.startY = e.getPosition().y;
-
-    }
-    else {
+    } else {
         int xDir = e.getPosition().x - selectorBox.startX;
         int yDir = e.getPosition().y - selectorBox.startY;
 
-        //work out which way to draw the selection box
-        if (xDir < 0 && yDir < 0) { //top left
+        // Work out which way to draw the selection box
+        if (xDir < 0 && yDir < 0) {
+            // Top left
             selectorBox.setTopLeftPosition(e.getPosition().x, e.getPosition().y);
-            selectorBox.setSize(selectorBox.startX - e.getPosition().getX(), selectorBox.startY - e.getPosition().getY());
-        }
-        else if (xDir > 0 && yDir < 0) { //top right
+            selectorBox.setSize(selectorBox.startX - e.getPosition().getX(),
+                                selectorBox.startY - e.getPosition().getY());
+        } else if (xDir > 0 && yDir < 0) {
+            // Top right
             selectorBox.setTopLeftPosition(selectorBox.startX, e.getPosition().y);
-            selectorBox.setSize(e.getPosition().getX() - selectorBox.startX, selectorBox.startY - e.getPosition().getY());
-        }
-        else if (xDir < 0 && yDir > 0) { //bottom left
+            selectorBox.setSize(e.getPosition().getX() - selectorBox.startX,
+                                selectorBox.startY - e.getPosition().getY());
+        } else if (xDir < 0 && yDir > 0) {
+            // Bottom left
             selectorBox.setTopLeftPosition(e.getPosition().x, selectorBox.startY);
-            selectorBox.setSize(selectorBox.startX - e.getPosition().getX(), e.getPosition().getY() -  selectorBox.startY);
-        }
-        else { //bottom right
-            selectorBox.setSize(e.getPosition().getX() - selectorBox.getX(), e.getPosition().getY() - selectorBox.getY());
+            selectorBox.setSize(selectorBox.startX - e.getPosition().getX(),
+                                e.getPosition().getY() - selectorBox.startY);
+        } else {
+            // Bottom right
+            selectorBox.setSize(e.getPosition().getX() - selectorBox.getX(),
+                                e.getPosition().getY() - selectorBox.getY());
         }
     }
 }
-void NoteGridComponent::mouseUp (const juce::MouseEvent&)
-{
+
+void NoteGridComponent::mouseUp(const juce::MouseEvent &) {
     RETURN_IF_EDITING_DISABLED
 
     if (selectorBox.isVisible()) {
-
-
-        for (NoteComponent * component : noteComps) {
+        for (NoteComponent *component: noteComps) {
             if (component->getBounds().intersects(selectorBox.getBounds())) {
                 component->setState(NoteComponent::eState::eSelected);
-            }
-            else {
+            } else {
                 component->setState(NoteComponent::eState::eNone);
             }
         }
         selectorBox.setVisible(false);
         selectorBox.toFront(false);
-        selectorBox.setSize(1,1);
+        selectorBox.setSize(1, 1);
     }
 
     sendEdit();
-
 }
 
-void NoteGridComponent::mouseDoubleClick (const juce::MouseEvent& e)
-{
+void NoteGridComponent::mouseDoubleClick(const juce::MouseEvent &e) {
     RETURN_IF_EDITING_DISABLED
 
-    const int xPos = (e.getMouseDownX() / ((float)pixelsPerBar)) * ticksPerTimeSignature;
-    const int yIn = ((float)e.getMouseDownY() / noteCompHeight);
+    const int xPos = (e.getMouseDownX() / ((float) pixelsPerBar)) * ticksPerTimeSignature;
+    const int yIn = ((float) e.getMouseDownY() / noteCompHeight);
     const int note = 127 - yIn;
     jassert(note >= 0 && note <= 127);
 
-    /*set up lambdas..
-
-     Essentialy each note component (child) sends messages back to parent (this) through a series of lambda callbacks
+    /*
+     * Set up lambdas. Essentialy each note component (child) sends messages back
+     * to parent (this) through a series of lambda callbacks
      */
 
-    NoteComponent * newNote = new NoteComponent(styleSheet);
-    newNote->onNoteSelect = [this](NoteComponent * n, const juce::MouseEvent& e) {
+    NoteComponent *newNote = new NoteComponent(styleSheet);
+    newNote->onNoteSelect = [this](NoteComponent *n, const juce::MouseEvent &e) {
         this->noteCompSelected(n, e);
     };
-    newNote->onPositionMoved = [this](NoteComponent * n) {
+    newNote->onPositionMoved = [this](NoteComponent *n) {
         this->noteCompPositionMoved(n);
     };
-    newNote->onLengthChange = [this](NoteComponent * n, int diff) {
+    newNote->onLengthChange = [this](NoteComponent *n, int diff) {
         this->noteCompLengthChanged(n, diff);
     };
-    newNote->onDragging = [this](NoteComponent * n, const juce::MouseEvent & e) {
+    newNote->onDragging = [this](NoteComponent *n, const juce::MouseEvent &e) {
         this->noteCompDragging(n, e);
     };
     addAndMakeVisible(newNote);
 
     const int defaultVelocity = 100;
 
-    NoteModel nModel((u8)note, defaultVelocity, (st_int)xPos, lastNoteLength, {});
+    NoteModel nModel((u8) note, defaultVelocity, (st_int) xPos, lastNoteLength, {});
     nModel.quantiseModel(currentQValue, true, true);
     nModel.sendChange = sendChange;
     nModel.trigger();
     newNote->setValues(nModel);
-
 
     noteComps.push_back(newNote);
 
@@ -380,12 +361,10 @@ void NoteGridComponent::mouseDoubleClick (const juce::MouseEvent& e)
     sendEdit();
 }
 
-bool NoteGridComponent::keyPressed (const juce::KeyPress& key, Component* originatingComponent)
-{
-
-// #ifndef LIB_VERSION
-//     LOG_KEY_PRESS(key.getKeyCode(), 1, key.getModifiers().getRawFlags());
-// #endif
+bool NoteGridComponent::keyPressed(const juce::KeyPress &key, Component *originatingComponent) {
+    // #ifndef LIB_VERSION
+    //     LOG_KEY_PRESS(key.getKeyCode(), 1, key.getModifiers().getRawFlags());
+    // #endif
 
     if (styleSheet.disableEditing) {
         return true;
@@ -395,16 +374,15 @@ bool NoteGridComponent::keyPressed (const juce::KeyPress& key, Component* origin
         deleteAllSelected();
         sendEdit();
         return true;
-    }
-    else if (key == juce::KeyPress::upKey || key == juce::KeyPress::downKey) {
+    } else if (key == juce::KeyPress::upKey || key == juce::KeyPress::downKey) {
         bool didMove = false;
-        for (auto nComp : noteComps) {
+        for (auto nComp: noteComps) {
             if (nComp->getState() == NoteComponent::eSelected) {
-                NoteModel nModel =  nComp->getModel();
+                NoteModel nModel = nComp->getModel();
 
-                (key == juce::KeyPress::upKey) ?
-                nModel.setNote(nModel.getNote() + 1) :
-                nModel.setNote(nModel.getNote() - 1);
+                (key == juce::KeyPress::upKey)
+                    ? nModel.setNote(nModel.getNote() + 1)
+                    : nModel.setNote(nModel.getNote() - 1);
 
                 nModel.sendChange = sendChange;
                 nComp->setValues(nModel);
@@ -415,23 +393,20 @@ bool NoteGridComponent::keyPressed (const juce::KeyPress& key, Component* origin
             sendEdit();
             resized();
             return true;
-
         }
-
-    }
-    else if (key == juce::KeyPress::leftKey || key == juce::KeyPress::rightKey) {
+    } else if (key == juce::KeyPress::leftKey || key == juce::KeyPress::rightKey) {
         bool didMove = false;
         const int nudgeAmount = currentQValue;
-        for (auto nComp : noteComps) {
-            if (nComp->getState() == NoteComponent::eSelected) {
-                NoteModel nModel =  nComp->getModel();
+        for (auto noteComponent: noteComps) {
+            if (noteComponent->getState() == NoteComponent::eSelected) {
+                NoteModel noteModel = noteComponent->getModel();
 
-                (key == juce::KeyPress::rightKey) ?
-                nModel.setStartTime(nModel.getStartTime() + nudgeAmount) :
-                nModel.setStartTime(nModel.getStartTime() - nudgeAmount) ;
+                (key == juce::KeyPress::rightKey)
+                    ? noteModel.setStartTime(noteModel.getStartTime() + nudgeAmount)
+                    : noteModel.setStartTime(noteModel.getStartTime() - nudgeAmount);
 
-                nModel.sendChange = sendChange;
-                nComp->setValues(nModel);
+                noteModel.sendChange = sendChange;
+                noteComponent->setValues(noteModel);
                 didMove = true;
             }
         }
@@ -440,31 +415,28 @@ bool NoteGridComponent::keyPressed (const juce::KeyPress& key, Component* origin
             resized();
             return true;
         }
-
     }
     return false;
 }
 
-void NoteGridComponent::deleteAllSelected ()
-{
+void NoteGridComponent::deleteAllSelected() {
     std::vector<NoteComponent *> itemsToKeep;
     for (int i = 0; i < noteComps.size(); i++) {
         if (noteComps[i]->getState() == NoteComponent::eSelected) {
             removeChildComponent(noteComps[i]);
             delete noteComps[i];
-        }
-        else {
+        } else {
             itemsToKeep.push_back(noteComps[i]);
         }
     }
     noteComps = itemsToKeep;
 }
 
-PRESequence NoteGridComponent::getSequence ()
-{
+PRESequence NoteGridComponent::getSequence() {
     int leftToSort = (int) noteComps.size();
 
     std::vector<NoteComponent *> componentsCopy = noteComps;
+
     /*
      inline lambda function to find the lowest startTime
      */
@@ -479,73 +451,68 @@ PRESequence NoteGridComponent::getSequence ()
     };
 
 
-    PRESequence seq;
+    PRESequence sequence;
     while (leftToSort) {
         const int index = findLowest();
         auto m = componentsCopy[index]->getModel();
         m.flags.state = componentsCopy[index]->getState();
-        seq.events.push_back(m);
-//        seq.events[seq.events.size()-1]->flags =1  //we also want the selected flags..
+        sequence.events.push_back(m);
+        //        seq.events[seq.events.size()-1]->flags =1  //we also want the selected flags..
 
         componentsCopy[index] = nullptr;
         componentsCopy.erase(componentsCopy.begin() + index);
         leftToSort--;
     }
-    seq.print();
-    return seq;
+    sequence.print();
+    return sequence;
 }
 
-void NoteGridComponent::loadSequence (PRESequence sq)
-{
+void NoteGridComponent::loadSequence(PRESequence sequence) {
     for (int i = 0; i < noteComps.size(); i++) {
         removeChildComponent(noteComps[i]);
         delete noteComps[i];
-
     }
     noteComps.clear();
 
-    noteComps.reserve(sq.events.size());
+    noteComps.reserve(sequence.events.size());
 
-    for (auto event : sq.events) {
-        NoteComponent * newNote = new NoteComponent(styleSheet);
-        newNote->onNoteSelect = [this](NoteComponent * n, const juce::MouseEvent& e) {
+    for (auto event: sequence.events) {
+        NoteComponent *newNote = new NoteComponent(styleSheet);
+        newNote->onNoteSelect = [this](NoteComponent *n, const juce::MouseEvent &e) {
             this->noteCompSelected(n, e);
         };
-        newNote->onPositionMoved = [this](NoteComponent * n) {
+        newNote->onPositionMoved = [this](NoteComponent *n) {
             this->noteCompPositionMoved(n);
         };
-        newNote->onLengthChange = [this](NoteComponent * n, int diff) {
+        newNote->onLengthChange = [this](NoteComponent *n, int diff) {
             this->noteCompLengthChanged(n, diff);
         };
-        newNote->onDragging = [this](NoteComponent * n, const juce::MouseEvent & e) {
+        newNote->onDragging = [this](NoteComponent *n, const juce::MouseEvent &e) {
             this->noteCompDragging(n, e);
         };
         addAndMakeVisible(newNote);
         NoteModel nModel(event);
         nModel.sendChange = sendChange;
-//        nModel.quantiseModel(PRE::defaultResolution / 8, true, true);
+        //        nModel.quantiseModel(PRE::defaultResolution / 8, true, true);
         newNote->setValues(nModel);
 
         noteComps.push_back(newNote);
-
     }
     resized();
     repaint();
 }
 
-std::vector<NoteModel *> NoteGridComponent::getSelectedModels ()
-{
+std::vector<NoteModel *> NoteGridComponent::getSelectedModels() {
     std::vector<NoteModel *> noteModels;
-    for (auto comp : noteComps) {
+    for (auto comp: noteComps) {
         if (comp->getState()) {
-           noteModels.push_back(comp->getModelPtr());
+            noteModels.push_back(comp->getModelPtr());
         }
     }
     return noteModels;
 }
 
-void NoteGridComponent::sendEdit ()
-{
+void NoteGridComponent::sendEdit() {
     if (this->onEdit != nullptr) {
         this->onEdit();
     }

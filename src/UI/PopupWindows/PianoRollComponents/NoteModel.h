@@ -71,6 +71,4 @@ public:
     void print();
 };
 
-
-
 #endif //NOTEMODEL_H

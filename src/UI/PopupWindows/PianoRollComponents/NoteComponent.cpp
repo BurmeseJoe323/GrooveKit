@@ -60,7 +60,7 @@ void NoteComponent::paint(juce::Graphics &g) {
 }
 
 void NoteComponent::resized() {
-    //    edgeResizer.setBounds(getWidth() - 10, getHeight(), 10, getHeight());
+    edgeResizer.setBounds(getWidth() - 10, getHeight(), 10, getHeight());
 }
 
 void NoteComponent::setCustomColour(juce::Colour c) {
