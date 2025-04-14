@@ -7,6 +7,8 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "TrackView-UI/TrackView.h"
 #include "../AppEngine/AppEngine.h"
+#include "TrackView-Tutorial/TrackViewTut.h"
+
 class MainComponent : public juce::Component
 {
 public:
@@ -17,8 +19,11 @@ public:
     void resized() override;
 private:
     TextButton openTrackView {"OPEN TRACKVIEW"};
+    TextButton openTrackViewTut {"TrackView Tutorial"};
     std::unique_ptr<TrackView> trackView;
+    std::unique_ptr<TrackViewTut> trackViewTut;
     AppEngine& appEngine;
 
     void showTrackView();
+    void showTrackViewTutorial();
 };

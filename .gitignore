@@ -21,3 +21,6 @@ cmake/JUCEPath.cmake
 cmake/TracktionPath.cmake
 
 .idea/
+
+#ignore users database
+./third-party/database/groovekit.db
