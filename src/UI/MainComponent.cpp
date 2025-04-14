@@ -33,20 +33,20 @@ void MainComponent::showWelcomeView() {
 void MainComponent::showTrackView()
 {
     removeAllChildren();
-    databaseManager.addTutorial("TrackViewTutorial");
     view = std::make_unique<TrackView>(*engine);
     addAndMakeVisible(view.get());
+
     view->setBounds(getLocalBounds());
 }
 
 void MainComponent::showTrackViewTutorial()
 {
     removeAllChildren();
+    databaseManager.addTutorial("TrackViewTutorial");
     view = std::make_unique<TrackViewTut>(databaseManager);
     addAndMakeVisible(view.get());
 
     view->setBounds(getLocalBounds());
-    // openTrackView.setVisible(false);
 }
 
 void MainComponent::showInstrumentTutorial() {
