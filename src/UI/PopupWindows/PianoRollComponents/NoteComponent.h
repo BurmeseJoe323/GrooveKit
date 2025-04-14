@@ -1,0 +1,77 @@
+//
+// Created by Joseph Rockwell on 4/13/25.
+//
+
+#ifndef NOTECOMPONENT_H
+#define NOTECOMPONENT_H
+
+#include <juce_gui_basics/juce_gui_basics.h>
+#include "PConstants.h"
+#include "NoteModel.h"
+# include "GridStyleSheet.h"
+
+class NoteComponent : public juce::Component, public juce::ComponentDragger {
+    public:
+    enum eState {
+        eNone,
+        eSelected,
+    };
+
+    struct MultiEditState {
+        int startWidth; // Used when resizing the noteComponents' length
+        bool coordinatesDiffer;
+        // Sometimes the size of this component gets changed externally (for example on multi-resizing) set this flag to be true and at
+        juce::Rectangle<int> startingBounds;
+    };
+
+    NoteComponent(GridStyleSheet styleSheet);
+    ~NoteComponent() override = default;
+
+    void paint (juce::Graphics & g) override;
+    void resized () override;
+    void setCustomColour (juce::Colour c);
+
+    void setValues (NoteModel model);
+    NoteModel getModel ();
+    NoteModel * getModelPtr ();
+
+    void setState (eState state);
+    eState getState ();
+
+    void mouseEnter (const juce::MouseEvent&) override;
+    void mouseExit  (const juce::MouseEvent&) override;
+    void mouseDown  (const juce::MouseEvent&) override;
+    void mouseUp    (const juce::MouseEvent&) override;
+    void mouseDrag  (const juce::MouseEvent&) override;
+    void mouseMove  (const juce::MouseEvent&) override;
+
+    std::function<void(NoteComponent *, const juce::MouseEvent &)> onNoteSelect;
+    std::function<void(NoteComponent *)> onPositionMoved;
+    // Send the drag event to other components
+    std::function<void(NoteComponent *, const juce::MouseEvent &)> onDragging;
+    // Sends the difference as this is relative for all components
+    std::function<void(NoteComponent *, int)> onLengthChange;
+
+    int minWidth = 10;
+     // Used when resizing the noteComponents length
+    int startWidth;
+    int startX, startY;
+    // Sometimes the size of this component gets changed externally (for example on multi-resizing)
+    // set this flag to be true and at some point the internal model will get updated also
+    bool coordinatesDiffer;
+    bool isMultiDrag;
+
+private:
+    GridStyleSheet &styleSheet;
+    juce::ResizableEdgeComponent edgeResizer;
+
+    bool mouseOver, useCustomColour, resizeEnabled, velocityEnabled;
+    int startVelocity;
+
+    juce::Colour customColour;
+    NoteModel model;
+    juce::MouseCursor normal;
+    eState state;
+};
+
+#endif //NOTECOMPONENT_H
