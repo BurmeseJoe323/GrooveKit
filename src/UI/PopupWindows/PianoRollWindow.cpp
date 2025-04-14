@@ -6,6 +6,7 @@
 
 PianoRollWindow::PianoRollWindow() : DocumentWindow("Piano Roll Editor", juce::Colours::darkblue,
                                                     DocumentWindow::closeButton, true) {
+    // TODO: get window to size properly on opening
     centreWithSize(800, 600);
     setUsingNativeTitleBar(true);
     setResizable(true, false);

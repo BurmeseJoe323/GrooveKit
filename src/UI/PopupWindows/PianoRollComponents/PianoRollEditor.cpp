@@ -5,9 +5,6 @@
 #include "PianoRollEditor.h"
 
 PianoRollEditor::PianoRollEditor() : noteGrid(gridStyleSheet), controlPanel(noteGrid, gridStyleSheet) {
-    // setVisible(true);
-
-    // TODO: Check if the viewport sizes are being set anywhere
     // Setup note grid
     addAndMakeVisible(gridView);
     gridView.setViewedComponent(&noteGrid, false);
