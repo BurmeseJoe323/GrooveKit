@@ -41,18 +41,17 @@ void PianoRollEditor::paint(juce::Graphics &g) {
     g.fillAll(juce::Colours::darkgrey.darker());
 }
 
-void PianoRollEditor::showControlPanel(bool state) {
-   controlPanel.setVisible(state);
+void PianoRollEditor::paintOverChildren(juce::Graphics &g) {
+    const int x = noteGrid.getPixelsPerBar() * (playbackTicks / (4.0 * PRE::defaultResolution));
+    const int xAbsolute = gridView.getViewPosition().getX();
+
+    g.setColour(juce::Colours::greenyellow);
+    g.drawLine(x - xAbsolute, 0, x - xAbsolute, getHeight(), 5.0);
 }
 
-// void PianoRollEditorComponent::paintOverChildren (Graphics& g)
-// {
-//     const int x = noteGrid.getPixelsPerBar() * (playbackTicks / (4.0 * PRE::defaultResolution));
-//     const int xAbsolute = viewportGrid.getViewPosition().getX();
-//
-//     g.setColour(Colours::greenyellow);
-//     g.drawLine(x - xAbsolute, 0, x - xAbsolute, getHeight(), 5.0);
-// }
+void PianoRollEditor::showControlPanel(bool state) {
+    controlPanel.setVisible(state);
+}
 
 void PianoRollEditor::resized() {
     gridView.setBounds(80, 50, getWidth() - 90, controlPanel.isVisible() ? getHeight() - 180 : getHeight() - 55);
@@ -68,56 +67,54 @@ void PianoRollEditor::resized() {
     controlPanel.setBounds(5, gridView.getBottom() + 5, getWidth() - 10, 140);
 }
 
-void PianoRollEditor::setStyleSheet(GridStyleSheet style) {}
+void PianoRollEditor::setStyleSheet(GridStyleSheet style) {
+    gridStyleSheet = style;
+}
 
-void PianoRollEditor::setup (const int bars, const int pixelsPerBar, const int noteHeight)
-{
+void PianoRollEditor::setup(const int bars, const int pixelsPerBar, const int noteHeight) {
     // NOTE: there's probably a better way to do this. Depending on how we implement bars, we may not
     // need to do this check at all
     if (bars > 1 && bars < 1000) {
         noteGrid.setupGrid(pixelsPerBar, noteHeight, bars);
         timeline.setup(bars, pixelsPerBar);
         keyboard.setSize(keyboardView.getWidth(), noteGrid.getHeight());
-    }
-    else {
+    } else {
         jassertfalse;
     }
 }
 
 
 void PianoRollEditor::updateBars(const int newNumberOfBars) {
-    if (newNumberOfBars > 1 && newNumberOfBars < 1000) { // sensible limits..
+    if (newNumberOfBars > 1 && newNumberOfBars < 1000) {
+        // sensible limits..
         const float pixelsPerBar = noteGrid.getPixelsPerBar();
         const float noteHeight = noteGrid.getNoteCompHeight();
 
         noteGrid.setupGrid(pixelsPerBar, noteHeight, newNumberOfBars);
         timeline.setup(newNumberOfBars, pixelsPerBar);
         keyboard.setSize(keyboardView.getWidth(), noteGrid.getHeight());
-    }
-    else {
+    } else {
         jassertfalse;
     }
 }
 
-// void PianoRollEditorComponent::loadSequence (PRESequence sequence)
-// {
-//     noteGrid.loadSequence(sequence);
-//
-//
-//     // fix me, this automatically scrolls the grid
-// //    const int middleNote = ((sequence.highNote - sequence.lowNote) * 0.5) + sequence.lowNote;
-// //    const float scrollRatio = middleNote / 127.0;
-// //    setScroll(0.0, scrollRatio);
-// }
-// PRESequence PianoRollEditorComponent::getSequence ()
-// {
-//     return noteGrid.getSequence();
-// }
-//
-// void PianoRollEditorComponent::setScroll (double x, double y)
-// {
-//     viewportGrid.setViewPositionProportionately(x, y);
-// }
+void PianoRollEditor::loadSequence(PRESequence sequence) {
+    noteGrid.loadSequence(sequence);
+
+
+    // TODO: fix me, this automatically scrolls the grid
+    //    const int middleNote = ((sequence.highNote - sequence.lowNote) * 0.5) + sequence.lowNote;
+    //    const float scrollRatio = middleNote / 127.0;
+    //    setScroll(0.0, scrollRatio);
+}
+
+PRESequence PianoRollEditor::getSequence() {
+    return noteGrid.getSequence();
+}
+
+void PianoRollEditor::setScroll(double x, double y) {
+    gridView.setViewPositionProportionately(x, y);
+}
 
 void PianoRollEditor::setPlaybackMarkerPosition(const st_int ticks, bool isVisible) {
     showPlaybackMarker = isVisible;
@@ -125,25 +122,21 @@ void PianoRollEditor::setPlaybackMarkerPosition(const st_int ticks, bool isVisib
     repaint();
 }
 
-// void PianoRollEditorComponent::disableEditing (bool value)
-// {
-//     styleSheet.disableEditing = value;
-//     noteGrid.repaint();
-// }
-//
-// NoteGridControlPanel & PianoRollEditorComponent::getControlPanel ()
-// {
-//     return controlPanel;
-// }
-//
-// PianoRollEditorComponent::ExternalModelEditor PianoRollEditorComponent::getSelectedNoteModels ()
-// {
-//     ExternalModelEditor mEdit;
-//     mEdit.update = [this]()
-//     {
-//         noteGrid.resized();
-//         noteGrid.repaint();
-//     };
-//     mEdit.models = noteGrid.getSelectedModels();
-//     return mEdit;
-// }
+void PianoRollEditor::disableEditing(bool value) {
+    gridStyleSheet.disableEditing = value;
+    noteGrid.repaint();
+}
+
+GridControlPanel &PianoRollEditor::getControlPanel() {
+    return controlPanel;
+}
+
+PianoRollEditor::ExternalModelEditor PianoRollEditor::getSelectedNoteModels() {
+    ExternalModelEditor modelEditor;
+    modelEditor.update = [this]() {
+        noteGrid.resized();
+        noteGrid.repaint();
+    };
+    modelEditor.models = noteGrid.getSelectedModels();
+    return modelEditor;
+}
