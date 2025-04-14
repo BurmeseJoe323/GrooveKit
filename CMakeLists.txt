@@ -56,6 +56,23 @@ if (WIN32)
             src/UI/MainViews/WelcomeView.h
             src/UI/PopupWindows/PianoRollWindow.cpp
             src/UI/PopupWindows/PianoRollWindow.h
+            src/UI/PopupWindows/PianoRollComponents/PianoRollEditor.cpp
+            src/UI/PopupWindows/PianoRollComponents/PianoRollEditor.h
+            src/UI/PopupWindows/PianoRollComponents/KeyboardComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/KeyboardComponent.h
+            src/UI/PopupWindows/PianoRollComponents/NoteGridComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/NoteGridComponent.h
+            src/UI/PopupWindows/PianoRollComponents/TimelineComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/TimelineComponent.h
+            src/UI/PopupWindows/PianoRollComponents/GridControlPanel.cpp
+            src/UI/PopupWindows/PianoRollComponents/GridControlPanel.h
+            src/UI/PopupWindows/PianoRollComponents/GridStyleSheet.cpp
+            src/UI/PopupWindows/PianoRollComponents/GridStyleSheet.h
+            src/UI/PopupWindows/PianoRollComponents/PConstants.h
+            src/UI/PopupWindows/PianoRollComponents/NoteComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/NoteComponent.h
+            src/UI/PopupWindows/PianoRollComponents/NoteModel.cpp
+            src/UI/PopupWindows/PianoRollComponents/NoteModel.h
             src/UI/TrackView-UI/TrackComponent.cpp
             src/UI/TrackView-UI/TrackComponent.h
             src/UI/TrackView-UI/TrackHeader.cpp
@@ -94,6 +111,23 @@ elseif (APPLE)
             src/UI/MainViews/WelcomeView.h
             src/UI/PopupWindows/PianoRollWindow.cpp
             src/UI/PopupWindows/PianoRollWindow.h
+            src/UI/PopupWindows/PianoRollComponents/PianoRollEditor.cpp
+            src/UI/PopupWindows/PianoRollComponents/PianoRollEditor.h
+            src/UI/PopupWindows/PianoRollComponents/KeyboardComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/KeyboardComponent.h
+            src/UI/PopupWindows/PianoRollComponents/NoteGridComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/NoteGridComponent.h
+            src/UI/PopupWindows/PianoRollComponents/TimelineComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/TimelineComponent.h
+            src/UI/PopupWindows/PianoRollComponents/GridControlPanel.cpp
+            src/UI/PopupWindows/PianoRollComponents/GridControlPanel.h
+            src/UI/PopupWindows/PianoRollComponents/GridStyleSheet.cpp
+            src/UI/PopupWindows/PianoRollComponents/GridStyleSheet.h
+            src/UI/PopupWindows/PianoRollComponents/PConstants.h
+            src/UI/PopupWindows/PianoRollComponents/NoteComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/NoteComponent.h
+            src/UI/PopupWindows/PianoRollComponents/NoteModel.cpp
+            src/UI/PopupWindows/PianoRollComponents/NoteModel.h
             src/UI/TrackView-UI/TrackComponent.cpp
             src/UI/TrackView-UI/TrackComponent.h
             src/UI/TrackView-UI/TrackHeader.cpp
