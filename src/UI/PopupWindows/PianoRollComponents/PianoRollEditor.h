@@ -29,6 +29,11 @@ public:
 
 class PianoRollEditor : public juce::Component {
 public:
+    struct ExternalModelEditor {
+        std::vector<NoteModel *> models; //const event pointers but mutable elements
+        std::function<void()> update; //once you have made the edits then call this
+    };
+
     PianoRollEditor();
     ~PianoRollEditor() override = default;
 
@@ -39,14 +44,34 @@ public:
     void setup (const int bars, const int pixelsPerBar, const int noteHeight);
     void updateBars (const int newNumberOfBars);
 
+    void setScroll(double x, double y);
     void paint(juce::Graphics &g) override;
+    void paintOverChildren (juce::Graphics& g) override;
+    void setPlaybackMarkerPosition (const st_int ticks, bool isVisible = true);
     void resized() override;
+
+    PRESequence getSequence();
+    void loadSequence(PRESequence sequence);
+
+    void disableEditing(bool value);
+    void setStyleSheet(GridStyleSheet styleSheet);
 
     void showControlPanel(bool state);
 
-    void setPlaybackMarkerPosition (const st_int ticks, bool isVisible = true);
-    void setStyleSheet(GridStyleSheet styleSheet);
+    GridControlPanel &getControlPanel();
 
+    ExternalModelEditor getSelectedNoteModels();
+
+    /*
+     This is called when the grid is edited.
+     */
+    std::function<void()> onEdit;
+
+    /*
+     You can use this to implement simple MIDI synthesis when notes are being edited,
+     when notes are edited this function will be called
+     */
+    std::function<void(int note, int velocity)> sendChange;
 private:
     // Style sheet for the grid
     GridStyleSheet gridStyleSheet;
@@ -66,7 +91,6 @@ private:
     // NOTE: this is for development.Once a pleasing visual has been found,
     // this panel should be disposed of or adapted to new controls before merging into main
     GridControlPanel controlPanel;
-
 
     st_int  playbackTicks;
     bool    showPlaybackMarker;

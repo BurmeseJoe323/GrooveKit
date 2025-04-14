@@ -66,6 +66,8 @@ if (WIN32)
             src/UI/PopupWindows/PianoRollComponents/NoteComponent.h
             src/UI/PopupWindows/PianoRollComponents/NoteModel.cpp
             src/UI/PopupWindows/PianoRollComponents/NoteModel.h
+            src/UI/PopupWindows/PianoRollComponents/PianoRollMainComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/PianoRollMainComponent.h
     )
 elseif (APPLE)
     # macOS: Build as console app (uses main via JUCE)
@@ -104,6 +106,8 @@ elseif (APPLE)
             src/UI/PopupWindows/PianoRollComponents/NoteComponent.h
             src/UI/PopupWindows/PianoRollComponents/NoteModel.cpp
             src/UI/PopupWindows/PianoRollComponents/NoteModel.h
+            src/UI/PopupWindows/PianoRollComponents/PianoRollMainComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/PianoRollMainComponent.h
     )
 endif()
 

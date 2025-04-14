@@ -3,17 +3,15 @@
 //
 
 #include "../MainViews/AppView.h"
+#include "PianoRollComponents/PianoRollMainComponent.h"
 
 PianoRollWindow::PianoRollWindow() : DocumentWindow("Piano Roll Editor", juce::Colours::darkblue,
                                                     DocumentWindow::closeButton, true) {
     setUsingNativeTitleBar(true);
-    pianoRoll = std::make_unique<PianoRollEditor>();
-    pianoRoll->setup(10, 900, 20);
-    pianoRoll->setVisible(true);
-    setContentOwned(pianoRoll.get(), true);
+    setContentOwned(new PianoRollMainComponent(), true);
 
     setResizable(true, false);
-    centreWithSize(800, 600);
+    centreWithSize(getWidth(), getHeight());
 }
 
 PianoRollWindow::~PianoRollWindow() = default;
