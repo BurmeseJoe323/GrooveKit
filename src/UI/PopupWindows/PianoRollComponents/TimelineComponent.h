@@ -11,7 +11,6 @@ class TimelineComponent : public juce::Component {
 public:
 
     TimelineComponent ();
-    // TODO: implement support for more time signatures
     //TimelineComponent (const timeSig);
 
     void setup (const int barsToDraw, const int pixelsPerBar);

@@ -26,8 +26,6 @@ GridControlPanel::GridControlPanel(NoteGridComponent &component, GridStyleSheet 
         if (configureGrid) {
             configureGrid(pixelsPerBar.getValue(), noteCompHeight.getValue());
         }
-        //        noteGrid.setupGrid(pixelsPerBar.getValue(), noteCompHeight.getValue());
-        //        noteGrid.repaint();
     };
     noteCompHeight.onValueChange = pixelsPerBar.onValueChange;
 
