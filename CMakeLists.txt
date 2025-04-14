@@ -62,6 +62,10 @@ if (WIN32)
             src/UI/PopupWindows/PianoRollComponents/GridStyleSheet.cpp
             src/UI/PopupWindows/PianoRollComponents/GridStyleSheet.h
             src/UI/PopupWindows/PianoRollComponents/PConstants.h
+            src/UI/PopupWindows/PianoRollComponents/NoteComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/NoteComponent.h
+            src/UI/PopupWindows/PianoRollComponents/NoteModel.cpp
+            src/UI/PopupWindows/PianoRollComponents/NoteModel.h
     )
 elseif (APPLE)
     # macOS: Build as console app (uses main via JUCE)
@@ -96,6 +100,10 @@ elseif (APPLE)
             src/UI/PopupWindows/PianoRollComponents/GridStyleSheet.cpp
             src/UI/PopupWindows/PianoRollComponents/GridStyleSheet.h
             src/UI/PopupWindows/PianoRollComponents/PConstants.h
+            src/UI/PopupWindows/PianoRollComponents/NoteComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/NoteComponent.h
+            src/UI/PopupWindows/PianoRollComponents/NoteModel.cpp
+            src/UI/PopupWindows/PianoRollComponents/NoteModel.h
     )
 endif()
 
