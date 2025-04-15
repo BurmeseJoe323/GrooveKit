@@ -18,7 +18,7 @@ MainComponent::MainComponent(AppEngine& engine)
 
     addAndMakeVisible(openTrackView);
     addAndMakeVisible(openTrackViewTut);
-
+    databaseManager.initialize();
 }
 
 MainComponent::~MainComponent() = default;

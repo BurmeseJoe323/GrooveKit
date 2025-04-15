@@ -64,6 +64,8 @@ if (WIN32)
             ${SQLITE_SOURCES}
             src/UI/TrackView-Tutorial/TrackViewTut.cpp
             src/UI/TrackView-Tutorial/TrackViewTut.h
+            src/DatabaseManager/DatabaseManager.cpp
+            src/DatabaseManager/DatabaseManager.h
     )
 elseif (APPLE)
     # macOS: Build as console app (uses main via JUCE)
@@ -95,6 +97,8 @@ elseif (APPLE)
             ${SQLITE_SOURCES}
             src/UI/TrackView-Tutorial/TrackViewTut.cpp
             src/UI/TrackView-Tutorial/TrackViewTut.h
+            src/DatabaseManager/DatabaseManager.cpp
+            src/DatabaseManager/DatabaseManager.h
     )
 endif()
 

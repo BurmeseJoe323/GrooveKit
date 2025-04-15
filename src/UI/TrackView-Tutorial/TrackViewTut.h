@@ -8,6 +8,7 @@
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
+#include "../../DatabaseManager/DatabaseManager.h"
 
 class TrackViewTut : public juce::Component{
 public:
