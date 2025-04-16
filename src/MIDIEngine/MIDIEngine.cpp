@@ -30,23 +30,23 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
     {
         case 1:  // Bass
             midiClip->getSequence().addNote(36, 0_bp, 1_bd, 100, 0, nullptr);
-        midiClip->getSequence().addNote(40, 1_bp, 1_bd, 100, 0, nullptr);
-        midiClip->getSequence().addNote(43, 2_bp, 1_bd, 100, 0, nullptr);
-        break;
+            midiClip->getSequence().addNote(40, 1_bp, 1_bd, 100, 0, nullptr);
+            midiClip->getSequence().addNote(43, 2_bp, 1_bd, 100, 0, nullptr);
+            break;
         case 2:  // Chords
             midiClip->getSequence().addNote(60, 0_bp, 1_bd, 100, 0, nullptr);
-        midiClip->getSequence().addNote(64, 0_bp, 1_bd, 100, 0, nullptr);
-        midiClip->getSequence().addNote(67, 0_bp, 1_bd, 100, 0, nullptr);
-        break;
+            midiClip->getSequence().addNote(64, 0_bp, 1_bd, 100, 0, nullptr);
+            midiClip->getSequence().addNote(67, 0_bp, 1_bd, 100, 0, nullptr);
+            break;
         case 3:  // melody
             midiClip->getSequence().addNote(76, 0_bp, 0.5_bd, 100, 0, nullptr);
-        midiClip->getSequence().addNote(79, 1_bp, 0.5_bd, 100, 0, nullptr);
-        midiClip->getSequence().addNote(81, 2_bp, 0.5_bd, 100, 0, nullptr);
-        break;
+            midiClip->getSequence().addNote(79, 1_bp, 0.5_bd, 100, 0, nullptr);
+            midiClip->getSequence().addNote(81, 2_bp, 0.5_bd, 100, 0, nullptr);
+            break;
         default:
             midiClip->getSequence().addNote(72, 0_bp, 1_bd, 100, 0, nullptr);
-        midiClip->getSequence().addNote(74, 1_bp, 1_bd, 100, 0, nullptr);
-        break;
+            midiClip->getSequence().addNote(74, 1_bp, 1_bd, 100, 0, nullptr);
+            break;
     }
 
     edit.getTransport().ensureContextAllocated();
