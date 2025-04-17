@@ -83,8 +83,8 @@ if (WIN32)
             Resources/exampleGUISetup.h
             src/UI/TrackView-UI/TrackClip.cpp
             src/UI/TrackView-UI/TrackClip.h
-            src/UI/TrackView-UI/EditComponent.cpp
-            src/UI/TrackView-UI/EditComponent.h
+            src/UI/TrackView-UI/TrackListComponent.cpp
+            src/UI/TrackView-UI/TrackListComponent.h
             src/AppEngine/TrackManager.h
             src/AppEngine/TrackManager.cpp
             ${SQLITE_SOURCES}
@@ -140,8 +140,8 @@ elseif (APPLE)
             Resources/exampleGUISetup.h
             src/UI/TrackView-UI/TrackClip.cpp
             src/UI/TrackView-UI/TrackClip.h
-            src/UI/TrackView-UI/EditComponent.cpp
-            src/UI/TrackView-UI/EditComponent.h
+            src/UI/TrackView-UI/TrackListComponent.cpp
+            src/UI/TrackView-UI/TrackListComponent.h
             src/AppEngine/TrackManager.h
             src/AppEngine/TrackManager.cpp
             ${SQLITE_SOURCES}
