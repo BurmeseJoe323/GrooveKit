@@ -38,6 +38,9 @@ if (WIN32)
             src/UI/TrackView-UI/TrackView.cpp
             src/UI/TrackView-UI/TrackView.h
             src/UI/MainViews/AppView.h
+            src/UI/TestComponent.h
+            src/UI/TrackView-UI/TrackEditView.cpp
+            src/UI/TrackView-UI/TrackEditView.h
             src/AppEngine/AppEngine.h
             src/AppEngine/AppEngine.cpp
             src/MIDIEngine/MIDIEngine.h
@@ -76,8 +79,8 @@ if (WIN32)
             Resources/exampleGUISetup.h
             src/UI/TrackView-UI/TrackClip.cpp
             src/UI/TrackView-UI/TrackClip.h
-            src/UI/TrackView-UI/EditComponent.cpp
-            src/UI/TrackView-UI/EditComponent.h
+            src/UI/TrackView-UI/TrackListComponent.cpp
+            src/UI/TrackView-UI/TrackListComponent.h
             src/AppEngine/TrackManager.h
             src/AppEngine/TrackManager.cpp
     )
@@ -90,6 +93,9 @@ elseif (APPLE)
             src/UI/TrackView-UI/TrackView.cpp
             src/UI/TrackView-UI/TrackView.h
             src/UI/MainViews/AppView.h
+            src/UI/TestComponent.h
+            src/UI/TrackView-UI/TrackEditView.cpp
+            src/UI/TrackView-UI/TrackEditView.h
             src/AppEngine/AppEngine.h
             src/AppEngine/AppEngine.cpp
             src/MIDIEngine/MIDIEngine.h
@@ -128,8 +134,8 @@ elseif (APPLE)
             Resources/exampleGUISetup.h
             src/UI/TrackView-UI/TrackClip.cpp
             src/UI/TrackView-UI/TrackClip.h
-            src/UI/TrackView-UI/EditComponent.cpp
-            src/UI/TrackView-UI/EditComponent.h
+            src/UI/TrackView-UI/TrackListComponent.cpp
+            src/UI/TrackView-UI/TrackListComponent.h
             src/AppEngine/TrackManager.h
             src/AppEngine/TrackManager.cpp
     )
