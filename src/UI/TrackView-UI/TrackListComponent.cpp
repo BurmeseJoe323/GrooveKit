@@ -49,7 +49,7 @@ void TrackListComponent::resized()
 
 void TrackListComponent::addNewTrack (int index)
 {
-    auto* header = new TrackHeader();
+    auto* header = new TrackHeaderComponent();
     auto* newTrack = new TrackComponent (appEngine, index);
 
     header->addListener (newTrack);

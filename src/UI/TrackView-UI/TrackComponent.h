@@ -8,15 +8,15 @@
 
 #pragma once
 
-#include <juce_gui_basics/juce_gui_basics.h>
-#include "TrackHeader.h"
-#include "TrackClip.h"
 #include "../../AppEngine/AppEngine.h"
+#include "TrackClip.h"
+#include "TrackHeaderComponent.h"
+#include <juce_gui_basics/juce_gui_basics.h>
 
 ///TrackComponent provides track UI element that contains the following
 ///   - TrackHeader Component
 ///   - TrackClips Component
-class TrackComponent : public juce::Component, public TrackHeader::Listener {
+class TrackComponent : public juce::Component, public TrackHeaderComponent::Listener {
 public:
     TrackComponent(std::shared_ptr<AppEngine> engine, int trackIndex);
     ~TrackComponent() override;
@@ -34,7 +34,7 @@ private:
     int trackIndex;
 
     TrackClip trackClip;
-    TrackHeader trackHeader;
+    TrackHeaderComponent trackHeader;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TrackComponent)
 };

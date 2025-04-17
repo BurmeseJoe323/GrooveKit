@@ -6,9 +6,11 @@
 
 #include "../../AppEngine/AppEngine.h"
 #include "TrackComponent.h"
-#include "TrackHeader.h"
-#include <juce_gui_basics/juce_gui_basics.h>
+#include "TrackHeaderComponent.h"
 
+/**
+ * Represents the Component view holding tracks.
+ */
 class TrackListComponent final : public Component
 {
 public:
@@ -24,7 +26,7 @@ private:
     AppEngine& appEngine;
 
     OwnedArray<TrackComponent> tracks;
-    OwnedArray<TrackHeader> headers;
+    OwnedArray<TrackHeaderComponent> headers;
     // OwnedArray<TrackFooterComponent> footers;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackListComponent)

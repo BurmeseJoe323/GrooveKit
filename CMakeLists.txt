@@ -73,8 +73,8 @@ if (WIN32)
             src/UI/PopupWindows/PianoRollComponents/PianoRollMainComponent.h
             src/UI/TrackView-UI/TrackComponent.cpp
             src/UI/TrackView-UI/TrackComponent.h
-            src/UI/TrackView-UI/TrackHeader.cpp
-            src/UI/TrackView-UI/TrackHeader.h
+            src/UI/TrackView-UI/TrackHeaderComponent.cpp
+            src/UI/TrackView-UI/TrackHeaderComponent.h
             Resources/exampleGUISetup.cpp
             Resources/exampleGUISetup.h
             src/UI/TrackView-UI/TrackClip.cpp
@@ -128,8 +128,8 @@ elseif (APPLE)
             src/UI/PopupWindows/PianoRollComponents/PianoRollMainComponent.h
             src/UI/TrackView-UI/TrackComponent.cpp
             src/UI/TrackView-UI/TrackComponent.h
-            src/UI/TrackView-UI/TrackHeader.cpp
-            src/UI/TrackView-UI/TrackHeader.h
+            src/UI/TrackView-UI/TrackHeaderComponent.cpp
+            src/UI/TrackView-UI/TrackHeaderComponent.h
             Resources/exampleGUISetup.cpp
             Resources/exampleGUISetup.h
             src/UI/TrackView-UI/TrackClip.cpp

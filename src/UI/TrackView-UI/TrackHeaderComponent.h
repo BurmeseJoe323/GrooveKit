@@ -11,7 +11,7 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 using namespace juce;
-class TrackHeader : public Component{
+class TrackHeaderComponent : public Component{
 public:
     class Listener {
     public:
@@ -25,8 +25,8 @@ public:
 
 
 
-    TrackHeader();
-    ~TrackHeader();
+    TrackHeaderComponent();
+    ~TrackHeaderComponent();
 
 
     //selection control
@@ -47,7 +47,7 @@ private:
     bool selected = false;
 
     juce::ListenerList<Listener> listeners;
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackHeader)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackHeaderComponent)
 };
 
 

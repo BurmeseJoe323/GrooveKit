@@ -2,9 +2,9 @@
 // Created by ikera on 4/8/2025.
 //
 
-#include "TrackHeader.h"
+#include "TrackHeaderComponent.h"
 
-TrackHeader::TrackHeader() {
+TrackHeaderComponent::TrackHeaderComponent() {
   // add everything to view
   addAndMakeVisible(addClip);
   addAndMakeVisible(deleteTrackButton);
@@ -25,13 +25,13 @@ TrackHeader::TrackHeader() {
   trackNameLabel.setText("Track", juce::dontSendNotification);
 };
 
-TrackHeader::~TrackHeader() = default;
+TrackHeaderComponent::~TrackHeaderComponent() = default;
 
-void TrackHeader::paint(juce::Graphics &g) {
+void TrackHeaderComponent::paint(juce::Graphics &g) {
   g.fillAll(juce::Colours::beige);
 };
 
-void TrackHeader::resized() {
+void TrackHeaderComponent::resized() {
   // this will be the main layout
   // set as vertical layout
   juce::FlexBox mainFB;
