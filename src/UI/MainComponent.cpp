@@ -11,14 +11,20 @@
 MainComponent::MainComponent(AppEngine& engine)
     : appEngine(engine)
 {
+    databaseManager.initialize();
     setSize(600, 400);
 
     openTrackView.onClick = [this]() { showTrackView(); };
-    openTrackViewTut.onClick = [this]() {showTrackViewTutorial();};
+    openTrackViewTut.onClick = [this]() {
+        // display TrackView tutorial
+        showTrackViewTutorial();
+        // add Tutorial to the db.
+        databaseManager.addTutorial("TrackViewTutorial");
+    };
 
     addAndMakeVisible(openTrackView);
     addAndMakeVisible(openTrackViewTut);
-    databaseManager.initialize();
+
 }
 
 MainComponent::~MainComponent() = default;
@@ -67,7 +73,7 @@ void MainComponent::showTrackView() {
 }
 
 void MainComponent::showTrackViewTutorial() {
-    trackViewTut = std::make_unique<TrackViewTut>();
+    trackViewTut = std::make_unique<TrackViewTut>(databaseManager);
     addAndMakeVisible(trackViewTut.get());
 
     trackViewTut->setBounds(getLocalBounds());

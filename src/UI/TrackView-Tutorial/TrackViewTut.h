@@ -10,15 +10,19 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "../../DatabaseManager/DatabaseManager.h"
 
-class TrackViewTut : public juce::Component{
+using namespace juce;
+class TrackViewTut : public Component{
 public:
-    TrackViewTut();
+    TrackViewTut(DatabaseManager& dbManager);
     ~TrackViewTut() override;
 
-    void paint(juce::Graphics& g) override;
+    void paint(Graphics& g) override;
     void resized() override;
 private:
-    juce::TextButton goBack {"Home"};
+
+    DatabaseManager& db;
+    TextButton goBack {"Home"};
+    TextButton endTutorial {"Complete Tutorial"};
     // below are examples of creating buttons and labels
     // juce::TextButton addClip {"simpl"};
     // juce::Label trackNameLabel {"Track"};
