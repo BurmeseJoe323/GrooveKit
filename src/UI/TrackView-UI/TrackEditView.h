@@ -6,21 +6,18 @@
 
 #include "../../AppEngine/AppEngine.h"
 #include "TrackListComponent.h"
-#include <juce_gui_basics/juce_gui_basics.h>
 
-/// TrackView will provide all of the necessary UI features of a
-/// track view, Tracks, edit and loading, and many other features
-/// This will be done by including many subcomponents within the
-/// TrackView Component
-/// Example:
-///     - TrackComponent
+/**
+ * Represents the track editor view, with functionality for adding and deleting tracks.
+ * Each track contains a corresponding header, footer, and a series of MIDI clips.
+ */
 class TrackEditView final : public Component
 {
 public:
-    void setupButtons();
     explicit TrackEditView (AppEngine& engine);
     ~TrackEditView() override;
 
+    void setupButtons();
     void paint (Graphics&) override;
     void resized() override;
 
