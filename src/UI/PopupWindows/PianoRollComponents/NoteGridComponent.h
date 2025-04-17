@@ -22,7 +22,7 @@ public:
     int startX, startY;
 };
 
-class NoteGridComponent : public juce::Component, juce::KeyListener {
+class NoteGridComponent : public juce::Component {
 public:
     NoteGridComponent(GridStyleSheet &sheet);
     ~NoteGridComponent() override;
@@ -50,7 +50,7 @@ public:
     void setupGrid (float pixelsPerBar, float compHeight, const int bars);
     void setQuantisation (const int val);
 
-    bool keyPressed (const juce::KeyPress& key, Component* originatingComponent) override;
+    // bool keyPressed (const juce::KeyPress& key, Component* originatingComponent) override;
     void deleteAllSelected ();
 
     // From here you could convert this into MIDI or any other custom musical encoding.

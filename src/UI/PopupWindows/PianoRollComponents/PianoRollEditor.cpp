@@ -33,6 +33,18 @@ PianoRollEditor::PianoRollEditor() : noteGrid(gridStyleSheet), controlPanel(note
         setup(10, pixelsPerBar, noteHeight);
     };
 
+    noteGrid.onEdit = [this]() //pass up the chain.
+    {
+        if (this->onEdit != nullptr) {
+            this->onEdit();
+        }
+    };
+    noteGrid.sendChange = [this](int note, int vel) {
+        if (this->sendChange != nullptr) {
+            this->sendChange(note, vel);
+        }
+    };
+
     playbackTicks = 0;
     showPlaybackMarker = false;
 }

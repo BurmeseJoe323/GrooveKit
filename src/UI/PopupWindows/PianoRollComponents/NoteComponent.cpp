@@ -32,7 +32,7 @@ void NoteComponent::paint(juce::Graphics &g) {
         colourToUse = juce::Colour(252, 97, 92);
     }
 
-    if (state || mouseOver) {
+    if (state == eSelected || mouseOver) {
         colourToUse = colourToUse.brighter(0.8);
     }
     g.setColour(colourToUse);
@@ -40,23 +40,23 @@ void NoteComponent::paint(juce::Graphics &g) {
     // Draw middle box
     g.fillRect(1, 1, getWidth() - 2, getHeight() - 2);
 
-    if (styleSheet.getDrawVelocity() && getWidth() > 10) {
-        g.setColour(colourToUse.brighter());
-        const int lineMax = getWidth() - 5;
-        g.drawLine(5, getHeight() * 0.5 - 2, lineMax * (model.getVelocity() / 127.0), getHeight() * 0.5 - 2, 4);
-    }
+    // if (styleSheet.getDrawVelocity() && getWidth() > 10) {
+    //     g.setColour(colourToUse.brighter());
+    //     const int lineMax = getWidth() - 5;
+    //     g.drawLine(5, getHeight() * 0.5 - 2, lineMax * (model.getVelocity() / 127.0), getHeight() * 0.5 - 2, 4);
+    // }
 
-    juce::String toDraw;
-    if (styleSheet.getDrawMIDINoteStr()) {
-        toDraw += juce::String(PRE::pitches_names[model.getNote() % 12]) + juce::String(model.getNote() / 12) +
-                juce::String(" ");
-    }
-    if (styleSheet.getDrawMIDINum()) {
-        toDraw += juce::String(model.getNote());
-    }
+    // juce::String toDraw;
+    // if (styleSheet.getDrawMIDINoteStr()) {
+    //     toDraw += juce::String(PRE::pitches_names[model.getNote() % 12]) + juce::String(model.getNote() / 12) +
+    //             juce::String(" ");
+    // }
+    // if (styleSheet.getDrawMIDINum()) {
+    //     toDraw += juce::String(model.getNote());
+    // }
 
-    g.setColour(juce::Colours::white);
-    g.drawText(juce::String(toDraw), 3, 3, getWidth() - 6, getHeight() - 6, juce::Justification::centred);
+    // g.setColour(juce::Colours::white);
+    // g.drawText(juce::String(toDraw), 3, 3, getWidth() - 6, getHeight() - 6, juce::Justification::centred);
 }
 
 void NoteComponent::resized() {

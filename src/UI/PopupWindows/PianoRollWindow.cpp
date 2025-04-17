@@ -19,3 +19,11 @@ PianoRollWindow::~PianoRollWindow() = default;
 void PianoRollWindow::closeButtonPressed() {
     setVisible(false);
 }
+
+void PianoRollWindow::activeWindowStatusChanged() {
+    if (isActiveWindow()) {
+        if (auto *content = getContentComponent()) {
+            content->grabKeyboardFocus();
+        }
+    }
+}

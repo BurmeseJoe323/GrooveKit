@@ -29,7 +29,8 @@ private:
     juce::Slider noteCompHeight, pixelsPerBar;
 
     juce::TextButton render;
-    juce::ToggleButton drawMIDINotes, drawMIDIText, drawVelocity;
+    juce::TextButton deleteNotes;
+    // juce::ToggleButton drawMIDINotes, drawMIDIText, drawVelocity;
 
     juce::ComboBox quantisationValue;
 };

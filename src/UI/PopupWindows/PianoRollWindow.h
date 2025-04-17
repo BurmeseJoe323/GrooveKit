@@ -13,6 +13,7 @@ public:
     ~PianoRollWindow() override;
 
     void closeButtonPressed() override;
+    void activeWindowStatusChanged() override;
 };
 
 #endif //PIANOROLLWINDOW_H
