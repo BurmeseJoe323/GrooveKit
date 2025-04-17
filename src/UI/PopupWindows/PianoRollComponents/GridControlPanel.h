@@ -17,7 +17,6 @@ public:
     void resized () override;
     void paint (juce::Graphics & g) override;
 
-    void renderSequence ();
     std::function<void(int pixelsPerBar, int noteHeight)> configureGrid;
 
     void setQuantisation (PRE::eQuantisationValue value);
@@ -28,7 +27,6 @@ private:
 
     juce::Slider noteCompHeight, pixelsPerBar;
 
-    juce::TextButton render;
     juce::TextButton deleteNotes;
     // juce::ToggleButton drawMIDINotes, drawMIDIText, drawVelocity;
 

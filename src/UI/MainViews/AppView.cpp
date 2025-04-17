@@ -63,8 +63,8 @@ void AppView::openPianoRoll() {
         pianoRollWindow = std::make_unique<PianoRollWindow>();
         addAndMakeVisible(pianoRollWindow.get());
         pianoRollWindow->addToDesktop(pianoRollWindow->getDesktopWindowStyleFlags());
-        // pianoRollWindow->setVisible(true);
         pianoRollWindow->toFront(true);
+        pianoRollWindow->centreWithSize(pianoRollWindow->getWidth(), pianoRollWindow->getHeight());
     } else {
         pianoRollWindow->setVisible(true);
         pianoRollWindow->toFront(true);
