@@ -33,19 +33,12 @@ GridControlPanel::GridControlPanel(NoteGridComponent &component, GridStyleSheet 
     // addAndMakeVisible(drawMIDINotes);
     // addAndMakeVisible(drawMIDIText);
     // addAndMakeVisible(drawVelocity);
-    addAndMakeVisible(render);
     addAndMakeVisible(deleteNotes);
 
-
-    render.setButtonText("Render");
     deleteNotes.setButtonText("Delete notes");
     // drawMIDINotes.setButtonText("Draw MIDI Notes");
     // drawMIDIText.setButtonText("Draw MIDI Text");
     // drawVelocity.setButtonText("Draw Velocity");
-
-    render.onClick = [this]() {
-        renderSequence();
-    };
 
     deleteNotes.onClick = [this]() {
         noteGrid.deleteAllSelected();
@@ -91,14 +84,9 @@ void GridControlPanel::resized() {
     // drawMIDIText.setBounds(pixelsPerBar.getRight() + 5, drawMIDINotes.getBottom() + 5, 200, drawMIDINotes.getHeight());
     // drawVelocity.setBounds(pixelsPerBar.getRight() + 5, drawMIDIText.getBottom() + 5, 200, drawMIDINotes.getHeight());
 
-    render.setBounds(getWidth() - 100, 5, 95, 40);
-    deleteNotes.setBounds(getWidth() - 100, render.getBottom() + 5, 95, 40);
-    quantisationValue.setBounds(render.getX() - 250, 5, 200, render.getHeight());
+    quantisationValue.setBounds(getWidth() - 250, 5, 200, 40);
+    deleteNotes.setBounds(quantisationValue.getX() - 150, 5, 120, quantisationValue.getHeight());
 }
 
 void GridControlPanel::paint(juce::Graphics &g) {
-}
-
-void GridControlPanel::renderSequence() {
-    //warning this needs to be moved..
 }

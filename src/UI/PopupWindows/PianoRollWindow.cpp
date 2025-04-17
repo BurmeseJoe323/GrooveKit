@@ -11,7 +11,6 @@ PianoRollWindow::PianoRollWindow() : DocumentWindow("Piano Roll Editor", juce::C
     setContentOwned(new PianoRollMainComponent(), true);
 
     setResizable(true, false);
-    centreWithSize(getWidth(), getHeight());
 }
 
 PianoRollWindow::~PianoRollWindow() = default;
