@@ -7,7 +7,7 @@
 GridStyleSheet::GridStyleSheet() {
     drawMIDINum = false;
     drawMIDINoteStr = false;
-    drawVelocity = true;
+    drawVelocity = false;
     disableEditing = false;
 }
 

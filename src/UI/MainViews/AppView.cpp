@@ -61,9 +61,13 @@ void AppView::paint (juce::Graphics& g) {
 void AppView::openPianoRoll() {
     if (pianoRollWindow == nullptr) {
         pianoRollWindow = std::make_unique<PianoRollWindow>();
-        pianoRollWindow->setVisible(true);
+        addAndMakeVisible(pianoRollWindow.get());
+        pianoRollWindow->addToDesktop(pianoRollWindow->getDesktopWindowStyleFlags());
+        // pianoRollWindow->setVisible(true);
+        pianoRollWindow->toFront(true);
     } else {
         pianoRollWindow->setVisible(true);
+        pianoRollWindow->toFront(true);
     }
 }
 

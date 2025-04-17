@@ -30,28 +30,34 @@ GridControlPanel::GridControlPanel(NoteGridComponent &component, GridStyleSheet 
     noteCompHeight.onValueChange = pixelsPerBar.onValueChange;
 
 
-    addAndMakeVisible(drawMIDINotes);
-    addAndMakeVisible(drawMIDIText);
-    addAndMakeVisible(drawVelocity);
+    // addAndMakeVisible(drawMIDINotes);
+    // addAndMakeVisible(drawMIDIText);
+    // addAndMakeVisible(drawVelocity);
     addAndMakeVisible(render);
+    addAndMakeVisible(deleteNotes);
 
 
     render.setButtonText("Render");
-    drawMIDINotes.setButtonText("Draw MIDI Notes");
-    drawMIDIText.setButtonText("Draw MIDI Text");
-    drawVelocity.setButtonText("Draw Velocity");
+    deleteNotes.setButtonText("Delete notes");
+    // drawMIDINotes.setButtonText("Draw MIDI Notes");
+    // drawMIDIText.setButtonText("Draw MIDI Text");
+    // drawVelocity.setButtonText("Draw Velocity");
 
     render.onClick = [this]() {
         renderSequence();
     };
 
-    drawMIDIText.onClick = [this]() {
-        styleSheet.drawMIDINoteStr = drawMIDIText.getToggleState();
-        styleSheet.drawMIDINum = drawMIDINotes.getToggleState();
-        styleSheet.drawVelocity = drawVelocity.getToggleState();
-        noteGrid.repaint();
+    deleteNotes.onClick = [this]() {
+        noteGrid.deleteAllSelected();
     };
-    drawVelocity.onClick = drawMIDINotes.onClick = drawMIDIText.onClick;
+
+    // drawMIDIText.onClick = [this]() {
+    //     styleSheet.drawMIDINoteStr = drawMIDIText.getToggleState();
+    //     styleSheet.drawMIDINum = drawMIDINotes.getToggleState();
+    //     styleSheet.drawVelocity = drawVelocity.getToggleState();
+    //     noteGrid.repaint();
+    // };
+    // drawVelocity.onClick = drawMIDINotes.onClick = drawMIDIText.onClick;
 
     addAndMakeVisible(quantisationValue);
     quantisationValue.addItem("1/64", PRE::eQuantisationValueNone + 1);
@@ -81,12 +87,13 @@ void GridControlPanel::resized() {
                                    noteCompHeight.getHeight() - 5);
 
 
-    drawMIDINotes.setBounds(pixelsPerBar.getRight() + 5, 5, 150, (getHeight() / 3) - 10);
-    drawMIDIText.setBounds(pixelsPerBar.getRight() + 5, drawMIDINotes.getBottom() + 5, 200, drawMIDINotes.getHeight());
-    drawVelocity.setBounds(pixelsPerBar.getRight() + 5, drawMIDIText.getBottom() + 5, 200, drawMIDINotes.getHeight());
+    // drawMIDINotes.setBounds(pixelsPerBar.getRight() + 5, 5, 150, (getHeight() / 3) - 10);
+    // drawMIDIText.setBounds(pixelsPerBar.getRight() + 5, drawMIDINotes.getBottom() + 5, 200, drawMIDINotes.getHeight());
+    // drawVelocity.setBounds(pixelsPerBar.getRight() + 5, drawMIDIText.getBottom() + 5, 200, drawMIDINotes.getHeight());
 
     render.setBounds(getWidth() - 100, 5, 95, 40);
-    quantisationValue.setBounds(drawMIDINotes.getRight() + 5, 5, 200, drawMIDINotes.getHeight());
+    deleteNotes.setBounds(getWidth() - 100, render.getBottom() + 5, 95, 40);
+    quantisationValue.setBounds(render.getX() - 250, 5, 200, render.getHeight());
 }
 
 void GridControlPanel::paint(juce::Graphics &g) {

@@ -10,14 +10,19 @@ NoteGridComponent::NoteGridComponent(GridStyleSheet &sheet) : styleSheet(sheet) 
     blackPitches = {1, 3, 6, 8, 10};
 
     addChildComponent(&selectorBox);
-    addKeyListener(this);
-    setWantsKeyboardFocus(true);
+
+    // NOTE: key presses don't work in this current implementation. In the more polished piano roll, they
+    // should work
+    // addKeyListener(this);
+    // setWantsKeyboardFocus(true);
     currentQValue = PRE::quantisedDivisionValues[PRE::eQuantisationValue1_32];
     lastNoteLength = PRE::quantisedDivisionValues[PRE::eQuantisationValue1_4];
     firstDrag = false;
     firstCall = false;
     lastTrigger = -1;
-    ticksPerTimeSignature = PRE::defaultResolution * 4; //4/4 assume
+    ticksPerTimeSignature = PRE::defaultResolution * 4; // 4/4 assume
+    pixelsPerBar = 0;
+    noteCompHeight = 0;
 }
 
 NoteGridComponent::~NoteGridComponent() {
@@ -259,6 +264,7 @@ void NoteGridComponent::mouseDown(const juce::MouseEvent &) {
         component->setState(NoteComponent::eNone);
     }
     sendEdit();
+    grabKeyboardFocus();
 }
 
 void NoteGridComponent::mouseDrag(const juce::MouseEvent &e) {
@@ -361,63 +367,63 @@ void NoteGridComponent::mouseDoubleClick(const juce::MouseEvent &e) {
     sendEdit();
 }
 
-bool NoteGridComponent::keyPressed(const juce::KeyPress &key, Component *originatingComponent) {
-    // #ifndef LIB_VERSION
-    //     LOG_KEY_PRESS(key.getKeyCode(), 1, key.getModifiers().getRawFlags());
-    // #endif
-
-    if (styleSheet.disableEditing) {
-        return true;
-    }
-    if (key == juce::KeyPress::backspaceKey) {
-        //
-        deleteAllSelected();
-        sendEdit();
-        return true;
-    } else if (key == juce::KeyPress::upKey || key == juce::KeyPress::downKey) {
-        bool didMove = false;
-        for (auto nComp: noteComps) {
-            if (nComp->getState() == NoteComponent::eSelected) {
-                NoteModel nModel = nComp->getModel();
-
-                (key == juce::KeyPress::upKey)
-                    ? nModel.setNote(nModel.getNote() + 1)
-                    : nModel.setNote(nModel.getNote() - 1);
-
-                nModel.sendChange = sendChange;
-                nComp->setValues(nModel);
-                didMove = true;
-            }
-        }
-        if (didMove) {
-            sendEdit();
-            resized();
-            return true;
-        }
-    } else if (key == juce::KeyPress::leftKey || key == juce::KeyPress::rightKey) {
-        bool didMove = false;
-        const int nudgeAmount = currentQValue;
-        for (auto noteComponent: noteComps) {
-            if (noteComponent->getState() == NoteComponent::eSelected) {
-                NoteModel noteModel = noteComponent->getModel();
-
-                (key == juce::KeyPress::rightKey)
-                    ? noteModel.setStartTime(noteModel.getStartTime() + nudgeAmount)
-                    : noteModel.setStartTime(noteModel.getStartTime() - nudgeAmount);
-
-                noteModel.sendChange = sendChange;
-                noteComponent->setValues(noteModel);
-                didMove = true;
-            }
-        }
-        if (didMove) {
-            sendEdit();
-            resized();
-            return true;
-        }
-    }
-    return false;
-}
+// bool NoteGridComponent::keyPressed(const juce::KeyPress &key, Component *originatingComponent) {
+//     // #ifndef LIB_VERSION
+//     //     LOG_KEY_PRESS(key.getKeyCode(), 1, key.getModifiers().getRawFlags());
+//     // #endif
+//
+//     if (styleSheet.disableEditing) {
+//         return true;
+//     }
+//     if (key == juce::KeyPress::backspaceKey) {
+//         //
+//         deleteAllSelected();
+//         sendEdit();
+//         return true;
+//     } else if (key == juce::KeyPress::upKey || key == juce::KeyPress::downKey) {
+//         bool didMove = false;
+//         for (auto nComp: noteComps) {
+//             if (nComp->getState() == NoteComponent::eSelected) {
+//                 NoteModel nModel = nComp->getModel();
+//
+//                 (key == juce::KeyPress::upKey)
+//                     ? nModel.setNote(nModel.getNote() + 1)
+//                     : nModel.setNote(nModel.getNote() - 1);
+//
+//                 nModel.sendChange = sendChange;
+//                 nComp->setValues(nModel);
+//                 didMove = true;
+//             }
+//         }
+//         if (didMove) {
+//             sendEdit();
+//             resized();
+//             return true;
+//         }
+//     } else if (key == juce::KeyPress::leftKey || key == juce::KeyPress::rightKey) {
+//         bool didMove = false;
+//         const int nudgeAmount = currentQValue;
+//         for (auto noteComponent: noteComps) {
+//             if (noteComponent->getState() == NoteComponent::eSelected) {
+//                 NoteModel noteModel = noteComponent->getModel();
+//
+//                 (key == juce::KeyPress::rightKey)
+//                     ? noteModel.setStartTime(noteModel.getStartTime() + nudgeAmount)
+//                     : noteModel.setStartTime(noteModel.getStartTime() - nudgeAmount);
+//
+//                 noteModel.sendChange = sendChange;
+//                 noteComponent->setValues(noteModel);
+//                 didMove = true;
+//             }
+//         }
+//         if (didMove) {
+//             sendEdit();
+//             resized();
+//             return true;
+//         }
+//     }
+//     return false;
+// }
 
 void NoteGridComponent::deleteAllSelected() {
     std::vector<NoteComponent *> itemsToKeep;
