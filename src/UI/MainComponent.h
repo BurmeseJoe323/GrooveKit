@@ -9,6 +9,7 @@
 #include "../AppEngine/AppEngine.h"
 #include "TrackView-Tutorial/TrackViewTut.h"
 #include "../DatabaseManager/DatabaseManager.h"
+#include "InstrumentTutorial/InstrumentTutorial.h"
 
 class MainComponent : public juce::Component
 {
@@ -21,10 +22,13 @@ public:
 private:
     TextButton openTrackView {"OPEN TRACKVIEW"};
     TextButton openTrackViewTut {"TrackView Tutorial"};
+    TextButton openInstTutorial {"Instrument Tutorial"};
     std::unique_ptr<TrackView> trackView;
     std::unique_ptr<TrackViewTut> trackViewTut;
+    std::unique_ptr<InstrumentTutorial> instTutorial;
     AppEngine& appEngine;
     DatabaseManager databaseManager;
     void showTrackView();
     void showTrackViewTutorial();
+    void showInstrumentTutorial();
 };

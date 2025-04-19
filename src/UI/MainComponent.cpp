@@ -6,6 +6,7 @@
 
 
 #include "TrackView-UI/TrackView.h"
+#include "InstrumentTutorial/InstrumentTutorial.h"
 
 
 MainComponent::MainComponent(AppEngine& engine)
@@ -15,6 +16,7 @@ MainComponent::MainComponent(AppEngine& engine)
     setSize(600, 400);
 
     openTrackView.onClick = [this]() { showTrackView(); };
+    openInstTutorial.onClick = [this]() { showInstrumentTutorial(); };
     openTrackViewTut.onClick = [this]() {
         // display TrackView tutorial
         showTrackViewTutorial();
@@ -24,6 +26,7 @@ MainComponent::MainComponent(AppEngine& engine)
 
     addAndMakeVisible(openTrackView);
     addAndMakeVisible(openTrackViewTut);
+    addAndMakeVisible(openInstTutorial);
 
 }
 
@@ -55,6 +58,12 @@ void MainComponent::resized()
             .withFlex(1.0f, 1.0f)
             .withMinWidth(50.0f)
             .withMinHeight(30.0f)
+            .withMargin({5.0f, 10.0f, 5.0f, 10.0f}),
+
+        FlexItem(openInstTutorial)
+            .withFlex(1.0f, 1.0f)
+            .withMinWidth(50.0f)
+            .withMinHeight(30.0f)
             .withMargin({5.0f, 10.0f, 5.0f, 10.0f})
     });
 
@@ -78,6 +87,25 @@ void MainComponent::showTrackViewTutorial() {
 
     trackViewTut->setBounds(getLocalBounds());
     openTrackView.setVisible(false);
+}
+
+void MainComponent::showInstrumentTutorial() {
+    instTutorial = std::make_unique<InstrumentTutorial>();
+
+    instTutorial->onFinishTutorial = [this]() {
+        instTutorial.reset();
+        openTrackView.setVisible(true);
+        openTrackViewTut.setVisible(true);
+        openInstTutorial.setVisible(true);
+        resized();
+    };
+
+    addAndMakeVisible(instTutorial.get());
+    instTutorial->setBounds(getLocalBounds());
+
+    openTrackView.setVisible(false);
+    openTrackViewTut.setVisible(false);
+    openInstTutorial.setVisible(false);
 }
 
     // layout child components here

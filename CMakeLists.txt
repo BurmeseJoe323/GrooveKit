@@ -31,6 +31,8 @@ juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_engine)
 set(SQLITE_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/third-party/database/sqlite3.c
         ${CMAKE_CURRENT_SOURCE_DIR}/third-party/database/sqlite3.h
+        src/UI/InstrumentTutorial/InstrumentTutorial.cpp
+        src/UI/InstrumentTutorial/InstrumentTutorial.h
 )
 
 # Build based on platform
