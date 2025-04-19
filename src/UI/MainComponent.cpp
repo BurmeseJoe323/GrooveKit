@@ -11,10 +11,20 @@
 MainComponent::MainComponent(AppEngine& engine)
     : appEngine(engine)
 {
+    databaseManager.initialize();
     setSize(600, 400);
 
     openTrackView.onClick = [this]() { showTrackView(); };
+    openTrackViewTut.onClick = [this]() {
+        // display TrackView tutorial
+        showTrackViewTutorial();
+        // add Tutorial to the db.
+        databaseManager.addTutorial("TrackViewTutorial");
+    };
+
     addAndMakeVisible(openTrackView);
+    addAndMakeVisible(openTrackViewTut);
+
 }
 
 MainComponent::~MainComponent() = default;
@@ -29,16 +39,44 @@ void MainComponent::paint(juce::Graphics& g)
 
 void MainComponent::resized()
 {
+    FlexBox box;
+    box.flexDirection = FlexBox::Direction::row;
+    box.justifyContent = FlexBox::JustifyContent::spaceBetween;
+    box.alignItems = FlexBox::AlignItems::flexEnd;
 
-    openTrackView.setBounds(getWidth() - 176, getHeight() - 60, 120, 32);
-    // layout child components here
+    box.items.addArray({
+        FlexItem(openTrackView)
+            .withFlex(1.0f, 1.0f)
+            .withMinWidth(50.0f)
+            .withMinHeight(30.0f)
+            .withMargin({5.0f, 10.0f, 5.0f, 10.0f}),
+
+        FlexItem(openTrackViewTut)
+            .withFlex(1.0f, 1.0f)
+            .withMinWidth(50.0f)
+            .withMinHeight(30.0f)
+            .withMargin({5.0f, 10.0f, 5.0f, 10.0f})
+    });
+
+    box.performLayout(getLocalBounds().reduced(10));  // Add overall padding
 }
 
 void MainComponent::showTrackView() {
     trackView = std::make_unique<TrackView>(appEngine);
-    auto view = std::make_unique<TrackView>(appEngine);
+
+    // why do we have this??
+    //auto view = std::make_unique<TrackView>(appEngine);
+
     addAndMakeVisible(trackView.get());
     trackView->setBounds(getLocalBounds());
+    openTrackView.setVisible(false);
+}
+
+void MainComponent::showTrackViewTutorial() {
+    trackViewTut = std::make_unique<TrackViewTut>(databaseManager);
+    addAndMakeVisible(trackViewTut.get());
+
+    trackViewTut->setBounds(getLocalBounds());
     openTrackView.setVisible(false);
 }
 

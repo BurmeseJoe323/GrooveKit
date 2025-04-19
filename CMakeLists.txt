@@ -27,6 +27,11 @@ juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_graph)
 # Add Tracktion Engine
 juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_engine)
 
+# Add this somewhere before your add_executable
+set(SQLITE_SOURCES
+        ${CMAKE_CURRENT_SOURCE_DIR}/third-party/database/sqlite3.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/third-party/database/sqlite3.h
+)
 
 # Build based on platform
 if (WIN32)
@@ -56,6 +61,11 @@ if (WIN32)
             src/UI/TrackView-UI/EditComponent.h
             src/AppEngine/TrackManager.h
             src/AppEngine/TrackManager.cpp
+            ${SQLITE_SOURCES}
+            src/UI/TrackView-Tutorial/TrackViewTut.cpp
+            src/UI/TrackView-Tutorial/TrackViewTut.h
+            src/DatabaseManager/DatabaseManager.cpp
+            src/DatabaseManager/DatabaseManager.h
     )
 elseif (APPLE)
     # macOS: Build as console app (uses main via JUCE)
@@ -84,6 +94,11 @@ elseif (APPLE)
             src/UI/TrackView-UI/EditComponent.h
             src/AppEngine/TrackManager.h
             src/AppEngine/TrackManager.cpp
+            ${SQLITE_SOURCES}
+            src/UI/TrackView-Tutorial/TrackViewTut.cpp
+            src/UI/TrackView-Tutorial/TrackViewTut.h
+            src/DatabaseManager/DatabaseManager.cpp
+            src/DatabaseManager/DatabaseManager.h
     )
 endif()
 
@@ -102,4 +117,9 @@ target_link_libraries(GrooveKit PRIVATE
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags
+)
+
+# Add include directory
+target_include_directories(GrooveKit PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sqlite
 )
