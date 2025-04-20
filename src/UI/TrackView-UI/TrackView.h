@@ -17,7 +17,7 @@ using namespace juce;
 ///     - TrackComponent
 class TrackView : public juce::Component {
 public:
-    explicit TrackView(AppEngine& engine);
+    explicit TrackView();
     ~TrackView() override;
 
     void paint(juce::Graphics&) override;
@@ -27,5 +27,5 @@ private:
                openEditButton {"Open Edit"}, newTrackButton { "New Track" }, recordButton { "Record" };
 
     std::unique_ptr<EditComponent> editComponent;
-    AppEngine& appEngine;
+    std::shared_ptr<AppEngine> appEngine;
 };

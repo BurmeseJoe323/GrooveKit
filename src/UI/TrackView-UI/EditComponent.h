@@ -13,7 +13,7 @@
 using namespace juce;
 class EditComponent : public juce::Component{
 public:
-    explicit EditComponent(AppEngine& engine);
+    explicit EditComponent(std::shared_ptr<AppEngine> engine);
     ~EditComponent();
 
     void paint(juce::Graphics& g) override;
@@ -26,7 +26,7 @@ private:
 
     // void removeSelectedTracks();
     // bool keyPressed(const KeyPress& key) override;
-    AppEngine& appEngine;
+    std::shared_ptr<AppEngine> appEngine;
     OwnedArray<TrackComponent> tracks;
     OwnedArray<TrackHeader> headers;
     // OwnedArray<TrackFooterComponent> footers;

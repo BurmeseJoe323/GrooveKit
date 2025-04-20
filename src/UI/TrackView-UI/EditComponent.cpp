@@ -7,7 +7,8 @@
 
 #include <tracktion_engine/audio_files/formats/tracktion_FFmpegEncoderAudioFormat.h>
 
-EditComponent::EditComponent(AppEngine& engine) : appEngine(engine) {
+EditComponent::EditComponent(std::shared_ptr<AppEngine> engine) : appEngine(engine)
+{
     //Add initial track pair
     //addNewTrack();
     setWantsKeyboardFocus(true);
