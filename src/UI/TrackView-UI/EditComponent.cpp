@@ -9,7 +9,6 @@
 
 EditComponent::EditComponent(AppEngine& engine) : appEngine(engine) {
     //Add initial track pair
-    //addNewTrack();
     setWantsKeyboardFocus(true);
 }
 
@@ -40,7 +39,8 @@ void EditComponent::resized() {
     }
 }
 
-void EditComponent::addNewTrack(int index) {
+void EditComponent::addNewTrack() {
+    int index = tracks.size();
     auto* header = new TrackHeader();
     auto* newTrack = new TrackComponent(appEngine, index);
 
