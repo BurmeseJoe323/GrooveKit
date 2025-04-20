@@ -1,21 +1,22 @@
 #include "TrackView.h"
 #include "../../AppEngine/AppEngine.h"
 
-TrackView::TrackView(AppEngine& engine) : appEngine(engine) {
+TrackView::TrackView()
+{
     // playButton.onClick = [this]() { engine.play(); };
     // stopButton.onClick = [this]() { engine.stop(); };
+    appEngine = std::make_shared<AppEngine>();
 
     newTrackButton.onClick = [this]() {
-        if (editComponent != nullptr) {
-            int index = appEngine.addMidiTrack();
-            editComponent->addNewTrack(index);
-        }
+        appEngine->addMidiTrack();          // 🔧 Backend update
+        if (editComponent != nullptr)
+            editComponent->addNewTrack();  // 🖼️ UI update
     };
 
     playPauseButton.onClick = [this]() {
-        appEngine.play();
+        appEngine->play();
     };
-    stopButton.onClick = [this]() {appEngine.stop();};
+    stopButton.onClick = [this]() {appEngine->stop();};
 
     addAndMakeVisible(newEditButton);
     addAndMakeVisible(playPauseButton);
@@ -56,6 +57,7 @@ void TrackView::resized()
     if (editComponent != nullptr)
         editComponent->setBounds(r);
 }
+
 
 
 
