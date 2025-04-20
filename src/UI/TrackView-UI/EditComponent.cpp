@@ -7,10 +7,9 @@
 
 #include <tracktion_engine/audio_files/formats/tracktion_FFmpegEncoderAudioFormat.h>
 
-EditComponent::EditComponent() {
+EditComponent::EditComponent(AppEngine& engine) : appEngine(engine) {
     //Add initial track pair
-    addNewTrack();
-    addNewTrack();
+    //addNewTrack();
     setWantsKeyboardFocus(true);
 }
 
@@ -42,11 +41,21 @@ void EditComponent::resized() {
 }
 
 void EditComponent::addNewTrack() {
+    int index = tracks.size();
     auto* header = new TrackHeader();
-    auto* newTrack = new TrackComponent();
+    auto* newTrack = new TrackComponent(appEngine, index);
 
-    // Connect header's add clip button to track
     header->addListener(newTrack);
+
+    newTrack->onRequestDeleteTrack = [this](int index) {
+        if (index >= 0 && index < tracks.size()) {
+            removeChildComponent(headers[index]);
+            removeChildComponent(tracks[index]);
+            headers.remove(index);
+            tracks.remove(index);
+            resized();
+        }
+    };
 
     headers.add(header);
     tracks.add(newTrack);

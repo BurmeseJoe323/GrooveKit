@@ -1,6 +1,8 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 
 #include "UI/MainComponent.h"
+#include "UI/TestComponent.h"
+#include "AppEngine/AppEngine.h"
 
 
 class MainWindow : public juce::DocumentWindow
@@ -23,6 +25,7 @@ public:
     {
         juce::JUCEApplication::getInstance()->systemRequestedQuit();
     }
+
 };
 
 class GrooveKitApplication : public juce::JUCEApplication

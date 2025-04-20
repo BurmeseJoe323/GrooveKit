@@ -4,10 +4,8 @@
 
 #include "TrackComponent.h"
 
-#include <tracktion_engine/utilities/tracktion_Identifiers.h>
-
 using namespace juce;
-TrackComponent::TrackComponent() {
+TrackComponent::TrackComponent(AppEngine& engine, int index) : appEngine(engine), trackIndex(index){
     addAndMakeVisible(trackClip);
 }
 
@@ -40,8 +38,14 @@ void TrackComponent::resized() {
 
 
 void TrackComponent::onAddClipClicked() {
-    // TODO: fix onAddClipclicked()
-    DBG("clicked add clip");
+    DBG("Add Clip clicked for track index: " << trackIndex);
+    appEngine.addMidiClipToTrack(trackIndex);
+}
+
+void TrackComponent::onDeleteTrackClicked() {
+    DBG("Delete clicked for track index: " << trackIndex);
+    if (onRequestDeleteTrack)
+        onRequestDeleteTrack(trackIndex);
 }
 
 

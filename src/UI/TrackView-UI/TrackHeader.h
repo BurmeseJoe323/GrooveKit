@@ -17,13 +17,17 @@ public:
     public:
         virtual ~Listener() = default;
         virtual void onAddClipClicked() = 0;
+        virtual void onDeleteTrackClicked() = 0;
     };
 
     void addListener(Listener* listener) {listeners.add(listener);}
     void removeListener(Listener* listener) {listeners.remove(listener);}
 
+
+
     TrackHeader();
     ~TrackHeader();
+
 
     //selection control
     // void mouseDown(const MouseEvent& event) override;
@@ -38,6 +42,7 @@ public:
 
 private:
     juce::TextButton addClip {"Add"};
+    juce::TextButton deleteTrackButton { "Delete" };
     juce::Label trackNameLabel {"Track"};
     bool selected = false;
 

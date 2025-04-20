@@ -26,9 +26,10 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
     if (midiClip == nullptr)
         return;
     int offset = 0 + trackIndex;
-
-    switch (trackIndex)
+    int patternIndex = trackIndex % 4;
+    switch (patternIndex)
     {
+        DBG("Pattern index: " << patternIndex);
         case 0:  // Bass
             midiClip->getSequence().addNote(36, 0_bp, 1_bd, 100, 0, nullptr);
         midiClip->getSequence().addNote(40, 1_bp, 1_bd, 100, 0, nullptr);

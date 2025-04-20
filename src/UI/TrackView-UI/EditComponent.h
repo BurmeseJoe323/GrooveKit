@@ -8,24 +8,25 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "TrackComponent.h"
 #include "TrackHeader.h"
+#include "../../AppEngine/AppEngine.h"
 
 using namespace juce;
 class EditComponent : public juce::Component{
 public:
-    EditComponent();
+    explicit EditComponent(AppEngine& engine);
     ~EditComponent();
 
     void paint(juce::Graphics& g) override;
     void resized() override;
+    void addNewTrack();
 private:
     // below are examples of creating buttons and labels
     // juce::TextButton addClip {"simpl"};
     // juce::Label trackNameLabel {"Track"};
 
-    void addNewTrack();
     // void removeSelectedTracks();
     // bool keyPressed(const KeyPress& key) override;
-
+    AppEngine& appEngine;
     OwnedArray<TrackComponent> tracks;
     OwnedArray<TrackHeader> headers;
     // OwnedArray<TrackFooterComponent> footers;

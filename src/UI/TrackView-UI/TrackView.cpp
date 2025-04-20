@@ -1,18 +1,30 @@
 #include "TrackView.h"
 #include "../../AppEngine/AppEngine.h"
 
-TrackView::TrackView() {
+TrackView::TrackView(AppEngine& engine) : appEngine(engine) {
     // playButton.onClick = [this]() { engine.play(); };
     // stopButton.onClick = [this]() { engine.stop(); };
 
+    newTrackButton.onClick = [this]() {
+        appEngine.addMidiTrack();          // 🔧 Backend update
+        if (editComponent != nullptr)
+            editComponent->addNewTrack();  // 🖼️ UI update
+    };
+
+    playPauseButton.onClick = [this]() {
+        appEngine.play();
+    };
+    stopButton.onClick = [this]() {appEngine.stop();};
+
     addAndMakeVisible(newEditButton);
     addAndMakeVisible(playPauseButton);
+    addAndMakeVisible(stopButton);
     addAndMakeVisible(recordButton);
     addAndMakeVisible(openEditButton);
     addAndMakeVisible(newTrackButton);
     addAndMakeVisible(deleteButton);
 
-    editComponent = std::make_unique<EditComponent>();
+    editComponent = std::make_unique<EditComponent>(appEngine);
     addAndMakeVisible(editComponent.get());
     setSize(800, 600);
 }
@@ -34,6 +46,7 @@ void TrackView::resized()
     auto topR = r.removeFromTop(30);
     newEditButton.setBounds(topR.removeFromLeft(w).reduced(2));
     playPauseButton.setBounds(topR.removeFromLeft(w).reduced(2));
+    stopButton.setBounds(topR.removeFromLeft(w).reduced(2));
     recordButton.setBounds(topR.removeFromLeft(w).reduced(2));
     openEditButton.setBounds(topR.removeFromLeft(w).reduced(2));
     newTrackButton.setBounds(topR.removeFromLeft(w).reduced(2));
