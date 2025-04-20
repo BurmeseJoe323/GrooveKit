@@ -9,6 +9,7 @@
 
 # Ignore CMake build directories
 cmake-build-debug/
+cmake-build-debug-visual-studio/
 CMakeBuild/
 out/build/
 build/
@@ -17,5 +18,6 @@ x64/Release/
 
 # Ignore user-specific JUCE path configuration
 cmake/JUCEPath.cmake
+cmake/TracktionPath.cmake
 
 .idea/
