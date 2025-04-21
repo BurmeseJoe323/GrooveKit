@@ -46,6 +46,7 @@ public:
 private:
     juce::TextButton addClip {"Add"};
     juce::TextButton deleteTrackButton { "Delete" };
+    juce::TextButton pianoRollButton{"Edit clip"};
     juce::Label trackNameLabel {"Track"};
     bool selected = false;
 
