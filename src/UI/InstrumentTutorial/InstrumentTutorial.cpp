@@ -1,6 +1,7 @@
 #include "InstrumentTutorial.h"
 
-InstrumentTutorial::InstrumentTutorial()
+InstrumentTutorial::InstrumentTutorial(DatabaseManager& dbManager)
+    : db(dbManager)
 {
     waveformBox.addItemList({ "Sine", "Square", "Triangle", "Saw" }, 1);
     waveformBox.setSelectedId(1);
@@ -33,8 +34,10 @@ InstrumentTutorial::InstrumentTutorial()
     addAndMakeVisible(finishButton);
     finishButton.setButtonText("Finish Tutorial");
     finishButton.onClick = [this]() {
-        if (onFinishTutorial)
+        if (onFinishTutorial){
+            db.addCompletedTutorial("InstrumentTutorial", "User1");
             onFinishTutorial();
+        }
     };
 
     updateTutorialUI();

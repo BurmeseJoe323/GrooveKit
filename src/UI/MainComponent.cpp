@@ -16,7 +16,10 @@ MainComponent::MainComponent(AppEngine& engine)
     setSize(600, 400);
 
     openTrackView.onClick = [this]() { showTrackView(); };
-    openInstTutorial.onClick = [this]() { showInstrumentTutorial(); };
+    openInstTutorial.onClick = [this]() {
+        showInstrumentTutorial();
+        databaseManager.addTutorial("InstrumentTutorial");
+    };
     openTrackViewTut.onClick = [this]() {
         // display TrackView tutorial
         showTrackViewTutorial();
@@ -90,7 +93,7 @@ void MainComponent::showTrackViewTutorial() {
 }
 
 void MainComponent::showInstrumentTutorial() {
-    instTutorial = std::make_unique<InstrumentTutorial>();
+    instTutorial = std::make_unique<InstrumentTutorial>(databaseManager);
 
     instTutorial->onFinishTutorial = [this]() {
         instTutorial.reset();

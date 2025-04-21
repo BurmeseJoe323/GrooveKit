@@ -1,11 +1,12 @@
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
+#include "../../DatabaseManager/DatabaseManager.h"
 
 class InstrumentTutorial : public juce::Component
 {
 public:
-    InstrumentTutorial();
+    InstrumentTutorial(DatabaseManager& dbManager);
     ~InstrumentTutorial() override = default;
 
     void paint(juce::Graphics&) override;
@@ -13,6 +14,7 @@ public:
     std::function<void()> onFinishTutorial;
 
 private:
+    DatabaseManager& db;
     juce::ComboBox waveformBox;
     juce::Slider attackSlider, decaySlider, sustainSlider, releaseSlider, volumeSlider;
 
