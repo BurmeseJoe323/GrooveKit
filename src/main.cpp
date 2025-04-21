@@ -1,6 +1,7 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 
 #include "UI/MainComponent.h"
+#include "AppEngine/AppEngine.h"
 
 
 class MainWindow : public juce::DocumentWindow
@@ -16,12 +17,14 @@ public:
         setContentOwned(new MainComponent(), true);
         centreWithSize(getWidth(), getHeight());
         setVisible(true);
+        juce::Logger::outputDebugString("== APP STARTED ==");
     }
 
     void closeButtonPressed() override
     {
         juce::JUCEApplication::getInstance()->systemRequestedQuit();
     }
+
 };
 
 class GrooveKitApplication : public juce::JUCEApplication

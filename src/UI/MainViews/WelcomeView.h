@@ -15,7 +15,7 @@ public:
     void paint(juce::Graphics&) override;
     void resized() override;
 private:
-    juce::TextButton openAppView {TRANS ("Open App")};
+    juce::TextButton openTrackView {TRANS ("Open Track Edit View")};
 };
 
 

@@ -16,6 +16,8 @@ AppEngine::AppEngine()
 
     midiEngine = std::make_unique<MIDIEngine>(*edit);
     audioEngine = std::make_unique<AudioEngine>(*edit);
+    trackManager = std::make_unique<TrackManager>(*edit);  // ✅ Add this line
+
 }
 
 AppEngine::~AppEngine() = default;
@@ -29,6 +31,7 @@ void AppEngine::createOrLoadEdit()
 
     if (editFile.existsAsFile())
         edit = te::loadEditFromFile(*engine, editFile);
+
     else
         edit = te::createEmptyEdit(*engine, editFile);
 
@@ -47,9 +50,13 @@ void AppEngine::stop()
     audioEngine->stop();
 }
 
-void AppEngine::addMidiTrack()
+int AppEngine::addMidiTrack()
 {
-    midiEngine->addMidiTrack();
+    return trackManager->addTrack();
+}
+
+void AppEngine::deleteMidiTrack(int index) {
+    trackManager->deleteTrack(index);
 }
 
 void AppEngine::addMidiClipToTrack(int trackIndex)

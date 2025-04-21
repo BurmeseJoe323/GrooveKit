@@ -2,7 +2,7 @@
 #define APPVIEW_H
 
 #include "../../AppEngine/AppEngine.h"
-#include "TrackView.h"
+#include "../TrackView-UI/TrackEditView.h"
 #include <vector>
 
 #include "../PopupWindows/PianoRollWindow.h"
@@ -18,7 +18,7 @@ public:
     // void closePianoRoll();
 
 private:
-    std::unique_ptr<TrackView> trackView;
+    std::unique_ptr<TrackEditView> trackView;
     std::unique_ptr<PianoRollWindow> pianoRollWindow;
 
     AppEngine engine;
