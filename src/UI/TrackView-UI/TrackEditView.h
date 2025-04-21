@@ -22,6 +22,8 @@ public:
     void paint (Graphics&) override;
     void resized() override;
 
+    void openPianoRollWindow(int trackIndex);
+
 private:
     std::shared_ptr<AppEngine> appEngine;
     std::unique_ptr<TrackListComponent> trackList;
@@ -29,7 +31,5 @@ private:
     Viewport viewport;
 
     TextButton newEditButton{"New"}, playPauseButton{"Play"}, stopButton{"Stop"},
-            openEditButton{"Open Edit"}, newTrackButton{"New Track"}, recordButton{"Record"}, pianoRollButton{
-                "Open piano roll"
-            };
+            openEditButton{"Open Edit"}, newTrackButton{"New Track"}, recordButton{"Record"};
 };
