@@ -6,7 +6,7 @@
 
 #include "TrackListComponent.h"
 
-TrackListComponent::TrackListComponent (AppEngine& engine) : appEngine (engine)
+TrackListComponent::TrackListComponent (std::shared_ptr<AppEngine> engine) : appEngine (engine)
 {
     //Add initial track pair
     //addNewTrack();

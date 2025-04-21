@@ -18,6 +18,7 @@ WelcomeView::WelcomeView()
 
     openInstTutorial.onClick = [this]() {
         auto parent = dynamic_cast<MainComponent*>(getParentComponent());
+        parent->showTrackView();
         parent->showInstrumentTutorial();
     };
 

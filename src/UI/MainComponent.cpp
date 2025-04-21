@@ -3,16 +3,15 @@
 #endif
 
 
+#include "TrackView-UI/TrackEditView.h"
 #include "MainComponent.h"
 #include "MainViews/AppView.h"
 #include "MainViews/WelcomeView.h"
-#include "TrackView-UI/TrackView.h"
-#include "InstrumentTutorial/InstrumentTutorial.h"
-
 
 MainComponent::MainComponent()
 {
-    engine = std::make_unique<AppEngine>();
+    setSize(600, 400);
+
     view = std::make_unique<WelcomeView>();
     addAndMakeVisible(view.get());
     // view->setBounds(getLocalBounds());
@@ -23,7 +22,8 @@ MainComponent::MainComponent()
 
 MainComponent::~MainComponent() = default;
 
-void MainComponent::showWelcomeView() {
+void MainComponent::showWelcomeView()
+{
     removeAllChildren();
     view = std::make_unique<WelcomeView>();
     addAndMakeVisible(view.get());
@@ -33,7 +33,7 @@ void MainComponent::showWelcomeView() {
 void MainComponent::showTrackView()
 {
     removeAllChildren();
-    view = std::make_unique<TrackView>(*engine);
+    view = std::make_unique<TrackEditView>();
     addAndMakeVisible(view.get());
 
     view->setBounds(getLocalBounds());

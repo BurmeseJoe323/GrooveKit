@@ -5,7 +5,7 @@
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
-#include "TrackView-UI/TrackView.h"
+#include "TrackView-UI/TrackEditView.h"
 #include "../AppEngine/AppEngine.h"
 #include "TrackView-Tutorial/TrackViewTut.h"
 #include "../DatabaseManager/DatabaseManager.h"
@@ -26,8 +26,4 @@ public:
 
 private:
     std::unique_ptr<Component> view;
-
-    std::unique_ptr<AppEngine> engine;
-
-    DatabaseManager databaseManager;
 };

@@ -1,7 +1,6 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 
 #include "UI/MainComponent.h"
-#include "UI/TestComponent.h"
 #include "AppEngine/AppEngine.h"
 
 

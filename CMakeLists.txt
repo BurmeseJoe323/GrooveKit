@@ -43,8 +43,8 @@ if (WIN32)
             src/UI/MainComponent.h
             src/UI/MainComponent.cpp
             src/UI/MainViews/AppView.h
-            src/UI/TrackView-UI/TrackView.cpp
-            src/UI/TrackView-UI/TrackView.h
+            src/UI/TrackView-UI/TrackEditView.cpp
+            src/UI/TrackView-UI/TrackEditView.h
             src/AppEngine/AppEngine.h
             src/AppEngine/AppEngine.cpp
             src/MIDIEngine/MIDIEngine.h
@@ -100,8 +100,8 @@ elseif (APPLE)
             src/UI/MainComponent.h
             src/UI/MainComponent.cpp
             src/UI/MainViews/AppView.h
-            src/UI/TrackView-UI/TrackView.cpp
-            src/UI/TrackView-UI/TrackView.h
+            src/UI/TrackView-UI/TrackEditView.cpp
+            src/UI/TrackView-UI/TrackEditView.h
             src/AppEngine/AppEngine.h
             src/AppEngine/AppEngine.cpp
             src/MIDIEngine/MIDIEngine.h

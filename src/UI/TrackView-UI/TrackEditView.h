@@ -6,6 +6,7 @@
 
 #include "../../AppEngine/AppEngine.h"
 #include "TrackListComponent.h"
+#include "../PopupWindows/PianoRollWindow.h"
 
 /**
  * Represents the track editor view, with functionality for adding and deleting tracks.
@@ -14,7 +15,7 @@
 class TrackEditView final : public Component
 {
 public:
-    explicit TrackEditView (AppEngine& engine);
+    explicit TrackEditView ();
     ~TrackEditView() override;
 
     void setupButtons();
@@ -22,10 +23,13 @@ public:
     void resized() override;
 
 private:
-    AppEngine& appEngine;
+    std::shared_ptr<AppEngine> appEngine;
     std::unique_ptr<TrackListComponent> trackList;
+    std::unique_ptr<PianoRollWindow> pianoRollWindow;
     Viewport viewport;
 
-    TextButton newEditButton { "New" }, playPauseButton { "Play" }, stopButton { "Stop" }, deleteButton { "Delete" },
-        openEditButton { "Open Edit" }, newTrackButton { "New Track" }, recordButton { "Record" };
+    TextButton newEditButton{"New"}, playPauseButton{"Play"}, stopButton{"Stop"},
+            openEditButton{"Open Edit"}, newTrackButton{"New Track"}, recordButton{"Record"}, pianoRollButton{
+                "Open piano roll"
+            };
 };
