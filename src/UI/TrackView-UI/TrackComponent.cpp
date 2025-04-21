@@ -6,7 +6,6 @@
 
 using namespace juce;
 TrackComponent::TrackComponent(std::shared_ptr<AppEngine> engine, int index) : appEngine(engine), trackIndex(index){
-    addAndMakeVisible(trackClip);
 }
 
 TrackComponent::~TrackComponent() {};
@@ -39,6 +38,7 @@ void TrackComponent::resized() {
 void TrackComponent::onAddClipClicked() {
     DBG("Add Clip clicked for track index: " << trackIndex);
     appEngine->addMidiClipToTrack(trackIndex);
+    addAndMakeVisible(trackClip);
 }
 
 void TrackComponent::onDeleteTrackClicked() {

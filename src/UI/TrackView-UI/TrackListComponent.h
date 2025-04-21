@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "PlayheadComponent.h"
 #include "../../AppEngine/AppEngine.h"
 #include "TrackComponent.h"
 #include "TrackHeaderComponent.h"
@@ -27,6 +28,8 @@ private:
 
     OwnedArray<TrackComponent> tracks;
     OwnedArray<TrackHeaderComponent> headers;
+
+    PlayheadComponent playhead;
     // OwnedArray<TrackFooterComponent> footers;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackListComponent)

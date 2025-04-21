@@ -27,7 +27,7 @@ void TrackEditView::paint (Graphics& g)
 void TrackEditView::resized()
 {
     auto r = getLocalBounds();
-    const int w = r.getWidth() / 7;
+    const int w = r.getWidth() / 6;
     auto topR = r.removeFromTop (30);
 
     newEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
@@ -36,7 +36,6 @@ void TrackEditView::resized()
     recordButton.setBounds (topR.removeFromLeft (w).reduced (2));
     openEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
     newTrackButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    pianoRollButton.setBounds (topR.removeFromLeft (w).reduced (2));
 
     viewport.setBounds (r);
 }
@@ -58,24 +57,10 @@ void TrackEditView::setupButtons()
 
     stopButton.onClick = [this] { appEngine->stop(); };
 
-    pianoRollButton.onClick = [this] {
-        if (pianoRollWindow == nullptr) {
-            pianoRollWindow = std::make_unique<PianoRollWindow>();
-            addAndMakeVisible(pianoRollWindow.get());
-            pianoRollWindow->addToDesktop(pianoRollWindow->getDesktopWindowStyleFlags());
-            pianoRollWindow->toFront(true);
-            pianoRollWindow->centreWithSize(pianoRollWindow->getWidth(), pianoRollWindow->getHeight());
-        } else {
-            pianoRollWindow->setVisible(true);
-            pianoRollWindow->toFront(true);
-        }
-    };
-
     addAndMakeVisible (newEditButton);
     addAndMakeVisible (playPauseButton);
     addAndMakeVisible (stopButton);
     addAndMakeVisible (recordButton);
     addAndMakeVisible (openEditButton);
     addAndMakeVisible (newTrackButton);
-    addAndMakeVisible (pianoRollButton);
 }
