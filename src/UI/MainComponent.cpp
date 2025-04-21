@@ -95,12 +95,17 @@ void MainComponent::showTrackViewTutorial() {
 void MainComponent::showInstrumentTutorial() {
     instTutorial = std::make_unique<InstrumentTutorial>(databaseManager);
 
-    instTutorial->onFinishTutorial = [this]() {
-        instTutorial.reset();
-        openTrackView.setVisible(true);
-        openTrackViewTut.setVisible(true);
-        openInstTutorial.setVisible(true);
-        resized();
+    //Creating a safe pointer to the component
+    juce::Component::SafePointer<MainComponent> safeThis(this);
+    instTutorial->onFinishTutorial = [safeThis]() {
+        if (auto* comp = safeThis.getComponent()) {
+            comp->instTutorial.reset();
+            comp->openTrackView.setVisible(true);
+            comp->openTrackViewTut.setVisible(true);
+            comp->openInstTutorial.setVisible(true);
+            comp->resized();
+        }
+
     };
 
     addAndMakeVisible(instTutorial.get());
