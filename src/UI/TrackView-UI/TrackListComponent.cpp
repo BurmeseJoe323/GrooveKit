@@ -6,11 +6,14 @@
 
 #include "TrackListComponent.h"
 
-TrackListComponent::TrackListComponent (std::shared_ptr<AppEngine> engine) : appEngine (engine)
+TrackListComponent::TrackListComponent(std::shared_ptr<AppEngine> engine) : appEngine(engine),
+                                                                            playhead(engine->getEdit(),
+                                                                                engine->getEditViewState())
 {
     //Add initial track pair
     //addNewTrack();
     setWantsKeyboardFocus (true); // setting keyboard focus?
+    addAndMakeVisible(playhead);
 }
 
 TrackListComponent::~TrackListComponent() = default;
@@ -45,6 +48,9 @@ void TrackListComponent::resized()
         headers[i]->setBounds (row.removeFromLeft (headerWidth).reduced (margin));
         tracks[i]->setBounds (row.reduced (margin));
     }
+
+    // Set bounds for playhead
+    playhead.setBounds (headerWidth, 0, 2, getHeight());
 }
 
 void TrackListComponent::addNewTrack (int index)

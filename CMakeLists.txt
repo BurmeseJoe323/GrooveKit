@@ -92,6 +92,8 @@ if (WIN32)
             src/UI/TrackView-Tutorial/TrackViewTut.h
             src/DatabaseManager/DatabaseManager.cpp
             src/DatabaseManager/DatabaseManager.h
+            src/UI/TrackView-UI/PlayheadComponent.cpp
+            src/UI/TrackView-UI/PlayheadComponent.h
     )
 elseif (APPLE)
     # macOS: Build as console app (uses main via JUCE)
@@ -149,6 +151,8 @@ elseif (APPLE)
             src/UI/TrackView-Tutorial/TrackViewTut.h
             src/DatabaseManager/DatabaseManager.cpp
             src/DatabaseManager/DatabaseManager.h
+            src/UI/TrackView-UI/PlayheadComponent.cpp
+            src/UI/TrackView-UI/PlayheadComponent.h
     )
 endif()
 

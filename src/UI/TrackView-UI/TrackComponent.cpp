@@ -37,12 +37,10 @@ void TrackComponent::resized() {
 
 void TrackComponent::onAddClipClicked() {
     DBG("Add Clip clicked for track index: " << trackIndex);
-    appEngine->addMidiClipToTrack(trackIndex + 1);
+    appEngine->addMidiClipToTrack(trackIndex);
     addAndMakeVisible(trackClip);
     numClips = 1;
 }
-
-// int TrackComponent::getNumClips() { return numClips; }
 
 void TrackComponent::onDeleteTrackClicked() {
     DBG("Delete clicked for track index: " << trackIndex);

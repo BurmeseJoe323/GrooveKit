@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "PlayheadComponent.h"
 #include "../../AppEngine/AppEngine.h"
 #include "TrackComponent.h"
 #include "TrackHeaderComponent.h"
@@ -28,6 +29,8 @@ private:
 
     OwnedArray<TrackComponent> tracks;
     OwnedArray<TrackHeaderComponent> headers;
+
+    PlayheadComponent playhead;
 
     std::unique_ptr<PianoRollWindow> pianoRollWindow;
     // OwnedArray<TrackFooterComponent> footers;
