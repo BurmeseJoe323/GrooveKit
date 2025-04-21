@@ -22,6 +22,19 @@ InstrumentTutorial::InstrumentTutorial(DatabaseManager& dbManager)
     setupSlider(volumeSlider, "Volume", 0.0, 1.0);
     volumeSlider.setValue(0.8);
 
+    auto setupLabel = [this](juce::Label& label, const juce::String& text) {
+        label.setText(text, juce::dontSendNotification);
+        label.setJustificationType(juce::Justification::centred);
+        label.setColour(juce::Label::textColourId, juce::Colours::white);
+        addAndMakeVisible(label);
+    };
+
+    setupLabel(attackLabel, "Attack");
+    setupLabel(decayLabel, "Decay");
+    setupLabel(sustainLabel, "Sustain");
+    setupLabel(releaseLabel, "Release");
+    setupLabel(volumeLabel, "Volume");
+
     addAndMakeVisible(descriptionLabel);
     descriptionLabel.setJustificationType(juce::Justification::centred);
     descriptionLabel.setFont(16.0f);
@@ -69,18 +82,34 @@ void InstrumentTutorial::resized()
     if (volumeSlider.isVisible())   numVisible++;
 
     const int sliderWidth = numVisible > 0 ? sliderRow.getWidth() / numVisible : 0;
-
+    int labelHeight = 20;
+    int sliderHeight = sliderRow.getHeight() - labelHeight;
+    int labelY = sliderRow.getBottom() - labelHeight;
     int x = sliderRow.getX();
-    if (attackSlider.isVisible())
-        attackSlider.setBounds(x, sliderRow.getY(), sliderWidth, sliderRow.getHeight()), x += sliderWidth;
-    if (decaySlider.isVisible())
-        decaySlider.setBounds(x, sliderRow.getY(), sliderWidth, sliderRow.getHeight()), x += sliderWidth;
-    if (sustainSlider.isVisible())
-        sustainSlider.setBounds(x, sliderRow.getY(), sliderWidth, sliderRow.getHeight()), x += sliderWidth;
-    if (releaseSlider.isVisible())
-        releaseSlider.setBounds(x, sliderRow.getY(), sliderWidth, sliderRow.getHeight()), x += sliderWidth;
-    if (volumeSlider.isVisible())
-        volumeSlider.setBounds(x, sliderRow.getY(), sliderWidth, sliderRow.getHeight());
+    if (attackSlider.isVisible()) {
+        attackSlider.setBounds(x, sliderRow.getY(), sliderWidth, sliderHeight);
+        attackLabel.setBounds(x, labelY, sliderWidth, labelHeight);
+        x += sliderWidth;
+    }
+    if (decaySlider.isVisible()) {
+        decaySlider.setBounds(x, sliderRow.getY(), sliderWidth, sliderHeight);
+        decayLabel.setBounds(x, labelY, sliderWidth, labelHeight);
+        x += sliderWidth;
+    }
+    if (sustainSlider.isVisible()) {
+        sustainSlider.setBounds(x, sliderRow.getY(), sliderWidth, sliderHeight);
+        sustainLabel.setBounds(x, labelY, sliderWidth, labelHeight);
+        x += sliderWidth;
+    }
+    if (releaseSlider.isVisible()) {
+        releaseSlider.setBounds(x, sliderRow.getY(), sliderWidth, sliderHeight);
+        releaseLabel.setBounds(x, labelY, sliderWidth, labelHeight);
+        x += sliderWidth;
+    }
+    if (volumeSlider.isVisible()) {
+        volumeSlider.setBounds(x, sliderRow.getY(), sliderWidth, sliderHeight);
+        volumeLabel.setBounds(x, labelY, sliderWidth, labelHeight);
+    }
 
     auto footer = area.removeFromBottom(50);
     nextButton.setBounds(footer.withSizeKeepingCentre(120, 30));
@@ -111,6 +140,12 @@ void InstrumentTutorial::updateTutorialUI()
     sustainSlider.setVisible(currentStep >= TutorialStep::Sustain);
     releaseSlider.setVisible(currentStep >= TutorialStep::Release);
     volumeSlider.setVisible(currentStep >= TutorialStep::Volume);
+
+    attackLabel.setVisible(currentStep >= TutorialStep::Attack);
+    decayLabel.setVisible(currentStep >= TutorialStep::Decay);
+    sustainLabel.setVisible(currentStep >= TutorialStep::Sustain);
+    releaseLabel.setVisible(currentStep >= TutorialStep::Release);
+    volumeLabel.setVisible(currentStep >= TutorialStep::Volume);
 
     nextButton.setVisible(currentStep != TutorialStep::Done);
     finishButton.setVisible(currentStep == TutorialStep::Done);

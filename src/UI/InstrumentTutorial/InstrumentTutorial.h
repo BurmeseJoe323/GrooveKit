@@ -17,6 +17,7 @@ private:
     DatabaseManager& db;
     juce::ComboBox waveformBox;
     juce::Slider attackSlider, decaySlider, sustainSlider, releaseSlider, volumeSlider;
+    juce::Label attackLabel, decayLabel, sustainLabel, releaseLabel, volumeLabel;
 
     enum class TutorialStep
     {
