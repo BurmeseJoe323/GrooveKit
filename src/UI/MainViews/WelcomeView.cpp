@@ -11,11 +11,11 @@ WelcomeView::WelcomeView()
 {
     setSize(600, 400);
 
-    openAppView.onClick = [this]() {
+    openTrackView.onClick = [this]() {
         auto parent = dynamic_cast<MainComponent*>(getParentComponent());
-        parent->showAppView();
+        parent->showTrackView();
     };
-    addAndMakeVisible(openAppView);
+    addAndMakeVisible(openTrackView);
 }
 
 WelcomeView::~WelcomeView() = default;
@@ -31,6 +31,5 @@ void WelcomeView::paint(juce::Graphics& g)
 
 void WelcomeView::resized()
 {
-    openAppView.setBounds(getWidth() - 176, getHeight() - 60, 120, 32);
-    // layout child components here
+    openTrackView.setBounds(getWidth() - 176, getHeight() - 60, 120, 32);
 }

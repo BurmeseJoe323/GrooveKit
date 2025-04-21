@@ -5,7 +5,7 @@
 #endif
 
 
-#include "TrackView-UI/TrackView.h"
+#include "TrackView-UI/TrackEditView.h"
 #include "MainViews/WelcomeView.h"
 
 MainComponent::MainComponent()
@@ -21,7 +21,7 @@ MainComponent::~MainComponent() = default;
 void MainComponent::showTrackView()
 {
     removeAllChildren();
-    view = std::make_unique<TrackView>();
+    view = std::make_unique<TrackEditView>();
     addAndMakeVisible(view.get());
     view->setBounds(getLocalBounds());
 }

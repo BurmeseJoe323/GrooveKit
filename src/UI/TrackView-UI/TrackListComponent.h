@@ -14,7 +14,7 @@
 class TrackListComponent final : public Component
 {
 public:
-    explicit TrackListComponent (AppEngine& engine);
+    explicit TrackListComponent (std::shared_ptr<AppEngine> engine);
     ~TrackListComponent() override;
 
     void paint (Graphics& g) override;
@@ -23,7 +23,7 @@ public:
     void addNewTrack (int index);
 
 private:
-    AppEngine& appEngine;
+    std::shared_ptr<AppEngine> appEngine;
 
     OwnedArray<TrackComponent> tracks;
     OwnedArray<TrackHeaderComponent> headers;
