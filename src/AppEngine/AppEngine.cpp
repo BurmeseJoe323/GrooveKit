@@ -45,6 +45,7 @@ void AppEngine::play()
 {
     audioEngine->play();
 }
+
 void AppEngine::stop()
 {
     audioEngine->stop();
