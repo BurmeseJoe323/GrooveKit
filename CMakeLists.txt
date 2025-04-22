@@ -65,8 +65,8 @@ if (WIN32)
             src/AppEngine/TrackManager.h
             src/AppEngine/TrackManager.cpp
             ${SQLITE_SOURCES}
-            src/UI/TrackEditViewTutorial/TrackViewTut.cpp
-            src/UI/TrackEditViewTutorial/TrackViewTut.h
+            src/UI/TrackEditViewTutorial/TrackEditViewTutorial.cpp
+            src/UI/TrackEditViewTutorial/TrackEditViewTutorial.h
             src/DatabaseManager/DatabaseManager.cpp
             src/DatabaseManager/DatabaseManager.h
             src/UI/TutorialManager/TutorialManagerComponent.cpp
