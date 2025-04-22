@@ -22,6 +22,8 @@ public:
     void paint (Graphics& g) override;
     void resized() override;
     void parentSizeChanged() override;
+
+
     void addNewTrack (int index);
 
 private:
@@ -36,6 +38,8 @@ private:
     PlayheadComponent playhead;
 
     // OwnedArray<TrackFooterComponent> footers;
+
+    void updateTrackIndexes();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackListComponent)
 };
