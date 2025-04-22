@@ -1,30 +1,26 @@
-//
-// Created by Bracken Asay on 4/2/25.
-//
-
 #pragma once
 
-#include <juce_gui_basics/juce_gui_basics.h>
-#include "EditComponent.h"
 #include "../../AppEngine/AppEngine.h"
+#include "EditComponent.h"
+#include <juce_gui_basics/juce_gui_basics.h>
 
-using namespace juce;
-/// TrackView will provide all of the necessary UI features of a
-/// track view, Tracks, edit and loading, and many other features
-/// This will be done by including many subcomponents within the
-/// TrackView Component
-/// Example:
-///     - TrackComponent
-class TrackView : public juce::Component {
+class TrackView final : public Component
+{
 public:
-    explicit TrackView(AppEngine& engine);
+    explicit TrackView (AppEngine& engine);
     ~TrackView() override;
 
-    void paint(juce::Graphics&) override;
+    void paint (Graphics&) override;
     void resized() override;
+
+    /**
+     Called when Back is pressed: should return to home screen.
+    */
+    std::function<void()> onBack;
+
 private:
-    TextButton newEditButton { "New" }, playPauseButton {"Play"}, stopButton {"Stop"}, deleteButton { "Delete" },
-               openEditButton {"Open Edit"}, newTrackButton { "New Track" }, recordButton { "Record" };
+    TextButton backButton { "Back" }, newEditButton { "New Edit" }, playPauseButton { "Play" }, stopButton { "Stop" },
+        openEditButton { "Open Edit" }, newTrackButton { "New Track" }, recordButton { "Record" };
 
     std::unique_ptr<EditComponent> editComponent;
     AppEngine& appEngine;

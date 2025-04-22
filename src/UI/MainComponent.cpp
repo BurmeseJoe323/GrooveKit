@@ -7,10 +7,15 @@ MainComponent::MainComponent (AppEngine& engine)
 {
     databaseManager.initialize();
 
-    tutorialManager = std::make_unique<TutorialManagerComponent>(appEngine, databaseManager);
+    tutorialManager = std::make_unique<TutorialManagerComponent> (appEngine, databaseManager);
     addAndMakeVisible (tutorialManager.get());
-    tutorialManager->setVisible (false);   // start hidden
+    tutorialManager->setVisible (false); // start hidden
     tutorialManager->onBack = [this] { showHome(); };
+
+    trackView = std::make_unique<TrackView> (appEngine);
+    addAndMakeVisible (trackView.get());
+    trackView->setVisible (false); // start hidden
+    trackView->onBack = [this] { showHome(); };
 
     openTrackView.onClick = [this] { showTrackView(); };
     addAndMakeVisible (openTrackView);
@@ -38,12 +43,11 @@ void MainComponent::resized()
     box.justifyContent = FlexBox::JustifyContent::spaceBetween;
     box.alignItems = FlexBox::AlignItems::flexEnd;
 
-    box.items.addArray ({
-        FlexItem (openTrackView)
-            .withFlex (1.0f, 1.0f)
-            .withMinWidth (50.0f)
-            .withMinHeight (30.0f)
-            .withMargin ({ 5.0f, 10.0f, 5.0f, 10.0f }),
+    box.items.addArray ({ FlexItem (openTrackView)
+                              .withFlex (1.0f, 1.0f)
+                              .withMinWidth (50.0f)
+                              .withMinHeight (30.0f)
+                              .withMargin ({ 5.0f, 10.0f, 5.0f, 10.0f }),
 
         FlexItem (openTutorialManager)
             .withFlex (1.0f, 1.0f)
@@ -56,12 +60,26 @@ void MainComponent::resized()
 
 void MainComponent::showTrackView()
 {
-    trackView = std::make_unique<TrackView> (appEngine);
-    addAndMakeVisible (trackView.get());
+    trackView->setVisible (true);
     trackView->setBounds (getLocalBounds());
-
     openTrackView.setVisible (false);
     openTutorialManager.setVisible (false);
+}
+
+void MainComponent::showTutorialManager()
+{
+    tutorialManager->setVisible (true);
+    tutorialManager->setBounds (getLocalBounds());
+    openTrackView.setVisible (false);
+    openTutorialManager.setVisible (false);
+}
+
+void MainComponent::showHome()
+{
+    tutorialManager->setVisible (false);
+    trackView->setVisible (false);
+    openTrackView.setVisible (true);
+    openTutorialManager.setVisible (true);
 }
 
 // void MainComponent::showInstrumentTutorial()
@@ -88,19 +106,3 @@ void MainComponent::showTrackView()
 //     openTrackViewTut.setVisible (false);
 //     openInstTutorial.setVisible (false);
 // }
-
-void MainComponent::showTutorialManager()
-{
-    tutorialManager->setVisible (true);
-    tutorialManager->setBounds (getLocalBounds());
-    openTrackView.setVisible (false);
-    openTutorialManager.setVisible (false);
-}
-
-void MainComponent::showHome()
-{
-    tutorialManager->setVisible(false);
-    openTrackView.setVisible (true);
-    openTutorialManager.setVisible (true);
-}
-
