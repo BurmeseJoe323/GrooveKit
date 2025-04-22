@@ -6,11 +6,17 @@
 
 #include "TrackListComponent.h"
 
-TrackListComponent::TrackListComponent (std::shared_ptr<AppEngine> engine) : appEngine (engine)
+#include <juce_graphics/fonts/harfbuzz/hb-ot-head-table.hh>
+
+TrackListComponent::TrackListComponent(std::shared_ptr<AppEngine> engine) : appEngine(engine),
+                                                                            playhead(engine->getEdit(),
+                                                                                     engine->getEditViewState())
 {
     //Add initial track pair
     //addNewTrack();
     setWantsKeyboardFocus (true); // setting keyboard focus?
+    addAndMakeVisible(playhead);
+    playhead.setAlwaysOnTop(true);
 }
 
 TrackListComponent::~TrackListComponent() = default;
@@ -33,7 +39,8 @@ void TrackListComponent::resized()
     int numTracks = headers.size();
     int contentH = numTracks * trackHeight + addButtonSpace;
 
-    setSize(getParentWidth(), contentH);
+    // Set the size to either default to the parent's height if the content height isn't tall enough
+    setSize(getParentWidth(), contentH > getParentHeight() ? contentH : getParentHeight());
 
     auto bounds = getLocalBounds();
     bounds.removeFromBottom (addButtonSpace); // Space for add button
@@ -45,6 +52,9 @@ void TrackListComponent::resized()
         headers[i]->setBounds (row.removeFromLeft (headerWidth).reduced (margin));
         tracks[i]->setBounds (row.reduced (margin));
     }
+
+    // Set bounds for playhead
+    playhead.setBounds (getLocalBounds().withTrimmedLeft(headerWidth));
 }
 
 void TrackListComponent::addNewTrack (int index)

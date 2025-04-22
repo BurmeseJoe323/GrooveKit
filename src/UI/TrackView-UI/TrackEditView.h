@@ -7,6 +7,7 @@
 #include "../../AppEngine/AppEngine.h"
 #include "TrackListComponent.h"
 #include "../PopupWindows/PianoRollWindow.h"
+#include <juce_gui_basics/juce_gui_basics.h>
 
 /**
  * Represents the track editor view, with functionality for adding and deleting tracks.
@@ -27,6 +28,9 @@ private:
     std::unique_ptr<TrackListComponent> trackList;
     std::unique_ptr<PianoRollWindow> pianoRollWindow;
     Viewport viewport;
+
+    // Do we need this here?
+    // EditViewState &editViewState;
 
     TextButton newEditButton{"New"}, playPauseButton{"Play"}, stopButton{"Stop"},
             openEditButton{"Open Edit"}, newTrackButton{"New Track"}, recordButton{"Record"};
