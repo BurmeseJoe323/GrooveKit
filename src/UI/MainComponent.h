@@ -23,6 +23,7 @@ private:
     TextButton openTrackView {"OPEN TRACKVIEW"};
     TextButton openTrackViewTut {"TrackView Tutorial"};
     TextButton openInstTutorial {"Instrument Tutorial"};
+    TextButton selectCompletedTutorials {"See completed Tutorials"};
     std::unique_ptr<TrackView> trackView;
     std::unique_ptr<TrackViewTut> trackViewTut;
     std::unique_ptr<InstrumentTutorial> instTutorial;

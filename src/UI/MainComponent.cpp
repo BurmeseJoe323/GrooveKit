@@ -27,9 +27,15 @@ MainComponent::MainComponent(AppEngine& engine)
         databaseManager.addTutorial("TrackViewTutorial");
     };
 
+    selectCompletedTutorials.onClick = [this]() {
+        int size = databaseManager.selectCompletedTutorials("User1").size();
+        std::cout << "There are: " << size <<  " elements in the array" << std::endl;
+    };
+
     addAndMakeVisible(openTrackView);
     addAndMakeVisible(openTrackViewTut);
     addAndMakeVisible(openInstTutorial);
+    addAndMakeVisible(selectCompletedTutorials);
 
 }
 
@@ -64,6 +70,11 @@ void MainComponent::resized()
             .withMargin({5.0f, 10.0f, 5.0f, 10.0f}),
 
         FlexItem(openInstTutorial)
+            .withFlex(1.0f, 1.0f)
+            .withMinWidth(50.0f)
+            .withMinHeight(30.0f)
+            .withMargin({5.0f, 10.0f, 5.0f, 10.0f}),
+        FlexItem(selectCompletedTutorials)
             .withFlex(1.0f, 1.0f)
             .withMinWidth(50.0f)
             .withMinHeight(30.0f)
