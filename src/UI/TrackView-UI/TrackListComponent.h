@@ -8,6 +8,7 @@
 #include "../../AppEngine/AppEngine.h"
 #include "TrackComponent.h"
 #include "TrackHeaderComponent.h"
+#include "../PopupWindows/PianoRollWindow.h"
 
 /**
  * Represents the Component view holding tracks.
@@ -29,7 +30,11 @@ private:
     OwnedArray<TrackComponent> tracks;
     OwnedArray<TrackHeaderComponent> headers;
 
+
+    std::unique_ptr<PianoRollWindow> pianoRollWindow;
+
     PlayheadComponent playhead;
+
     // OwnedArray<TrackFooterComponent> footers;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackListComponent)

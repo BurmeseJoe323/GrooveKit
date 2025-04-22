@@ -60,9 +60,9 @@ void TrackListComponent::resized()
 void TrackListComponent::addNewTrack (int index)
 {
     auto* header = new TrackHeaderComponent();
-    auto* newTrack = new TrackComponent (appEngine, index);
+    auto* newTrack = new TrackComponent(appEngine, index);
 
-    header->addListener (newTrack);
+    header->addListener(newTrack);
 
     // TODO : Tracks are not properly being deleted here.
     //        Should probably be in its own method.
@@ -73,7 +73,24 @@ void TrackListComponent::addNewTrack (int index)
             removeChildComponent (tracks[index]);
             headers.remove (index);
             tracks.remove (index);
+            appEngine->deleteMidiTrack(index);
             resized();
+        }
+    };
+
+    newTrack->onRequestOpenPianoRoll = [this] (int index) {
+        if (index >= 0 && index < tracks.size())
+        {
+            if (pianoRollWindow == nullptr) {
+                pianoRollWindow = std::make_unique<PianoRollWindow>();
+                addAndMakeVisible(pianoRollWindow.get());
+                pianoRollWindow->addToDesktop(pianoRollWindow->getDesktopWindowStyleFlags());
+                pianoRollWindow->toFront(true);
+                pianoRollWindow->centreWithSize(pianoRollWindow->getWidth(), pianoRollWindow->getHeight());
+            } else {
+                pianoRollWindow->setVisible(true);
+                pianoRollWindow->toFront(true);
+            }
         }
     };
 

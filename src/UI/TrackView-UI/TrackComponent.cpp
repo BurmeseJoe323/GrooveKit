@@ -37,14 +37,24 @@ void TrackComponent::resized() {
 
 void TrackComponent::onAddClipClicked() {
     DBG("Add Clip clicked for track index: " << trackIndex);
-    appEngine->addMidiClipToTrack(trackIndex);
+    appEngine->addMidiClipToTrack(trackIndex + 1);
     addAndMakeVisible(trackClip);
+    numClips = 1;
 }
+
+// int TrackComponent::getNumClips() { return numClips; }
 
 void TrackComponent::onDeleteTrackClicked() {
     DBG("Delete clicked for track index: " << trackIndex);
     if (onRequestDeleteTrack)
         onRequestDeleteTrack(trackIndex);
+    // deleteAllChildren();
+}
+
+void TrackComponent::onPianoRollClicked() {
+    DBG("Piano Roll clicked for track index: " << trackIndex);
+    if (onRequestOpenPianoRoll && numClips > 0)
+        onRequestOpenPianoRoll(trackIndex);
 }
 
 

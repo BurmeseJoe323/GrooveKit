@@ -22,16 +22,20 @@ public:
     ~TrackComponent() override;
 
     void onAddClipClicked() override;
+    // int getNumClips();
     void onDeleteTrackClicked() override;
+    void onPianoRollClicked() override;
 
     void paint(juce::Graphics& g) override;
     void resized() override;
 
     std::function<void(int)> onRequestDeleteTrack;
+    std::function<void(int)> onRequestOpenPianoRoll;
 
 private:
     std::shared_ptr<AppEngine> appEngine;
     int trackIndex;
+    int numClips;
 
     TrackClip trackClip;
     TrackHeaderComponent trackHeader;

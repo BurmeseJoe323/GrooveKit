@@ -46,7 +46,7 @@ void TrackEditView::setupButtons()
         if (trackList != nullptr)
         {
             // TODO : might not be returning the right index
-            int index = appEngine->addMidiTrack();
+            int index = appEngine->addMidiTrack() - 1;
             trackList->addNewTrack (index);
         }
     };

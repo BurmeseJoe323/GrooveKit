@@ -18,12 +18,11 @@ public:
         virtual ~Listener() = default;
         virtual void onAddClipClicked() = 0;
         virtual void onDeleteTrackClicked() = 0;
+        virtual void onPianoRollClicked() = 0;
     };
 
     void addListener(Listener* listener) {listeners.add(listener);}
     void removeListener(Listener* listener) {listeners.remove(listener);}
-
-
 
     TrackHeaderComponent();
     ~TrackHeaderComponent();
@@ -43,6 +42,7 @@ public:
 private:
     juce::TextButton addClip {"Add"};
     juce::TextButton deleteTrackButton { "Delete" };
+    juce::TextButton pianoRollButton{"Edit clip"};
     juce::Label trackNameLabel {"Track"};
     bool selected = false;
 

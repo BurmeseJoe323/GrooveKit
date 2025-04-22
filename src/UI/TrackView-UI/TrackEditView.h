@@ -33,7 +33,5 @@ private:
     // EditViewState &editViewState;
 
     TextButton newEditButton{"New"}, playPauseButton{"Play"}, stopButton{"Stop"},
-            openEditButton{"Open Edit"}, newTrackButton{"New Track"}, recordButton{"Record"}, pianoRollButton{
-                "Open piano roll"
-            };
+            openEditButton{"Open Edit"}, newTrackButton{"New Track"}, recordButton{"Record"};
 };

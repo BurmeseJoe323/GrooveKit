@@ -8,6 +8,7 @@ TrackHeaderComponent::TrackHeaderComponent() {
   // add everything to view
   addAndMakeVisible(addClip);
   addAndMakeVisible(deleteTrackButton);
+  addAndMakeVisible(pianoRollButton);
   addAndMakeVisible(trackNameLabel);
 
   addClip.onClick = [this]() {
@@ -16,6 +17,10 @@ TrackHeaderComponent::TrackHeaderComponent() {
 
   deleteTrackButton.onClick = [this]() {
     listeners.call([](Listener& l) { l.onDeleteTrackClicked(); });
+  };
+
+  pianoRollButton.onClick = [this]() {
+    listeners.call([](Listener& l) { l.onPianoRollClicked(); });
   };
 
   // setup trackNameLabel
@@ -56,6 +61,10 @@ void TrackHeaderComponent::resized() {
         .withHeight(30));
 
   buttonRowFB.items.add(juce::FlexItem(deleteTrackButton)
+        .withWidth(50)
+        .withHeight(30));
+
+  buttonRowFB.items.add(juce::FlexItem(pianoRollButton)
         .withWidth(50)
         .withHeight(30));
 
