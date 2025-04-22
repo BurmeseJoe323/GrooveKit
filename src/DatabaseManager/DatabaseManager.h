@@ -10,6 +10,8 @@
 #pragma once
 #include "../../third-party/database/sqlite3.h"
 #include <string>
+#include <vector>
+#include <unordered_map>
 
 class DatabaseManager {
 public:
@@ -41,6 +43,11 @@ public:
     /// @return Returns true, if successful query, false other-wise
     ///     NOTE: if name is a duplicate, query will also fail
     bool addUser(const std::string &name);
+
+    /// This method will select and return true if the select was a success and false o.w.
+    /// @userName The user's userName in the current session.
+    /// @return Returns a list of all of the completed tutorials based on the given userName
+    bool selectCompletedTutorials(const std::string &userName);
 
 private:
     sqlite3* db = nullptr;

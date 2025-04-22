@@ -15,12 +15,15 @@
 /// @param argv 
 /// @param azColName 
 /// @return 
-static int callback(void *data, int argc, char **argv, char **azColName){
+static int callback(void* data, int argc, char** argv, char** azColName)
+{
     int i;
     fprintf(stderr, "%s: ", (const char*)data);
-    for(i=0; i<argc; i++){
+
+    for (i = 0; i < argc; i++) {
         printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
     }
+
     printf("\n");
     return 0;
 }
@@ -185,6 +188,22 @@ bool DatabaseManager::addCompletedTutorial(const std::string &tutorialName, cons
     }
 
     sqlite3_finalize(stmt);
+    return true;
+}
+
+bool DatabaseManager::selectCompletedTutorials(const std::string &userName) {
+    std::string data("CALLBACK FUNCTION");
+
+    std::string sql("SELECT * FROM COMPLETED;");
+
+    int rc = sqlite3_exec(db, sql.c_str(), callback, (void*)data.c_str(), nullptr);
+
+    if (rc != SQLITE_OK) {
+        std::cerr << "Error SELECT" << std::endl;
+        return false;
+    }
+
+    std::cout << "Operation OK!" << std::endl;
     return true;
 }
 
