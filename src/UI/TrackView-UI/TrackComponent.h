@@ -26,6 +26,8 @@ public:
     void onDeleteTrackClicked() override;
     void onPianoRollClicked() override;
 
+    void setTrackIndex(int index);
+
     void paint(juce::Graphics& g) override;
     void resized() override;
 

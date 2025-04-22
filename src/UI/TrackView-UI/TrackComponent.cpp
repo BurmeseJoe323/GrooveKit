@@ -55,4 +55,9 @@ void TrackComponent::onPianoRollClicked() {
         onRequestOpenPianoRoll(trackIndex);
 }
 
+void TrackComponent::setTrackIndex(int index)
+{
+    this->trackIndex = index;
+}
+
 

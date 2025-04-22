@@ -74,6 +74,7 @@ void TrackListComponent::addNewTrack (int index)
             headers.remove (index);
             tracks.remove (index);
             appEngine->deleteMidiTrack(index);
+            updateTrackIndexes();
             resized();
         }
     };
@@ -105,6 +106,14 @@ void TrackListComponent::addNewTrack (int index)
 void TrackListComponent::parentSizeChanged()
 {
     resized();
+}
+
+void TrackListComponent::updateTrackIndexes()
+{
+    for (int i = 0; i < tracks.size(); i++) {
+       TrackComponent *track = tracks[i];
+        track->setTrackIndex(i);
+    }
 }
 
 // bool EditComponent::keyPressed(const KeyPress& key) {
