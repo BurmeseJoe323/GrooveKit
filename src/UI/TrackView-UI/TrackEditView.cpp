@@ -40,27 +40,13 @@ void TrackEditView::resized()
     viewport.setBounds (r);
 }
 
-void TrackEditView::openPianoRollWindow(int trackIndex)
-{
-    if (pianoRollWindow == nullptr) {
-        pianoRollWindow = std::make_unique<PianoRollWindow>();
-        addAndMakeVisible(pianoRollWindow.get());
-        pianoRollWindow->addToDesktop(pianoRollWindow->getDesktopWindowStyleFlags());
-        pianoRollWindow->toFront(true);
-        pianoRollWindow->centreWithSize(pianoRollWindow->getWidth(), pianoRollWindow->getHeight());
-    } else {
-        pianoRollWindow->setVisible(true);
-        pianoRollWindow->toFront(true);
-    }
-}
-
 void TrackEditView::setupButtons()
 {
     newTrackButton.onClick = [this] {
         if (trackList != nullptr)
         {
             // TODO : might not be returning the right index
-            int index = appEngine->addMidiTrack();
+            int index = appEngine->addMidiTrack() - 1;
             trackList->addNewTrack (index);
         }
     };

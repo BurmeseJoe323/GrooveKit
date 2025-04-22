@@ -22,8 +22,6 @@ public:
     void paint (Graphics&) override;
     void resized() override;
 
-    void openPianoRollWindow(int trackIndex);
-
 private:
     std::shared_ptr<AppEngine> appEngine;
     std::unique_ptr<TrackListComponent> trackList;
