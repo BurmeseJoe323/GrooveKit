@@ -14,7 +14,7 @@ using namespace juce;
 class EditComponent : public juce::Component{
 public:
     explicit EditComponent(AppEngine& engine);
-    ~EditComponent();
+    ~EditComponent() override;
 
     void paint(juce::Graphics& g) override;
     void resized() override;
