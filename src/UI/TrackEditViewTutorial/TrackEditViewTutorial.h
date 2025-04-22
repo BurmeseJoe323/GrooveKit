@@ -12,7 +12,7 @@ public:
     explicit TrackEditViewTutorial (DatabaseManager& db);
     ~TrackEditViewTutorial() override;
 
-    String getName() const override
+    String getScreenName() const override
     {
         return "Track Edit View Tutorial";
     }

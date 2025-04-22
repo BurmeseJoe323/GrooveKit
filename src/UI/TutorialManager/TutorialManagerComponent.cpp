@@ -11,7 +11,7 @@ TutorialManagerComponent::TutorialManagerComponent(AppEngine& engine, DatabaseMa
     // Create nodes
     for (int i = 0; i < screens.size(); ++i)
     {
-        auto* node = new TutorialNodeComponent(screens[i]->getName(), i,
+        auto* node = new TutorialNodeComponent(screens[i]->getScreenName(), i,
             [this](int idx) { showScreen(idx); });
         nodes.add(node);
         addAndMakeVisible(node);

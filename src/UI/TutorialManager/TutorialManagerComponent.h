@@ -46,7 +46,7 @@ struct TutorialScreen
 {
     virtual ~TutorialScreen() = default;
     /** Human‑readable name for the node list. */
-    [[nodiscard]] virtual juce::String getName() const = 0;
+    [[nodiscard]] virtual juce::String getScreenName() const = 0;
     /** Returns a brand‑new component to show in the right pane. */
     virtual juce::Component* createContent() = 0;
 };
