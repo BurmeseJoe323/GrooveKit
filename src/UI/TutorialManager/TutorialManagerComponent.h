@@ -30,13 +30,15 @@ private:
     void showNodeView();
     void showScreen(int index);
 
+
+
     AppEngine& appEngine;
     DatabaseManager& db;
     bool showingNodes = true;
 
     juce::OwnedArray<TutorialScreen> screens;
     juce::OwnedArray<TutorialNodeComponent> nodes;
-    juce::Component::SafePointer<juce::Component> currentContent;
+    std::unique_ptr<juce::Component> currentContent;
     juce::TextButton backButton { "Back" };
     juce::Array<bool> getCompletedTutorials();
 };

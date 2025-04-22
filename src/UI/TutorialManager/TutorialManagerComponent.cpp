@@ -67,7 +67,7 @@ void TutorialManagerComponent::resized()
     }
     else
     {
-        if (auto* c = currentContent.getComponent())
+        if (auto* c = currentContent.get())
             c->setBounds (area);
     }
 }
@@ -77,7 +77,7 @@ void TutorialManagerComponent::showNodeView()
     showingNodes = true;
     for (auto* node : nodes)
         node->setVisible (true);
-    if (auto* old = currentContent.getComponent())
+    if (auto* old = currentContent.get())
         removeChildComponent (old);
     currentContent = {};
     resized();
@@ -88,6 +88,8 @@ void TutorialManagerComponent::showScreen (int index)
     showingNodes = false;
     for (auto* node : nodes)
         node->setVisible (false);
+    currentContent.reset();
+
 
     auto* comp = screens[index]->createContent();
     if (auto* trackTut = dynamic_cast<TrackEditViewTutorial*>(comp))
@@ -100,6 +102,7 @@ void TutorialManagerComponent::showScreen (int index)
                 bool shouldEnable = completedStatus[i] || (i == 0) || (i > 0 && completedStatus[i - 1]);
                 nodes[i]->setEnabled(shouldEnable);
             }
+
         };
     }
     else if (auto* instrumentTut = dynamic_cast<InstrumentTutorial*>(comp))
@@ -112,10 +115,11 @@ void TutorialManagerComponent::showScreen (int index)
                 bool shouldEnable = completedStatus[i] || (i == 0) || (i > 0 && completedStatus[i - 1]);
                 nodes[i]->setEnabled(shouldEnable);
             }
+
         };
     }
     addAndMakeVisible (comp);
-    currentContent = comp;
+    currentContent.reset(comp);
     resized();
 }
 
