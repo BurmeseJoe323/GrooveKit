@@ -7,22 +7,13 @@ MainComponent::MainComponent (AppEngine& engine)
 {
     databaseManager.initialize();
 
+    tutorialManager = std::make_unique<TutorialManagerComponent>(appEngine, databaseManager);
+    addAndMakeVisible (tutorialManager.get());
+    tutorialManager->setVisible (false);   // start hidden
+    tutorialManager->onBack = [this] { showHome(); };
+
     openTrackView.onClick = [this] { showTrackView(); };
     addAndMakeVisible (openTrackView);
-
-    // openInstTutorial.onClick = [this]() {
-    //     showInstrumentTutorial();
-    //     databaseManager.addTutorial ("InstrumentTutorial");
-    // };
-    // addAndMakeVisible (openTrackViewTut);
-    //
-    // openTrackViewTut.onClick = [this]() {
-    //     // display TrackView tutorial
-    //     showTrackViewTutorial();
-    //     // add Tutorial to the db.
-    //     databaseManager.addTutorial ("TrackViewTutorial");
-    // };
-    // addAndMakeVisible (openInstTutorial);
 
     openTutorialManager.onClick = [this] { showTutorialManager(); };
     addAndMakeVisible (openTutorialManager);
@@ -32,12 +23,12 @@ MainComponent::MainComponent (AppEngine& engine)
 
 MainComponent::~MainComponent() = default;
 
-void MainComponent::paint (juce::Graphics& g)
+void MainComponent::paint (Graphics& g)
 {
-    g.fillAll (juce::Colours::black);
-    g.setColour (juce::Colours::white);
+    g.fillAll (Colours::black);
+    g.setColour (Colours::white);
     g.setFont (20.0f);
-    g.drawText ("Hello, GrooveKit!", getLocalBounds(), juce::Justification::centred, true);
+    g.drawText ("Hello, GrooveKit!", getLocalBounds(), Justification::centred, true);
 }
 
 void MainComponent::resized()
@@ -47,23 +38,12 @@ void MainComponent::resized()
     box.justifyContent = FlexBox::JustifyContent::spaceBetween;
     box.alignItems = FlexBox::AlignItems::flexEnd;
 
-    box.items.addArray ({ FlexItem (openTrackView)
-                              .withFlex (1.0f, 1.0f)
-                              .withMinWidth (50.0f)
-                              .withMinHeight (30.0f)
-                              .withMargin ({ 5.0f, 10.0f, 5.0f, 10.0f }),
-
-        // FlexItem (openTrackViewTut)
-        //     .withFlex (1.0f, 1.0f)
-        //     .withMinWidth (50.0f)
-        //     .withMinHeight (30.0f)
-        //     .withMargin ({ 5.0f, 10.0f, 5.0f, 10.0f }),
-        //
-        // FlexItem (openInstTutorial)
-        //     .withFlex (1.0f, 1.0f)
-        //     .withMinWidth (50.0f)
-        //     .withMinHeight (30.0f)
-        //     .withMargin ({ 5.0f, 10.0f, 5.0f, 10.0f }),
+    box.items.addArray ({
+        FlexItem (openTrackView)
+            .withFlex (1.0f, 1.0f)
+            .withMinWidth (50.0f)
+            .withMinHeight (30.0f)
+            .withMargin ({ 5.0f, 10.0f, 5.0f, 10.0f }),
 
         FlexItem (openTutorialManager)
             .withFlex (1.0f, 1.0f)
@@ -77,27 +57,19 @@ void MainComponent::resized()
 void MainComponent::showTrackView()
 {
     trackView = std::make_unique<TrackView> (appEngine);
-
     addAndMakeVisible (trackView.get());
     trackView->setBounds (getLocalBounds());
-    openTrackView.setVisible (false);
-}
 
-// void MainComponent::showTrackViewTutorial()
-// {
-//     trackViewTut = std::make_unique<TrackEditViewTutorial> (databaseManager);
-//     addAndMakeVisible (trackViewTut.get());
-//
-//     trackViewTut->setBounds (getLocalBounds());
-//     openTrackView.setVisible (false);
-// }
+    openTrackView.setVisible (false);
+    openTutorialManager.setVisible (false);
+}
 
 // void MainComponent::showInstrumentTutorial()
 // {
 //     instTutorial = std::make_unique<InstrumentTutorial> (databaseManager);
 //
 //     //Creating a safe pointer to the component
-//     juce::Component::SafePointer<MainComponent> safeThis (this);
+//     Component::SafePointer<MainComponent> safeThis (this);
 //     instTutorial->onFinishTutorial = [safeThis]() {
 //         if (auto* comp = safeThis.getComponent())
 //         {
@@ -119,13 +91,16 @@ void MainComponent::showTrackView()
 
 void MainComponent::showTutorialManager()
 {
-    tutorialManager = std::make_unique<TutorialManagerComponent> (appEngine, databaseManager);
-
-    addAndMakeVisible (tutorialManager.get());
+    tutorialManager->setVisible (true);
     tutorialManager->setBounds (getLocalBounds());
-
     openTrackView.setVisible (false);
-    // openTrackViewTut.setVisible (false);
-    // openInstTutorial.setVisible (false);
     openTutorialManager.setVisible (false);
 }
+
+void MainComponent::showHome()
+{
+    tutorialManager->setVisible(false);
+    openTrackView.setVisible (true);
+    openTutorialManager.setVisible (true);
+}
+
