@@ -1,23 +1,36 @@
 #pragma once
 
-#include <juce_gui_basics/juce_gui_basics.h>
 #include "../../DatabaseManager/DatabaseManager.h"
+#include "../TutorialManager/TutorialManagerComponent.h"
+#include <juce_gui_basics/juce_gui_basics.h>
 
-class InstrumentTutorial : public juce::Component
+using namespace juce;
+class InstrumentTutorial final : public Component, public TutorialScreen
 {
 public:
-    InstrumentTutorial(DatabaseManager& dbManager);
+    explicit InstrumentTutorial (DatabaseManager& dbManager);
     ~InstrumentTutorial() override = default;
 
-    void paint(juce::Graphics&) override;
+    String getScreenName() const override
+    {
+        return "Instrument Tutorial";
+    }
+
+    Component* createContent() override
+    {
+        // we return a *new* instance so the manager can own it:
+        return new InstrumentTutorial (db);
+    }
+
+    void paint(Graphics&) override;
     void resized() override;
     std::function<void()> onFinishTutorial;
 
 private:
     DatabaseManager& db;
-    juce::ComboBox waveformBox;
-    juce::Slider attackSlider, decaySlider, sustainSlider, releaseSlider, volumeSlider;
-    juce::Label attackLabel, decayLabel, sustainLabel, releaseLabel, volumeLabel;
+    ComboBox waveformBox;
+    Slider attackSlider, decaySlider, sustainSlider, releaseSlider, volumeSlider;
+    Label attackLabel, decayLabel, sustainLabel, releaseLabel, volumeLabel;
 
     enum class TutorialStep
     {
@@ -32,10 +45,10 @@ private:
 
     TutorialStep currentStep = TutorialStep::Waveform;
 
-    juce::TextButton nextButton { "Next" };
-    juce::Label descriptionLabel;
+    TextButton nextButton { "Next" };
+    Label descriptionLabel;
 
-    juce::TextButton finishButton { "Finish Tutorial" };
+    TextButton finishButton { "Finish Tutorial" };
 
     void advanceStep();
     void updateTutorialUI();

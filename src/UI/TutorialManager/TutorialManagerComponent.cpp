@@ -1,4 +1,6 @@
 #include "TutorialManagerComponent.h"
+
+#include "../InstrumentTutorial/InstrumentTutorial.h"
 #include "../TrackEditViewTutorial/TrackEditViewTutorial.h"
 
 TutorialManagerComponent::TutorialManagerComponent(AppEngine& engine, DatabaseManager& db)
@@ -6,7 +8,7 @@ TutorialManagerComponent::TutorialManagerComponent(AppEngine& engine, DatabaseMa
 {
     // Register your tutorial screens
     screens.add(new TrackEditViewTutorial(db));
-    // Add more: screens.add(new OtherTutorial());
+    screens.add(new InstrumentTutorial(db));
 
     // Create nodes
     for (int i = 0; i < screens.size(); ++i)
