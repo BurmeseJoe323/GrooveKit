@@ -7,26 +7,24 @@ MainComponent::MainComponent (AppEngine& engine)
 {
     databaseManager.initialize();
 
-    openTrackView.onClick = [this]() { showTrackView(); };
+    openTrackView.onClick = [this] { showTrackView(); };
     addAndMakeVisible (openTrackView);
 
-    openInstTutorial.onClick = [this]() {
-        showInstrumentTutorial();
-        databaseManager.addTutorial ("InstrumentTutorial");
-    };
-    addAndMakeVisible (openTrackViewTut);
+    // openInstTutorial.onClick = [this]() {
+    //     showInstrumentTutorial();
+    //     databaseManager.addTutorial ("InstrumentTutorial");
+    // };
+    // addAndMakeVisible (openTrackViewTut);
+    //
+    // openTrackViewTut.onClick = [this]() {
+    //     // display TrackView tutorial
+    //     showTrackViewTutorial();
+    //     // add Tutorial to the db.
+    //     databaseManager.addTutorial ("TrackViewTutorial");
+    // };
+    // addAndMakeVisible (openInstTutorial);
 
-    openTrackViewTut.onClick = [this]() {
-        // display TrackView tutorial
-        showTrackViewTutorial();
-        // add Tutorial to the db.
-        databaseManager.addTutorial ("TrackViewTutorial");
-    };
-    addAndMakeVisible (openInstTutorial);
-
-    openTutorialManager.onClick = [this]() {
-        showTutorialManager();
-    };
+    openTutorialManager.onClick = [this] { showTutorialManager(); };
     addAndMakeVisible (openTutorialManager);
 
     setSize (600, 400);
@@ -55,17 +53,17 @@ void MainComponent::resized()
                               .withMinHeight (30.0f)
                               .withMargin ({ 5.0f, 10.0f, 5.0f, 10.0f }),
 
-        FlexItem (openTrackViewTut)
-            .withFlex (1.0f, 1.0f)
-            .withMinWidth (50.0f)
-            .withMinHeight (30.0f)
-            .withMargin ({ 5.0f, 10.0f, 5.0f, 10.0f }),
-
-        FlexItem (openInstTutorial)
-            .withFlex (1.0f, 1.0f)
-            .withMinWidth (50.0f)
-            .withMinHeight (30.0f)
-            .withMargin ({ 5.0f, 10.0f, 5.0f, 10.0f }),
+        // FlexItem (openTrackViewTut)
+        //     .withFlex (1.0f, 1.0f)
+        //     .withMinWidth (50.0f)
+        //     .withMinHeight (30.0f)
+        //     .withMargin ({ 5.0f, 10.0f, 5.0f, 10.0f }),
+        //
+        // FlexItem (openInstTutorial)
+        //     .withFlex (1.0f, 1.0f)
+        //     .withMinWidth (50.0f)
+        //     .withMinHeight (30.0f)
+        //     .withMargin ({ 5.0f, 10.0f, 5.0f, 10.0f }),
 
         FlexItem (openTutorialManager)
             .withFlex (1.0f, 1.0f)
@@ -80,47 +78,44 @@ void MainComponent::showTrackView()
 {
     trackView = std::make_unique<TrackView> (appEngine);
 
-    // why do we have this??
-    //auto view = std::make_unique<TrackView>(appEngine);
-
     addAndMakeVisible (trackView.get());
     trackView->setBounds (getLocalBounds());
     openTrackView.setVisible (false);
 }
 
-void MainComponent::showTrackViewTutorial()
-{
-    trackViewTut = std::make_unique<TrackEditViewTutorial> (databaseManager);
-    addAndMakeVisible (trackViewTut.get());
+// void MainComponent::showTrackViewTutorial()
+// {
+//     trackViewTut = std::make_unique<TrackEditViewTutorial> (databaseManager);
+//     addAndMakeVisible (trackViewTut.get());
+//
+//     trackViewTut->setBounds (getLocalBounds());
+//     openTrackView.setVisible (false);
+// }
 
-    trackViewTut->setBounds (getLocalBounds());
-    openTrackView.setVisible (false);
-}
-
-void MainComponent::showInstrumentTutorial()
-{
-    instTutorial = std::make_unique<InstrumentTutorial> (databaseManager);
-
-    //Creating a safe pointer to the component
-    juce::Component::SafePointer<MainComponent> safeThis (this);
-    instTutorial->onFinishTutorial = [safeThis]() {
-        if (auto* comp = safeThis.getComponent())
-        {
-            comp->instTutorial.reset();
-            comp->openTrackView.setVisible (true);
-            comp->openTrackViewTut.setVisible (true);
-            comp->openInstTutorial.setVisible (true);
-            comp->resized();
-        }
-    };
-
-    addAndMakeVisible (instTutorial.get());
-    instTutorial->setBounds (getLocalBounds());
-
-    openTrackView.setVisible (false);
-    openTrackViewTut.setVisible (false);
-    openInstTutorial.setVisible (false);
-}
+// void MainComponent::showInstrumentTutorial()
+// {
+//     instTutorial = std::make_unique<InstrumentTutorial> (databaseManager);
+//
+//     //Creating a safe pointer to the component
+//     juce::Component::SafePointer<MainComponent> safeThis (this);
+//     instTutorial->onFinishTutorial = [safeThis]() {
+//         if (auto* comp = safeThis.getComponent())
+//         {
+//             comp->instTutorial.reset();
+//             comp->openTrackView.setVisible (true);
+//             comp->openTrackViewTut.setVisible (true);
+//             comp->openInstTutorial.setVisible (true);
+//             comp->resized();
+//         }
+//     };
+//
+//     addAndMakeVisible (instTutorial.get());
+//     instTutorial->setBounds (getLocalBounds());
+//
+//     openTrackView.setVisible (false);
+//     openTrackViewTut.setVisible (false);
+//     openInstTutorial.setVisible (false);
+// }
 
 void MainComponent::showTutorialManager()
 {
@@ -130,7 +125,7 @@ void MainComponent::showTutorialManager()
     tutorialManager->setBounds (getLocalBounds());
 
     openTrackView.setVisible (false);
-    openTrackViewTut.setVisible (false);
-    openInstTutorial.setVisible (false);
+    // openTrackViewTut.setVisible (false);
+    // openInstTutorial.setVisible (false);
     openTutorialManager.setVisible (false);
 }
