@@ -4,7 +4,9 @@ TrackEditViewTutorial::TrackEditViewTutorial (DatabaseManager& dbManager) : db (
 {
     addAndMakeVisible (endTutorial);
     endTutorial.onClick = [&] {
-        db.addCompletedTutorial ("TrackViewTutorial", "User1");
+        db.addCompletedTutorial(getScreenName().toStdString(), "User1");
+        if (onTutorialCompleted)
+            onTutorialCompleted();
     };
 }
 

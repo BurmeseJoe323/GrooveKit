@@ -6,15 +6,19 @@
 TutorialManagerComponent::TutorialManagerComponent (AppEngine& engine, DatabaseManager& db)
     : appEngine (engine), db (db)
 {
-    // Register tutorial screens
-    screens.add (new TrackEditViewTutorial (db));
+    // Register tutorial screen
     screens.add (new InstrumentTutorial (db));
+    screens.add (new TrackEditViewTutorial (db));
+
+    auto completedStatus = getCompletedTutorials();
 
     // Create nodes
     for (int i = 0; i < screens.size(); ++i)
     {
         auto* node = new TutorialNodeComponent (screens[i]->getScreenName(), i,
             [this] (int idx) { showScreen (idx); });
+        bool shouldEnable = completedStatus[i] || (i == 0) || (i > 0 && completedStatus[i - 1]);
+        node->setEnabled(shouldEnable);
         nodes.add (node);
         addAndMakeVisible (node);
     }
@@ -86,7 +90,44 @@ void TutorialManagerComponent::showScreen (int index)
         node->setVisible (false);
 
     auto* comp = screens[index]->createContent();
+    if (auto* trackTut = dynamic_cast<TrackEditViewTutorial*>(comp))
+    {
+        trackTut->onTutorialCompleted = [this]() {
+            showNodeView();
+            auto completedStatus = getCompletedTutorials();
+            for (int i = 0; i < nodes.size(); ++i)
+            {
+                bool shouldEnable = completedStatus[i] || (i == 0) || (i > 0 && completedStatus[i - 1]);
+                nodes[i]->setEnabled(shouldEnable);
+            }
+        };
+    }
+    else if (auto* instrumentTut = dynamic_cast<InstrumentTutorial*>(comp))
+    {
+        instrumentTut->onFinishTutorial = [this]() {
+            showNodeView();
+            auto completedStatus = getCompletedTutorials();
+            for (int i = 0; i < nodes.size(); ++i)
+            {
+                bool shouldEnable = completedStatus[i] || (i == 0) || (i > 0 && completedStatus[i - 1]);
+                nodes[i]->setEnabled(shouldEnable);
+            }
+        };
+    }
     addAndMakeVisible (comp);
     currentContent = comp;
     resized();
 }
+
+juce::Array<bool> TutorialManagerComponent::getCompletedTutorials()
+{
+    juce::Array<bool> completed;
+    for (const auto& screen : screens)
+    {
+        bool isDone = db.isTutorialComplete(screen->getScreenName().toStdString());
+        completed.add(isDone);
+    }
+    return completed;
+}
+
+

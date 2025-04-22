@@ -38,6 +38,7 @@ private:
     juce::OwnedArray<TutorialNodeComponent> nodes;
     juce::Component::SafePointer<juce::Component> currentContent;
     juce::TextButton backButton { "Back" };
+    juce::Array<bool> getCompletedTutorials();
 };
 
 /**

@@ -42,6 +42,9 @@ public:
     ///     NOTE: if name is a duplicate, query will also fail
     bool addUser(const std::string &name);
 
+    bool isTutorialComplete(const std::string& name);
+
+
 private:
     sqlite3* db = nullptr;
     std::string userDbPath;

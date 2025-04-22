@@ -21,21 +21,33 @@ public:
     void paint(juce::Graphics& g) override
     {
         auto bounds = getLocalBounds().toFloat();
-        g.setColour(juce::Colours::darkgrey);
+
+        g.setColour(enabled ? juce::Colours::darkgrey : juce::Colours::darkgrey.withAlpha(0.3f));
         g.fillEllipse(bounds);
-        g.setColour(juce::Colours::white);
+
+        g.setColour(enabled ? juce::Colours::white : juce::Colours::white.withAlpha(0.3f));
         g.drawText(title, getLocalBounds(), juce::Justification::centred);
+
     }
 
     void mouseUp(const juce::MouseEvent&) override
     {
-        if (callback)
+        if (enabled && callback)
             callback(index);
+
     }
+
+    void setEnabled(bool shouldEnable)
+    {
+        enabled = shouldEnable;
+        repaint();
+    }
+
 
     void resized() override {}
 
 private:
+    bool enabled = false;
     juce::String title;
     int index;
     std::function<void(int)> callback;

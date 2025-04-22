@@ -26,10 +26,13 @@ public:
     void paint (Graphics& g) override;
     void resized() override;
 
+    std::function<void()> onTutorialCompleted;
+
 private:
     DatabaseManager& db;
     TextButton goBack { "Home" };
     TextButton endTutorial { "Complete Tutorial" };
+
     // below are examples of creating buttons and labels
     // juce::TextButton addClip {"simpl"};
     // juce::Label trackNameLabel {"Track"};
