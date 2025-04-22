@@ -20,7 +20,7 @@ TrackHeaderComponent::TrackHeaderComponent() {
   };
 
   pianoRollButton.onClick = [this]() {
-
+    listeners.call([](Listener& l) { l.onPianoRollClicked(); });
   };
 
   // setup trackNameLabel
