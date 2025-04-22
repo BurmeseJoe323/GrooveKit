@@ -4,12 +4,12 @@
 
 #pragma once
 
-#include <juce_gui_basics/juce_gui_basics.h>
-#include "TrackView-UI/TrackView.h"
 #include "../AppEngine/AppEngine.h"
-#include "TrackView-Tutorial/TrackViewTut.h"
 #include "../DatabaseManager/DatabaseManager.h"
 #include "InstrumentTutorial/InstrumentTutorial.h"
+#include "TrackEditViewTutorial/TrackEditViewTutorial.h"
+#include "TrackView/TrackView.h"
+#include <juce_gui_basics/juce_gui_basics.h>
 
 class MainComponent : public juce::Component
 {
@@ -20,15 +20,20 @@ public:
     void paint(juce::Graphics&) override;
     void resized() override;
 private:
-    TextButton openTrackView {"OPEN TRACKVIEW"};
-    TextButton openTrackViewTut {"TrackView Tutorial"};
-    TextButton openInstTutorial {"Instrument Tutorial"};
-    std::unique_ptr<TrackView> trackView;
-    std::unique_ptr<TrackViewTut> trackViewTut;
-    std::unique_ptr<InstrumentTutorial> instTutorial;
     AppEngine& appEngine;
     DatabaseManager databaseManager;
+    std::unique_ptr<TrackView> trackView;
+    std::unique_ptr<TrackEditViewTutorial> trackViewTut;
+    std::unique_ptr<InstrumentTutorial> instTutorial;
+    std::unique_ptr<TutorialManagerComponent> tutorialManager;
+
+    TextButton openTrackView {"TrackView"};
+    TextButton openTrackViewTut {"TrackView Tutorial"};
+    TextButton openInstTutorial {"Instrument Tutorial"};
+    TextButton openTutorialManager {"Tutorials"};
+
     void showTrackView();
     void showTrackViewTutorial();
     void showInstrumentTutorial();
+    void showTutorialManager();
 };
