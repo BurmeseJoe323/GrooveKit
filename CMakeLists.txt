@@ -33,6 +33,7 @@ set(SQLITE_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/third-party/database/sqlite3.h
         src/UI/InstrumentTutorial/InstrumentTutorial.cpp
         src/UI/InstrumentTutorial/InstrumentTutorial.h
+        src/UI/TutorialManager/TutorialManagerComponent.cpp
 )
 
 # Build based on platform
@@ -43,31 +44,32 @@ if (WIN32)
             src/UI/MainComponent.h
             src/UI/MainComponent.cpp
             src/UI/TestComponent.h
-            src/UI/TrackView-UI/TrackView.cpp
-            src/UI/TrackView-UI/TrackView.h
+            src/UI/TrackView/TrackView.cpp
+            src/UI/TrackView/TrackView.h
             src/AppEngine/AppEngine.h
             src/AppEngine/AppEngine.cpp
             src/MIDIEngine/MIDIEngine.h
             src/MIDIEngine/MIDIEngine.cpp
             src/AudioEngine/AudioEngine.h
             src/AudioEngine/AudioEngine.cpp
-            src/UI/TrackView-UI/TrackComponent.cpp
-            src/UI/TrackView-UI/TrackComponent.h
-            src/UI/TrackView-UI/TrackHeader.cpp
-            src/UI/TrackView-UI/TrackHeader.h
+            src/UI/TrackView/TrackComponent.cpp
+            src/UI/TrackView/TrackComponent.h
+            src/UI/TrackView/TrackHeader.cpp
+            src/UI/TrackView/TrackHeader.h
             Resources/exampleGUISetup.cpp
             Resources/exampleGUISetup.h
-            src/UI/TrackView-UI/TrackClip.cpp
-            src/UI/TrackView-UI/TrackClip.h
-            src/UI/TrackView-UI/EditComponent.cpp
-            src/UI/TrackView-UI/EditComponent.h
+            src/UI/TrackView/TrackClip.cpp
+            src/UI/TrackView/TrackClip.h
+            src/UI/TrackView/EditComponent.cpp
+            src/UI/TrackView/EditComponent.h
             src/AppEngine/TrackManager.h
             src/AppEngine/TrackManager.cpp
             ${SQLITE_SOURCES}
-            src/UI/TrackView-Tutorial/TrackViewTut.cpp
-            src/UI/TrackView-Tutorial/TrackViewTut.h
+            src/UI/TrackEditViewTutorial/TrackViewTut.cpp
+            src/UI/TrackEditViewTutorial/TrackViewTut.h
             src/DatabaseManager/DatabaseManager.cpp
             src/DatabaseManager/DatabaseManager.h
+            src/UI/TutorialManager/TutorialManagerComponent.cpp
     )
 elseif (APPLE)
     # macOS: Build as console app (uses main via JUCE)
@@ -76,31 +78,32 @@ elseif (APPLE)
             src/UI/MainComponent.h
             src/UI/MainComponent.cpp
             src/UI/TestComponent.h
-            src/UI/TrackView-UI/TrackView.cpp
-            src/UI/TrackView-UI/TrackView.h
+            src/UI/TrackView/TrackView.cpp
+            src/UI/TrackView/TrackView.h
             src/AppEngine/AppEngine.h
             src/AppEngine/AppEngine.cpp
             src/MIDIEngine/MIDIEngine.h
             src/MIDIEngine/MIDIEngine.cpp
             src/AudioEngine/AudioEngine.h
             src/AudioEngine/AudioEngine.cpp
-            src/UI/TrackView-UI/TrackComponent.cpp
-            src/UI/TrackView-UI/TrackComponent.h
-            src/UI/TrackView-UI/TrackHeader.cpp
-            src/UI/TrackView-UI/TrackHeader.h
+            src/UI/TrackView/TrackComponent.cpp
+            src/UI/TrackView/TrackComponent.h
+            src/UI/TrackView/TrackHeader.cpp
+            src/UI/TrackView/TrackHeader.h
             Resources/exampleGUISetup.cpp
             Resources/exampleGUISetup.h
-            src/UI/TrackView-UI/TrackClip.cpp
-            src/UI/TrackView-UI/TrackClip.h
-            src/UI/TrackView-UI/EditComponent.cpp
-            src/UI/TrackView-UI/EditComponent.h
+            src/UI/TrackView/TrackClip.cpp
+            src/UI/TrackView/TrackClip.h
+            src/UI/TrackView/EditComponent.cpp
+            src/UI/TrackView/EditComponent.h
             src/AppEngine/TrackManager.h
             src/AppEngine/TrackManager.cpp
             ${SQLITE_SOURCES}
-            src/UI/TrackView-Tutorial/TrackViewTut.cpp
-            src/UI/TrackView-Tutorial/TrackViewTut.h
+            src/UI/TrackEditViewTutorial/TrackEditViewTutorial.cpp
+            src/UI/TrackEditViewTutorial/TrackEditViewTutorial.h
             src/DatabaseManager/DatabaseManager.cpp
             src/DatabaseManager/DatabaseManager.h
+            src/UI/TutorialManager/TutorialManagerComponent.cpp
     )
 endif()
 
