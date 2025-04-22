@@ -18,6 +18,7 @@ public:
     explicit TutorialManagerComponent(AppEngine& engine, DatabaseManager& db);
     ~TutorialManagerComponent() override;
 
+    void paint(juce::Graphics &g) override;
     void resized() override;
 
     /**

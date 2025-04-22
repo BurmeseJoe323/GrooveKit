@@ -31,6 +31,14 @@ TutorialManagerComponent::TutorialManagerComponent (AppEngine& engine, DatabaseM
 
 TutorialManagerComponent::~TutorialManagerComponent() = default;
 
+void TutorialManagerComponent::paint(Graphics& g)
+{
+    g.fillAll (Colours::darkblue);
+    g.setColour (Colours::white);
+    g.setFont (20.0f);
+    g.drawText ("TutorialManager", getLocalBounds(), Justification::centred, true);
+}
+
 void TutorialManagerComponent::resized()
 {
     auto area = getLocalBounds().reduced (10);
