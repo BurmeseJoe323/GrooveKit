@@ -39,7 +39,8 @@ void TrackListComponent::resized()
     int numTracks = headers.size();
     int contentH = numTracks * trackHeight + addButtonSpace;
 
-    setSize(getParentWidth(), contentH);
+    // Set the size to either default to the parent's height if the content height isn't tall enough
+    setSize(getParentWidth(), contentH > getParentHeight() ? contentH : getParentHeight());
 
     auto bounds = getLocalBounds();
     bounds.removeFromBottom (addButtonSpace); // Space for add button
