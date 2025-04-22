@@ -6,14 +6,17 @@
 
 #include "TrackListComponent.h"
 
+#include <juce_graphics/fonts/harfbuzz/hb-ot-head-table.hh>
+
 TrackListComponent::TrackListComponent(std::shared_ptr<AppEngine> engine) : appEngine(engine),
                                                                             playhead(engine->getEdit(),
-                                                                                engine->getEditViewState())
+                                                                                     engine->getEditViewState())
 {
     //Add initial track pair
     //addNewTrack();
     setWantsKeyboardFocus (true); // setting keyboard focus?
     addAndMakeVisible(playhead);
+    playhead.setAlwaysOnTop(true);
 }
 
 TrackListComponent::~TrackListComponent() = default;
@@ -50,7 +53,7 @@ void TrackListComponent::resized()
     }
 
     // Set bounds for playhead
-    playhead.setBounds (headerWidth, 0, 2, getHeight());
+    playhead.setBounds (getLocalBounds().withTrimmedLeft(headerWidth));
 }
 
 void TrackListComponent::addNewTrack (int index)
