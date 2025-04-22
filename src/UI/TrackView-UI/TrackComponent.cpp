@@ -27,7 +27,7 @@ void TrackComponent::resized() {
     const FlexItem::Margin itemMargin(margin);
 
     mainFB.items.add(FlexItem(trackClip)
-        .withWidth(300)
+        .withWidth(125)
         .withHeight(getHeight() - itemMargin.top - itemMargin.bottom)
         .withMargin(itemMargin));
 

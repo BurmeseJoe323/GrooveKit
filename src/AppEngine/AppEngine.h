@@ -28,7 +28,8 @@ namespace IDs
 
 namespace te = tracktion;
 
-using namespace te::core::literals;
+using namespace te::literals;
+using namespace std::literals;
 
 class EditViewState
 {
@@ -51,8 +52,8 @@ public:
         showMidiDevices.referTo (state, IDs::showMidiDevices, um, false);
         showWaveDevices.referTo (state, IDs::showWaveDevices, um, true);
 
-        viewX1.referTo (state, IDs::viewX1, um, 0_tp);
-        viewX2.referTo (state, IDs::viewX2, um, 60_tp);
+        viewX1.referTo (state, IDs::viewX1, um, 0s);
+        viewX2.referTo (state, IDs::viewX2, um, 15s);
         viewY.referTo (state, IDs::viewY, um, 0);
     }
 
