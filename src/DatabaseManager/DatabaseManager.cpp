@@ -191,19 +191,41 @@ bool DatabaseManager::addCompletedTutorial(const std::string &tutorialName, cons
     return true;
 }
 
-bool DatabaseManager::selectCompletedTutorials(const std::string &userName) {
-    std::string data("CALLBACK FUNCTION");
+std::vector<const unsigned char*> DatabaseManager::selectCompletedTutorials(const std::string &userName) {
+    std::vector<const unsigned char*> completedTutorials;
+    int rc;
+    sqlite3_stmt *stmt;
+    const char* sql = "SELECT tutorialName FROM COMPLETED WHERE userName = ?;";
 
-    std::string sql("SELECT * FROM COMPLETED;");
-
-    int rc = sqlite3_exec(db, sql.c_str(), callback, (void*)data.c_str(), nullptr);
-
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
     if (rc != SQLITE_OK) {
-        std::cerr << "Error SELECT" << std::endl;
-        return false;
+        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+        return completedTutorials;
     }
 
+    // This binds the username parameter into our sql statement.
+    sqlite3_bind_text(stmt, 1, userName.c_str(), -1, SQLITE_STATIC);
+
+    // Execute the statement and process results
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        const unsigned char* tutorialName = sqlite3_column_text(stmt, 0);
+        if (tutorialName == nullptr) {
+            std::cout << "Something Went Wrong. tutorialName may be null" << std::endl;
+            break;
+        }
+        std::cout << "Tutorial Name: " << tutorialName << std::endl;
+
+        completedTutorials.push_back(tutorialName);
+
+    }
+
+    if (rc != SQLITE_DONE) {
+        std::cerr << "Error executing statement" << sqlite3_errmsg(db) << std::endl;
+    }
+
+    sqlite3_finalize(stmt);
+
     std::cout << "Operation OK!" << std::endl;
-    return true;
+    return completedTutorials;
 }
 

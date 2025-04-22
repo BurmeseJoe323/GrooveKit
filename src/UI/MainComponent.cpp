@@ -28,7 +28,8 @@ MainComponent::MainComponent(AppEngine& engine)
     };
 
     selectCompletedTutorials.onClick = [this]() {
-        databaseManager.selectCompletedTutorials("User1");
+        int size = databaseManager.selectCompletedTutorials("User1").size();
+        std::cout << "There are: " << size <<  " elements in the array" << std::endl;
     };
 
     addAndMakeVisible(openTrackView);

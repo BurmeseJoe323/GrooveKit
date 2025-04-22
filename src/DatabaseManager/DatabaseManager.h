@@ -11,7 +11,6 @@
 #include "../../third-party/database/sqlite3.h"
 #include <string>
 #include <vector>
-#include <unordered_map>
 
 class DatabaseManager {
 public:
@@ -47,7 +46,7 @@ public:
     /// This method will select and return true if the select was a success and false o.w.
     /// @userName The user's userName in the current session.
     /// @return Returns a list of all of the completed tutorials based on the given userName
-    bool selectCompletedTutorials(const std::string &userName);
+    std::vector<const unsigned char*> selectCompletedTutorials(const std::string &userName);
 
 private:
     sqlite3* db = nullptr;
