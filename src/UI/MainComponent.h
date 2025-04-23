@@ -26,4 +26,6 @@ public:
 
 private:
     std::unique_ptr<Component> view;
+
+    DatabaseManager databaseManager;
 };

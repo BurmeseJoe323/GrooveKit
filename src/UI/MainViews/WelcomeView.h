@@ -22,7 +22,6 @@ private:
     TextButton openTrackViewTut {"TrackView Tutorial"};
     TextButton openInstTutorial {"Instrument Tutorial"};
     TextButton selectCompletedTutorials {"See completed Tutorials"};
-
 };
 
 

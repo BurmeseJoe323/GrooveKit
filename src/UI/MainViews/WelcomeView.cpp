@@ -27,9 +27,15 @@ WelcomeView::WelcomeView()
         parent->showTrackViewTutorial();
     };
 
+    selectCompletedTutorials.onClick = [this]() {
+        auto parent = dynamic_cast<MainComponent*>(getParentComponent());
+        parent->reportDatabaseSize();
+    };
+
     addAndMakeVisible(openTrackView);
     addAndMakeVisible(openInstTutorial);
     addAndMakeVisible(openTrackViewTut);
+    addAndMakeVisible(selectCompletedTutorials);
 }
 
 WelcomeView::~WelcomeView() = default;
@@ -45,7 +51,8 @@ void WelcomeView::paint(juce::Graphics& g)
 
 void WelcomeView::resized()
 {
-    openTrackView.setBounds(50, getHeight() - 60, 120, 32);
-    openInstTutorial.setBounds(openTrackView.getRight() + 50, getHeight() - 60, 120, 32);
-    openTrackViewTut.setBounds(openInstTutorial.getRight() + 50, getHeight() - 60, 120, 32);
+    openTrackView.setBounds(0, getHeight() - 60, 120, 32);
+    openInstTutorial.setBounds(getWidth() / 4, getHeight() - 60, 120, 32);
+    openTrackViewTut.setBounds(getWidth() / 2, getHeight() - 60, 120, 32);
+    selectCompletedTutorials.setBounds(getWidth() * 3 / 4, getHeight() - 60, 120, 32);
 }

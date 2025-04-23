@@ -10,7 +10,6 @@ MIDIEngine::MIDIEngine(te::Edit& editRef)
 }
 
 int MIDIEngine::addMidiTrack()
-
 {
     int currentNumTracks = getAudioTracks(edit).size();
     edit.ensureNumberOfAudioTracks(currentNumTracks + 1);
