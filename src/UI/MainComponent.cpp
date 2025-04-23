@@ -23,6 +23,9 @@ MainComponent::MainComponent (AppEngine& engine)
     openTutorialManager.onClick = [this] { showTutorialManager(); };
     addAndMakeVisible (openTutorialManager);
 
+    clearDataButton.onClick = [this] { clearUserData(); };
+    addAndMakeVisible (clearDataButton);
+
     setSize (600, 400);
 }
 
@@ -53,6 +56,12 @@ void MainComponent::resized()
             .withFlex (1.0f, 1.0f)
             .withMinWidth (50.0f)
             .withMinHeight (30.0f)
+            .withMargin ({ 5.0f, 10.0f, 5.0f, 10.0f }),
+
+        FlexItem (clearDataButton)
+            .withFlex (1.0f, 1.0f)
+            .withMinWidth (50.0f)
+            .withMinHeight (30.0f)
             .withMargin ({ 5.0f, 10.0f, 5.0f, 10.0f }) });
 
     box.performLayout (getLocalBounds().reduced (10)); // Add overall padding
@@ -64,6 +73,7 @@ void MainComponent::showTrackView()
     trackView->setBounds (getLocalBounds());
     openTrackView.setVisible (false);
     openTutorialManager.setVisible (false);
+    clearDataButton.setVisible (false);
 }
 
 void MainComponent::showTutorialManager()
@@ -72,6 +82,7 @@ void MainComponent::showTutorialManager()
     tutorialManager->setBounds (getLocalBounds());
     openTrackView.setVisible (false);
     openTutorialManager.setVisible (false);
+    clearDataButton.setVisible (false);
 }
 
 void MainComponent::showHome()
@@ -80,7 +91,14 @@ void MainComponent::showHome()
     trackView->setVisible (false);
     openTrackView.setVisible (true);
     openTutorialManager.setVisible (true);
+    clearDataButton.setVisible (true);
 }
+
+void MainComponent::clearUserData()
+{
+    // TODO : hook up with database
+}
+
 
 // void MainComponent::showInstrumentTutorial()
 // {

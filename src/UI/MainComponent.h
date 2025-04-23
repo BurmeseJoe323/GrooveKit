@@ -23,8 +23,10 @@ private:
 
     TextButton openTrackView { "TrackView" };
     TextButton openTutorialManager { "Tutorials" };
+    TextButton clearDataButton { "Clear Data" };
 
     void showTrackView();
     void showTutorialManager();
     void showHome();
+    void clearUserData();
 };
