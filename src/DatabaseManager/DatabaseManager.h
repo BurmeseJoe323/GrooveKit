@@ -54,6 +54,9 @@ public:
     ///     NOTE: if name is a duplicate, query will also fail
     bool deleteUserData(const std::string &userName);
 
+    bool isTutorialComplete(const std::string& name);
+
+
 private:
     sqlite3* db = nullptr;
     std::string userDbPath;

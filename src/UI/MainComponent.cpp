@@ -1,140 +1,68 @@
-#include "MainComponent.h"
-
 #ifdef _WIN32
 #include <corecrt_io.h>
 #endif
 
 
-#include "TrackView-UI/TrackView.h"
-#include "InstrumentTutorial/InstrumentTutorial.h"
+#include "TrackView/TrackEditView.h"
+#include "MainComponent.h"
+#include "MainViews/AppView.h"
+#include "MainViews/WelcomeView.h"
 
-
-MainComponent::MainComponent(AppEngine& engine)
-    : appEngine(engine)
+MainComponent::MainComponent()
 {
-    databaseManager.initialize();
     setSize(600, 400);
 
-    openTrackView.onClick = [this]() { showTrackView(); };
-    openInstTutorial.onClick = [this]() {
-        showInstrumentTutorial();
-        databaseManager.addTutorial("InstrumentTutorial");
-    };
-    openTrackViewTut.onClick = [this]() {
-        // display TrackView tutorial
-        showTrackViewTutorial();
-        // add Tutorial to the db.
-        databaseManager.addTutorial("TrackViewTutorial");
-    };
-    deleteUserData.onClick = [this]() {
-        databaseManager.deleteUserData("User1");
-    };
+    view = std::make_unique<WelcomeView>();
+    addAndMakeVisible(view.get());
+    // view->setBounds(getLocalBounds());
 
-    selectCompletedTutorials.onClick = [this]() {
-        int size = databaseManager.selectCompletedTutorials("User1").size();
-        std::cout << "There are: " << size <<  " elements in the array" << std::endl;
-    };
-
-    addAndMakeVisible(openTrackView);
-    addAndMakeVisible(openTrackViewTut);
-    addAndMakeVisible(openInstTutorial);
-    addAndMakeVisible(selectCompletedTutorials);
-    addAndMakeVisible(deleteUserData);
-
+    databaseManager.initialize();
+    setSize(600, 400);
 }
 
 MainComponent::~MainComponent() = default;
 
-void MainComponent::paint(juce::Graphics& g)
+void MainComponent::showWelcomeView()
 {
-    g.fillAll(juce::Colours::black);
-    g.setColour(juce::Colours::white);
-    g.setFont(20.0f);
-    g.drawText("Hello, GrooveKit!", getLocalBounds(), juce::Justification::centred, true);
+    removeAllChildren();
+    view = std::make_unique<WelcomeView>();
+    addAndMakeVisible(view.get());
+    view->setBounds(getLocalBounds());
 }
 
-void MainComponent::resized()
+void MainComponent::showTrackView()
 {
-    FlexBox box;
-    box.flexDirection = FlexBox::Direction::row;
-    box.justifyContent = FlexBox::JustifyContent::spaceBetween;
-    box.alignItems = FlexBox::AlignItems::flexEnd;
+    removeAllChildren();
+    view = std::make_unique<TrackEditView>();
+    addAndMakeVisible(view.get());
 
-    box.items.addArray({
-        FlexItem(openTrackView)
-            .withFlex(1.0f, 1.0f)
-            .withMinWidth(50.0f)
-            .withMinHeight(30.0f)
-            .withMargin({5.0f, 10.0f, 5.0f, 10.0f}),
-
-        FlexItem(openTrackViewTut)
-            .withFlex(1.0f, 1.0f)
-            .withMinWidth(50.0f)
-            .withMinHeight(30.0f)
-            .withMargin({5.0f, 10.0f, 5.0f, 10.0f}),
-
-        FlexItem(openInstTutorial)
-            .withFlex(1.0f, 1.0f)
-            .withMinWidth(50.0f)
-            .withMinHeight(30.0f)
-            .withMargin({5.0f, 10.0f, 5.0f, 10.0f}),
-        FlexItem(selectCompletedTutorials)
-            .withFlex(1.0f, 1.0f)
-            .withMinWidth(50.0f)
-            .withMinHeight(30.0f)
-            .withMargin({5.0f, 10.0f, 5.0f, 10.0f}),
-        FlexItem(deleteUserData)
-            .withFlex(1.0f, 1.0f)
-            .withMinWidth(50.0f)
-            .withMinHeight(30.0f)
-            .withMargin({5.0f, 10.0f, 5.0f, 10.0f})
-    });
-
-    box.performLayout(getLocalBounds().reduced(10));  // Add overall padding
+    view->setBounds(getLocalBounds());
 }
 
-void MainComponent::showTrackView() {
-    trackView = std::make_unique<TrackView>(appEngine);
+void MainComponent::showTrackViewTutorial()
+{
+    removeAllChildren();
+    databaseManager.addTutorial("TrackViewTutorial");
+    view = std::make_unique<TrackEditViewTutorial>(databaseManager);
+    addAndMakeVisible(view.get());
 
-    // why do we have this??
-    //auto view = std::make_unique<TrackView>(appEngine);
-
-    addAndMakeVisible(trackView.get());
-    trackView->setBounds(getLocalBounds());
-    openTrackView.setVisible(false);
-}
-
-void MainComponent::showTrackViewTutorial() {
-    trackViewTut = std::make_unique<TrackViewTut>(databaseManager);
-    addAndMakeVisible(trackViewTut.get());
-
-    trackViewTut->setBounds(getLocalBounds());
-    openTrackView.setVisible(false);
+    view->setBounds(getLocalBounds());
 }
 
 void MainComponent::showInstrumentTutorial() {
-    instTutorial = std::make_unique<InstrumentTutorial>(databaseManager);
+    removeAllChildren();
+    databaseManager.addTutorial("InstrumentTutorial");
+    view = std::make_unique<InstrumentTutorial>(databaseManager);
+    addAndMakeVisible(view.get());
 
-    //Creating a safe pointer to the component
-    juce::Component::SafePointer<MainComponent> safeThis(this);
-    instTutorial->onFinishTutorial = [safeThis]() {
-        if (auto* comp = safeThis.getComponent()) {
-            comp->instTutorial.reset();
-            comp->openTrackView.setVisible(true);
-            comp->openTrackViewTut.setVisible(true);
-            comp->openInstTutorial.setVisible(true);
-            comp->resized();
-        }
-
-    };
-
-    addAndMakeVisible(instTutorial.get());
-    instTutorial->setBounds(getLocalBounds());
-
-    openTrackView.setVisible(false);
-    openTrackViewTut.setVisible(false);
-    openInstTutorial.setVisible(false);
+    view->setBounds(getLocalBounds());
 }
 
-    // layout child components here
+void MainComponent::reportDatabaseSize()
+{
+    int size = databaseManager.selectCompletedTutorials("User1").size();
+    std::cout << "There are: " << size <<  " elements in the array" << std::endl;
+}
+
+
 

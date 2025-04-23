@@ -16,8 +16,12 @@ public:
      */
     void addMidiClipToTrack(int trackIndex);
 
+    int addMidiTrack();
+
 private:
     tracktion::engine::Edit& edit;
+
+
 
 
 
