@@ -1,32 +1,27 @@
-//
-// Created by ikera on 4/8/2025.
-//
-
 #ifndef TRACKHEADER_H
 #define TRACKHEADER_H
-
-
 
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
+
 using namespace juce;
-class TrackHeader : public Component{
+class TrackHeaderComponent : public Component
+{
 public:
     class Listener {
     public:
         virtual ~Listener() = default;
         virtual void onAddClipClicked() = 0;
         virtual void onDeleteTrackClicked() = 0;
+        virtual void onPianoRollClicked() = 0;
     };
 
     void addListener(Listener* listener) {listeners.add(listener);}
     void removeListener(Listener* listener) {listeners.remove(listener);}
 
-
-
-    TrackHeader();
-    ~TrackHeader();
+    TrackHeaderComponent();
+    ~TrackHeaderComponent();
 
 
     //selection control
@@ -43,12 +38,12 @@ public:
 private:
     juce::TextButton addClip {"Add"};
     juce::TextButton deleteTrackButton { "Delete" };
+    juce::TextButton pianoRollButton{"Edit clip"};
     juce::Label trackNameLabel {"Track"};
     bool selected = false;
 
     juce::ListenerList<Listener> listeners;
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackHeader)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackHeaderComponent)
 };
-
 
 #endif //TRACKHEADER_H

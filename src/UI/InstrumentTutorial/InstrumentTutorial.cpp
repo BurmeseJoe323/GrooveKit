@@ -1,4 +1,5 @@
 #include "InstrumentTutorial.h"
+#include "../MainComponent.h"
 
 InstrumentTutorial::InstrumentTutorial (DatabaseManager& dbManager)
     : db (dbManager)
@@ -49,7 +50,7 @@ InstrumentTutorial::InstrumentTutorial (DatabaseManager& dbManager)
     finishButton.onClick = [this]() {
         if (onFinishTutorial)
         {
-            db.addCompletedTutorial (getScreenName().toStdString(), "User1");
+            db.addCompletedTutorial("InstrumentTutorial", "User1");
             onFinishTutorial();
         }
     };
@@ -201,3 +202,11 @@ void InstrumentTutorial::updateTutorialUI()
 
     resized();
 }
+
+// void InstrumentTutorial::onFinishTutorial()
+// {
+//     db.addCompletedTutorial("InstrumentTutorial", "User1");
+//     auto parent = dynamic_cast<TutorialManagerComponent*>(getParentComponent());
+//     parent->onBack;
+// }
+

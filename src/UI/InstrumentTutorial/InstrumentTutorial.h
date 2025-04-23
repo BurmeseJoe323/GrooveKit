@@ -24,6 +24,7 @@ public:
 
     void paint(Graphics&) override;
     void resized() override;
+    // void onFinishTutorial();
     std::function<void()> onFinishTutorial;
 
 private:

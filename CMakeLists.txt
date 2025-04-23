@@ -43,25 +43,49 @@ if (WIN32)
             src/main.cpp
             src/UI/MainComponent.h
             src/UI/MainComponent.cpp
-            src/UI/TestComponent.h
-            src/UI/TrackView/TrackView.cpp
-            src/UI/TrackView/TrackView.h
+            src/UI/MainViews/AppView.h
+            src/UI/TrackView/TrackEditView.cpp
+            src/UI/TrackView/TrackEditView.h
             src/AppEngine/AppEngine.h
             src/AppEngine/AppEngine.cpp
             src/MIDIEngine/MIDIEngine.h
             src/MIDIEngine/MIDIEngine.cpp
             src/AudioEngine/AudioEngine.h
             src/AudioEngine/AudioEngine.cpp
+            src/UI/MainViews/AppView.cpp
+            src/UI/MainViews/WelcomeView.cpp
+            src/UI/MainViews/WelcomeView.h
+            src/UI/PopupWindows/PianoRollWindow.cpp
+            src/UI/PopupWindows/PianoRollWindow.h
+            src/UI/PopupWindows/PianoRollComponents/PianoRollEditor.cpp
+            src/UI/PopupWindows/PianoRollComponents/PianoRollEditor.h
+            src/UI/PopupWindows/PianoRollComponents/KeyboardComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/KeyboardComponent.h
+            src/UI/PopupWindows/PianoRollComponents/NoteGridComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/NoteGridComponent.h
+            src/UI/PopupWindows/PianoRollComponents/TimelineComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/TimelineComponent.h
+            src/UI/PopupWindows/PianoRollComponents/GridControlPanel.cpp
+            src/UI/PopupWindows/PianoRollComponents/GridControlPanel.h
+            src/UI/PopupWindows/PianoRollComponents/GridStyleSheet.cpp
+            src/UI/PopupWindows/PianoRollComponents/GridStyleSheet.h
+            src/UI/PopupWindows/PianoRollComponents/PConstants.h
+            src/UI/PopupWindows/PianoRollComponents/NoteComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/NoteComponent.h
+            src/UI/PopupWindows/PianoRollComponents/NoteModel.cpp
+            src/UI/PopupWindows/PianoRollComponents/NoteModel.h
+            src/UI/PopupWindows/PianoRollComponents/PianoRollMainComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/PianoRollMainComponent.h
             src/UI/TrackView/TrackComponent.cpp
             src/UI/TrackView/TrackComponent.h
-            src/UI/TrackView/TrackHeader.cpp
-            src/UI/TrackView/TrackHeader.h
+            src/UI/TrackView/TrackHeaderComponent.cpp
+            src/UI/TrackView/TrackHeaderComponent.h
             Resources/exampleGUISetup.cpp
             Resources/exampleGUISetup.h
             src/UI/TrackView/TrackClip.cpp
             src/UI/TrackView/TrackClip.h
-            src/UI/TrackView/EditComponent.cpp
-            src/UI/TrackView/EditComponent.h
+            src/UI/TrackView/TrackListComponent.cpp
+            src/UI/TrackView/TrackListComponent.h
             src/AppEngine/TrackManager.h
             src/AppEngine/TrackManager.cpp
             ${SQLITE_SOURCES}
@@ -69,6 +93,8 @@ if (WIN32)
             src/UI/TrackEditViewTutorial/TrackEditViewTutorial.h
             src/DatabaseManager/DatabaseManager.cpp
             src/DatabaseManager/DatabaseManager.h
+            src/UI/TrackView/PlayheadComponent.cpp
+            src/UI/TrackView/PlayheadComponent.h
             src/UI/TutorialManager/TutorialManagerComponent.cpp
             src/UI/TutorialManager/TutorialManagerComponent.h
     )
@@ -78,25 +104,49 @@ elseif (APPLE)
             src/main.cpp
             src/UI/MainComponent.h
             src/UI/MainComponent.cpp
-            src/UI/TestComponent.h
-            src/UI/TrackView/TrackView.cpp
-            src/UI/TrackView/TrackView.h
+            src/UI/MainViews/AppView.h
+            src/UI/TrackView/TrackEditView.cpp
+            src/UI/TrackView/TrackEditView.h
             src/AppEngine/AppEngine.h
             src/AppEngine/AppEngine.cpp
             src/MIDIEngine/MIDIEngine.h
             src/MIDIEngine/MIDIEngine.cpp
             src/AudioEngine/AudioEngine.h
             src/AudioEngine/AudioEngine.cpp
+            src/UI/MainViews/AppView.cpp
+            src/UI/MainViews/WelcomeView.cpp
+            src/UI/MainViews/WelcomeView.h
+            src/UI/PopupWindows/PianoRollWindow.cpp
+            src/UI/PopupWindows/PianoRollWindow.h
+            src/UI/PopupWindows/PianoRollComponents/PianoRollEditor.cpp
+            src/UI/PopupWindows/PianoRollComponents/PianoRollEditor.h
+            src/UI/PopupWindows/PianoRollComponents/KeyboardComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/KeyboardComponent.h
+            src/UI/PopupWindows/PianoRollComponents/NoteGridComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/NoteGridComponent.h
+            src/UI/PopupWindows/PianoRollComponents/TimelineComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/TimelineComponent.h
+            src/UI/PopupWindows/PianoRollComponents/GridControlPanel.cpp
+            src/UI/PopupWindows/PianoRollComponents/GridControlPanel.h
+            src/UI/PopupWindows/PianoRollComponents/GridStyleSheet.cpp
+            src/UI/PopupWindows/PianoRollComponents/GridStyleSheet.h
+            src/UI/PopupWindows/PianoRollComponents/PConstants.h
+            src/UI/PopupWindows/PianoRollComponents/NoteComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/NoteComponent.h
+            src/UI/PopupWindows/PianoRollComponents/NoteModel.cpp
+            src/UI/PopupWindows/PianoRollComponents/NoteModel.h
+            src/UI/PopupWindows/PianoRollComponents/PianoRollMainComponent.cpp
+            src/UI/PopupWindows/PianoRollComponents/PianoRollMainComponent.h
             src/UI/TrackView/TrackComponent.cpp
             src/UI/TrackView/TrackComponent.h
-            src/UI/TrackView/TrackHeader.cpp
-            src/UI/TrackView/TrackHeader.h
+            src/UI/TrackView/TrackHeaderComponent.cpp
+            src/UI/TrackView/TrackHeaderComponent.h
             Resources/exampleGUISetup.cpp
             Resources/exampleGUISetup.h
             src/UI/TrackView/TrackClip.cpp
             src/UI/TrackView/TrackClip.h
-            src/UI/TrackView/EditComponent.cpp
-            src/UI/TrackView/EditComponent.h
+            src/UI/TrackView/TrackListComponent.cpp
+            src/UI/TrackView/TrackListComponent.h
             src/AppEngine/TrackManager.h
             src/AppEngine/TrackManager.cpp
             ${SQLITE_SOURCES}
@@ -104,6 +154,8 @@ elseif (APPLE)
             src/UI/TrackEditViewTutorial/TrackEditViewTutorial.h
             src/DatabaseManager/DatabaseManager.cpp
             src/DatabaseManager/DatabaseManager.h
+            src/UI/TrackView/PlayheadComponent.cpp
+            src/UI/TrackView/PlayheadComponent.h
             src/UI/TutorialManager/TutorialManagerComponent.cpp
             src/UI/TutorialManager/TutorialManagerComponent.h
     )

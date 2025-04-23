@@ -1,15 +1,11 @@
-//
-// Created by ikera on 4/15/2025.
-//
-
 #ifndef DATABASEMANAGER_H
 #define DATABASEMANAGER_H
 
-
-// DatabaseManager.h
 #pragma once
+
 #include "../../third-party/database/sqlite3.h"
 #include <string>
+#include <vector>
 
 class DatabaseManager {
 public:
@@ -41,6 +37,11 @@ public:
     /// @return Returns true, if successful query, false other-wise
     ///     NOTE: if name is a duplicate, query will also fail
     bool addUser(const std::string &name);
+
+    /// This method will select and return true if the select was a success and false o.w.
+    /// @userName The user's userName in the current session.
+    /// @return Returns a list of all of the completed tutorials based on the given userName
+    std::vector<const unsigned char*> selectCompletedTutorials(const std::string &userName);
 
     bool isTutorialComplete(const std::string& name);
 

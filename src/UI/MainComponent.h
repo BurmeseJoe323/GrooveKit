@@ -1,32 +1,31 @@
+//
+// Created by Bracken Asay on 4/2/25.
+//
+
 #pragma once
 
-#include "../AppEngine/AppEngine.h"
-#include "../DatabaseManager/DatabaseManager.h"
-#include "TrackEditViewTutorial/TrackEditViewTutorial.h"
-#include "TrackView/TrackView.h"
 #include <juce_gui_basics/juce_gui_basics.h>
+#include "TrackView/TrackEditView.h"
+#include "../AppEngine/AppEngine.h"
+#include "TrackEditViewTutorial/TrackEditViewTutorial.h"
+#include "../DatabaseManager/DatabaseManager.h"
+#include "InstrumentTutorial/InstrumentTutorial.h"
 
-class MainComponent final : public Component
+class MainComponent : public juce::Component
 {
 public:
-    explicit MainComponent (AppEngine& engine);
+    MainComponent();
     ~MainComponent() override;
 
-    void paint (Graphics&) override;
-    void resized() override;
+    void showTrackView();
+    void showWelcomeView();
+    void showTrackViewTutorial();
+    void showInstrumentTutorial();
+
+    void reportDatabaseSize();
 
 private:
-    AppEngine& appEngine;
+    std::unique_ptr<Component> view;
+
     DatabaseManager databaseManager;
-    std::unique_ptr<TrackView> trackView;
-    std::unique_ptr<TutorialManagerComponent> tutorialManager;
-
-    TextButton openTrackView { "TrackView" };
-    TextButton openTutorialManager { "Tutorials" };
-    TextButton clearDataButton { "Clear Data" };
-
-    void showTrackView();
-    void showTutorialManager();
-    void showHome();
-    void clearUserData();
 };
