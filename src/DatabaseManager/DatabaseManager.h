@@ -48,6 +48,12 @@ public:
     /// @return Returns a list of all of the completed tutorials based on the given userName
     std::vector<const unsigned char*> selectCompletedTutorials(const std::string &userName);
 
+    /// This method will delete all of the data related to this user.
+    /// @param userName The user's username being passed in by the user
+    /// @return Returns true, if successful query, false other-wise
+    ///     NOTE: if name is a duplicate, query will also fail
+    bool deleteUserData(const std::string &userName);
+
 private:
     sqlite3* db = nullptr;
     std::string userDbPath;

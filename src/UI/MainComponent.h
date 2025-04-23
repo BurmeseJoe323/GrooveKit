@@ -24,6 +24,7 @@ private:
     TextButton openTrackViewTut {"TrackView Tutorial"};
     TextButton openInstTutorial {"Instrument Tutorial"};
     TextButton selectCompletedTutorials {"See completed Tutorials"};
+    TextButton deleteUserData {"Delete user data"};
     std::unique_ptr<TrackView> trackView;
     std::unique_ptr<TrackViewTut> trackViewTut;
     std::unique_ptr<InstrumentTutorial> instTutorial;

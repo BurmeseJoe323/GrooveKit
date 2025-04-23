@@ -229,3 +229,63 @@ std::vector<const unsigned char*> DatabaseManager::selectCompletedTutorials(cons
     return completedTutorials;
 }
 
+bool DatabaseManager::deleteUserData(const std::string &name) {
+    char* errMsg = nullptr;
+
+    // Begin transaction
+    if (sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, &errMsg) != SQLITE_OK) {
+        sqlite3_free(errMsg);
+        std::cerr << "Couldn't begin transaction: " << sqlite3_errmsg(db) << std::endl;
+        return false;
+    }
+
+    try {
+        // Delete tutorials
+        sqlite3_stmt* stmt;
+        const char* deleteTutorials = "DELETE FROM Completed WHERE userName = ?";
+        if (sqlite3_prepare_v2(db, deleteTutorials, -1, &stmt, nullptr) != SQLITE_OK) {
+            std::cerr << "Prepare failed (tutorials): " << sqlite3_errmsg(db) << std::endl;
+            throw std::runtime_error("Failed to prepare tutorials delete");
+        }
+
+        // Bind parameter for tutorials delete (parameter index is 1, not 2)
+        sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_TRANSIENT);
+
+        if (sqlite3_step(stmt) != SQLITE_DONE) {
+            std::cerr << "Delete failed (tutorials): " << sqlite3_errmsg(db) << std::endl;
+            sqlite3_finalize(stmt);
+            throw std::runtime_error("Failed to delete tutorials");
+        }
+        sqlite3_finalize(stmt);
+
+        // Delete user
+        const char* deleteUser = "DELETE FROM Users WHERE userName = ?";
+        if (sqlite3_prepare_v2(db, deleteUser, -1, &stmt, nullptr) != SQLITE_OK) {
+            std::cerr << "Prepare failed (user): " << sqlite3_errmsg(db) << std::endl;
+            throw std::runtime_error("Failed to prepare user delete");
+        }
+
+        // Bind parameter for user delete
+        sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_TRANSIENT);
+
+        if (sqlite3_step(stmt) != SQLITE_DONE) {
+            std::cerr << "Delete failed (user): " << sqlite3_errmsg(db) << std::endl;
+            sqlite3_finalize(stmt);
+            throw std::runtime_error("Failed to delete user");
+        }
+        sqlite3_finalize(stmt);
+
+        // Commit transaction
+        if (sqlite3_exec(db, "COMMIT", nullptr, nullptr, &errMsg) != SQLITE_OK) {
+            sqlite3_free(errMsg);
+            throw std::runtime_error("Failed to commit transaction");
+        }
+
+        std::cout << "Operation successful!" << std::endl;
+        return true;
+    } catch (...) {
+        sqlite3_exec(db, "ROLLBACK", nullptr, nullptr, nullptr);
+        std::cerr << "Operation failed, rolled back" << std::endl;
+        return false;
+    }
+}

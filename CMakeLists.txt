@@ -42,7 +42,6 @@ if (WIN32)
             src/main.cpp
             src/UI/MainComponent.h
             src/UI/MainComponent.cpp
-            src/UI/TestComponent.h
             src/UI/TrackView-UI/TrackView.cpp
             src/UI/TrackView-UI/TrackView.h
             src/AppEngine/AppEngine.h
@@ -75,7 +74,6 @@ elseif (APPLE)
             src/main.cpp
             src/UI/MainComponent.h
             src/UI/MainComponent.cpp
-            src/UI/TestComponent.h
             src/UI/TrackView-UI/TrackView.cpp
             src/UI/TrackView-UI/TrackView.h
             src/AppEngine/AppEngine.h

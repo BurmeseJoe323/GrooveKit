@@ -26,6 +26,9 @@ MainComponent::MainComponent(AppEngine& engine)
         // add Tutorial to the db.
         databaseManager.addTutorial("TrackViewTutorial");
     };
+    deleteUserData.onClick = [this]() {
+        databaseManager.deleteUserData("User1");
+    };
 
     selectCompletedTutorials.onClick = [this]() {
         int size = databaseManager.selectCompletedTutorials("User1").size();
@@ -36,6 +39,7 @@ MainComponent::MainComponent(AppEngine& engine)
     addAndMakeVisible(openTrackViewTut);
     addAndMakeVisible(openInstTutorial);
     addAndMakeVisible(selectCompletedTutorials);
+    addAndMakeVisible(deleteUserData);
 
 }
 
@@ -75,6 +79,11 @@ void MainComponent::resized()
             .withMinHeight(30.0f)
             .withMargin({5.0f, 10.0f, 5.0f, 10.0f}),
         FlexItem(selectCompletedTutorials)
+            .withFlex(1.0f, 1.0f)
+            .withMinWidth(50.0f)
+            .withMinHeight(30.0f)
+            .withMargin({5.0f, 10.0f, 5.0f, 10.0f}),
+        FlexItem(deleteUserData)
             .withFlex(1.0f, 1.0f)
             .withMinWidth(50.0f)
             .withMinHeight(30.0f)
