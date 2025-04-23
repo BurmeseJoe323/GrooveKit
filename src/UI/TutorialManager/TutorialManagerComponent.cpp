@@ -96,12 +96,7 @@ void TutorialManagerComponent::showScreen (int index)
     {
         trackTut->onTutorialCompleted = [this]() {
             showNodeView();
-            auto completedStatus = getCompletedTutorials();
-            for (int i = 0; i < nodes.size(); ++i)
-            {
-                bool shouldEnable = completedStatus[i] || (i == 0) || (i > 0 && completedStatus[i - 1]);
-                nodes[i]->setEnabled(shouldEnable);
-            }
+            refreshNodes();
 
         };
     }
@@ -109,18 +104,27 @@ void TutorialManagerComponent::showScreen (int index)
     {
         instrumentTut->onFinishTutorial = [this]() {
             showNodeView();
-            auto completedStatus = getCompletedTutorials();
-            for (int i = 0; i < nodes.size(); ++i)
-            {
-                bool shouldEnable = completedStatus[i] || (i == 0) || (i > 0 && completedStatus[i - 1]);
-                nodes[i]->setEnabled(shouldEnable);
-            }
+            refreshNodes();
 
         };
     }
     addAndMakeVisible (comp);
     currentContent.reset(comp);
     resized();
+}
+
+void TutorialManagerComponent::refreshNodes()
+{
+    auto completedStatus = getCompletedTutorials();
+
+    for (int i = 0; i < nodes.size(); ++i)
+    {
+        bool shouldEnable = completedStatus[i] || (i == 0) || (i > 0 && completedStatus[i - 1]);
+        nodes[i]->setEnabled(shouldEnable);
+    }
+
+    resized(); // ⬅️ Important: update layout and visuals
+    repaint();
 }
 
 juce::Array<bool> TutorialManagerComponent::getCompletedTutorials()

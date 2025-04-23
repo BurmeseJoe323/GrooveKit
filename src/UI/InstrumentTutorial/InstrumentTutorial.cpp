@@ -50,7 +50,7 @@ InstrumentTutorial::InstrumentTutorial (DatabaseManager& dbManager)
     finishButton.onClick = [this]() {
         if (onFinishTutorial)
         {
-            db.addCompletedTutorial("InstrumentTutorial", "User1");
+            db.addCompletedTutorial(getScreenName().toStdString(), "User1");
             onFinishTutorial();
         }
     };

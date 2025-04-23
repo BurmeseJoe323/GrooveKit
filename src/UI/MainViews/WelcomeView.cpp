@@ -7,52 +7,51 @@
 #include "AppView.h"
 #include "../MainComponent.h"
 
-WelcomeView::WelcomeView()
+WelcomeView::WelcomeView(AppEngine& engine, DatabaseManager& db)
+    : appEngine(engine), databaseManager(db)
 {
     setSize(600, 400);
 
-    openTrackView.onClick = [this]() {
-        auto parent = dynamic_cast<MainComponent*>(getParentComponent());
-        parent->showTrackView();
-    };
-
-    openInstTutorial.onClick = [this]() {
-        auto parent = dynamic_cast<MainComponent*>(getParentComponent());
-        parent->showTrackView();
-        parent->showInstrumentTutorial();
-    };
-
-    openTrackViewTut.onClick = [this]() {
-        auto parent = dynamic_cast<MainComponent*>(getParentComponent());
-        parent->showTrackViewTutorial();
-    };
-
-    selectCompletedTutorials.onClick = [this]() {
-        auto parent = dynamic_cast<MainComponent*>(getParentComponent());
-        parent->reportDatabaseSize();
-    };
-
     addAndMakeVisible(openTrackView);
-    addAndMakeVisible(openInstTutorial);
-    addAndMakeVisible(openTrackViewTut);
-    addAndMakeVisible(selectCompletedTutorials);
-}
+    addAndMakeVisible(openTutorialManager);
 
-WelcomeView::~WelcomeView() = default;
+    openTrackView.onClick = [this]() {
+        auto* trackView = new TrackEditView();
+        trackView->onBack = [this]() {
+            currentView.reset();
+            resized();
+        };
+        currentView.reset(trackView);
+        addAndMakeVisible(currentView.get());
+        resized();
+    };
+
+    openTutorialManager.onClick = [this]() {
+        auto* tutorialManager = new TutorialManagerComponent(appEngine, databaseManager);
+        tutorialManager->onBack = [this]() {
+            currentView.reset();
+            resized();
+        };
+        currentView.reset(tutorialManager);
+        addAndMakeVisible(currentView.get());
+        resized();
+    };
+}
 
 void WelcomeView::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colours::black);
     g.setColour(juce::Colours::white);
     g.setFont(20.0f);
-    g.drawText("Hello, GrooveKit!", getLocalBounds(), juce::Justification::centred, true);
+    g.drawText("Welcome to GrooveKit!", getLocalBounds().removeFromTop(40), juce::Justification::centred, true);
 }
-
 
 void WelcomeView::resized()
 {
-    openTrackView.setBounds(0, getHeight() - 60, 120, 32);
-    openInstTutorial.setBounds(getWidth() / 4, getHeight() - 60, 120, 32);
-    openTrackViewTut.setBounds(getWidth() / 2, getHeight() - 60, 120, 32);
-    selectCompletedTutorials.setBounds(getWidth() * 3 / 4, getHeight() - 60, 120, 32);
+    auto area = getLocalBounds().reduced(20);
+    openTrackView.setBounds(area.removeFromBottom(40).removeFromLeft(200));
+    openTutorialManager.setBounds(area.removeFromBottom(40).removeFromLeft(200));
+
+    if (currentView)
+        currentView->setBounds(getLocalBounds().reduced(10));
 }

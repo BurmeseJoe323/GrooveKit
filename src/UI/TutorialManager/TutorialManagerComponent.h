@@ -29,6 +29,7 @@ public:
 private:
     void showNodeView();
     void showScreen(int index);
+    void refreshNodes();
 
 
 

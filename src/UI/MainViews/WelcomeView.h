@@ -7,21 +7,27 @@
 
 
 #include <juce_gui_basics/juce_gui_basics.h>
+#include "../../DatabaseManager/DatabaseManager.h"
 
+class AppEngine;
 using namespace juce;
 
-class WelcomeView : public juce::Component {
+class WelcomeView : public juce::Component
+{
 public:
-    WelcomeView();
-    ~WelcomeView() override;
+    WelcomeView(AppEngine& engine, DatabaseManager& db);
+    ~WelcomeView() override = default;
 
     void paint(juce::Graphics&) override;
     void resized() override;
+
 private:
-    TextButton openTrackView {TRANS ("Open Track View")};
-    TextButton openTrackViewTut {"TrackView Tutorial"};
-    TextButton openInstTutorial {"Instrument Tutorial"};
-    TextButton selectCompletedTutorials {"See completed Tutorials"};
+    juce::TextButton openTrackView { "Open Track View" };
+    juce::TextButton openTutorialManager { "Tutorials" };
+
+    std::unique_ptr<juce::Component> currentView;
+    AppEngine& appEngine;
+    DatabaseManager& databaseManager;
 };
 
 
