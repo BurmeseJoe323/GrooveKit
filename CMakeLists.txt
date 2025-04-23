@@ -70,6 +70,7 @@ if (WIN32)
             src/DatabaseManager/DatabaseManager.cpp
             src/DatabaseManager/DatabaseManager.h
             src/UI/TutorialManager/TutorialManagerComponent.cpp
+            src/UI/TutorialManager/TutorialManagerComponent.h
     )
 elseif (APPLE)
     # macOS: Build as console app (uses main via JUCE)
@@ -104,6 +105,7 @@ elseif (APPLE)
             src/DatabaseManager/DatabaseManager.cpp
             src/DatabaseManager/DatabaseManager.h
             src/UI/TutorialManager/TutorialManagerComponent.cpp
+            src/UI/TutorialManager/TutorialManagerComponent.h
     )
 endif()
 
