@@ -33,6 +33,7 @@ set(SQLITE_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/third-party/database/sqlite3.h
         src/UI/InstrumentTutorial/InstrumentTutorial.cpp
         src/UI/InstrumentTutorial/InstrumentTutorial.h
+        src/UI/TutorialManager/TutorialManagerComponent.cpp
 )
 
 # Build based on platform
@@ -43,8 +44,8 @@ if (WIN32)
             src/UI/MainComponent.h
             src/UI/MainComponent.cpp
             src/UI/MainViews/AppView.h
-            src/UI/TrackView-UI/TrackEditView.cpp
-            src/UI/TrackView-UI/TrackEditView.h
+            src/UI/TrackView/TrackEditView.cpp
+            src/UI/TrackView/TrackEditView.h
             src/AppEngine/AppEngine.h
             src/AppEngine/AppEngine.cpp
             src/MIDIEngine/MIDIEngine.h
@@ -75,25 +76,27 @@ if (WIN32)
             src/UI/PopupWindows/PianoRollComponents/NoteModel.h
             src/UI/PopupWindows/PianoRollComponents/PianoRollMainComponent.cpp
             src/UI/PopupWindows/PianoRollComponents/PianoRollMainComponent.h
-            src/UI/TrackView-UI/TrackComponent.cpp
-            src/UI/TrackView-UI/TrackComponent.h
-            src/UI/TrackView-UI/TrackHeaderComponent.cpp
-            src/UI/TrackView-UI/TrackHeaderComponent.h
+            src/UI/TrackView/TrackComponent.cpp
+            src/UI/TrackView/TrackComponent.h
+            src/UI/TrackView/TrackHeaderComponent.cpp
+            src/UI/TrackView/TrackHeaderComponent.h
             Resources/exampleGUISetup.cpp
             Resources/exampleGUISetup.h
-            src/UI/TrackView-UI/TrackClip.cpp
-            src/UI/TrackView-UI/TrackClip.h
-            src/UI/TrackView-UI/TrackListComponent.cpp
-            src/UI/TrackView-UI/TrackListComponent.h
+            src/UI/TrackView/TrackClip.cpp
+            src/UI/TrackView/TrackClip.h
+            src/UI/TrackView/TrackListComponent.cpp
+            src/UI/TrackView/TrackListComponent.h
             src/AppEngine/TrackManager.h
             src/AppEngine/TrackManager.cpp
             ${SQLITE_SOURCES}
-            src/UI/TrackView-Tutorial/TrackViewTut.cpp
-            src/UI/TrackView-Tutorial/TrackViewTut.h
+            src/UI/TrackEditViewTutorial/TrackEditViewTutorial.cpp
+            src/UI/TrackEditViewTutorial/TrackEditViewTutorial.h
             src/DatabaseManager/DatabaseManager.cpp
             src/DatabaseManager/DatabaseManager.h
-            src/UI/TrackView-UI/PlayheadComponent.cpp
-            src/UI/TrackView-UI/PlayheadComponent.h
+            src/UI/TrackView/PlayheadComponent.cpp
+            src/UI/TrackView/PlayheadComponent.h
+            src/UI/TutorialManager/TutorialManagerComponent.cpp
+            src/UI/TutorialManager/TutorialManagerComponent.h
     )
 elseif (APPLE)
     # macOS: Build as console app (uses main via JUCE)
@@ -102,8 +105,8 @@ elseif (APPLE)
             src/UI/MainComponent.h
             src/UI/MainComponent.cpp
             src/UI/MainViews/AppView.h
-            src/UI/TrackView-UI/TrackEditView.cpp
-            src/UI/TrackView-UI/TrackEditView.h
+            src/UI/TrackView/TrackEditView.cpp
+            src/UI/TrackView/TrackEditView.h
             src/AppEngine/AppEngine.h
             src/AppEngine/AppEngine.cpp
             src/MIDIEngine/MIDIEngine.h
@@ -134,25 +137,27 @@ elseif (APPLE)
             src/UI/PopupWindows/PianoRollComponents/NoteModel.h
             src/UI/PopupWindows/PianoRollComponents/PianoRollMainComponent.cpp
             src/UI/PopupWindows/PianoRollComponents/PianoRollMainComponent.h
-            src/UI/TrackView-UI/TrackComponent.cpp
-            src/UI/TrackView-UI/TrackComponent.h
-            src/UI/TrackView-UI/TrackHeaderComponent.cpp
-            src/UI/TrackView-UI/TrackHeaderComponent.h
+            src/UI/TrackView/TrackComponent.cpp
+            src/UI/TrackView/TrackComponent.h
+            src/UI/TrackView/TrackHeaderComponent.cpp
+            src/UI/TrackView/TrackHeaderComponent.h
             Resources/exampleGUISetup.cpp
             Resources/exampleGUISetup.h
-            src/UI/TrackView-UI/TrackClip.cpp
-            src/UI/TrackView-UI/TrackClip.h
-            src/UI/TrackView-UI/TrackListComponent.cpp
-            src/UI/TrackView-UI/TrackListComponent.h
+            src/UI/TrackView/TrackClip.cpp
+            src/UI/TrackView/TrackClip.h
+            src/UI/TrackView/TrackListComponent.cpp
+            src/UI/TrackView/TrackListComponent.h
             src/AppEngine/TrackManager.h
             src/AppEngine/TrackManager.cpp
             ${SQLITE_SOURCES}
-            src/UI/TrackView-Tutorial/TrackViewTut.cpp
-            src/UI/TrackView-Tutorial/TrackViewTut.h
+            src/UI/TrackEditViewTutorial/TrackEditViewTutorial.cpp
+            src/UI/TrackEditViewTutorial/TrackEditViewTutorial.h
             src/DatabaseManager/DatabaseManager.cpp
             src/DatabaseManager/DatabaseManager.h
-            src/UI/TrackView-UI/PlayheadComponent.cpp
-            src/UI/TrackView-UI/PlayheadComponent.h
+            src/UI/TrackView/PlayheadComponent.cpp
+            src/UI/TrackView/PlayheadComponent.h
+            src/UI/TutorialManager/TutorialManagerComponent.cpp
+            src/UI/TutorialManager/TutorialManagerComponent.h
     )
 endif()
 

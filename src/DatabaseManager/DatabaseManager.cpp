@@ -15,12 +15,10 @@
 /// @param argv 
 /// @param azColName 
 /// @return 
-static int callback(void* data, int argc, char** argv, char** azColName)
-{
+static int callback(void *data, int argc, char **argv, char **azColName){
     int i;
     fprintf(stderr, "%s: ", (const char*)data);
-
-    for (i = 0; i < argc; i++) {
+    for(i=0; i<argc; i++){
         printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
     }
 
@@ -190,6 +188,46 @@ bool DatabaseManager::addCompletedTutorial(const std::string &tutorialName, cons
     sqlite3_finalize(stmt);
     return true;
 }
+
+bool DatabaseManager::isTutorialComplete(const std::string& tutorialName)
+{
+    sqlite3_stmt* stmt;
+    const char* query = "SELECT COUNT(*) FROM Completed WHERE tutorialName = ? AND userName = ?;";
+
+    int rc = sqlite3_prepare_v2(db, query, -1, &stmt, nullptr);
+    if (rc != SQLITE_OK) {
+        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+        return false;
+    }
+
+    const char* currentUser = "User1";
+    rc = sqlite3_bind_text(stmt, 1, tutorialName.c_str(), -1, SQLITE_TRANSIENT);
+    if (rc != SQLITE_OK) {
+        std::cerr << "Failed to bind tutorialName: " << sqlite3_errmsg(db) << "\n";
+        sqlite3_finalize(stmt);
+        return false;
+    }
+
+    rc = sqlite3_bind_text(stmt, 2, currentUser, -1, SQLITE_TRANSIENT);
+    if (rc != SQLITE_OK) {
+        std::cerr << "Failed to bind userName: " << sqlite3_errmsg(db) << "\n";
+        sqlite3_finalize(stmt);
+        return false;
+    }
+
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_ROW) {
+        std::cerr << "Failed to execute statement: " << sqlite3_errmsg(db) << "\n";
+        sqlite3_finalize(stmt);
+        return false;
+    }
+
+    int count = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+
+    return count > 0;
+}
+
 
 std::vector<const unsigned char*> DatabaseManager::selectCompletedTutorials(const std::string &userName) {
     std::vector<const unsigned char*> completedTutorials;

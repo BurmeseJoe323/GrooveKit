@@ -1,18 +1,11 @@
-//
-// Created by ikera on 4/8/2025.
-//
-
 #ifndef TRACKHEADER_H
 #define TRACKHEADER_H
-
-
 
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
 using namespace juce;
-
 class TrackHeaderComponent : public Component
 {
 public:
@@ -52,6 +45,5 @@ private:
     juce::ListenerList<Listener> listeners;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackHeaderComponent)
 };
-
 
 #endif //TRACKHEADER_H

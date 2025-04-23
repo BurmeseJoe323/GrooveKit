@@ -3,7 +3,7 @@
 #endif
 
 
-#include "TrackView-UI/TrackEditView.h"
+#include "TrackView/TrackEditView.h"
 #include "MainComponent.h"
 #include "MainViews/AppView.h"
 #include "MainViews/WelcomeView.h"
@@ -43,7 +43,7 @@ void MainComponent::showTrackViewTutorial()
 {
     removeAllChildren();
     databaseManager.addTutorial("TrackViewTutorial");
-    view = std::make_unique<TrackViewTut>(databaseManager);
+    view = std::make_unique<TrackEditViewTutorial>(databaseManager);
     addAndMakeVisible(view.get());
 
     view->setBounds(getLocalBounds());

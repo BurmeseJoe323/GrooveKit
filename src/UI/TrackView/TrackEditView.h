@@ -23,6 +23,11 @@ public:
     void paint (Graphics&) override;
     void resized() override;
 
+    /**
+      Called when Back is pressed: should return to home screen.
+    */
+    std::function<void()> onBack;
+
 private:
     std::shared_ptr<AppEngine> appEngine;
     std::unique_ptr<TrackListComponent> trackList;
@@ -32,6 +37,6 @@ private:
     // Do we need this here?
     // EditViewState &editViewState;
 
-    TextButton newEditButton{"New"}, playPauseButton{"Play"}, stopButton{"Stop"},
+    TextButton backButton { "Back" }, newEditButton{"New"}, playPauseButton{"Play"}, stopButton{"Stop"},
             openEditButton{"Open Edit"}, newTrackButton{"New Track"}, recordButton{"Record"};
 };

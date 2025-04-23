@@ -1,13 +1,8 @@
-//
-// Created by ikera on 4/15/2025.
-//
-
 #ifndef DATABASEMANAGER_H
 #define DATABASEMANAGER_H
 
-
-// DatabaseManager.h
 #pragma once
+
 #include "../../third-party/database/sqlite3.h"
 #include <string>
 #include <vector>
@@ -47,6 +42,9 @@ public:
     /// @userName The user's userName in the current session.
     /// @return Returns a list of all of the completed tutorials based on the given userName
     std::vector<const unsigned char*> selectCompletedTutorials(const std::string &userName);
+
+    bool isTutorialComplete(const std::string& name);
+
 
 private:
     sqlite3* db = nullptr;

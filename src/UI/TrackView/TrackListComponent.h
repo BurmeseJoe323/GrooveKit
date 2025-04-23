@@ -1,7 +1,3 @@
-//
-// Created by ikera on 4/9/2025.
-//
-
 #pragma once
 
 #include "PlayheadComponent.h"

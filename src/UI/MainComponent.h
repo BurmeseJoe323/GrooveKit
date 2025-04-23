@@ -5,9 +5,9 @@
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
-#include "TrackView-UI/TrackEditView.h"
+#include "TrackView/TrackEditView.h"
 #include "../AppEngine/AppEngine.h"
-#include "TrackView-Tutorial/TrackViewTut.h"
+#include "TrackEditViewTutorial/TrackEditViewTutorial.h"
 #include "../DatabaseManager/DatabaseManager.h"
 #include "InstrumentTutorial/InstrumentTutorial.h"
 

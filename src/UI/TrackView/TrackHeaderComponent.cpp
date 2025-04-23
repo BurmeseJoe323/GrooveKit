@@ -1,7 +1,3 @@
-//
-// Created by ikera on 4/8/2025.
-//
-
 #include "TrackHeaderComponent.h"
 
 TrackHeaderComponent::TrackHeaderComponent() {

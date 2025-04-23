@@ -27,14 +27,15 @@ void TrackEditView::paint (Graphics& g)
 void TrackEditView::resized()
 {
     auto r = getLocalBounds();
-    const int w = r.getWidth() / 6;
+    const int w = r.getWidth() / 7;
     auto topR = r.removeFromTop (30);
 
+    backButton.setBounds (topR.removeFromLeft (w).reduced (2));
     newEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
+    openEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
     playPauseButton.setBounds (topR.removeFromLeft (w).reduced (2));
     stopButton.setBounds (topR.removeFromLeft (w).reduced (2));
     recordButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    openEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
     newTrackButton.setBounds (topR.removeFromLeft (w).reduced (2));
 
     viewport.setBounds (r);
@@ -63,4 +64,10 @@ void TrackEditView::setupButtons()
     addAndMakeVisible (recordButton);
     addAndMakeVisible (openEditButton);
     addAndMakeVisible (newTrackButton);
+
+    addAndMakeVisible (backButton);
+    backButton.onClick = [this] {
+        if (onBack)
+            onBack(); // from track view back to home
+    };
 }
