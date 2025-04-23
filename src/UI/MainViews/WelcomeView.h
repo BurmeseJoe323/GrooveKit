@@ -24,6 +24,7 @@ public:
 private:
     juce::TextButton openTrackView { "Open Track View" };
     juce::TextButton openTutorialManager { "Tutorials" };
+    TextButton deleteUserData { "Delete User Data" };
 
     std::unique_ptr<juce::Component> currentView;
     AppEngine& appEngine;

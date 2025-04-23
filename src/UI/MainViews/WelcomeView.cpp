@@ -14,6 +14,7 @@ WelcomeView::WelcomeView(AppEngine& engine, DatabaseManager& db)
 
     addAndMakeVisible(openTrackView);
     addAndMakeVisible(openTutorialManager);
+    addAndMakeVisible(deleteUserData);
 
     openTrackView.onClick = [this]() {
         auto* trackView = new TrackEditView();
@@ -36,6 +37,10 @@ WelcomeView::WelcomeView(AppEngine& engine, DatabaseManager& db)
         addAndMakeVisible(currentView.get());
         resized();
     };
+
+    deleteUserData.onClick = [this]() {
+        databaseManager.deleteUserData("User1");
+    };
 }
 
 void WelcomeView::paint(juce::Graphics& g)
@@ -51,6 +56,7 @@ void WelcomeView::resized()
     auto area = getLocalBounds().reduced(20);
     openTrackView.setBounds(area.removeFromBottom(40).removeFromLeft(200));
     openTutorialManager.setBounds(area.removeFromBottom(40).removeFromLeft(200));
+    deleteUserData.setBounds(area.removeFromBottom(40).removeFromLeft(200));
 
     if (currentView)
         currentView->setBounds(getLocalBounds().reduced(10));
