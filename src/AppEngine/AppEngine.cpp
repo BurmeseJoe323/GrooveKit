@@ -17,7 +17,9 @@ AppEngine::AppEngine()
     midiEngine = std::make_unique<MIDIEngine>(*edit);
     audioEngine = std::make_unique<AudioEngine>(*edit);
     trackManager = std::make_unique<TrackManager>(*edit);  // ✅ Add this line
+    selectionManager = std::make_unique<te::SelectionManager>(*engine);
 
+    editViewState = std::make_unique<EditViewState>(*edit, *selectionManager);
 }
 
 AppEngine::~AppEngine() = default;
@@ -41,25 +43,18 @@ void AppEngine::createOrLoadEdit()
     edit->restartPlayback();
 }
 
-void AppEngine::play()
-{
-    audioEngine->play();
-}
-void AppEngine::stop()
-{
-    audioEngine->stop();
-}
+void AppEngine::play() { audioEngine->play(); }
 
-int AppEngine::addMidiTrack()
-{
-    return trackManager->addTrack();
-}
+void AppEngine::stop() { audioEngine->stop(); }
 
-void AppEngine::deleteMidiTrack(int index) {
-    trackManager->deleteTrack(index);
-}
+int AppEngine::addMidiTrack() { return trackManager->addTrack(); }
 
-void AppEngine::addMidiClipToTrack(int trackIndex)
-{
-    midiEngine->addMidiClipToTrack(trackIndex);
-}
+void AppEngine::deleteMidiTrack(int index) { trackManager->deleteTrack(index); }
+
+void AppEngine::addMidiClipToTrack(int trackIndex) { midiEngine->addMidiClipToTrack(trackIndex); }
+
+int AppEngine::getNumTracks() { return tracktion::getAudioTracks(*edit).size(); }
+
+EditViewState &AppEngine::getEditViewState() { return *editViewState; }
+
+te::Edit & AppEngine::getEdit() { return *edit; }

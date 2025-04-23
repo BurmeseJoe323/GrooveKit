@@ -1,4 +1,5 @@
 #include "InstrumentTutorial.h"
+#include "../MainComponent.h"
 
 InstrumentTutorial::InstrumentTutorial(DatabaseManager& dbManager)
     : db(dbManager)
@@ -47,10 +48,7 @@ InstrumentTutorial::InstrumentTutorial(DatabaseManager& dbManager)
     addAndMakeVisible(finishButton);
     finishButton.setButtonText("Finish Tutorial");
     finishButton.onClick = [this]() {
-        if (onFinishTutorial){
-            db.addCompletedTutorial("InstrumentTutorial", "User1");
-            onFinishTutorial();
-        }
+        onFinishTutorial();
     };
 
     updateTutorialUI();
@@ -176,5 +174,12 @@ void InstrumentTutorial::updateTutorialUI()
     }
 
     resized();
+}
+
+void InstrumentTutorial::onFinishTutorial()
+{
+    db.addCompletedTutorial("InstrumentTutorial", "User1");
+    auto parent = dynamic_cast<MainComponent*>(getParentComponent());
+    parent->showWelcomeView();
 }
 

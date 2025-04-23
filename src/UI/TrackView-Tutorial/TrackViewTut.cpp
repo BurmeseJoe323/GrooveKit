@@ -4,10 +4,14 @@
 
 #include "TrackViewTut.h"
 
+#include "../MainComponent.h"
+
 TrackViewTut::TrackViewTut(DatabaseManager &dbManager) : db(dbManager) {
     addAndMakeVisible(endTutorial);
     endTutorial.onClick = [&] {
         db.addCompletedTutorial("TrackViewTutorial", "User1");
+        auto parent = dynamic_cast<MainComponent*>(getParentComponent());
+        parent->showWelcomeView();
     };
 }
 

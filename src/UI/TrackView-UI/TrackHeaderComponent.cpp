@@ -2,12 +2,13 @@
 // Created by ikera on 4/8/2025.
 //
 
-#include "TrackHeader.h"
+#include "TrackHeaderComponent.h"
 
-TrackHeader::TrackHeader() {
+TrackHeaderComponent::TrackHeaderComponent() {
   // add everything to view
   addAndMakeVisible(addClip);
   addAndMakeVisible(deleteTrackButton);
+  addAndMakeVisible(pianoRollButton);
   addAndMakeVisible(trackNameLabel);
 
   addClip.onClick = [this]() {
@@ -18,6 +19,10 @@ TrackHeader::TrackHeader() {
     listeners.call([](Listener& l) { l.onDeleteTrackClicked(); });
   };
 
+  pianoRollButton.onClick = [this]() {
+    listeners.call([](Listener& l) { l.onPianoRollClicked(); });
+  };
+
   // setup trackNameLabel
   trackNameLabel.setFont(juce::Font(15.0f));
   trackNameLabel.setColour(juce::Label::textColourId, juce::Colours::black);
@@ -25,13 +30,13 @@ TrackHeader::TrackHeader() {
   trackNameLabel.setText("Track", juce::dontSendNotification);
 };
 
-TrackHeader::~TrackHeader() = default;
+TrackHeaderComponent::~TrackHeaderComponent() = default;
 
-void TrackHeader::paint(juce::Graphics &g) {
+void TrackHeaderComponent::paint(juce::Graphics &g) {
   g.fillAll(juce::Colours::beige);
 };
 
-void TrackHeader::resized() {
+void TrackHeaderComponent::resized() {
   // this will be the main layout
   // set as vertical layout
   juce::FlexBox mainFB;
@@ -59,6 +64,10 @@ void TrackHeader::resized() {
         .withWidth(50)
         .withHeight(30));
 
+  buttonRowFB.items.add(juce::FlexItem(pianoRollButton)
+        .withWidth(50)
+        .withHeight(30));
+
   // Add the button row as a FlexItem to the main layout
   mainFB.items.add(juce::FlexItem(buttonRowFB)
       .withHeight(30)); // Fixed height for the button row
@@ -66,4 +75,3 @@ void TrackHeader::resized() {
   // Perform layout
   mainFB.performLayout(area);
 }
-
