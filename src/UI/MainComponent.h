@@ -18,16 +18,18 @@ public:
     MainComponent();
     ~MainComponent() override;
 
-    void showTrackView();
+
     void showWelcomeView();
     void showTrackViewTutorial();
     void showInstrumentTutorial();
+
 
 
     void reportDatabaseSize();
 
 private:
     std::unique_ptr<Component> view;
+    AppEngine appEngine;
 
     DatabaseManager databaseManager;
 };

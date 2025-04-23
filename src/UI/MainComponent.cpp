@@ -11,13 +11,11 @@
 MainComponent::MainComponent()
 {
     setSize(600, 400);
-
-    view = std::make_unique<WelcomeView>();
-    addAndMakeVisible(view.get());
-    // view->setBounds(getLocalBounds());
-
     databaseManager.initialize();
-    setSize(600, 400);
+
+    view = std::make_unique<WelcomeView>(appEngine, databaseManager);
+    addAndMakeVisible(view.get());
+    view->setBounds(getLocalBounds());
 }
 
 MainComponent::~MainComponent() = default;
@@ -25,19 +23,12 @@ MainComponent::~MainComponent() = default;
 void MainComponent::showWelcomeView()
 {
     removeAllChildren();
-    view = std::make_unique<WelcomeView>();
+    view = std::make_unique<WelcomeView>(appEngine, databaseManager);
     addAndMakeVisible(view.get());
     view->setBounds(getLocalBounds());
 }
 
-void MainComponent::showTrackView()
-{
-    removeAllChildren();
-    view = std::make_unique<TrackEditView>();
-    addAndMakeVisible(view.get());
 
-    view->setBounds(getLocalBounds());
-}
 
 void MainComponent::showTrackViewTutorial()
 {
@@ -57,6 +48,8 @@ void MainComponent::showInstrumentTutorial() {
 
     view->setBounds(getLocalBounds());
 }
+
+
 
 void MainComponent::reportDatabaseSize()
 {
