@@ -10,6 +10,7 @@
 #include "TrackEditViewTutorial/TrackEditViewTutorial.h"
 #include "../DatabaseManager/DatabaseManager.h"
 #include "InstrumentTutorial/InstrumentTutorial.h"
+#include "TutorialManager/TutorialManagerComponent.h"
 
 class MainComponent : public juce::Component
 {
@@ -21,6 +22,7 @@ public:
     void showWelcomeView();
     void showTrackViewTutorial();
     void showInstrumentTutorial();
+
 
     void reportDatabaseSize();
 
