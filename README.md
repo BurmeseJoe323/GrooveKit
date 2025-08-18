@@ -1,14 +1,16 @@
 # GrooveKit
 
-GrooveKit is an educational tool designed for new electronic music creators. Inspired by the interface of GrooveBox, GrooveKit provides a structured learning experience, guiding users through a series of interactive tutorials to progressively build their music production skills. As users advance, they unlock new features and capabilities within the app, ensuring a gradual and engaging learning process.
+GrooveKit is an educational tool designed for new electronic music creators.
+Inspired by the interface of the groovebox, GrooveKit provides a structured learning experience,
+guiding users through a series of interactive tutorials to progressively build their music production skills.
+As users advance, they unlock new features and capabilities within the app, ensuring a gradual and engaging learning process.
 
 ## Features
 - **Interactive Tutorials** – Step-by-step guidance to introduce key concepts in electronic music production.
 - **Progressive Unlock System** – New features are unlocked as users complete tutorials and gain confidence.
-- **Intuitive UI** – A user-friendly interface inspired by GrooveBox for a seamless experience.
+- **Intuitive UI** – A user-friendly interface inspired by grooveboxes for a seamless experience.
 - **Hands-on Learning** – Users create music while learning, reinforcing concepts in real-time.
 - **Built-in Sound Library** – A selection of preloaded sounds and instruments to experiment with.
-- **Customizable Workflows** – Adaptable learning paths to suit different styles and paces.
 
 ## Getting Started
 1. **Install GrooveKit** – Download and install the application on your device.
