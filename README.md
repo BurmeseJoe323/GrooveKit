@@ -4,6 +4,7 @@ GrooveKit is an educational tool designed for new electronic music creators.
 Inspired by the interface of the groovebox, GrooveKit provides a structured learning experience,
 guiding users through a series of interactive tutorials to progressively build their music production skills.
 As users advance, they unlock new features and capabilities within the app, ensuring a gradual and engaging learning process.
+![Example image of the Roland groovebox](https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatic.roland.com%2Fassets%2Fimages%2Fproducts%2Fgallery%2Fmc-707_front_gal.jpg&f=1&nofb=1&ipt=3b9a5fe6e158b625a339a702691a65b5b245f43a9e48347aa32b79405cd2bf62 "Roland groovebox")
 
 ## Features
 - **Interactive Tutorials** – Step-by-step guidance to introduce key concepts in electronic music production.
