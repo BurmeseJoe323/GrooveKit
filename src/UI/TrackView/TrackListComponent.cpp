@@ -27,7 +27,7 @@ void TrackListComponent::resized()
     FlexBox mainFlex;
     mainFlex.flexDirection = FlexBox::Direction::column;
 
-    const int headerWidth = 100;
+    const int headerWidth = 140;
     const int trackHeight = 100;
     const int margin = 2;
     const int addButtonSpace = 30;
