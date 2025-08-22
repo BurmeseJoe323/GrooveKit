@@ -24,10 +24,8 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
 
     auto track = te::getAudioTracks(edit)[trackIndex];
 
-    // Define a time range of one bar
     te::TimeRange oneBar(0s, edit.tempoSequence.toTime({1, te::BeatDuration()}));
 
-    // Insert a new MIDI clip
     auto clip = track->insertNewClip(te::TrackItem::Type::midi, "Midi Clip", oneBar, nullptr);
     auto midiClip = dynamic_cast<te::MidiClip*>(clip);
     DBG("Clip added to track: " << trackIndex);

@@ -29,6 +29,9 @@ public:
     void onSoloToggled(bool isSolo) override;
 
     void setTrackIndex(int index);
+    void setEngineIndex (int i) { engineIndex = i; }
+    int  getEngineIndex() const { return engineIndex; }
+
 
     void paint(juce::Graphics& g) override;
     void resized() override;
@@ -38,7 +41,8 @@ public:
 
 private:
     std::shared_ptr<AppEngine> appEngine;
-    int trackIndex;
+    int trackIndex = -1;
+    int engineIndex = -1;
     int numClips;
 
     TrackClip trackClip;

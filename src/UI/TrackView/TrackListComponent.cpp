@@ -53,59 +53,43 @@ void TrackListComponent::resized()
     playhead.setBounds (getLocalBounds().withTrimmedLeft(headerWidth));
 }
 
-void TrackListComponent::addNewTrack (int index)
+void TrackListComponent::addNewTrack (int engineIdx)
 {
-    auto* header = new TrackHeaderComponent();
-    auto* newTrack = new TrackComponent(appEngine, index);
+    auto* header   = new TrackHeaderComponent();
+    auto* newTrack = new TrackComponent(appEngine, engineIdx);
+    newTrack->setEngineIndex(engineIdx);
 
     header->addListener(newTrack);
 
-    // TODO : Tracks are not properly being deleted here.
-    //        Should probably be in its own method.
-    newTrack->onRequestDeleteTrack = [this] (int index) {
-        if (index >= 0 && index < tracks.size())
+    headers.add(header);
+    tracks.add(newTrack);
+
+    addAndMakeVisible(header);
+    addAndMakeVisible(newTrack);
+
+    updateTrackIndexes();
+
+    header->setMuted(appEngine->isTrackMuted(newTrack->getEngineIndex()));
+    header->setSolo (appEngine->isTrackSoloed(newTrack->getEngineIndex()));
+    refreshSoloVisuals();
+
+    newTrack->onRequestDeleteTrack = [this](int uiIndex) {
+        if (uiIndex >= 0 && uiIndex < tracks.size())
         {
-            removeChildComponent (headers[index]);
-            removeChildComponent (tracks[index]);
-            headers.remove (index);
-            tracks.remove (index);
-            appEngine->deleteMidiTrack(index);
+            const int engineIdxToDelete = tracks[uiIndex]->getEngineIndex();
+            removeChildComponent(headers[uiIndex]);
+            removeChildComponent(tracks[uiIndex]);
+            headers.remove(uiIndex);
+            tracks.remove(uiIndex);
+            appEngine->deleteMidiTrack(engineIdxToDelete);
             updateTrackIndexes();
             resized();
         }
     };
 
-    newTrack->onRequestOpenPianoRoll = [this] (int index) {
-        if (index >= 0 && index < tracks.size())
-        {
-            if (pianoRollWindow == nullptr) {
-                pianoRollWindow = std::make_unique<PianoRollWindow>();
-                addAndMakeVisible(pianoRollWindow.get());
-                pianoRollWindow->addToDesktop(pianoRollWindow->getDesktopWindowStyleFlags());
-                pianoRollWindow->toFront(true);
-                pianoRollWindow->centreWithSize(pianoRollWindow->getWidth(), pianoRollWindow->getHeight());
-            } else {
-                pianoRollWindow->setVisible(true);
-                pianoRollWindow->toFront(true);
-            }
-        }
-    };
-
-    headers.add (header);
-    tracks.add (newTrack);
-
-    addAndMakeVisible (header);
-    addAndMakeVisible (newTrack);
-
-    updateTrackIndexes();
-
-    const int uiIndex = tracks.indexOf(newTrack);
-    header->setMuted(appEngine->isTrackMuted(uiIndex));
-    header->setSolo (appEngine->isTrackSoloed(uiIndex));
-    refreshSoloVisuals();
-
     resized();
 }
+
 
 void TrackListComponent::parentSizeChanged()
 {
@@ -123,7 +107,7 @@ void TrackListComponent::refreshSoloVisuals()
     const bool anySolo = appEngine->anyTrackSoloed();
     for (int i = 0; i < headers.size(); ++i)
     {
-        const bool thisSolo = appEngine->isTrackSoloed(i);
+        const bool thisSolo = appEngine->isTrackSoloed(tracks[i]->getEngineIndex());
         headers[i]->setDimmed(anySolo && !thisSolo);
     }
 }

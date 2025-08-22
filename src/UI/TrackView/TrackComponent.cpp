@@ -7,7 +7,10 @@
 #include "TrackListComponent.h"
 
 using namespace juce;
-TrackComponent::TrackComponent(std::shared_ptr<AppEngine> engine, int index) : appEngine(engine), trackIndex(index){
+TrackComponent::TrackComponent(std::shared_ptr<AppEngine> engine, int index)
+    : appEngine(engine), trackIndex(index)
+{
+    engineIndex = index; //
 }
 
 TrackComponent::~TrackComponent() = default;
@@ -38,8 +41,9 @@ void TrackComponent::resized() {
 
 
 void TrackComponent::onAddClipClicked() {
-    DBG("Add Clip clicked for track index: " << trackIndex);
-    appEngine->addMidiClipToTrack(trackIndex);
+    DBG("Add clip -> UI " << trackIndex << " -> engine " << engineIndex);
+
+    appEngine->addMidiClipToTrack(engineIndex);
     addAndMakeVisible(trackClip);
     resized();
     numClips = 1;
@@ -65,13 +69,12 @@ void TrackComponent::setTrackIndex(int index)
 
 void TrackComponent::onMuteToggled(bool isMuted) {
     if (appEngine)
-        appEngine->setTrackMuted(trackIndex, isMuted);
+        appEngine->setTrackMuted(engineIndex, isMuted);
 }
 
-void TrackComponent::onSoloToggled(bool isSolo)
-{
-    if (appEngine) appEngine->setTrackSoloed(trackIndex, isSolo);
-
+void TrackComponent::onSoloToggled(bool isSolo) {
+    if (appEngine)
+        appEngine->setTrackSoloed(engineIndex, isSolo);
     if (auto* p = findParentComponentOfClass<TrackListComponent>())
         p->refreshSoloVisuals();
 }

@@ -67,6 +67,6 @@ void TrackEditView::setupButtons()
     addAndMakeVisible (backButton);
     backButton.onClick = [this] {
         if (onBack)
-            onBack(); // from track view back to home
+            onBack(); 
     };
 }

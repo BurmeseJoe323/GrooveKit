@@ -16,28 +16,35 @@ te::AudioTrack* TrackManager::getTrack(int index) {
     return track;
 }
 
-int TrackManager::addTrack() {
+int TrackManager::addTrack()
+{
     juce::Logger::outputDebugString("Track added");
-    int currentNumTracks = te::getAudioTracks(edit).size();
+
+    const int currentNumTracks = te::getAudioTracks(edit).size();
     edit.ensureNumberOfAudioTracks(currentNumTracks + 1);
 
-    auto track = te::getAudioTracks(edit)[currentNumTracks];
+    auto* track = te::getAudioTracks(edit)[currentNumTracks];
 
-    auto plugin = edit.getPluginCache().createNewPlugin(te::FourOscPlugin::xmlTypeName, {}).get();
-    if (plugin){
-        track->pluginList.insertPlugin(*plugin, 0, nullptr);
-        te::PluginInitialisationInfo info;
-        info.sampleRate = edit.engine.getDeviceManager().getSampleRate();
-        info.blockSizeSamples = edit.engine.getDeviceManager().getBlockSize();
+    auto plugin = edit.getPluginCache().createNewPlugin(te::FourOscPlugin::xmlTypeName, {});
+    if (plugin)
+    {
+        track->pluginList.insertPlugin(std::move(plugin), 0, nullptr);
+        juce::Logger::outputDebugString("addTrack: engine had "
+            + juce::String(currentNumTracks) + " audio tracks; new index = "
+            + juce::String(currentNumTracks));
+        juce::Logger::outputDebugString("Track " + juce::String(currentNumTracks)
+            + " plugins: " + juce::String(track->pluginList.size()));
 
-        plugin->initialise(info);
-
-        DBG("Plugin on track: " << plugin->getName());
     }
+
+    edit.getTransport().ensureContextAllocated();
+
     edit.restartPlayback();
 
     return currentNumTracks;
 }
+
+
 
 void TrackManager::deleteTrack(int index) {
     if (index < 0 || index >= getNumTracks())
