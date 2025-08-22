@@ -17,6 +17,11 @@ public:
     void muteTrack(int index);
     void setTrackMuted(int index, bool mute);
     bool isTrackMuted(int index) const;
+
+    void soloTrack(int index);
+    void setTrackSoloed(int index, bool solo);
+    bool isTrackSoloed(int index) const;
+    bool anyTrackSoloed() const;
     //void clearAllTracks();
 
 private:

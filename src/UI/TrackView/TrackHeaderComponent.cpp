@@ -7,6 +7,7 @@ TrackHeaderComponent::TrackHeaderComponent() {
   addAndMakeVisible(pianoRollButton);
   addAndMakeVisible(trackNameLabel);
   addAndMakeVisible(muteTrackButton);
+  addAndMakeVisible(soloTrackButton);
 
   addClip.onClick = [this]() {
     listeners.call([](Listener& l) { l.onAddClipClicked(); });
@@ -26,6 +27,18 @@ TrackHeaderComponent::TrackHeaderComponent() {
     updateMuteButtonVisuals();
     listeners.call([&](Listener& l) { l.onMuteToggled(nowMuted); });
   };
+
+  soloTrackButton.setClickingTogglesState(true);
+  soloTrackButton.onClick = [this]{
+    const bool nowSolo = soloTrackButton.getToggleState();
+    updateSoloButtonVisuals();
+    listeners.call([&](Listener& l){ l.onSoloToggled(nowSolo); });
+  };
+
+  soloTrackButton.setColour(juce::TextButton::buttonOnColourId, juce::Colours::yellow.withAlpha(0.9f));
+  soloTrackButton.setColour(juce::TextButton::buttonColourId,  juce::Colours::lightgrey);
+  soloTrackButton.setColour(juce::TextButton::textColourOnId,  juce::Colours::black);
+  soloTrackButton.setColour(juce::TextButton::textColourOffId, juce::Colours::black);
 
   // setup trackNameLabel
   trackNameLabel.setFont(juce::Font(15.0f));
@@ -60,6 +73,20 @@ void TrackHeaderComponent::updateMuteButtonVisuals() {
   muteTrackButton.repaint();
 }
 
+void TrackHeaderComponent::setSolo(bool s){
+  soloTrackButton.setToggleState(s, juce::dontSendNotification);
+  updateSoloButtonVisuals();
+}
+bool TrackHeaderComponent::isSolo() const { return soloTrackButton.getToggleState(); }
+
+void TrackHeaderComponent::updateSoloButtonVisuals(){
+  soloTrackButton.setTooltip(soloTrackButton.getToggleState() ? "Soloed" : "Not soloed");
+}
+
+void TrackHeaderComponent::setDimmed(bool dim){
+  setAlpha(dim ? 0.6f : 1.0f);
+}
+
 void TrackHeaderComponent::paint(juce::Graphics &g) {
   g.fillAll(juce::Colours::beige);
 };
@@ -89,6 +116,10 @@ void TrackHeaderComponent::resized() {
         .withHeight(30));
 
   buttonRowFB.items.add(juce::FlexItem(muteTrackButton)
+        .withWidth(50)
+        .withHeight(30));
+
+  buttonRowFB.items.add(juce::FlexItem(soloTrackButton)
         .withWidth(50)
         .withHeight(30));
 

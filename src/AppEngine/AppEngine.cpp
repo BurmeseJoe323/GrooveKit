@@ -16,7 +16,7 @@ AppEngine::AppEngine()
 
     midiEngine = std::make_unique<MIDIEngine>(*edit);
     audioEngine = std::make_unique<AudioEngine>(*edit);
-    trackManager = std::make_unique<TrackManager>(*edit);  // ✅ Add this line
+    trackManager = std::make_unique<TrackManager>(*edit); 
     selectionManager = std::make_unique<te::SelectionManager>(*engine);
 
     editViewState = std::make_unique<EditViewState>(*edit, *selectionManager);
@@ -58,3 +58,8 @@ int AppEngine::getNumTracks() { return tracktion::getAudioTracks(*edit).size(); 
 EditViewState &AppEngine::getEditViewState() { return *editViewState; }
 
 te::Edit & AppEngine::getEdit() { return *edit; }
+
+void AppEngine::soloTrack(int i)                 { trackManager->soloTrack(i); }
+void AppEngine::setTrackSoloed(int i, bool s)    { trackManager->setTrackSoloed(i, s); }
+bool AppEngine::isTrackSoloed(int i) const       { return trackManager->isTrackSoloed(i); }
+bool AppEngine::anyTrackSoloed() const           { return trackManager->anyTrackSoloed(); }

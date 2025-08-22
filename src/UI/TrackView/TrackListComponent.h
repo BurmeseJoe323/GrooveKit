@@ -18,6 +18,7 @@ public:
     void paint (Graphics& g) override;
     void resized() override;
     void parentSizeChanged() override;
+    void refreshSoloVisuals();
 
 
     void addNewTrack (int index);

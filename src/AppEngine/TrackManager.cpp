@@ -67,6 +67,35 @@ void TrackManager::setTrackMuted(int index, bool mute) {
         track->setMute(mute);
 }
 
+void TrackManager::soloTrack(int index)
+{
+    if (auto* t = getTrack(index))
+        setTrackSoloed(index, ! t->isSolo(false));
+}
+
+void TrackManager::setTrackSoloed(int index, bool solo)
+{
+    if (auto* t = getTrack(index))
+        t->setSolo(solo);
+}
+
+bool TrackManager::isTrackSoloed(int index) const
+{
+    auto ts = te::getAudioTracks(edit);
+    if (index < 0 || index >= (int) ts.size()) return false;
+    return ts[(size_t) index]->isSolo(false);
+}
+
+bool TrackManager::anyTrackSoloed() const
+{
+    auto ts = te::getAudioTracks(edit);
+    for (auto* t : ts)
+        if (t->isSolo(false)) return true;
+    return false;
+}
+
+
+
 
 
 

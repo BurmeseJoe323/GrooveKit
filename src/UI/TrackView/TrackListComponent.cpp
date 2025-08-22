@@ -101,6 +101,8 @@ void TrackListComponent::addNewTrack (int index)
 
     const int uiIndex = tracks.indexOf(newTrack);
     header->setMuted(appEngine->isTrackMuted(uiIndex));
+    header->setSolo (appEngine->isTrackSoloed(uiIndex));
+    refreshSoloVisuals();
 
     resized();
 }
@@ -114,6 +116,16 @@ void TrackListComponent::updateTrackIndexes()
 {
     for (int i = 0; i < tracks.size(); ++i)
         tracks[i]->setTrackIndex(i);
+}
+
+void TrackListComponent::refreshSoloVisuals()
+{
+    const bool anySolo = appEngine->anyTrackSoloed();
+    for (int i = 0; i < headers.size(); ++i)
+    {
+        const bool thisSolo = appEngine->isTrackSoloed(i);
+        headers[i]->setDimmed(anySolo && !thisSolo);
+    }
 }
 
 // bool EditComponent::keyPressed(const KeyPress& key) {

@@ -100,8 +100,14 @@ public:
     int getNumTracks();
     void deleteMidiTrack(int index);
     void addMidiClipToTrack(int trackIndex);
+
     void setTrackMuted(int index, bool mute) { trackManager->setTrackMuted(index, mute); }
     bool isTrackMuted(int index) const { return trackManager->isTrackMuted(index); }
+
+    void soloTrack(int index);
+    void setTrackSoloed(int index, bool solo);
+    bool isTrackSoloed(int index) const;
+    bool anyTrackSoloed() const;
 
     EditViewState& getEditViewState();
     te::Edit &getEdit();

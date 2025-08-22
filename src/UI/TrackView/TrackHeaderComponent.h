@@ -16,6 +16,7 @@ public:
         virtual void onDeleteTrackClicked() = 0;
         virtual void onPianoRollClicked() = 0;
         virtual void onMuteToggled(bool isMuted) = 0;
+        virtual void onSoloToggled(bool isSolo) = 0;
     };
 
     void addListener(Listener* listener) {listeners.add(listener);}
@@ -38,17 +39,24 @@ public:
 
     void setMuted(bool shouldBeMuted);
     bool isMuted() const;
+
+    void setSolo(bool shouldBeSolo);
+    bool isSolo() const;
+    void setDimmed(bool dim);
+
     void setTrackName(juce::String name);
 
 private:
     juce::TextButton addClip {"+"};
     juce::TextButton muteTrackButton {"M"};
+    juce::TextButton soloTrackButton{ "S" };
     juce::TextButton deleteTrackButton { "-" };
     juce::TextButton pianoRollButton{"Edit clip"};
     juce::Label trackNameLabel {"Track"};
     bool selected = false;
 
     void updateMuteButtonVisuals();
+    void updateSoloButtonVisuals();
 
     juce::ListenerList<Listener> listeners;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackHeaderComponent)

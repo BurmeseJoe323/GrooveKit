@@ -26,6 +26,7 @@ public:
     void onDeleteTrackClicked() override;
     void onPianoRollClicked() override;
     void onMuteToggled(bool isMuted) override;
+    void onSoloToggled(bool isSolo) override;
 
     void setTrackIndex(int index);
 
