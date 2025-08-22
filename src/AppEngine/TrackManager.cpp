@@ -47,6 +47,17 @@ void TrackManager::deleteTrack(int index) {
     edit.deleteTrack(track);
 }
 
+void TrackManager::muteTrack(int index) {
+    if (index < 0 || index >= getNumTracks())
+        //should probably throw error or something
+        return;
+
+    te::AudioTrack* track = getTrack(index);
+    edit.
+
+}
+
+
 
 
 

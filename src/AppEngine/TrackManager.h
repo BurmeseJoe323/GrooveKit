@@ -12,8 +12,9 @@ public:
     te::AudioTrack* getTrack(int index);
 
     int addTrack();
-
     void deleteTrack(int index);
+
+    void muteTrack(int index);
     //void clearAllTracks();
 
 private:
