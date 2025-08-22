@@ -46,9 +46,8 @@ void TrackEditView::setupButtons()
     newTrackButton.onClick = [this] {
         if (trackList != nullptr)
         {
-            // TODO : might not be returning the right index
-            int index = appEngine->addMidiTrack() - 1;
-            trackList->addNewTrack (index);
+            const int index = appEngine->addMidiTrack();
+            trackList->addNewTrack(index);
         }
     };
 

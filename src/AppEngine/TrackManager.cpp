@@ -48,13 +48,23 @@ void TrackManager::deleteTrack(int index) {
 }
 
 void TrackManager::muteTrack(int index) {
+    if (auto* track = getTrack(index)) {
+        track->setMute(!track->isMuted(false));
+    }
+}
+
+bool TrackManager::isTrackMuted(int index) const {
+    auto audioTracks = te::getAudioTracks(edit);
+    if (index < 0 || index >= (int) audioTracks.size())
+        return false;
+    return audioTracks[(size_t) index]->isMuted(false);
+}
+
+void TrackManager::setTrackMuted(int index, bool mute) {
     if (index < 0 || index >= getNumTracks())
-        //should probably throw error or something
         return;
-
-    te::AudioTrack* track = getTrack(index);
-    edit.
-
+    if (auto* track = getTrack(index))
+        track->setMute(mute);
 }
 
 

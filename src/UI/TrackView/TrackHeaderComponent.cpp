@@ -6,6 +6,7 @@ TrackHeaderComponent::TrackHeaderComponent() {
   addAndMakeVisible(deleteTrackButton);
   addAndMakeVisible(pianoRollButton);
   addAndMakeVisible(trackNameLabel);
+  addAndMakeVisible(muteTrackButton);
 
   addClip.onClick = [this]() {
     listeners.call([](Listener& l) { l.onAddClipClicked(); });
@@ -19,6 +20,13 @@ TrackHeaderComponent::TrackHeaderComponent() {
     listeners.call([](Listener& l) { l.onPianoRollClicked(); });
   };
 
+  muteTrackButton.setClickingTogglesState(true);
+  muteTrackButton.onClick = [this]() {
+    const bool nowMuted = muteTrackButton.getToggleState();
+    updateMuteButtonVisuals();
+    listeners.call([&](Listener& l) { l.onMuteToggled(nowMuted); });
+  };
+
   // setup trackNameLabel
   trackNameLabel.setFont(juce::Font(15.0f));
   trackNameLabel.setColour(juce::Label::textColourId, juce::Colours::black);
@@ -27,6 +35,30 @@ TrackHeaderComponent::TrackHeaderComponent() {
 };
 
 TrackHeaderComponent::~TrackHeaderComponent() = default;
+
+void TrackHeaderComponent::setMuted(bool shouldBeMuted) {
+  muteTrackButton.setToggleState(shouldBeMuted, juce::dontSendNotification);
+  updateMuteButtonVisuals();
+}
+bool TrackHeaderComponent::isMuted() const {
+  return muteTrackButton.getToggleState();
+}
+void TrackHeaderComponent::setTrackName(juce::String name) {
+  trackNameLabel.setText(std::move(name), juce::dontSendNotification);
+}
+
+void TrackHeaderComponent::updateMuteButtonVisuals() {
+  const bool on = muteTrackButton.getToggleState();
+
+  muteTrackButton.setColour(juce::TextButton::buttonOnColourId, juce::Colours::red.withAlpha(0.8f));
+  muteTrackButton.setColour(juce::TextButton::buttonColourId,  juce::Colours::lightgrey);
+
+  muteTrackButton.setColour(juce::TextButton::textColourOnId,  juce::Colours::white);
+  muteTrackButton.setColour(juce::TextButton::textColourOffId, juce::Colours::black);
+
+  muteTrackButton.setTooltip(on ? "Muted" : "Unmuted");
+  muteTrackButton.repaint();
+}
 
 void TrackHeaderComponent::paint(juce::Graphics &g) {
   g.fillAll(juce::Colours::beige);
@@ -53,6 +85,10 @@ void TrackHeaderComponent::resized() {
   buttonRowFB.justifyContent = juce::FlexBox::JustifyContent::flexEnd;
 
   buttonRowFB.items.add(juce::FlexItem(addClip)
+        .withWidth(50)
+        .withHeight(30));
+
+  buttonRowFB.items.add(juce::FlexItem(muteTrackButton)
         .withWidth(50)
         .withHeight(30));
 

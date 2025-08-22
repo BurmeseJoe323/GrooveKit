@@ -39,6 +39,7 @@ void TrackComponent::onAddClipClicked() {
     DBG("Add Clip clicked for track index: " << trackIndex);
     appEngine->addMidiClipToTrack(trackIndex);
     addAndMakeVisible(trackClip);
+    resized();  
     numClips = 1;
 }
 
@@ -59,5 +60,11 @@ void TrackComponent::setTrackIndex(int index)
 {
     this->trackIndex = index;
 }
+
+void TrackComponent::onMuteToggled(bool isMuted) {
+    if (appEngine)
+        appEngine->setTrackMuted(trackIndex, isMuted);
+}
+
 
 

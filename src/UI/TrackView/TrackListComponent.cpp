@@ -96,6 +96,12 @@ void TrackListComponent::addNewTrack (int index)
 
     addAndMakeVisible (header);
     addAndMakeVisible (newTrack);
+
+    updateTrackIndexes();
+
+    const int uiIndex = tracks.indexOf(newTrack);
+    header->setMuted(appEngine->isTrackMuted(uiIndex));
+
     resized();
 }
 
@@ -106,10 +112,8 @@ void TrackListComponent::parentSizeChanged()
 
 void TrackListComponent::updateTrackIndexes()
 {
-    for (int i = 0; i < tracks.size(); i++) {
-       TrackComponent *track = tracks[i];
-        track->setTrackIndex(i);
-    }
+    for (int i = 0; i < tracks.size(); ++i)
+        tracks[i]->setTrackIndex(i);
 }
 
 // bool EditComponent::keyPressed(const KeyPress& key) {

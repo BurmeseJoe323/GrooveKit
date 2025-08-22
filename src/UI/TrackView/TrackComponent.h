@@ -25,6 +25,7 @@ public:
     // int getNumClips();
     void onDeleteTrackClicked() override;
     void onPianoRollClicked() override;
+    void onMuteToggled(bool isMuted) override;
 
     void setTrackIndex(int index);
 
