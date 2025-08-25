@@ -18,8 +18,10 @@ else()
     message(FATAL_ERROR "TracktionPath.cmake not found. Please create it and specify your TRACKTION_ENGINE_PATH.")
 endif()
 
-# Add Tracktion-bundled JUCE as subdirectory
-add_subdirectory(${TRACKTION_ENGINE_PATH}/modules/juce ${CMAKE_BINARY_DIR}/juce)
+# Add JUCE as subdirectory
+# NOTE: may want to just cache the Tracktion Engine path and use JUCE in the submodules there
+# add_subdirectory(${TRACKTION_ENGINE_PATH}/modules/juce ${CMAKE_BINARY_DIR}/juce)
+add_subdirectory(${JUCE_DIR} ${CMAKE_BINARY_DIR}/juce)
 
 # Register tracktion_graph before tracktion_engine
 juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_graph)
