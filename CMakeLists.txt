@@ -4,13 +4,6 @@ project(GrooveKit VERSION 1.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Load JUCE path
-if (EXISTS "${CMAKE_SOURCE_DIR}/cmake/JUCEPath.cmake")
-    include("${CMAKE_SOURCE_DIR}/cmake/JUCEPath.cmake")
-else()
-    message(FATAL_ERROR "JUCEPath.cmake not found. Please create it and specify your JUCE directory.")
-endif()
-
 # Load Tracktion Engine path
 if (EXISTS "${CMAKE_SOURCE_DIR}/cmake/TracktionPath.cmake")
     include("${CMAKE_SOURCE_DIR}/cmake/TracktionPath.cmake")
@@ -18,10 +11,9 @@ else()
     message(FATAL_ERROR "TracktionPath.cmake not found. Please create it and specify your TRACKTION_ENGINE_PATH.")
 endif()
 
-# Add JUCE as subdirectory
-# NOTE: may want to just cache the Tracktion Engine path and use JUCE in the submodules there
-# add_subdirectory(${TRACKTION_ENGINE_PATH}/modules/juce ${CMAKE_BINARY_DIR}/juce)
-add_subdirectory(${JUCE_DIR} ${CMAKE_BINARY_DIR}/juce)
+# Add JUCE Tracktion submodule as subdirectory
+add_subdirectory(${TRACKTION_ENGINE_PATH}/modules/juce ${CMAKE_BINARY_DIR}/juce)
+# add_subdirectory(${JUCE_DIR} ${CMAKE_BINARY_DIR}/juce)
 
 # Register tracktion_graph before tracktion_engine
 juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_graph)
