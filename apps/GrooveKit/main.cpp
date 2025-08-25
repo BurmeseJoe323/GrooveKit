@@ -1,7 +1,7 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 
-#include "UI/MainComponent.h"
-#include "AppEngine/AppEngine.h"
+#include "MainComponent.h"
+#include "AppEngine.h"
 
 
 class MainWindow : public juce::DocumentWindow
