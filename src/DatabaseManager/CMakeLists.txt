@@ -1,4 +1,4 @@
-# sqlite (local C source)
+# sqlite
 add_library(sqlite3 STATIC
         ${CMAKE_SOURCE_DIR}/third-party/database/sqlite3.c
         ${CMAKE_SOURCE_DIR}/third-party/database/sqlite3.h

@@ -3,7 +3,7 @@ project(GrooveKit VERSION 1.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Load paths
+# Load JUCE and Tracktion paths
 include(${CMAKE_SOURCE_DIR}/cmake/JUCEPath.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/TracktionPath.cmake)
 
