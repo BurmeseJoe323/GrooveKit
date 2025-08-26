@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include(${CMAKE_SOURCE_DIR}/cmake/JUCEPath.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/TracktionPath.cmake)
 
+add_subdirectory(${TRACKTION_ENGINE_PATH}/modules/juce ${CMAKE_BINARY_DIR}/juce)
+
 # Tracktion-bundled JUCE
 juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_graph)
 juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_engine)
