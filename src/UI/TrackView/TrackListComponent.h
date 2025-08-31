@@ -24,7 +24,8 @@ public:
     void addNewTrack (int index);
 
 private:
-    std::shared_ptr<AppEngine> appEngine;
+    const std::shared_ptr<AppEngine> appEngine;
+    int selectedTrackIndex;
 
     OwnedArray<TrackComponent> tracks;
     OwnedArray<TrackHeaderComponent> headers;

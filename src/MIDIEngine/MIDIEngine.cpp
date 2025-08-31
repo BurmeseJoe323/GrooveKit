@@ -61,3 +61,26 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
 
 
 }
+
+juce::Array<tracktion_engine::MidiNote*> MIDIEngine::getMidiClipFromTrack(int trackIndex) {
+    auto audioTracks = getAudioTracks(edit);
+    if (trackIndex < 0 || trackIndex >= audioTracks.size())
+        // Return empty array if trackIndex is invalid
+        return {};
+
+    auto track = te::getAudioTracks(edit)[trackIndex];
+    auto clip = track->getClips().getFirst();
+
+    if (clip == nullptr) {
+        return {};
+    } else if (!clip->isMidi()) {
+        return {};
+    }
+    auto *midiClip = dynamic_cast<te::MidiClip*>(clip);
+    if (midiClip == nullptr) {
+        return {};
+    }
+    return midiClip->getSequence().getNotes();
+}
+
+

@@ -4,37 +4,39 @@
 
 #include "AppView.h"
 #include "../PopupWindows/PianoRollWindow.h"
+
+// TODO: delete AppView?
 AppView::AppView() {
-    playButton.setButtonText("Play MIDI");
-    playButton.onClick = [this] { engine.play(); };
-
-    stopButton.setButtonText("Stop MIDI");
-    stopButton.onClick = [this] { engine.stop(); };
-
-    addTrackButton.setButtonText("Add MIDI Track");
-    addTrackButton.onClick = [this] {
-        engine.addMidiTrack();
-        trackCount = engine.getNumTracks();
-        selectedTrackIndex = trackCount - 1;
-    };
-
-    addClipButton.setButtonText("Add MIDI Clip");
-    addClipButton.onClick = [this] {
-        engine.addMidiClipToTrack(trackCount - 1); // Actually adds a clip
-        clipCount++; // Keep track of visual clips
-        repaint(); // Trigger UI redraw
-    };
-
-    openPianoRollWindow.setButtonText("Open piano roll");
-    openPianoRollWindow.onClick = [this] {
-        openPianoRoll();
-    };
-
-    addAndMakeVisible(playButton);
-    addAndMakeVisible(stopButton);
-    addAndMakeVisible(addTrackButton);
-    addAndMakeVisible(addClipButton);
-    addAndMakeVisible(openPianoRollWindow);
+    // playButton.setButtonText("Play MIDI");
+    // playButton.onClick = [this] { engine.play(); };
+    //
+    // stopButton.setButtonText("Stop MIDI");
+    // stopButton.onClick = [this] { engine.stop(); };
+    //
+    // addTrackButton.setButtonText("Add MIDI Track");
+    // addTrackButton.onClick = [this] {
+    //     engine.addMidiTrack();
+    //     trackCount = engine.getNumTracks();
+    //     selectedTrackIndex = trackCount - 1;
+    // };
+    //
+    // addClipButton.setButtonText("Add MIDI Clip");
+    // addClipButton.onClick = [this] {
+    //     engine.addMidiClipToTrack(trackCount - 1); // Actually adds a clip
+    //     clipCount++; // Keep track of visual clips
+    //     repaint(); // Trigger UI redraw
+    // };
+    //
+    // openPianoRollWindow.setButtonText("Open piano roll");
+    // openPianoRollWindow.onClick = [this] {
+    //     openPianoRoll();
+    // };
+    //
+    // addAndMakeVisible(playButton);
+    // addAndMakeVisible(stopButton);
+    // addAndMakeVisible(addTrackButton);
+    // addAndMakeVisible(addClipButton);
+    // addAndMakeVisible(openPianoRollWindow);
 
     setSize(400, 300);
 }
@@ -60,7 +62,7 @@ void AppView::paint (juce::Graphics& g) {
 
 void AppView::openPianoRoll() {
     if (pianoRollWindow == nullptr) {
-        pianoRollWindow = std::make_unique<PianoRollWindow>();
+        pianoRollWindow = std::make_unique<PianoRollWindow>(0);
         addAndMakeVisible(pianoRollWindow.get());
         pianoRollWindow->addToDesktop(pianoRollWindow->getDesktopWindowStyleFlags());
         pianoRollWindow->toFront(true);

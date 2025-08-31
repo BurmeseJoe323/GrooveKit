@@ -13,6 +13,7 @@ TrackListComponent::TrackListComponent(std::shared_ptr<AppEngine> engine) : appE
     setWantsKeyboardFocus (true); // setting keyboard focus?
     addAndMakeVisible(playhead);
     playhead.setAlwaysOnTop(true);
+    selectedTrackIndex = 0;
 }
 
 TrackListComponent::~TrackListComponent() = default;
@@ -55,6 +56,11 @@ void TrackListComponent::resized()
 
 void TrackListComponent::addNewTrack (int engineIdx)
 {
+    // TODO: delete this after implementing MIDI editing for one track
+    DBG("Track " << engineIdx << " added");
+    if (engineIdx > 1)
+        return;
+
     auto* header   = new TrackHeaderComponent();
     auto* newTrack = new TrackComponent(appEngine, engineIdx);
     newTrack->setEngineIndex(engineIdx);
@@ -84,6 +90,23 @@ void TrackListComponent::addNewTrack (int engineIdx)
             appEngine->deleteMidiTrack(engineIdxToDelete);
             updateTrackIndexes();
             resized();
+        }
+    };
+
+    newTrack->onRequestOpenPianoRoll = [this](int uiIndex) {
+        if (pianoRollWindow != nullptr && pianoRollWindow->getTrackIndex() != uiIndex) {
+            // TODO: close current piano roll window and change to this one
+        }
+        if (uiIndex >= 0 && uiIndex < tracks.size()) {
+            int engineIdx = tracks[uiIndex]->getEngineIndex();
+            selectedTrackIndex = engineIdx;
+            pianoRollWindow = std::make_unique<PianoRollWindow>(engineIdx);
+            addAndMakeVisible(pianoRollWindow.get());
+            pianoRollWindow->addToDesktop(pianoRollWindow->getDesktopWindowStyleFlags());
+            pianoRollWindow->toFront(true);
+            pianoRollWindow->centreWithSize(pianoRollWindow->getWidth(), pianoRollWindow->getHeight());
+            // TODO: load MIDI sequence from selected track into piano roll
+            appEngine->getMidiClipFromTrack(engineIdx);
         }
     };
 

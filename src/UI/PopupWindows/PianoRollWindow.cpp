@@ -5,12 +5,13 @@
 #include "../MainViews/AppView.h"
 #include "PianoRollComponents/PianoRollMainComponent.h"
 
-PianoRollWindow::PianoRollWindow() : DocumentWindow("Piano Roll Editor", juce::Colours::darkblue,
+PianoRollWindow::PianoRollWindow(int trackIndex) : DocumentWindow("Piano Roll Editor", juce::Colours::darkblue,
                                                     DocumentWindow::closeButton, true) {
     setUsingNativeTitleBar(true);
     setContentOwned(new PianoRollMainComponent(), true);
 
     setResizable(true, false);
+    this->trackIndex = trackIndex;
 }
 
 PianoRollWindow::~PianoRollWindow() = default;

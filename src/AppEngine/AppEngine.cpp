@@ -53,6 +53,10 @@ void AppEngine::deleteMidiTrack(int index) { trackManager->deleteTrack(index); }
 
 void AppEngine::addMidiClipToTrack(int trackIndex) { midiEngine->addMidiClipToTrack(trackIndex); }
 
+juce::Array<te::MidiNote *> AppEngine::getMidiClipFromTrack(int trackIndex) {
+    return midiEngine->getMidiClipFromTrack(trackIndex);
+}
+
 int AppEngine::getNumTracks() { return tracktion::getAudioTracks(*edit).size(); }
 
 EditViewState &AppEngine::getEditViewState() { return *editViewState; }

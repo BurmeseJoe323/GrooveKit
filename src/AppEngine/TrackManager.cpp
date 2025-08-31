@@ -18,7 +18,7 @@ te::AudioTrack* TrackManager::getTrack(int index) {
 
 int TrackManager::addTrack()
 {
-    juce::Logger::outputDebugString("Track added");
+    DBG("Track added");
 
     const int currentNumTracks = te::getAudioTracks(edit).size();
     edit.ensureNumberOfAudioTracks(currentNumTracks + 1);
@@ -29,10 +29,10 @@ int TrackManager::addTrack()
     if (plugin)
     {
         track->pluginList.insertPlugin(std::move(plugin), 0, nullptr);
-        juce::Logger::outputDebugString("addTrack: engine had "
+        DBG("addTrack: engine had "
             + juce::String(currentNumTracks) + " audio tracks; new index = "
             + juce::String(currentNumTracks));
-        juce::Logger::outputDebugString("Track " + juce::String(currentNumTracks)
+        DBG("Track " + juce::String(currentNumTracks)
             + " plugins: " + juce::String(track->pluginList.size()));
 
     }

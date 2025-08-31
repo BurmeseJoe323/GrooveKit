@@ -43,7 +43,7 @@ private:
     std::shared_ptr<AppEngine> appEngine;
     int trackIndex = -1;
     int engineIndex = -1;
-    int numClips;
+    int numClips = 0;
 
     TrackClip trackClip;
     TrackHeaderComponent trackHeader;
