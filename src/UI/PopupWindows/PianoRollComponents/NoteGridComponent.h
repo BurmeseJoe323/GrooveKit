@@ -6,6 +6,7 @@
 #define NOTEGRIDCOMPONENT_H
 
 #include <juce_gui_basics/juce_gui_basics.h>
+#include <tracktion_engine/tracktion_engine.h>
 
 #include "GridStyleSheet.h"
 #include "NoteComponent.h"
@@ -54,8 +55,9 @@ public:
     void deleteAllSelected ();
 
     // From here you could convert this into MIDI or any other custom musical encoding.
-    PRESequence getSequence ();
-    void loadSequence (PRESequence sequence);
+    juce::Array<tracktion::MidiNote *> getSequence();
+
+    void loadSequence(juce::Array<tracktion::MidiNote *>  sequence);
 
     float getNoteCompHeight() const;
     float getPixelsPerBar() const;
@@ -70,6 +72,7 @@ private:
     GridStyleSheet &styleSheet;
     SelectionBox selectorBox;
     std::vector<NoteComponent *> noteComps;
+    juce::Array<tracktion::MidiNote *> sequence;
 
     juce::Array<int> blackPitches;
 

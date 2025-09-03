@@ -6,6 +6,7 @@
 #define PIANOROLL_H
 
 #include <juce_gui_basics/juce_gui_basics.h>
+#include <tracktion_engine/tracktion_engine.h>
 
 #include "GridControlPanel.h"
 #include "KeyboardComponent.h"
@@ -50,8 +51,8 @@ public:
     void setPlaybackMarkerPosition (const st_int ticks, bool isVisible = true);
     void resized() override;
 
-    PRESequence getSequence();
-    void loadSequence(PRESequence sequence);
+    juce::Array<tracktion::MidiNote *> getSequence();
+    void loadSequence(juce::Array<tracktion::MidiNote *> sequence);
 
     void disableEditing(bool value);
     void setStyleSheet(GridStyleSheet styleSheet);

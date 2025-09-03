@@ -7,6 +7,7 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "PianoRollEditor.h"
+#include "tracktion_engine/tracktion_engine.h"
 
 class PianoRollMainComponent : public juce::Component, juce::Timer {
     public:
@@ -16,6 +17,9 @@ class PianoRollMainComponent : public juce::Component, juce::Timer {
     void resized() override;
 
     void timerCallback() override;
+
+    void loadSequence(juce::Array<tracktion::MidiNote *> notes);
+
 private:
     st_int tickTest;
     PianoRollEditor editor;

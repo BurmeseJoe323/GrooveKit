@@ -6,6 +6,7 @@
 
 #define RETURN_IF_EDITING_DISABLED if(styleSheet.disableEditing) { return; }
 
+// TODO: clean up and refactor this class to work with Tracktion instead of custom components
 NoteGridComponent::NoteGridComponent(GridStyleSheet &sheet) : styleSheet(sheet) {
     blackPitches = {1, 3, 6, 8, 10};
 
@@ -438,74 +439,74 @@ void NoteGridComponent::deleteAllSelected() {
     noteComps = itemsToKeep;
 }
 
-PRESequence NoteGridComponent::getSequence() {
-    int leftToSort = (int) noteComps.size();
-
-    std::vector<NoteComponent *> componentsCopy = noteComps;
-
-    /*
-     inline lambda function to find the lowest startTime
-     */
-    auto findLowest = [&]() -> int {
-        int lowestIndex = 0;
-        for (int i = 0; i < componentsCopy.size(); i++) {
-            if (componentsCopy[i]->getModel().getStartTime() < componentsCopy[lowestIndex]->getModel().getStartTime()) {
-                lowestIndex = i;
-            }
-        }
-        return lowestIndex;
-    };
-
-
-    PRESequence sequence;
-    while (leftToSort) {
-        const int index = findLowest();
-        auto m = componentsCopy[index]->getModel();
-        m.flags.state = componentsCopy[index]->getState();
-        sequence.events.push_back(m);
-        //        seq.events[seq.events.size()-1]->flags =1  //we also want the selected flags..
-
-        componentsCopy[index] = nullptr;
-        componentsCopy.erase(componentsCopy.begin() + index);
-        leftToSort--;
-    }
-    sequence.print();
+juce::Array<tracktion::MidiNote *> NoteGridComponent::getSequence() {
+    // int leftToSort = (int) noteComps.size();
+    //
+    // std::vector<NoteComponent *> componentsCopy = noteComps;
+    //
+    // /*
+    //  inline lambda function to find the lowest startTime
+    //  */
+    // auto findLowest = [&]() -> int {
+    //     int lowestIndex = 0;
+    //     for (int i = 0; i < componentsCopy.size(); i++) {
+    //         if (componentsCopy[i]->getModel().getStartTime() < componentsCopy[lowestIndex]->getModel().getStartTime()) {
+    //             lowestIndex = i;
+    //         }
+    //     }
+    //     return lowestIndex;
+    // };
+    //
+    //
+    // PRESequence sequence;
+    // while (leftToSort) {
+    //     const int index = findLowest();
+    //     auto m = componentsCopy[index]->getModel();
+    //     m.flags.state = componentsCopy[index]->getState();
+    //     sequence.events.push_back(m);
+    //     //        seq.events[seq.events.size()-1]->flags =1  //we also want the selected flags..
+    //
+    //     componentsCopy[index] = nullptr;
+    //     componentsCopy.erase(componentsCopy.begin() + index);
+    //     leftToSort--;
+    // }
+    // sequence.print();
     return sequence;
 }
 
-void NoteGridComponent::loadSequence(PRESequence sequence) {
-    for (int i = 0; i < noteComps.size(); i++) {
-        removeChildComponent(noteComps[i]);
-        delete noteComps[i];
-    }
-    noteComps.clear();
-
-    noteComps.reserve(sequence.events.size());
-
-    for (auto event: sequence.events) {
-        NoteComponent *newNote = new NoteComponent(styleSheet);
-        newNote->onNoteSelect = [this](NoteComponent *n, const juce::MouseEvent &e) {
-            this->noteCompSelected(n, e);
-        };
-        newNote->onPositionMoved = [this](NoteComponent *n) {
-            this->noteCompPositionMoved(n);
-        };
-        newNote->onLengthChange = [this](NoteComponent *n, int diff) {
-            this->noteCompLengthChanged(n, diff);
-        };
-        newNote->onDragging = [this](NoteComponent *n, const juce::MouseEvent &e) {
-            this->noteCompDragging(n, e);
-        };
-        addAndMakeVisible(newNote);
-        NoteModel nModel(event);
-        nModel.sendChange = sendChange;
-        //        nModel.quantiseModel(PRE::defaultResolution / 8, true, true);
-        newNote->setValues(nModel);
-
-        noteComps.push_back(newNote);
-    }
-    resized();
-    repaint();
+void NoteGridComponent::loadSequence(juce::Array<tracktion::MidiNote *> sequence) {
+    // for (int i = 0; i < noteComps.size(); i++) {
+    //     removeChildComponent(noteComps[i]);
+    //     delete noteComps[i];
+    // }
+    // noteComps.clear();
+    //
+    // noteComps.reserve(sequence.events.size());
+    //
+    // for (auto event: sequence.events) {
+    //     NoteComponent *newNote = new NoteComponent(styleSheet);
+    //     newNote->onNoteSelect = [this](NoteComponent *n, const juce::MouseEvent &e) {
+    //         this->noteCompSelected(n, e);
+    //     };
+    //     newNote->onPositionMoved = [this](NoteComponent *n) {
+    //         this->noteCompPositionMoved(n);
+    //     };
+    //     newNote->onLengthChange = [this](NoteComponent *n, int diff) {
+    //         this->noteCompLengthChanged(n, diff);
+    //     };
+    //     newNote->onDragging = [this](NoteComponent *n, const juce::MouseEvent &e) {
+    //         this->noteCompDragging(n, e);
+    //     };
+    //     addAndMakeVisible(newNote);
+    //     NoteModel nModel(event);
+    //     nModel.sendChange = sendChange;
+    //     //        nModel.quantiseModel(PRE::defaultResolution / 8, true, true);
+    //     newNote->setValues(nModel);
+    //
+    //     noteComps.push_back(newNote);
+    // }
+    // resized();
+    // repaint();
 }
 
 std::vector<NoteModel *> NoteGridComponent::getSelectedModels() {

@@ -29,3 +29,7 @@ void PianoRollMainComponent::timerCallback() {
         tickTest = 0;
     }
 }
+
+void PianoRollMainComponent::loadSequence(juce::Array<tracktion::MidiNote *> notes) {
+    editor.loadSequence(notes);
+}
