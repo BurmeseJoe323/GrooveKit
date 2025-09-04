@@ -80,7 +80,7 @@ const te::MidiList &MIDIEngine::getMidiClipFromTrack(int trackIndex) {
     if (midiClip == nullptr) {
         return {};
     }
-    return midiClip->getSequence().getNotes();
+    return midiClip->getSequence();
 }
 
 

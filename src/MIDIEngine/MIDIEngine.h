@@ -5,6 +5,7 @@
 
 #include "tracktion_graph/tracktion_graph.h"
 
+namespace te = tracktion;
 
 class MIDIEngine
 {
