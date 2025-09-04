@@ -2,7 +2,6 @@ add_library(app_ui)
 target_sources(app_ui
         PRIVATE
         MainComponent.cpp MainComponent.h
-        MainViews/AppView.cpp MainViews/AppView.h
         MainViews/WelcomeView.cpp MainViews/WelcomeView.h
         TrackView/TrackEditView.cpp TrackView/TrackEditView.h
         TrackView/TrackComponent.cpp TrackView/TrackComponent.h

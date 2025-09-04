@@ -5,7 +5,6 @@
 
 #include "TrackView/TrackEditView.h"
 #include "MainComponent.h"
-#include "MainViews/AppView.h"
 #include "MainViews/WelcomeView.h"
 
 MainComponent::MainComponent()

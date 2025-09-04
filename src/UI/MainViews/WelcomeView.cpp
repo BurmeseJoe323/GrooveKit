@@ -4,7 +4,6 @@
 
 #include "WelcomeView.h"
 
-#include "AppView.h"
 #include "../MainComponent.h"
 
 WelcomeView::WelcomeView(AppEngine& engine, DatabaseManager& db)
