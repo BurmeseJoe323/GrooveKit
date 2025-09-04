@@ -1,4 +1,14 @@
-add_library(app_ui)
+add_library(app_ui
+        DrumSamplerView/DrumSamplerView.cpp
+        DrumSamplerView/DrumSamplerView.h
+        DrumSamplerView/DrumSamplerLauncher.cpp
+        DrumSamplerView/DrumSamplerLauncher.h)
+target_link_libraries(app_ui
+        PRIVATE
+        GrooveKitResources
+        jive::jive_layouts
+        jive::jive_style_sheets
+)
 target_sources(app_ui
         PRIVATE
         MainComponent.cpp MainComponent.h

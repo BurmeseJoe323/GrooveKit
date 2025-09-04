@@ -109,6 +109,10 @@ public:
     bool isTrackSoloed(int index) const;
     bool anyTrackSoloed() const;
 
+    AudioEngine& getAudioEngine();
+    MIDIEngine& getMidiEngine();
+    juce::AudioProcessorValueTreeState& getAPVTS();
+
     EditViewState& getEditViewState();
     te::Edit &getEdit();
 

@@ -63,3 +63,7 @@ void AppEngine::soloTrack(int i)                 { trackManager->soloTrack(i); }
 void AppEngine::setTrackSoloed(int i, bool s)    { trackManager->setTrackSoloed(i, s); }
 bool AppEngine::isTrackSoloed(int i) const       { return trackManager->isTrackSoloed(i); }
 bool AppEngine::anyTrackSoloed() const           { return trackManager->anyTrackSoloed(); }
+
+AudioEngine& AppEngine::getAudioEngine() { return *audioEngine; }
+MIDIEngine&  AppEngine::getMidiEngine()  { return *midiEngine;  }
+

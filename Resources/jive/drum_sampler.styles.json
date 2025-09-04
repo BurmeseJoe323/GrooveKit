@@ -1,0 +1,15 @@
+{
+  "background": "#101216",
+  "foreground": "#E8EAF0",
+  "font-family": "Inter, Helvetica, Arial",
+  "#title": { "font-size": "22", "font-style": "bold", "margin": "0 0 8 0" },
+
+  "Button": { "padding": "10", "radius": "12", "background": "#1D2230", "border": "#3A4154" },
+  "Button:hover": { "background": "#273043" },
+  "Button:pressed": { "background": "#36425B" },
+
+  "#padGrid Button": { "font-size": "16", "min-width": "64", "min-height": "64" },
+
+  "Slider": { "height": "28" },
+  "#controls": { "background": "#0E1116", "padding": "8", "radius": "12", "border": "#2A3142" }
+}

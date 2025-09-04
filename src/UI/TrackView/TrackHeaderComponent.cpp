@@ -8,6 +8,7 @@ TrackHeaderComponent::TrackHeaderComponent() {
   addAndMakeVisible(trackNameLabel);
   addAndMakeVisible(muteTrackButton);
   addAndMakeVisible(soloTrackButton);
+  addAndMakeVisible(drumSamplerButton);
 
   addClip.onClick = [this]() {
     listeners.call([](Listener& l) { l.onAddClipClicked(); });
@@ -19,6 +20,10 @@ TrackHeaderComponent::TrackHeaderComponent() {
 
   pianoRollButton.onClick = [this]() {
     listeners.call([](Listener& l) { l.onPianoRollClicked(); });
+  };
+
+  drumSamplerButton.onClick = [this]() {
+    listeners.call([](Listener& l) { l.onDrumSamplerClicked(); });
   };
 
   muteTrackButton.setClickingTogglesState(true);
@@ -129,6 +134,10 @@ void TrackHeaderComponent::resized() {
 
   buttonRowFB.items.add(juce::FlexItem(pianoRollButton)
         .withWidth(50)
+        .withHeight(30));
+
+  buttonRowFB.items.add(juce::FlexItem(drumSamplerButton)
+        .withWidth(70)   // a tad wider for the label
         .withHeight(30));
 
   // Add the button row as a FlexItem to the main layout

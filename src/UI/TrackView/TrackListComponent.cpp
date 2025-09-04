@@ -4,6 +4,8 @@
 
 #include <juce_graphics/fonts/harfbuzz/hb-ot-head-table.hh>
 
+#include "DrumSamplerView/DrumSamplerLauncher.h"
+
 TrackListComponent::TrackListComponent(std::shared_ptr<AppEngine> engine) : appEngine(engine),
                                                                             playhead(engine->getEdit(),
                                                                                      engine->getEditViewState())
@@ -85,6 +87,20 @@ void TrackListComponent::addNewTrack (int engineIdx)
             updateTrackIndexes();
             resized();
         }
+    };
+
+    newTrack->onRequestOpenDrumSampler = [this](int trackIdx)
+    {
+        DBG("Open Drum Sampler requested for track " << trackIdx);
+
+        juce::DialogWindow::LaunchOptions opts;
+        opts.content.setOwned(makeDrumSamplerView(appEngine->getAudioEngine(),
+                                          appEngine->getMidiEngine()).release());
+        opts.content->setSize(720, 480);
+        opts.dialogTitle = "Drum Sampler";
+        opts.useNativeTitleBar = true;
+        opts.resizable = true;
+        opts.launchAsync(); // or runModal();
     };
 
     resized();

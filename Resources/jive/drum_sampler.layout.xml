@@ -1,0 +1,59 @@
+<Component id="drumSamplerRoot"
+           display="flex" flex-direction="row" padding="12">
+
+    <!-- LEFT: 4x4 pad grid -->
+    <Component id="padGrid"
+               display="grid"
+               template-columns="1fr 1fr 1fr 1fr"
+               template-rows="1fr 1fr 1fr 1fr"
+               gap="8"
+               margin-right="12"
+               flex-grow="3">
+
+        <Button id="pad00" text="1"/>
+        <Button id="pad01" text="2"/>
+        <Button id="pad02" text="3"/>
+        <Button id="pad03" text="4"/>
+        <Button id="pad10" text="5"/>
+        <Button id="pad11" text="6"/>
+        <Button id="pad12" text="7"/>
+        <Button id="pad13" text="8"/>
+        <Button id="pad20" text="9"/>
+        <Button id="pad21" text="10"/>
+        <Button id="pad22" text="11"/>
+        <Button id="pad23" text="12"/>
+        <Button id="pad30" text="13"/>
+        <Button id="pad31" text="14"/>
+        <Button id="pad32" text="15"/>
+        <Button id="pad33" text="16"/>
+    </Component>
+
+    <!-- RIGHT: controls column -->
+    <Component id="controls"
+               display="flex" flex-direction="column"
+               flex-grow="2">
+
+        <Text id="title" text="Drum Sampler" margin-bottom="8"/>
+
+        <Component id="sampleLoader" display="flex" flex-direction="row" margin-bottom="10">
+            <Text text="Sample" margin-right="6"/>
+            <Button id="loadSampleBtn" text="Load..."/>
+        </Component>
+
+        <!-- Envelope block: 2x2 grid -->
+        <Component id="env" display="grid"
+                   template-columns="1fr 1fr"
+                   template-rows="1fr 1fr"
+                   gap="6"
+                   margin-bottom="10">
+            <Slider id="attack"  text="Attack"/>
+            <Slider id="release" text="Release"/>
+            <Slider id="decay"   text="Decay"/>
+            <Slider id="sustain" text="Sustain"/>
+        </Component>
+
+        <Slider id="tune"         text="Tune"         margin-bottom="10"/>
+        <Slider id="filterCutoff" text="Cutoff"       margin-bottom="10"/>
+        <Slider id="volume"       text="Volume"/>
+    </Component>
+</Component>
