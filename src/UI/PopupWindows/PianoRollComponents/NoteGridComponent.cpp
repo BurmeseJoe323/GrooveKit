@@ -3,11 +3,12 @@
 //
 
 #include "NoteGridComponent.h"
+#include "AppEngine.h"
 
 #define RETURN_IF_EDITING_DISABLED if(styleSheet.disableEditing) { return; }
 
 // TODO: clean up and refactor this class to work with Tracktion instead of custom components
-NoteGridComponent::NoteGridComponent(GridStyleSheet &sheet) : styleSheet(sheet) {
+NoteGridComponent::NoteGridComponent(GridStyleSheet &sheet, std::shared_ptr<AppEngine> engine, int trackIndex) : styleSheet(sheet), appEngine(engine), trackIndex(trackIndex) {
     blackPitches = {1, 3, 6, 8, 10};
 
     addChildComponent(&selectorBox);
@@ -24,6 +25,17 @@ NoteGridComponent::NoteGridComponent(GridStyleSheet &sheet) : styleSheet(sheet) 
     ticksPerTimeSignature = PRE::defaultResolution * 4; // 4/4 assume
     pixelsPerBar = 0;
     noteCompHeight = 0;
+
+    // Load any existing MIDI notes for the current track from appEngine
+    const te::MidiList &sequence = appEngine->getMidiClipFromTrack(trackIndex);
+    for (auto note : sequence.getNotes()) {
+        DBG("Starting beat: " << note->getStartBeat().inBeats());
+
+        NoteModel *model = new NoteModel();
+        NoteComponent *comp = new NoteComponent();
+        noteComps.emplace_back(note->getNoteNumber(), note->getVelocity(),
+                               note->getStartBeat().inBeats(), note->getLengthBeats().inBeats());
+    }
 }
 
 NoteGridComponent::~NoteGridComponent() {
@@ -355,7 +367,8 @@ void NoteGridComponent::mouseDoubleClick(const juce::MouseEvent &e) {
 
     const int defaultVelocity = 100;
 
-    NoteModel nModel((u8) note, defaultVelocity, (st_int) xPos, lastNoteLength, {});
+    // TODO: change this code to access sequence from appEngine and add note there
+    NoteModel nModel((u8) note, defaultVelocity, (st_int) xPos, lastNoteLength);
     nModel.quantiseModel(currentQValue, true, true);
     nModel.sendChange = sendChange;
     nModel.trigger();
@@ -471,43 +484,44 @@ const te::MidiList &NoteGridComponent::getSequence() {
     //     leftToSort--;
     // }
     // sequence.print();
-    return sequence;
+    return appEngine->getMidiClipFromTrack(trackIndex);
 }
 
-void NoteGridComponent::loadSequence(const te::MidiList &sequence) {
-    // for (int i = 0; i < noteComps.size(); i++) {
-    //     removeChildComponent(noteComps[i]);
-    //     delete noteComps[i];
-    // }
-    // noteComps.clear();
-    //
-    // noteComps.reserve(sequence.events.size());
-    //
-    // for (auto event: sequence.events) {
-    //     NoteComponent *newNote = new NoteComponent(styleSheet);
-    //     newNote->onNoteSelect = [this](NoteComponent *n, const juce::MouseEvent &e) {
-    //         this->noteCompSelected(n, e);
-    //     };
-    //     newNote->onPositionMoved = [this](NoteComponent *n) {
-    //         this->noteCompPositionMoved(n);
-    //     };
-    //     newNote->onLengthChange = [this](NoteComponent *n, int diff) {
-    //         this->noteCompLengthChanged(n, diff);
-    //     };
-    //     newNote->onDragging = [this](NoteComponent *n, const juce::MouseEvent &e) {
-    //         this->noteCompDragging(n, e);
-    //     };
-    //     addAndMakeVisible(newNote);
-    //     NoteModel nModel(event);
-    //     nModel.sendChange = sendChange;
-    //     //        nModel.quantiseModel(PRE::defaultResolution / 8, true, true);
-    //     newNote->setValues(nModel);
-    //
-    //     noteComps.push_back(newNote);
-    // }
-    // resized();
-    // repaint();
-}
+// void NoteGridComponent::loadSequence() {
+//      const te::MidiList &sequence = appEngine->getMidiClipFromTrack(trackIndex);
+//     for (int i = 0; i < noteComps.size(); i++) {
+//         removeChildComponent(noteComps[i]);
+//         delete noteComps[i];
+//     }
+//     noteComps.clear();
+//
+//     noteComps.reserve(sequence.size());
+//
+//     for (auto event: sequence) {
+//         NoteComponent *newNote = new NoteComponent(styleSheet);
+//         newNote->onNoteSelect = [this](NoteComponent *n, const juce::MouseEvent &e) {
+//             this->noteCompSelected(n, e);
+//         };
+//         newNote->onPositionMoved = [this](NoteComponent *n) {
+//             this->noteCompPositionMoved(n);
+//         };
+//         newNote->onLengthChange = [this](NoteComponent *n, int diff) {
+//             this->noteCompLengthChanged(n, diff);
+//         };
+//         newNote->onDragging = [this](NoteComponent *n, const juce::MouseEvent &e) {
+//             this->noteCompDragging(n, e);
+//         };
+//         addAndMakeVisible(newNote);
+//         NoteModel nModel(event->getNoteNumber(), event->getVelocity(), event->getStartBeat().inTicks(), event->getLengthInTicks(), {});
+//         nModel.sendChange = sendChange;
+//         //        nModel.quantiseModel(PRE::defaultResolution / 8, true, true);
+//         newNote->setValues(nModel);
+//
+//         noteComps.push_back(newNote);
+//     }
+//     resized();
+//     repaint();
+// }
 
 std::vector<NoteModel *> NoteGridComponent::getSelectedModels() {
     std::vector<NoteModel *> noteModels;

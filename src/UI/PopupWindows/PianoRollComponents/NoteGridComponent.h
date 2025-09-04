@@ -7,6 +7,7 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <tracktion_engine/tracktion_engine.h>
+#include "../../../AppEngine/AppEngine.h"
 
 #include "GridStyleSheet.h"
 #include "NoteComponent.h"
@@ -27,7 +28,7 @@ public:
 
 class NoteGridComponent : public juce::Component {
 public:
-    NoteGridComponent(GridStyleSheet &sheet);
+    NoteGridComponent(GridStyleSheet &sheet, std::shared_ptr<AppEngine> engine, int trackIndex);
     ~NoteGridComponent() override;
 
     void paint (juce::Graphics & g) override;
@@ -59,7 +60,7 @@ public:
     // From here you could convert this into MIDI or any other custom musical encoding.
     const te::MidiList &getSequence();
 
-    void loadSequence(const te::MidiList &sequence);
+    // void loadSequence();
 
     float getNoteCompHeight() const;
     float getPixelsPerBar() const;
@@ -71,13 +72,15 @@ public:
 private:
     void sendEdit ();
 
+    // The appEngine is where all MIDI information is stored. The trackIndex is used to locate the correct track
+    std::shared_ptr<AppEngine> appEngine;
+    int trackIndex;
+
     GridStyleSheet &styleSheet;
     SelectionBox selectorBox;
     std::vector<NoteComponent *> noteComps;
-    const te::MidiList &sequence;
 
     juce::Array<int> blackPitches;
-
     float noteCompHeight;
     float pixelsPerBar;
     st_int ticksPerTimeSignature;

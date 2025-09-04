@@ -4,11 +4,12 @@
 
 #include "PianoRollMainComponent.h"
 
-PianoRollMainComponent::PianoRollMainComponent() {
+PianoRollMainComponent::PianoRollMainComponent(std::shared_ptr<AppEngine> engine, int trackIndex) : editor(engine, trackIndex) {
     setSize(800, 600);
     addAndMakeVisible(editor);
     editor.setup(10, 900, 20);
     //default 10 bars, with 900 pixels per bar (width) and 20 pixels per step (each note height)
+    // editor.loadSequence();
 
     editor.sendChange = [](int note, int velocity) {
         // You will probably want to send this information to some kind of MIDI messaging system
@@ -28,8 +29,4 @@ void PianoRollMainComponent::timerCallback() {
     if (tickTest >= 480 * 4 * 10) {
         tickTest = 0;
     }
-}
-
-void PianoRollMainComponent::loadSequence(const te::MidiList &notes) {
-    editor.loadSequence(notes);
 }

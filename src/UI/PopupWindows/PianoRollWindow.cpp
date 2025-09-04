@@ -5,21 +5,19 @@
 #include "PianoRollWindow.h"
 
 
-PianoRollWindow::PianoRollWindow(int trackIndex) : DocumentWindow("Piano Roll Editor", juce::Colours::darkblue,
-                                                    DocumentWindow::closeButton, true) {
+PianoRollWindow::PianoRollWindow(std::shared_ptr<AppEngine> engine, int trackIndex) :
+DocumentWindow("Piano Roll Editor", juce::Colours::darkblue,
+        DocumentWindow::closeButton, true),
+    trackIndex(trackIndex)
+{
     setUsingNativeTitleBar(true);
-    editor = std::make_unique<PianoRollMainComponent>();
+    editor = std::make_unique<PianoRollMainComponent>(engine, trackIndex);
     setContentOwned(editor.get(), true);
 
     setResizable(true, false);
-    this->trackIndex = trackIndex;
 }
 
 PianoRollWindow::~PianoRollWindow() = default;
-
-void PianoRollWindow::loadSequence(const te::MidiList &sequence) {
-    editor->loadSequence(notes);
-}
 
 void PianoRollWindow::closeButtonPressed() {
     setVisible(false);

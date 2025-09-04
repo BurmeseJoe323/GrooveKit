@@ -12,6 +12,7 @@
 #include "KeyboardComponent.h"
 #include "NoteGridComponent.h"
 #include "TimelineComponent.h"
+#include "../../../AppEngine/AppEngine.h"
 
 namespace te = tracktion;
 
@@ -37,7 +38,7 @@ public:
         std::function<void()> update; //once you have made the edits then call this
     };
 
-    PianoRollEditor();
+    PianoRollEditor(std::shared_ptr<AppEngine> engine, int trackIndex);
     ~PianoRollEditor() override = default;
 
     /*
@@ -53,8 +54,8 @@ public:
     void setPlaybackMarkerPosition (const st_int ticks, bool isVisible = true);
     void resized() override;
 
-    te::MidiList &getSequence();
-    void loadSequence(const te::MidiList &sequence);
+    const te::MidiList &getSequence();
+    // void loadSequence();
 
     void disableEditing(bool value);
     void setStyleSheet(GridStyleSheet styleSheet);
@@ -97,8 +98,5 @@ private:
 
     st_int  playbackTicks;
     bool    showPlaybackMarker;
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PianoRollEditor)
 };
-
-
-#endif //PIANOROLL_H
+#endif

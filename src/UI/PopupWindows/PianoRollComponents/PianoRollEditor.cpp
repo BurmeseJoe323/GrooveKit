@@ -4,7 +4,7 @@
 
 #include "PianoRollEditor.h"
 
-PianoRollEditor::PianoRollEditor() : noteGrid(gridStyleSheet), controlPanel(noteGrid, gridStyleSheet) {
+PianoRollEditor::PianoRollEditor(std::shared_ptr<AppEngine> engine, int trackIndex) : noteGrid(gridStyleSheet, engine, trackIndex), controlPanel(noteGrid, gridStyleSheet) {
     // Setup note grid
     addAndMakeVisible(gridView);
     gridView.setViewedComponent(&noteGrid, false);
@@ -110,17 +110,17 @@ void PianoRollEditor::updateBars(const int newNumberOfBars) {
     }
 }
 
-void PianoRollEditor::loadSequence(const te::MidiList &sequence) {
-    noteGrid.loadSequence(sequence);
+// void PianoRollEditor::loadSequence() {
+//     noteGrid.loadSequence();
+//
+//
+//     // TODO: fix me, this automatically scrolls the grid
+//     //    const int middleNote = ((sequence.highNote - sequence.lowNote) * 0.5) + sequence.lowNote;
+//     //    const float scrollRatio = middleNote / 127.0;
+//     //    setScroll(0.0, scrollRatio);
+// }
 
-
-    // TODO: fix me, this automatically scrolls the grid
-    //    const int middleNote = ((sequence.highNote - sequence.lowNote) * 0.5) + sequence.lowNote;
-    //    const float scrollRatio = middleNote / 127.0;
-    //    setScroll(0.0, scrollRatio);
-}
-
-PRESequence PianoRollEditor::getSequence() {
+const te::MidiList &PianoRollEditor::getSequence() {
     return noteGrid.getSequence();
 }
 

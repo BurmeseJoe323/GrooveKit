@@ -8,24 +8,20 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "PianoRollEditor.h"
 #include "tracktion_engine/tracktion_engine.h"
+#include "../../../AppEngine/AppEngine.h"
 
 class PianoRollMainComponent : public juce::Component, juce::Timer {
     public:
-    PianoRollMainComponent();
+    PianoRollMainComponent(std::shared_ptr<AppEngine> engine, int trackIndex);
     ~PianoRollMainComponent() override = default;
 
     void resized() override;
 
     void timerCallback() override;
 
-    void loadSequence(const te::MidiList &notes);
-
 private:
     st_int tickTest;
     PianoRollEditor editor;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PianoRollMainComponent)
 };
-
-
-
 #endif //MAINCOMPONENT_H

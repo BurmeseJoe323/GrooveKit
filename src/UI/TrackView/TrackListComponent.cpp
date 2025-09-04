@@ -1,5 +1,3 @@
-#pragma once
-
 #include "TrackListComponent.h"
 
 #include <juce_graphics/fonts/harfbuzz/hb-ot-head-table.hh>
@@ -100,14 +98,12 @@ void TrackListComponent::addNewTrack (int engineIdx)
         if (uiIndex >= 0 && uiIndex < tracks.size()) {
             int engineIdx = tracks[uiIndex]->getEngineIndex();
             selectedTrackIndex = engineIdx;
-            pianoRollWindow = std::make_unique<PianoRollWindow>(engineIdx);
+            pianoRollWindow = std::make_unique<PianoRollWindow>(appEngine, engineIdx);
             addAndMakeVisible(pianoRollWindow.get());
             pianoRollWindow->addToDesktop(pianoRollWindow->getDesktopWindowStyleFlags());
             pianoRollWindow->toFront(true);
             pianoRollWindow->centreWithSize(pianoRollWindow->getWidth(), pianoRollWindow->getHeight());
             // TODO: load MIDI sequence from selected track into piano roll
-            auto &notes = appEngine->getMidiClipFromTrack(engineIdx);
-            pianoRollWindow->loadSequence(notes);
         }
     };
 
