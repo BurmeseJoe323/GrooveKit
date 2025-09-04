@@ -10,6 +10,8 @@
 #include "PianoRollComponents/PianoRollMainComponent.h"
 #include "tracktion_graph/tracktion_graph.h"
 
+namespace te = tracktion;
+
 class PianoRollWindow : public juce::DocumentWindow {
 public:
     explicit PianoRollWindow(int trackIndex);
@@ -18,7 +20,7 @@ public:
     int getTrackIndex() const { return trackIndex; }
     // TODO: add setTrackIndex, or just destroy and reopen window?
 
-    void loadSequence(juce::Array<tracktion::MidiNote *> notes);
+    void loadSequence(const te::MidiList &sequence);
 
     void closeButtonPressed() override;
     void activeWindowStatusChanged() override;

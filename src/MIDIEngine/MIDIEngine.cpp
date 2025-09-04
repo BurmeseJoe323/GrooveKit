@@ -62,7 +62,7 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
 
 }
 
-juce::Array<tracktion_engine::MidiNote*> MIDIEngine::getMidiClipFromTrack(int trackIndex) {
+const te::MidiList &MIDIEngine::getMidiClipFromTrack(int trackIndex) {
     auto audioTracks = getAudioTracks(edit);
     if (trackIndex < 0 || trackIndex >= audioTracks.size())
         // Return empty array if trackIndex is invalid

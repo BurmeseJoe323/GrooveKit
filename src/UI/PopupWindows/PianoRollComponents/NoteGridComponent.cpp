@@ -439,7 +439,7 @@ void NoteGridComponent::deleteAllSelected() {
     noteComps = itemsToKeep;
 }
 
-juce::Array<tracktion::MidiNote *> NoteGridComponent::getSequence() {
+const te::MidiList &NoteGridComponent::getSequence() {
     // int leftToSort = (int) noteComps.size();
     //
     // std::vector<NoteComponent *> componentsCopy = noteComps;
@@ -474,7 +474,7 @@ juce::Array<tracktion::MidiNote *> NoteGridComponent::getSequence() {
     return sequence;
 }
 
-void NoteGridComponent::loadSequence(juce::Array<tracktion::MidiNote *> sequence) {
+void NoteGridComponent::loadSequence(const te::MidiList &sequence) {
     // for (int i = 0; i < noteComps.size(); i++) {
     //     removeChildComponent(noteComps[i]);
     //     delete noteComps[i];

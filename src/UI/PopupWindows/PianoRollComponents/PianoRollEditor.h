@@ -13,6 +13,8 @@
 #include "NoteGridComponent.h"
 #include "TimelineComponent.h"
 
+namespace te = tracktion;
+
 /*
  * Custom viewport that synchronizes the scrolling movement of several viewports at once
  */
@@ -51,8 +53,8 @@ public:
     void setPlaybackMarkerPosition (const st_int ticks, bool isVisible = true);
     void resized() override;
 
-    juce::Array<tracktion::MidiNote *> getSequence();
-    void loadSequence(juce::Array<tracktion::MidiNote *> sequence);
+    te::MidiList &getSequence();
+    void loadSequence(const te::MidiList &sequence);
 
     void disableEditing(bool value);
     void setStyleSheet(GridStyleSheet styleSheet);

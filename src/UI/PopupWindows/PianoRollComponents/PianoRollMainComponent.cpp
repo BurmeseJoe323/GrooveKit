@@ -30,6 +30,6 @@ void PianoRollMainComponent::timerCallback() {
     }
 }
 
-void PianoRollMainComponent::loadSequence(juce::Array<tracktion::MidiNote *> notes) {
+void PianoRollMainComponent::loadSequence(const te::MidiList &notes) {
     editor.loadSequence(notes);
 }

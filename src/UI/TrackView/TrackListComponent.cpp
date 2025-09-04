@@ -106,7 +106,7 @@ void TrackListComponent::addNewTrack (int engineIdx)
             pianoRollWindow->toFront(true);
             pianoRollWindow->centreWithSize(pianoRollWindow->getWidth(), pianoRollWindow->getHeight());
             // TODO: load MIDI sequence from selected track into piano roll
-            auto notes = appEngine->getMidiClipFromTrack(engineIdx);
+            auto &notes = appEngine->getMidiClipFromTrack(engineIdx);
             pianoRollWindow->loadSequence(notes);
         }
     };

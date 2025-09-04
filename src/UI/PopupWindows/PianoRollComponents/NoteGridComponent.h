@@ -12,6 +12,8 @@
 #include "NoteComponent.h"
 #include "PConstants.h"
 
+namespace te = tracktion;
+
 class SelectionBox : public juce::Component {
 public:
     void paint(juce::Graphics &g) {
@@ -55,9 +57,9 @@ public:
     void deleteAllSelected ();
 
     // From here you could convert this into MIDI or any other custom musical encoding.
-    juce::Array<tracktion::MidiNote *> getSequence();
+    const te::MidiList &getSequence();
 
-    void loadSequence(juce::Array<tracktion::MidiNote *>  sequence);
+    void loadSequence(const te::MidiList &sequence);
 
     float getNoteCompHeight() const;
     float getPixelsPerBar() const;
@@ -72,7 +74,7 @@ private:
     GridStyleSheet &styleSheet;
     SelectionBox selectorBox;
     std::vector<NoteComponent *> noteComps;
-    juce::Array<tracktion::MidiNote *> sequence;
+    const te::MidiList &sequence;
 
     juce::Array<int> blackPitches;
 

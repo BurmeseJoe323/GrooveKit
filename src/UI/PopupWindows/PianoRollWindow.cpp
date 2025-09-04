@@ -17,7 +17,9 @@ PianoRollWindow::PianoRollWindow(int trackIndex) : DocumentWindow("Piano Roll Ed
 
 PianoRollWindow::~PianoRollWindow() = default;
 
-void PianoRollWindow::loadSequence(juce::Array<tracktion::MidiNote *> notes) { editor->loadSequence(notes); }
+void PianoRollWindow::loadSequence(const te::MidiList &sequence) {
+    editor->loadSequence(notes);
+}
 
 void PianoRollWindow::closeButtonPressed() {
     setVisible(false);

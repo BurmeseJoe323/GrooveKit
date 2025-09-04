@@ -18,7 +18,7 @@ class PianoRollMainComponent : public juce::Component, juce::Timer {
 
     void timerCallback() override;
 
-    void loadSequence(juce::Array<tracktion::MidiNote *> notes);
+    void loadSequence(const te::MidiList &notes);
 
 private:
     st_int tickTest;

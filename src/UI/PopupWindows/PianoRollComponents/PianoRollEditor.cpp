@@ -110,7 +110,7 @@ void PianoRollEditor::updateBars(const int newNumberOfBars) {
     }
 }
 
-void PianoRollEditor::loadSequence(juce::Array<tracktion::MidiNote *> notes) {
+void PianoRollEditor::loadSequence(const te::MidiList &sequence) {
     noteGrid.loadSequence(sequence);
 
 
