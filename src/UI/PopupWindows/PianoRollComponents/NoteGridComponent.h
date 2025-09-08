@@ -71,7 +71,7 @@ public:
     float getNoteCompHeight() const;
     float getPixelsPerBar() const;
 
-    std::vector<NoteModel *> getSelectedModels ();
+    juce::Array<te::MidiNote *> getSelectedModels();
 
     std::function<void(int note,int velocity)> sendChange;
     std::function<void()> onEdit;
@@ -87,16 +87,21 @@ private:
     SelectionBox selectorBox;
     std::vector<NoteComponent *> noteComps;
 
-    juce::Array<int> blackPitches;
+    std::set<int> blackPitches = {1, 3, 6, 8, 10};
     float noteCompHeight;
     float pixelsPerBar;
     TimeSignature timeSignature;
     st_int ticksPerTimeSignature;
     st_int currentQValue;
-    st_int lastNoteLength;
+    // st_int lastNoteLength;
     bool firstDrag;
     bool firstCall;
     int lastTrigger;
+
+    float beatsToX(float beats);
+    float pitchToY(float pitch);
+    float xToBeats(float x);
+    int yToPitch(float y);
 };
 
 

@@ -9,7 +9,6 @@
 
 // TODO: clean up and refactor this class to work with Tracktion instead of custom components
 NoteGridComponent::NoteGridComponent(GridStyleSheet &sheet, std::shared_ptr<AppEngine> engine, int trackIndex) : styleSheet(sheet), appEngine(engine), trackIndex(trackIndex) {
-    blackPitches = {1, 3, 6, 8, 10};
 
     addChildComponent(&selectorBox);
 
@@ -18,18 +17,40 @@ NoteGridComponent::NoteGridComponent(GridStyleSheet &sheet, std::shared_ptr<AppE
     // addKeyListener(this);
     // setWantsKeyboardFocus(true);
     currentQValue = PRE::quantisedDivisionValues[PRE::eQuantisationValue1_32];
-    lastNoteLength = PRE::quantisedDivisionValues[PRE::eQuantisationValue1_4];
     firstDrag = false;
     firstCall = false;
     lastTrigger = -1;
     pixelsPerBar = 0;
     noteCompHeight = 0;
 
-    // TODO: most of the time, we will be working in 4/4, but we want this to be set according to the DAW itself
+    // TODO: We want the time signature to be set according to the DAW itself
     timeSignature.beatsPerBar = 4;
     timeSignature.beatValue = 4;
     // Set ticks according to time signature's beatValue
     ticksPerTimeSignature = PRE::defaultResolution * timeSignature.beatsPerBar;
+
+    // TODO: refactor to not use NoteComponent
+    // Components for each note will likely impact performance. We will probably want to draw directly
+    // on the grid instead, and also figure out a way to select notes and drag them
+    const te::MidiList &seq = appEngine->getMidiClipFromTrack(trackIndex);
+    for (te::MidiNote *note : seq.getNotes()) {
+        NoteComponent *newNote = new NoteComponent(styleSheet);
+        newNote->onNoteSelect = [this](NoteComponent *n, const juce::MouseEvent &e) {
+            this->noteCompSelected(n, e);
+        };
+        newNote->onPositionMoved = [this](NoteComponent *n) {
+            this->noteCompPositionMoved(n);
+        };
+        newNote->onLengthChange = [this](NoteComponent *n, int diff) {
+            this->noteCompLengthChanged(n, diff);
+        };
+        newNote->onDragging = [this](NoteComponent *n, const juce::MouseEvent &e) {
+            this->noteCompDragging(n, e);
+        };
+        newNote->setModel(note);
+        addAndMakeVisible(newNote);
+        noteComps.push_back(newNote);
+    }
 }
 
 NoteGridComponent::~NoteGridComponent() {
@@ -59,8 +80,7 @@ void NoteGridComponent::paint(juce::Graphics &g) {
         g.drawLine(0, floor(line), getWidth(), floor(line));
     }
 
-    // NOTE: Currently assuming 4/4, should be made adjustable in the future
-
+    // TODO: Currently assuming 4/4, should be made adjustable in the future
     // Draw bar lines
     const float increment = pixelsPerBar / 16;
     line = 0;
@@ -79,39 +99,31 @@ void NoteGridComponent::paint(juce::Graphics &g) {
         line += increment;
     }
 
-    // TODO: Draw all notes currently in this clip
-    const te::MidiList &seq = appEngine->getMidiClipFromTrack(trackIndex);
-    for (te::MidiNote* note : seq.getNotes()) {
-        // NOTE: calculations for the time-position of a note require using PRE::defaultResolution right now, which
-        // is hard-coded to 480. We may want to change this in the future
-        const float floatTicks = static_cast<float>(ticksPerTimeSignature);
-
-        const float startBeat = static_cast<float>(note->getStartBeat().inBeats()) * PRE::defaultResolution;
-        const float xPos = startBeat / floatTicks * pixelsPerBar;
-
-        const float gridHeight = static_cast<float>(getHeight());
-        const float pitch = static_cast<float>(note->getNoteNumber());
-        const float yPos = gridHeight - pitch * noteCompHeight - noteCompHeight;
-
-        const float duration = static_cast<float>(note->getLengthBeats().inBeats()) * PRE::defaultResolution;
-        const float len = duration / floatTicks * pixelsPerBar;
-
-        // Set color
-        juce::Colour colourToUse = juce::Colour(252, 97, 92);
-        // if (useCustomColour) {
-        //     colourToUse = customColour;
-        // } else {
-        //     colourToUse = juce::Colour(252, 97, 92);
-        // }
-        //
-        // if (state == eSelected || mouseOver) {
-        //     colourToUse = colourToUse.brighter(0.8);
-        // }
-        g.setColour(colourToUse);
-
-        // Draw middle box
-        g.fillRect(xPos, yPos, len, noteCompHeight);
-    }
+    // TODO: Draw all notes in this clip directly, instead of using components
+    // const te::MidiList &seq = appEngine->getMidiClipFromTrack(trackIndex);
+    // for (te::MidiNote* note : seq.getNotes()) {
+    //     // NOTE: calculations for the time-position of a note require using PRE::defaultResolution right now, which
+    //     // is hard-coded to 480. We may want to change this in the future
+    //     const float xPos = beatsToX(static_cast<float>(note->getStartBeat().inBeats()));
+    //     const float yPos = pitchToY(static_cast<float>(note->getNoteNumber()));
+    //     const float len = beatsToX(static_cast<float>(note->getLengthBeats().inBeats()));
+    //
+    //     // Set color
+    //     juce::Colour colourToUse = juce::Colour(252, 97, 92);
+    //     // if (useCustomColour) {
+    //     //     colourToUse = customColour;
+    //     // } else {
+    //     //     colourToUse = juce::Colour(252, 97, 92);
+    //     // }
+    //     //
+    //     // if (state == eSelected || mouseOver) {
+    //     //     colourToUse = colourToUse.brighter(0.8);
+    //     // }
+    //     g.setColour(colourToUse);
+    //
+    //     // Draw middle box
+    //     g.fillRect(xPos, yPos, len, noteCompHeight);
+    // }
 }
 
 void NoteGridComponent::resized() {
@@ -119,12 +131,10 @@ void NoteGridComponent::resized() {
         if (component->coordinatesDiffer) {
             noteCompPositionMoved(component, false);
         }
-        // convert from model representation into component representation (translation and scale)
-
-        const float xPos = (component->getModel().getStartTime() / ((float) ticksPerTimeSignature)) * pixelsPerBar;
-        const float yPos = (getHeight() - (component->getModel().getNote() * noteCompHeight)) - noteCompHeight;
-
-        float len = (component->getModel().getNoteLength() / ((float) ticksPerTimeSignature)) * pixelsPerBar;
+        // Convert model-side information to component coordinates
+        const float xPos = beatsToX(static_cast<float>(component->getModel()->getStartBeat().inBeats()));
+        const float yPos = pitchToY(static_cast<float>(component->getModel()->getNoteNumber()));
+        const float len = beatsToX(static_cast<float>(component->getModel()->getLengthBeats().inBeats()));
 
         component->setBounds(xPos, yPos, len, noteCompHeight);
     }
@@ -195,32 +205,30 @@ void NoteGridComponent::noteCompPositionMoved(NoteComponent *comp, bool callResi
     }
 
     //could do with refactoring this code here..
-    int xPos = (comp->getX() / ((float) pixelsPerBar)) * ticksPerTimeSignature;
-    int note = 127 - (comp->getY() / noteCompHeight);
+    int note = yToPitch(comp->getY());
     if (note > 127) {
         note = 127;
     } else if (note < 0) {
         note = 0;
     }
 
-    if (xPos <= 0) {
-        xPos = 0;
+    float beatStart = xToBeats(static_cast<float>(comp->getX()));
+    if (beatStart < 0) {
+        beatStart = 0;
     }
 
-    const int len = (comp->getWidth() / ((float) pixelsPerBar)) * ticksPerTimeSignature;
-    NoteModel nm = comp->getModel();
-    nm.setNote(note);
-    nm.setStartTime(xPos);
-    nm.setNoteLength(len);
-    nm.quantiseModel(currentQValue, true, true);
-    nm.sendChange = sendChange;
-
-    // TODO: could make this toggleable behaviour
-    lastNoteLength = nm.getNoteLength();
+    const float beatLength = xToBeats(static_cast<float>(comp->getWidth()));
+    te::MidiNote *nm = comp->getModel();
+    nm->setNoteNumber(note, nullptr);
+    nm->setStartAndLength(te::BeatPosition::fromBeats(beatStart),
+                          te::BeatDuration::fromBeats(beatLength), nullptr);
+    // TODO: figure out how Tracktion quantization works and apply here
+    // nm.quantiseModel(currentQValue, true, true);
+    // nm.sendChange = sendChange;
 
     comp->startY = -1;
     comp->startX = -1;
-    comp->setValues(nm);
+    comp->setModel(nm);
     if (callResize) {
         resized();
     }
@@ -288,10 +296,6 @@ void NoteGridComponent::noteCompDragging(NoteComponent *original, const juce::Mo
      */
     int note = 127 - (original->getY() / noteCompHeight);
     if (note > 127) { note = 127; } else if (note < 0) { note = 0; }
-    if (note != lastTrigger) {
-        original->getModel().trigger(note, 100);
-        lastTrigger = note;
-    }
 }
 
 void NoteGridComponent::setPositions() {
@@ -378,16 +382,10 @@ void NoteGridComponent::mouseUp(const juce::MouseEvent &) {
 void NoteGridComponent::mouseDoubleClick(const juce::MouseEvent &e) {
     RETURN_IF_EDITING_DISABLED
 
-    const int xPos = (e.getMouseDownX() / ((float) pixelsPerBar)) * ticksPerTimeSignature;
-    const int yIn = ((float) e.getMouseDownY() / noteCompHeight);
-    const int note = 127 - yIn;
-    jassert(note >= 0 && note <= 127);
-
     /*
-     * Set up lambdas. Essentialy each note component (child) sends messages back
+     * Set up lambdas. Essentially each note component (child) sends messages back
      * to parent (this) through a series of lambda callbacks
      */
-
     NoteComponent *newNote = new NoteComponent(styleSheet);
     newNote->onNoteSelect = [this](NoteComponent *n, const juce::MouseEvent &e) {
         this->noteCompSelected(n, e);
@@ -403,14 +401,23 @@ void NoteGridComponent::mouseDoubleClick(const juce::MouseEvent &e) {
     };
     addAndMakeVisible(newNote);
 
-    const int defaultVelocity = 100;
 
-    // TODO: change this code to access sequence from appEngine and add note there
-    NoteModel nModel((u8) note, defaultVelocity, (st_int) xPos, lastNoteLength);
-    nModel.quantiseModel(currentQValue, true, true);
-    nModel.sendChange = sendChange;
-    nModel.trigger();
-    newNote->setValues(nModel);
+    // NoteModel nModel((u8) note, defaultVelocity, (st_int) xPos, lastNoteLength);
+    // nModel.quantiseModel(currentQValue, true, true);
+    // nModel.sendChange = sendChange;
+    // nModel.trigger();
+
+    const float beatStart = xToBeats(static_cast<float>(e.getMouseDownX()));
+    const float beatLength = xToBeats(static_cast<float>(newNote->getWidth()));
+    int pitch = yToPitch(static_cast<float>(e.getMouseDownY()));
+    if (pitch < 0) { pitch = 0; } else if (pitch > 127) { pitch = 127; }
+
+    te::MidiList &seq = appEngine->getMidiClipFromTrack(trackIndex);
+    // TODO: add new note to sequence here, then add note to component
+    // auto newModel = seq.addNote(pitch, te::BeatPosition::fromBeats(beatStart), te::BeatDuration::fromBeats(beatLength),
+    //                             100, 0, nullptr);
+    //
+    // newNote->setModel(newModel);
 
     noteComps.push_back(newNote);
 
@@ -561,11 +568,11 @@ const te::MidiList &NoteGridComponent::getSequence() {
 //     repaint();
 // }
 
-std::vector<NoteModel *> NoteGridComponent::getSelectedModels() {
-    std::vector<NoteModel *> noteModels;
+juce::Array<te::MidiNote *> NoteGridComponent::getSelectedModels() {
+    juce::Array<te::MidiNote *> noteModels;
     for (auto comp: noteComps) {
         if (comp->getState()) {
-            noteModels.push_back(comp->getModelPtr());
+            noteModels.add(comp->getModel());
         }
     }
     return noteModels;
@@ -575,6 +582,25 @@ void NoteGridComponent::sendEdit() {
     if (this->onEdit != nullptr) {
         this->onEdit();
     }
+}
+
+float NoteGridComponent::beatsToX(float beats) {
+    const float floatTicks = static_cast<float>(ticksPerTimeSignature);
+    return beats * PRE::defaultResolution / floatTicks * pixelsPerBar;
+}
+
+float NoteGridComponent::pitchToY(float pitch) {
+    const float gridHeight = static_cast<float>(getHeight());
+    return gridHeight - pitch * noteCompHeight - noteCompHeight;
+}
+
+float NoteGridComponent::xToBeats(float x) {
+    const float floatTicks = static_cast<float>(ticksPerTimeSignature);
+    return x / PRE::defaultResolution * floatTicks / pixelsPerBar;
+}
+
+int NoteGridComponent::yToPitch(float y) {
+    return 127 - y / noteCompHeight;
 }
 
 float NoteGridComponent::getNoteCompHeight() const {
