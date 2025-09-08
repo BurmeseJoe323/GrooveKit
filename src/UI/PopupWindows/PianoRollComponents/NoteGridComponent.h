@@ -28,17 +28,23 @@ public:
 
 class NoteGridComponent : public juce::Component {
 public:
+    // Public struct for defining time signatures
+    struct TimeSignature {
+      unsigned int beatsPerBar;
+      unsigned int beatValue;
+    };
     NoteGridComponent(GridStyleSheet &sheet, std::shared_ptr<AppEngine> engine, int trackIndex);
     ~NoteGridComponent() override;
 
     void paint (juce::Graphics & g) override;
     void resized () override;
 
-    void noteCompSelected (NoteComponent *, const juce::MouseEvent&);
-    void noteCompPositionMoved (NoteComponent *, bool callResize = true);
-    void noteCompLengthChanged (NoteComponent *, int diff);
-    void noteCompDragging (NoteComponent*, const juce::MouseEvent&);
-    void setPositions ();
+    void noteCompSelected(NoteComponent *, const juce::MouseEvent &);
+    void noteCompPositionMoved(NoteComponent *, bool callResize = true);
+    void noteCompLengthChanged(NoteComponent *, int diff);
+    void noteCompDragging(NoteComponent *, const juce::MouseEvent &);
+    void setPositions();
+    void setTimeSignature(unsigned int beatsPerBar, unsigned int beatValue);
 
     /* optional
     void mouseEnter (const MouseEvent&);
@@ -72,7 +78,8 @@ public:
 private:
     void sendEdit ();
 
-    // The appEngine is where all MIDI information is stored. The trackIndex is used to locate the correct track
+    // The appEngine is where all MIDI information is stored. The trackIndex is used to locate the correct track inside
+    // the engine
     std::shared_ptr<AppEngine> appEngine;
     int trackIndex;
 
@@ -83,6 +90,7 @@ private:
     juce::Array<int> blackPitches;
     float noteCompHeight;
     float pixelsPerBar;
+    TimeSignature timeSignature;
     st_int ticksPerTimeSignature;
     st_int currentQValue;
     st_int lastNoteLength;

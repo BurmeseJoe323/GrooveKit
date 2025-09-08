@@ -22,20 +22,14 @@ NoteGridComponent::NoteGridComponent(GridStyleSheet &sheet, std::shared_ptr<AppE
     firstDrag = false;
     firstCall = false;
     lastTrigger = -1;
-    ticksPerTimeSignature = PRE::defaultResolution * 4; // 4/4 assume
     pixelsPerBar = 0;
     noteCompHeight = 0;
 
-    // Load any existing MIDI notes for the current track from appEngine
-    const te::MidiList &sequence = appEngine->getMidiClipFromTrack(trackIndex);
-    for (auto note : sequence.getNotes()) {
-        DBG("Starting beat: " << note->getStartBeat().inBeats());
-
-        NoteModel *model = new NoteModel();
-        NoteComponent *comp = new NoteComponent();
-        noteComps.emplace_back(note->getNoteNumber(), note->getVelocity(),
-                               note->getStartBeat().inBeats(), note->getLengthBeats().inBeats());
-    }
+    // TODO: most of the time, we will be working in 4/4, but we want this to be set according to the DAW itself
+    timeSignature.beatsPerBar = 4;
+    timeSignature.beatValue = 4;
+    // Set ticks according to time signature's beatValue
+    ticksPerTimeSignature = PRE::defaultResolution * timeSignature.beatsPerBar;
 }
 
 NoteGridComponent::~NoteGridComponent() {
@@ -71,7 +65,7 @@ void NoteGridComponent::paint(juce::Graphics &g) {
     const float increment = pixelsPerBar / 16;
     line = 0;
     g.setColour(juce::Colours::black);
-    for (int i = 0; line < getWidth(); i++) {
+    for (int i = 0; line < static_cast<float>(getWidth()); i++) {
         float lineThickness = 1.0;
         // Bar marker
         if (i % 16 == 0) {
@@ -80,9 +74,43 @@ void NoteGridComponent::paint(juce::Graphics &g) {
             // Quarter-note div
             lineThickness = 2.0;
         }
-        g.drawLine(line, 0, line, getHeight(), lineThickness);
+        g.drawLine(line, 0, line, static_cast<float>(getHeight()), lineThickness);
 
         line += increment;
+    }
+
+    // TODO: Draw all notes currently in this clip
+    const te::MidiList &seq = appEngine->getMidiClipFromTrack(trackIndex);
+    for (te::MidiNote* note : seq.getNotes()) {
+        // NOTE: calculations for the time-position of a note require using PRE::defaultResolution right now, which
+        // is hard-coded to 480. We may want to change this in the future
+        const float floatTicks = static_cast<float>(ticksPerTimeSignature);
+
+        const float startBeat = static_cast<float>(note->getStartBeat().inBeats()) * PRE::defaultResolution;
+        const float xPos = startBeat / floatTicks * pixelsPerBar;
+
+        const float gridHeight = static_cast<float>(getHeight());
+        const float pitch = static_cast<float>(note->getNoteNumber());
+        const float yPos = gridHeight - pitch * noteCompHeight - noteCompHeight;
+
+        const float duration = static_cast<float>(note->getLengthBeats().inBeats()) * PRE::defaultResolution;
+        const float len = duration / floatTicks * pixelsPerBar;
+
+        // Set color
+        juce::Colour colourToUse = juce::Colour(252, 97, 92);
+        // if (useCustomColour) {
+        //     colourToUse = customColour;
+        // } else {
+        //     colourToUse = juce::Colour(252, 97, 92);
+        // }
+        //
+        // if (state == eSelected || mouseOver) {
+        //     colourToUse = colourToUse.brighter(0.8);
+        // }
+        g.setColour(colourToUse);
+
+        // Draw middle box
+        g.fillRect(xPos, yPos, len, noteCompHeight);
     }
 }
 
@@ -268,6 +296,16 @@ void NoteGridComponent::noteCompDragging(NoteComponent *original, const juce::Mo
 
 void NoteGridComponent::setPositions() {
     //unused..
+}
+
+void NoteGridComponent::setTimeSignature(unsigned int beatsPerBar, unsigned int beatValue) {
+    // Check if the beat value is valid (for our sake, must be between 1 and 16 inclusively, and must be a power of 2)
+    if ( beatValue > 16 || beatValue < 1|| (beatValue & beatValue - 1) != 0 ) {
+        DBG("Invalid beat value passed");
+        return;
+    }
+    timeSignature.beatsPerBar = beatsPerBar;
+    timeSignature.beatValue = beatValue;
 }
 
 void NoteGridComponent::mouseDown(const juce::MouseEvent &) {
