@@ -17,7 +17,6 @@ target_sources(app_ui
         PopupWindows/PianoRollComponents/GridControlPanel.cpp PopupWindows/PianoRollComponents/GridControlPanel.h
         PopupWindows/PianoRollComponents/GridStyleSheet.cpp PopupWindows/PianoRollComponents/GridStyleSheet.h
         PopupWindows/PianoRollComponents/NoteComponent.cpp PopupWindows/PianoRollComponents/NoteComponent.h
-        PopupWindows/PianoRollComponents/NoteModel.cpp PopupWindows/PianoRollComponents/NoteModel.h
         PopupWindows/PianoRollComponents/PianoRollMainComponent.cpp PopupWindows/PianoRollComponents/PianoRollMainComponent.h
         TrackEditViewTutorial/TrackEditViewTutorial.cpp TrackEditViewTutorial/TrackEditViewTutorial.h
         TutorialManager/TutorialManagerComponent.cpp TutorialManager/TutorialManagerComponent.h
