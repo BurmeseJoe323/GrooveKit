@@ -53,7 +53,7 @@ void AppEngine::deleteMidiTrack(int index) { trackManager->deleteTrack(index); }
 
 void AppEngine::addMidiClipToTrack(int trackIndex) { midiEngine->addMidiClipToTrack(trackIndex); }
 
-const te::MidiList &AppEngine::getMidiClipFromTrack(int trackIndex) {
+te::MidiList &AppEngine::getMidiClipFromTrack(int trackIndex) {
     return midiEngine->getMidiClipFromTrack(trackIndex);
 }
 

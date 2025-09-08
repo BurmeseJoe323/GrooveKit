@@ -62,7 +62,7 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
 
 }
 
-const te::MidiList &MIDIEngine::getMidiClipFromTrack(int trackIndex) {
+te::MidiList &MIDIEngine::getMidiClipFromTrack(int trackIndex) {
     auto audioTracks = getAudioTracks(edit);
     if (trackIndex < 0 || trackIndex >= audioTracks.size())
         // Return empty array if trackIndex is invalid
