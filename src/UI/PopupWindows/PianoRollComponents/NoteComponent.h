@@ -10,6 +10,11 @@
 #include "NoteModel.h"
 # include "GridStyleSheet.h"
 
+#include <tracktion_engine/tracktion_engine.h>
+
+namespace te = tracktion;
+
+// TODO: refactor the rest of the piano roll to use information from the AppEngine instead of keeping track of components
 class NoteComponent : public juce::Component, public juce::ComponentDragger {
     public:
     enum eState {
@@ -31,9 +36,9 @@ class NoteComponent : public juce::Component, public juce::ComponentDragger {
     void resized () override;
     void setCustomColour (juce::Colour c);
 
-    void setValues (NoteModel model);
-    NoteModel getModel ();
-    NoteModel * getModelPtr ();
+    void setModel(te::MidiNote *model);
+
+    te::MidiNote *getModel();
 
     void setState (eState state);
     eState getState ();
@@ -69,7 +74,8 @@ private:
     int startVelocity;
 
     juce::Colour customColour;
-    NoteModel model;
+
+    te::MidiNote *model;
     juce::MouseCursor normal;
     eState state;
 };

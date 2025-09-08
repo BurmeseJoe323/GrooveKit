@@ -25,12 +25,12 @@ void NoteComponent::paint(juce::Graphics &g) {
     g.fillAll(juce::Colours::darkgrey);
 
     // Set color
-    juce::Colour colourToUse;
-    if (useCustomColour && model.flags.isGenerative) {
-        colourToUse = customColour;
-    } else {
-        colourToUse = juce::Colour(252, 97, 92);
-    }
+    juce::Colour colourToUse = juce::Colour(252, 97, 92);
+    // if (useCustomColour) {
+    //     colourToUse = customColour;
+    // } else {
+    //     colourToUse = juce::Colour(252, 97, 92);
+    // }
 
     if (state == eSelected || mouseOver) {
         colourToUse = colourToUse.brighter(0.8);
@@ -68,23 +68,13 @@ void NoteComponent::setCustomColour(juce::Colour c) {
     useCustomColour = true;
 }
 
-void NoteComponent::setValues(NoteModel m) {
-    if (m.getNote() == 255) { m.setNote(0); } //unsigned overflow
-    if (m.getNote() > 127) { m.setNote(127); }
-
-    //cast to int as noteLen is unsigned. allows us to check for 0
-    if (((int) m.getStartTime()) < 0) { m.setStartTime(0); }
-
-    model = m;
+void NoteComponent::setModel(te::MidiNote *model) {
+    this->model = model;
     repaint();
 }
 
-NoteModel NoteComponent::getModel() {
+te::MidiNote *NoteComponent::getModel() {
     return model;
-}
-
-NoteModel *NoteComponent::getModelPtr() {
-    return &model;
 }
 
 void NoteComponent::setState(eState s) {
@@ -114,7 +104,7 @@ void NoteComponent::mouseDown(const juce::MouseEvent &e) {
 
     if (e.mods.isShiftDown()) {
         velocityEnabled = true;
-        startVelocity = model.getVelocity();
+        startVelocity = model->getVelocity();
     } else if (getWidth() - e.getMouseDownX() < 10) {
         resizeEnabled = true;
         startWidth = getWidth();
@@ -156,7 +146,7 @@ void NoteComponent::mouseDrag(const juce::MouseEvent &e) {
         } else if (newVelocity > 127) {
             newVelocity = 127;
         }
-        model.setVelocity(newVelocity);
+        model->setVelocity(newVelocity, nullptr);
         repaint();
         //        std::cout << velocityDiff << "\n";
     } else {
