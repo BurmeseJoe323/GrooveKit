@@ -142,13 +142,3 @@ void PianoRollEditor::disableEditing(bool value) {
 GridControlPanel &PianoRollEditor::getControlPanel() {
     return controlPanel;
 }
-
-PianoRollEditor::ExternalModelEditor PianoRollEditor::getSelectedNoteModels() {
-    ExternalModelEditor modelEditor;
-    modelEditor.update = [this]() {
-        noteGrid.resized();
-        noteGrid.repaint();
-    };
-    modelEditor.models = noteGrid.getSelectedModels();
-    return modelEditor;
-}

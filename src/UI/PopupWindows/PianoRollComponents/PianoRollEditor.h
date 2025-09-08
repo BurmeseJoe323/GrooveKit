@@ -33,11 +33,6 @@ public:
 
 class PianoRollEditor : public juce::Component {
 public:
-    struct ExternalModelEditor {
-        std::vector<NoteModel *> models; //const event pointers but mutable elements
-        std::function<void()> update; //once you have made the edits then call this
-    };
-
     PianoRollEditor(std::shared_ptr<AppEngine> engine, int trackIndex);
     ~PianoRollEditor() override = default;
 
@@ -63,8 +58,6 @@ public:
     void showControlPanel(bool state);
 
     GridControlPanel &getControlPanel();
-
-    ExternalModelEditor getSelectedNoteModels();
 
     /*
      This is called when the grid is edited.
