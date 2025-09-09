@@ -7,7 +7,6 @@
 
 #define RETURN_IF_EDITING_DISABLED if(styleSheet.disableEditing) { return; }
 
-// TODO: clean up and refactor this class to work with Tracktion instead of custom components
 NoteGridComponent::NoteGridComponent(GridStyleSheet &sheet, std::shared_ptr<AppEngine> engine, int trackIndex) : styleSheet(sheet), appEngine(engine), trackIndex(trackIndex) {
 
     addChildComponent(&selectorBox);
@@ -408,7 +407,6 @@ void NoteGridComponent::mouseDoubleClick(const juce::MouseEvent &e) {
         DBG("Error: MIDI clip at " << trackIndex << " not found.");
         return;
     }
-    // TODO: add new note to sequence here, then add note to component
     auto &seq = clip->getSequence();
     auto newModel = seq.addNote(pitch, te::BeatPosition::fromBeats(beatStart), te::BeatDuration::fromBeats(beatLength),
                                 100, 0, nullptr);

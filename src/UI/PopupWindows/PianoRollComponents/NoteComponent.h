@@ -13,7 +13,6 @@
 
 namespace te = tracktion;
 
-// TODO: refactor the rest of the piano roll to use information from the AppEngine instead of keeping track of components
 class NoteComponent : public juce::Component, public juce::ComponentDragger {
     public:
     enum eState {

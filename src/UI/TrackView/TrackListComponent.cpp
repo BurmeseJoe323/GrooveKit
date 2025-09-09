@@ -54,11 +54,6 @@ void TrackListComponent::resized()
 
 void TrackListComponent::addNewTrack (int engineIdx)
 {
-    // TODO: delete this after implementing MIDI editing for one track
-    DBG("Track " << engineIdx << " added");
-    if (engineIdx > 1)
-        return;
-
     auto* header   = new TrackHeaderComponent();
     auto* newTrack = new TrackComponent(appEngine, engineIdx);
     newTrack->setEngineIndex(engineIdx);
@@ -103,7 +98,6 @@ void TrackListComponent::addNewTrack (int engineIdx)
             pianoRollWindow->addToDesktop(pianoRollWindow->getDesktopWindowStyleFlags());
             pianoRollWindow->toFront(true);
             pianoRollWindow->centreWithSize(pianoRollWindow->getWidth(), pianoRollWindow->getHeight());
-            // TODO: load MIDI sequence from selected track into piano roll
         }
     };
 

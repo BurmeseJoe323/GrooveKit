@@ -59,10 +59,10 @@ GridControlPanel::GridControlPanel(NoteGridComponent &component, GridStyleSheet 
     quantisationValue.addItem("1/16", Quantise16);
     quantisationValue.addItem("1/8", Quantise8);
     quantisationValue.addItem("1/4", Quantise4);
-    quantisationValue.setSelectedItemIndex(1);
+    quantisationValue.setSelectedId(Quantise4);
 
     quantisationValue.onChange = [this]() {
-        noteGrid.setQuantisation(fractionsOfBeat.at(quantisationValue.getSelectedItemIndex()));
+        noteGrid.setQuantisation(fractionsOfBeat.at(quantisationValue.getSelectedId()));
     };
 }
 
