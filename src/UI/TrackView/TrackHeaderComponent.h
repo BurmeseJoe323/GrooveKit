@@ -9,6 +9,9 @@ using namespace juce;
 class TrackHeaderComponent : public Component
 {
 public:
+
+    enum class TrackType { Drum, Instrument };
+
     class Listener {
     public:
         virtual ~Listener() = default;
@@ -46,6 +49,7 @@ public:
     void setDimmed(bool dim);
 
     void setTrackName(juce::String name);
+    void setTrackType(TrackType type);
 
 private:
     juce::TextButton addClip {"+"};
@@ -56,6 +60,8 @@ private:
     juce::TextButton drumSamplerButton{"Drums"};
     juce::Label trackNameLabel {"Track"};
     bool selected = false;
+
+    TrackType trackType = TrackType::Instrument;
 
     void updateMuteButtonVisuals();
     void updateSoloButtonVisuals();

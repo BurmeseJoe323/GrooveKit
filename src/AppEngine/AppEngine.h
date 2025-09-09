@@ -101,6 +101,8 @@ public:
     void deleteMidiTrack(int index);
     void addMidiClipToTrack(int trackIndex);
 
+    bool isDrumTrack(int index) const;
+
     void setTrackMuted(int index, bool mute) { trackManager->setTrackMuted(index, mute); }
     bool isTrackMuted(int index) const { return trackManager->isTrackMuted(index); }
 

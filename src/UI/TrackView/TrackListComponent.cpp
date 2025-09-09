@@ -64,6 +64,13 @@ void TrackListComponent::addNewTrack (int engineIdx)
     header->addListener(newTrack);
 
     headers.add(header);
+
+    const int engineIndexForThisTrack = newTrack->getEngineIndex();
+
+    header->setTrackType(appEngine->getTrackManager().isDrumTrack(engineIndexForThisTrack)
+                            ? TrackHeaderComponent::TrackType::Drum
+                            : TrackHeaderComponent::TrackType::Instrument);
+
     tracks.add(newTrack);
 
     addAndMakeVisible(header);
@@ -89,19 +96,44 @@ void TrackListComponent::addNewTrack (int engineIdx)
         }
     };
 
-    newTrack->onRequestOpenDrumSampler = [this](int trackIdx)
+    newTrack->onRequestOpenDrumSampler = [this](int uiIndex)
     {
-        DBG("Open Drum Sampler requested for track " << trackIdx);
+        // Map UI index -> engine index
+        if (uiIndex < 0 || uiIndex >= tracks.size())
+            return;
 
-        juce::DialogWindow::LaunchOptions opts;
-        opts.content.setOwned(makeDrumSamplerView(appEngine->getAudioEngine(),
-                                          appEngine->getMidiEngine()).release());
-        opts.content->setSize(720, 480);
-        opts.dialogTitle = "Drum Sampler";
-        opts.useNativeTitleBar = true;
-        opts.resizable = true;
-        opts.launchAsync(); // or runModal();
+        const int engineIdx = tracks[uiIndex]->getEngineIndex();
+
+        // Fetch the drum adapter (choose whichever API you exposed)
+        // Option A: pass-through via AppEngine
+        if (auto* eng = appEngine->getDrumAdapter(engineIdx))
+        {
+            auto* view = new DrumSamplerView(*eng);
+            juce::DialogWindow::LaunchOptions()
+                .withTitle("Drum Sampler")
+                .withComponent(view, true)
+                .withResizable(true)
+                .useNativeTitleBar(true)
+                .launchAsync();
+            return;
+        }
+
+        // Option B: go via TrackManager if that’s what you wired up
+        if (auto* mgr = appEngine->getTrackManagerPtr())
+        {
+            if (auto* eng = mgr->getDrumAdapter(engineIdx))
+            {
+                auto* view = new DrumSamplerView(*eng);
+                juce::DialogWindow::LaunchOptions()
+                    .withTitle("Drum Sampler")
+                    .withComponent(view, true)
+                    .withResizable(true)
+                    .useNativeTitleBar(true)
+                    .launchAsync();
+            }
+        }
     };
+
 
     resized();
 }

@@ -1,8 +1,11 @@
 add_library(app_ui
-        DrumSamplerView/DrumSamplerView.cpp
         DrumSamplerView/DrumSamplerView.h
         DrumSamplerView/DrumSamplerLauncher.cpp
-        DrumSamplerView/DrumSamplerLauncher.h)
+        DrumSamplerView/DrumSamplerLauncher.h
+        DrumSamplerView/DrumSamplerEngine.h
+        DrumSamplerView/DrumPadComponent.h
+        DrumSamplerView/DrumSamplerComponent.h
+        DrumSamplerView/SampleLibraryComponent.h)
 target_link_libraries(app_ui
         PRIVATE
         GrooveKitResources
