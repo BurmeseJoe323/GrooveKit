@@ -4,6 +4,7 @@
 
 #include "GridControlPanel.h"
 #include "GridStyleSheet.h"
+#include "NoteGridComponent.h"
 #include "PConstants.h"
 
 GridControlPanel::GridControlPanel(NoteGridComponent &component, GridStyleSheet &ss) : noteGrid(component),
@@ -53,22 +54,19 @@ GridControlPanel::GridControlPanel(NoteGridComponent &component, GridStyleSheet 
     // drawVelocity.onClick = drawMIDINotes.onClick = drawMIDIText.onClick;
 
     addAndMakeVisible(quantisationValue);
-    quantisationValue.addItem("1/64", PRE::eQuantisationValueNone + 1);
-    quantisationValue.addItem("1/32", PRE::eQuantisationValue1_32 + 1);
-    quantisationValue.addItem("1/16", PRE::eQuantisationValue1_16 + 1);
-    quantisationValue.addItem("1/8", PRE::eQuantisationValue1_8 + 1);
+    quantisationValue.addItem("1/64", Quantise64);
+    quantisationValue.addItem("1/32", Quantise32);
+    quantisationValue.addItem("1/16", Quantise16);
+    quantisationValue.addItem("1/8", Quantise8);
+    quantisationValue.addItem("1/4", Quantise4);
     quantisationValue.setSelectedItemIndex(1);
 
     quantisationValue.onChange = [this]() {
-        noteGrid.setQuantisation(quantisationValue.getSelectedItemIndex());
+        noteGrid.setQuantisation(fractionsOfBeat.at(quantisationValue.getSelectedItemIndex()));
     };
 }
 
 GridControlPanel::~GridControlPanel() {
-}
-
-void GridControlPanel::setQuantisation(PRE::eQuantisationValue value) {
-    quantisationValue.setSelectedItemIndex(value);
 }
 
 void GridControlPanel::resized() {

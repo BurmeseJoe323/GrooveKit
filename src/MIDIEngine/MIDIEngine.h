@@ -24,7 +24,7 @@ public:
      * @param trackIndex the index of the track to get the Midi clip of.
      * @return MidiList representing the sequence in this track
      */
-    te::MidiList &getMidiClipFromTrack(int trackIndex);
+    te::MidiClip *getMidiClipFromTrack(int trackIndex);
 
     int addMidiTrack();
 

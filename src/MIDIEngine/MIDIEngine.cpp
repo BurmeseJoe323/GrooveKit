@@ -62,25 +62,23 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
 
 }
 
-te::MidiList &MIDIEngine::getMidiClipFromTrack(int trackIndex) {
+te::MidiClip *MIDIEngine::getMidiClipFromTrack(int trackIndex) {
     auto audioTracks = getAudioTracks(edit);
     if (trackIndex < 0 || trackIndex >= audioTracks.size())
-        // Return empty array if trackIndex is invalid
-        return {};
+        // Return nullptr if the trackIndex is invalid
+        return nullptr;
 
     auto track = te::getAudioTracks(edit)[trackIndex];
     auto clip = track->getClips().getFirst();
 
     if (clip == nullptr) {
-        return {};
+        return nullptr;
     } else if (!clip->isMidi()) {
-        return {};
+        return nullptr;
     }
+
     auto *midiClip = dynamic_cast<te::MidiClip*>(clip);
-    if (midiClip == nullptr) {
-        return {};
-    }
-    return midiClip->getSequence();
+    return midiClip;
 }
 
 

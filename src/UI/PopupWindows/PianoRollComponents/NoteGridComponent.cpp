@@ -16,7 +16,7 @@ NoteGridComponent::NoteGridComponent(GridStyleSheet &sheet, std::shared_ptr<AppE
     // should work
     // addKeyListener(this);
     // setWantsKeyboardFocus(true);
-    currentQValue = PRE::quantisedDivisionValues[PRE::eQuantisationValue1_32];
+    currentQValue = 1.f; // Assume quantisation to quarter-note beats
     firstDrag = false;
     firstCall = false;
     lastTrigger = -1;
@@ -32,9 +32,12 @@ NoteGridComponent::NoteGridComponent(GridStyleSheet &sheet, std::shared_ptr<AppE
     // TODO: refactor to not use NoteComponent
     // Components for each note will likely impact performance. We will probably want to draw directly
     // on the grid instead, and also figure out a way to select notes and drag them
-    const te::MidiList &seq = appEngine->getMidiClipFromTrack(trackIndex);
-    for (te::MidiNote *note : seq.getNotes()) {
-        NoteComponent *newNote = new NoteComponent(styleSheet);
+    const auto clip = appEngine->getMidiClipFromTrack(trackIndex);
+    if (clip == nullptr) {
+        return;
+    }
+    for (te::MidiNote *note : clip->getSequence().getNotes()) {
+        auto newNote = new NoteComponent(styleSheet);
         newNote->onNoteSelect = [this](NoteComponent *n, const juce::MouseEvent &e) {
             this->noteCompSelected(n, e);
         };
@@ -146,14 +149,8 @@ void NoteGridComponent::setupGrid(float pixelsPerBar, float compHeight, const in
     setSize(pixelsPerBar * bars, compHeight * 128); //we have 128 slots for notes
 }
 
-void NoteGridComponent::setQuantisation(const int val) {
-    if (val >= 0 && val < PRE::eQuantisationValueTotal) {
-        currentQValue = PRE::quantisedDivisionValues[val];
-    }
-    // NOTE: again... should probably do something else here rather than jassertfalse
-    else {
-        jassertfalse;
-    }
+void NoteGridComponent::setQuantisation(float newVal) {
+    currentQValue  = newVal;
 }
 
 void NoteGridComponent::noteCompSelected(NoteComponent *noteComponent, const juce::MouseEvent &e) {
@@ -401,23 +398,22 @@ void NoteGridComponent::mouseDoubleClick(const juce::MouseEvent &e) {
     };
     addAndMakeVisible(newNote);
 
-
-    // NoteModel nModel((u8) note, defaultVelocity, (st_int) xPos, lastNoteLength);
-    // nModel.quantiseModel(currentQValue, true, true);
-    // nModel.sendChange = sendChange;
-    // nModel.trigger();
-
     const float beatStart = xToBeats(static_cast<float>(e.getMouseDownX()));
-    const float beatLength = xToBeats(static_cast<float>(newNote->getWidth()));
+    const float beatLength = 1 * currentQValue;
     int pitch = yToPitch(static_cast<float>(e.getMouseDownY()));
     if (pitch < 0) { pitch = 0; } else if (pitch > 127) { pitch = 127; }
 
-    te::MidiList &seq = appEngine->getMidiClipFromTrack(trackIndex);
+    auto clip = appEngine->getMidiClipFromTrack(trackIndex);
+    if (clip == nullptr) {
+        DBG("Error: MIDI clip at " << trackIndex << " not found.");
+        return;
+    }
     // TODO: add new note to sequence here, then add note to component
-    // auto newModel = seq.addNote(pitch, te::BeatPosition::fromBeats(beatStart), te::BeatDuration::fromBeats(beatLength),
-    //                             100, 0, nullptr);
-    //
-    // newNote->setModel(newModel);
+    auto &seq = clip->getSequence();
+    auto newModel = seq.addNote(pitch, te::BeatPosition::fromBeats(beatStart), te::BeatDuration::fromBeats(beatLength),
+                                100, 0, nullptr);
+
+    newNote->setModel(newModel);
 
     noteComps.push_back(newNote);
 
@@ -486,8 +482,15 @@ void NoteGridComponent::mouseDoubleClick(const juce::MouseEvent &e) {
 
 void NoteGridComponent::deleteAllSelected() {
     std::vector<NoteComponent *> itemsToKeep;
+    auto clip = appEngine->getMidiClipFromTrack(trackIndex);
+    if (clip == nullptr) {
+        DBG("Error: MIDI clip at track " << trackIndex << "not found.");
+        return;
+    }
+    auto &seq = clip->getSequence();
     for (int i = 0; i < noteComps.size(); i++) {
         if (noteComps[i]->getState() == NoteComponent::eSelected) {
+            seq.removeNote(*noteComps[i]->getModel(), nullptr);
             removeChildComponent(noteComps[i]);
             delete noteComps[i];
         } else {
@@ -497,39 +500,14 @@ void NoteGridComponent::deleteAllSelected() {
     noteComps = itemsToKeep;
 }
 
-const te::MidiList &NoteGridComponent::getSequence() {
-    // int leftToSort = (int) noteComps.size();
-    //
-    // std::vector<NoteComponent *> componentsCopy = noteComps;
-    //
-    // /*
-    //  inline lambda function to find the lowest startTime
-    //  */
-    // auto findLowest = [&]() -> int {
-    //     int lowestIndex = 0;
-    //     for (int i = 0; i < componentsCopy.size(); i++) {
-    //         if (componentsCopy[i]->getModel().getStartTime() < componentsCopy[lowestIndex]->getModel().getStartTime()) {
-    //             lowestIndex = i;
-    //         }
-    //     }
-    //     return lowestIndex;
-    // };
-    //
-    //
-    // PRESequence sequence;
-    // while (leftToSort) {
-    //     const int index = findLowest();
-    //     auto m = componentsCopy[index]->getModel();
-    //     m.flags.state = componentsCopy[index]->getState();
-    //     sequence.events.push_back(m);
-    //     //        seq.events[seq.events.size()-1]->flags =1  //we also want the selected flags..
-    //
-    //     componentsCopy[index] = nullptr;
-    //     componentsCopy.erase(componentsCopy.begin() + index);
-    //     leftToSort--;
-    // }
-    // sequence.print();
-    return appEngine->getMidiClipFromTrack(trackIndex);
+// TODO: do we need this function?
+te::MidiList &NoteGridComponent::getSequence() {
+    auto clip = appEngine->getMidiClipFromTrack(trackIndex);
+    if (clip == nullptr) {
+        DBG("Error: MIDI clip not found at track " << trackIndex);
+        throw std::format("Error: MIDI clip not found at track {}", trackIndex);
+    }
+    return clip->getSequence();
 }
 
 // void NoteGridComponent::loadSequence() {

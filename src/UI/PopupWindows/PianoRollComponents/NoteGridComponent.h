@@ -28,6 +28,7 @@ public:
 
 class NoteGridComponent : public juce::Component {
 public:
+
     // Public struct for defining time signatures
     struct TimeSignature {
       unsigned int beatsPerBar;
@@ -58,13 +59,13 @@ public:
     void mouseDoubleClick (const juce::MouseEvent&) override;
 
     void setupGrid (float pixelsPerBar, float compHeight, const int bars);
-    void setQuantisation (const int val);
+    void setQuantisation (float newVal);
 
     // bool keyPressed (const juce::KeyPress& key, Component* originatingComponent) override;
     void deleteAllSelected ();
 
     // From here you could convert this into MIDI or any other custom musical encoding.
-    const te::MidiList &getSequence();
+    te::MidiList &getSequence();
 
     // void loadSequence();
 
@@ -92,7 +93,7 @@ private:
     float pixelsPerBar;
     TimeSignature timeSignature;
     st_int ticksPerTimeSignature;
-    st_int currentQValue;
+    float currentQValue;
     // st_int lastNoteLength;
     bool firstDrag;
     bool firstCall;

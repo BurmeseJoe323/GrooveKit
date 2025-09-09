@@ -7,7 +7,6 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "PConstants.h"
-#include "NoteModel.h"
 # include "GridStyleSheet.h"
 
 #include <tracktion_engine/tracktion_engine.h>
