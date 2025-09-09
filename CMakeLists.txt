@@ -25,19 +25,40 @@ CPMAddPackage("gh:ImJimmi/JIVE#main")
 juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_graph)
 juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_engine)
 
-# ---- BinaryData (define before UI so UI sees <BinaryData.h>)
+file(GLOB_RECURSE GROOVEKIT_DEFAULT_WAVS
+        ${CMAKE_SOURCE_DIR}/src/resources/Samples/*.[Ww][Aa][Vv]
+)
+
+list(LENGTH GROOVEKIT_DEFAULT_WAVS GROOVEKIT_NUM_WAVS)
+message(STATUS "GrooveKit: embedding ${GROOVEKIT_NUM_WAVS} default WAV(s)")
+foreach(w ${GROOVEKIT_DEFAULT_WAVS})
+    message(STATUS "  WAV: ${w}")
+endforeach()
+
+if(GROOVEKIT_NUM_WAVS EQUAL 0)
+    message(WARNING "No WAVs found under src/resources/Samples; creating dummy resource so juce_add_binary_data has at least one file.")
+    set(GROOVEKIT_DUMMY_RESOURCE "${CMAKE_CURRENT_BINARY_DIR}/__groovekit_dummy_resource__.txt")
+    file(WRITE "${GROOVEKIT_DUMMY_RESOURCE}" "GrooveKit dummy resource.\n")
+    set(GROOVEKIT_RESOURCE_FILES "${GROOVEKIT_DUMMY_RESOURCE}")
+else()
+    set(GROOVEKIT_RESOURCE_FILES ${GROOVEKIT_DEFAULT_WAVS})
+endif()
+
 juce_add_binary_data(GrooveKitResources
         SOURCES
-        resources/jive/drum_sampler.layout.xml
-        resources/jive/drum_sampler.styles.json
+        ${GROOVEKIT_RESOURCE_FILES}
 )
+
+target_sources(GrooveKitResources PRIVATE ${GROOVEKIT_DEFAULT_WAVS})
 
 # ---- Your libraries
 add_subdirectory(src/AppEngine)
 add_subdirectory(src/MIDIEngine)
 add_subdirectory(src/AudioEngine)
-add_subdirectory(src/UI)           # <-- now comes after GrooveKitResources
+add_subdirectory(src/DrumSamplerEngine)
+add_subdirectory(src/UI)
 add_subdirectory(src/DatabaseManager)
+
 
 # ---- App target (defines GrooveKit)
 add_subdirectory(apps/GrooveKit)

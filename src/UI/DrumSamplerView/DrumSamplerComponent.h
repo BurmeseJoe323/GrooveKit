@@ -38,7 +38,7 @@ public:
         release.onValueChange = updateADSR;
 
         // Sample library
-        sampleLibrary = std::make_unique<SampleLibraryComponent> (this);
+        sampleLibrary = std::make_unique<SampleLibraryComponent> ();
         addAndMakeVisible (*sampleLibrary);
 
         // 4x4 pads
@@ -91,7 +91,7 @@ public:
 
     void resized() override
     {
-        auto r = getLocalBounds().reduced (10);
+        auto r = getLocalBounds().reduced (0);
 
         // Header
         auto header = r.removeFromTop (36);
@@ -146,18 +146,7 @@ public:
         padsArea = juce::Rectangle<int> (padsArea.getX(), padsArea.getY(), side, side).withCentre (padsArea.getCentre());
         grid.performLayout (padsArea);
 
-        // Load buttons under pads
-        auto btnRow = right.removeFromTop (36);
-        auto cellW  = padsArea.getWidth() / 4;
-        auto cellH  = 28;
-        for (int i = 0; i < 16; ++i)
-        {
-            int row = i / 4, col = i % 4;
-            auto cell = juce::Rectangle<int> (padsArea.getX() + col * cellW,
-                                              btnRow.getY(),
-                                              cellW, cellH);
-            loadButtons[i]->setBounds (cell.reduced (8, 2));
-        }
+
     }
 
 private:

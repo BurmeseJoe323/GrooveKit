@@ -1,6 +1,7 @@
 
 #include "AppEngine.h"
 #include <tracktion_engine/tracktion_engine.h>
+#include "../DrumSamplerEngine/DefaultSampleLibrary.h"
 
 
 
@@ -20,6 +21,7 @@ AppEngine::AppEngine()
     selectionManager = std::make_unique<te::SelectionManager>(*engine);
 
     editViewState = std::make_unique<EditViewState>(*edit, *selectionManager);
+
 }
 
 AppEngine::~AppEngine() = default;
@@ -47,8 +49,6 @@ void AppEngine::play() { audioEngine->play(); }
 
 void AppEngine::stop() { audioEngine->stop(); }
 
-int AppEngine::addMidiTrack() { return trackManager->addTrack(); }
-
 void AppEngine::deleteMidiTrack(int index) { trackManager->deleteTrack(index); }
 
 void AppEngine::addMidiClipToTrack(int trackIndex) { midiEngine->addMidiClipToTrack(trackIndex); }
@@ -58,6 +58,20 @@ int AppEngine::getNumTracks() { return tracktion::getAudioTracks(*edit).size(); 
 EditViewState &AppEngine::getEditViewState() { return *editViewState; }
 
 te::Edit & AppEngine::getEdit() { return *edit; }
+
+bool AppEngine::isDrumTrack (int i) const{ return trackManager ? trackManager->isDrumTrack(i) : false;}
+
+DrumSamplerEngineAdapter* AppEngine::getDrumAdapter (int i){ return trackManager ? trackManager->getDrumAdapter(i) : nullptr;}
+
+int AppEngine::addDrumTrack(){
+    jassert (trackManager != nullptr);
+    return trackManager->addDrumTrack();
+}
+
+int AppEngine::addInstrumentTrack(){
+    jassert (trackManager != nullptr);
+    return trackManager->addInstrumentTrack();
+}
 
 void AppEngine::soloTrack(int i)                 { trackManager->soloTrack(i); }
 void AppEngine::setTrackSoloed(int i, bool s)    { trackManager->setTrackSoloed(i, s); }

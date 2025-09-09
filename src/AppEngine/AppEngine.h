@@ -85,6 +85,7 @@ public:
     juce::ValueTree state;
 };
 
+class DrumSamplerEngineAdapter;
 
 class AppEngine
 {
@@ -103,6 +104,11 @@ public:
 
     bool isDrumTrack(int index) const;
 
+    DrumSamplerEngineAdapter* getDrumAdapter(int index);
+
+    int addDrumTrack();
+    int addInstrumentTrack();
+
     void setTrackMuted(int index, bool mute) { trackManager->setTrackMuted(index, mute); }
     bool isTrackMuted(int index) const { return trackManager->isTrackMuted(index); }
 
@@ -110,6 +116,9 @@ public:
     void setTrackSoloed(int index, bool solo);
     bool isTrackSoloed(int index) const;
     bool anyTrackSoloed() const;
+
+    TrackManager& getTrackManager()       { return *trackManager; }
+    TrackManager* getTrackManagerPtr()    { return trackManager.get(); }
 
     AudioEngine& getAudioEngine();
     MIDIEngine& getMidiEngine();

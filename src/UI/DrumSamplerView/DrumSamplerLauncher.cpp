@@ -6,7 +6,6 @@
 
 namespace
 {
-    // TEMP adapter — replace with your real Tracktion-backed engine when ready.
     struct NoopDrumSamplerEngine : DrumSamplerEngine
     {
         juce::String slotNames[16];
@@ -42,11 +41,11 @@ namespace
     };
 }
 
-// Your project’s factory signature (adjust include path if needed)
 std::unique_ptr<juce::Component> makeDrumSamplerView (AudioEngine& audio, MIDIEngine& midi)
 {
     juce::ignoreUnused (audio, midi);
 
-    static NoopDrumSamplerEngine engine; // keep alive for the window's lifetime
+    static NoopDrumSamplerEngine engine;
     return std::make_unique<DrumSamplerView> (engine);
+
 }

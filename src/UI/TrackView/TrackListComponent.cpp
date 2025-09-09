@@ -5,6 +5,7 @@
 #include <juce_graphics/fonts/harfbuzz/hb-ot-head-table.hh>
 
 #include "DrumSamplerView/DrumSamplerLauncher.h"
+#include "DrumSamplerView/DrumSamplerView.h"
 
 TrackListComponent::TrackListComponent(std::shared_ptr<AppEngine> engine) : appEngine(engine),
                                                                             playhead(engine->getEdit(),
@@ -29,7 +30,7 @@ void TrackListComponent::resized()
     FlexBox mainFlex;
     mainFlex.flexDirection = FlexBox::Direction::column;
 
-    const int headerWidth = 140;
+    const int headerWidth = 190;
     const int trackHeight = 100;
     const int margin = 2;
     const int addButtonSpace = 30;
@@ -65,11 +66,12 @@ void TrackListComponent::addNewTrack (int engineIdx)
 
     headers.add(header);
 
-    const int engineIndexForThisTrack = newTrack->getEngineIndex();
+    header->setTrackType(
+    appEngine->isDrumTrack(newTrack->getEngineIndex())
+        ? TrackHeaderComponent::TrackType::Drum
+        : TrackHeaderComponent::TrackType::Instrument
+);
 
-    header->setTrackType(appEngine->getTrackManager().isDrumTrack(engineIndexForThisTrack)
-                            ? TrackHeaderComponent::TrackType::Drum
-                            : TrackHeaderComponent::TrackType::Instrument);
 
     tracks.add(newTrack);
 
@@ -98,41 +100,26 @@ void TrackListComponent::addNewTrack (int engineIdx)
 
     newTrack->onRequestOpenDrumSampler = [this](int uiIndex)
     {
-        // Map UI index -> engine index
         if (uiIndex < 0 || uiIndex >= tracks.size())
             return;
 
         const int engineIdx = tracks[uiIndex]->getEngineIndex();
 
-        // Fetch the drum adapter (choose whichever API you exposed)
-        // Option A: pass-through via AppEngine
         if (auto* eng = appEngine->getDrumAdapter(engineIdx))
         {
-            auto* view = new DrumSamplerView(*eng);
-            juce::DialogWindow::LaunchOptions()
-                .withTitle("Drum Sampler")
-                .withComponent(view, true)
-                .withResizable(true)
-                .useNativeTitleBar(true)
-                .launchAsync();
-            return;
-        }
+            auto* comp = new DrumSamplerView(static_cast<DrumSamplerEngine&>(*eng));
 
-        // Option B: go via TrackManager if that’s what you wired up
-        if (auto* mgr = appEngine->getTrackManagerPtr())
-        {
-            if (auto* eng = mgr->getDrumAdapter(engineIdx))
-            {
-                auto* view = new DrumSamplerView(*eng);
-                juce::DialogWindow::LaunchOptions()
-                    .withTitle("Drum Sampler")
-                    .withComponent(view, true)
-                    .withResizable(true)
-                    .useNativeTitleBar(true)
-                    .launchAsync();
-            }
+            juce::DialogWindow::LaunchOptions opts;
+            comp->setSize(1000, 700);
+            opts.content.setOwned(comp);
+            opts.dialogTitle = "Drum Sampler";
+            opts.resizable = true;
+            opts.useNativeTitleBar = true;
+
+            opts.launchAsync();
         }
     };
+
 
 
     resized();

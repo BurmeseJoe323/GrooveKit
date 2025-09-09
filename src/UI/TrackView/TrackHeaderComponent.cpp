@@ -131,11 +131,17 @@ void TrackHeaderComponent::resized()
   buttonRowFB.items.add(juce::FlexItem(muteTrackButton).withWidth(50).withHeight(30));
   buttonRowFB.items.add(juce::FlexItem(soloTrackButton).withWidth(50).withHeight(30));
   buttonRowFB.items.add(juce::FlexItem(deleteTrackButton).withWidth(50).withHeight(30));
-  buttonRowFB.items.add(juce::FlexItem(pianoRollButton).withWidth(70).withHeight(30));
+
+  juce::FlexBox buttonRowFB2;
+  buttonRowFB2.flexDirection = juce::FlexBox::Direction::row;
+  buttonRowFB2.justifyContent = juce::FlexBox::JustifyContent::flexEnd;
+
+  buttonRowFB2.items.add(juce::FlexItem(pianoRollButton).withWidth(70).withHeight(30));
 
   if (drumSamplerButton.isVisible())
-    buttonRowFB.items.add(juce::FlexItem(drumSamplerButton).withWidth(70).withHeight(30));
+    buttonRowFB2.items.add(juce::FlexItem(drumSamplerButton).withWidth(70).withHeight(30));
 
   mainFB.items.add(juce::FlexItem(buttonRowFB).withHeight(30));
+  mainFB.items.add(juce::FlexItem(buttonRowFB2).withHeight(30));
   mainFB.performLayout(area);
 }

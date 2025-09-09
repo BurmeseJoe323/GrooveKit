@@ -18,7 +18,6 @@ public:
 
     void setTitle (juce::String s) { title = std::move (s); repaint(); }
 
-    // ===== FileDragAndDropTarget (external files from Finder/Explorer)
     bool isInterestedInFileDrag (const juce::StringArray& files) override
     {
         return files.size() > 0;
@@ -31,28 +30,23 @@ public:
         if (onDropFile) onDropFile (f);
     }
 
-    // ===== DragAndDropTarget (internal drags from our library list)
-    bool isInterestedInDragSource (const SourceDetails& dragSourceDetails) override
+    bool isInterestedInDragSource (const SourceDetails& d) override
     {
-        juce::ignoreUnused (dragSourceDetails);
-        return true; // accept anything; we’ll validate in itemDropped
+        return d.description.isString(); // we pass absolute file path as a string
     }
 
-    void itemDropped (const SourceDetails& dragSourceDetails) override
+    void itemDropped (const SourceDetails& d) override
     {
-        // Expect the description to be a file path string
-        if (dragSourceDetails.description.isString())
-        {
-            juce::File f (dragSourceDetails.description.toString());
-            if (f.existsAsFile() && onDropFile)
-                onDropFile (f);
-        }
+        DBG ("[Pad] dropped: " << d.description.toString());
+        const juce::String path = d.description.toString();
+        const juce::File   f (path);
+        if (f.existsAsFile() && onDropFile)
+            onDropFile (f);
     }
 
     void itemDragEnter (const SourceDetails&) override { flashOn = true; repaint(); }
     void itemDragExit  (const SourceDetails&) override { flashOn = false; repaint(); }
 
-    // ===== UI
     void mouseDown (const juce::MouseEvent& e) override
     {
         const float v = juce::jlimit (0.1f, 1.0f, 1.0f - (float)e.position.y / (float)getHeight());
