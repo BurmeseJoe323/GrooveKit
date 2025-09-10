@@ -16,11 +16,13 @@ AppEngine::AppEngine()
     createOrLoadEdit();
 
     midiEngine = std::make_unique<MIDIEngine>(*edit);
-    audioEngine = std::make_unique<AudioEngine>(*edit);
+    audioEngine = std::make_unique<AudioEngine>(*edit, *engine);
     trackManager = std::make_unique<TrackManager>(*edit); 
     selectionManager = std::make_unique<te::SelectionManager>(*engine);
 
     editViewState = std::make_unique<EditViewState>(*edit, *selectionManager);
+
+    audioEngine->initialiseDefaults (48000.0, 512);
 
 }
 
@@ -33,7 +35,9 @@ void AppEngine::createOrLoadEdit()
                         .getChildFile("GrooveKit")
                         .getNonexistentChildFile("Test", ".tracktionedit", false);
 
-    if (editFile.existsAsFile())
+    const bool exists = editFile.existsAsFile();
+
+    if (exists)
         edit = te::loadEditFromFile(*engine, editFile);
 
     else
@@ -41,6 +45,13 @@ void AppEngine::createOrLoadEdit()
 
     edit->editFileRetriever = [editFile] { return editFile; };
     edit->playInStopEnabled = true;
+
+    if (!exists)
+    {
+        auto tracks = tracktion::getAudioTracks(*edit);
+        for (auto* t : tracks)
+            edit->deleteTrack(t);
+    }
 
     edit->restartPlayback();
 }

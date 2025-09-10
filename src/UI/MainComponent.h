@@ -23,7 +23,7 @@ public:
     void showTrackViewTutorial();
     void showInstrumentTutorial();
 
-
+    void resized() override;
 
     void reportDatabaseSize();
 

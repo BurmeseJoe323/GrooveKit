@@ -9,6 +9,8 @@
 #include "../PopupWindows/PianoRollWindow.h"
 #include <juce_gui_basics/juce_gui_basics.h>
 
+class AppEngine;
+
 /**
  * Represents the track editor view, with functionality for adding and deleting tracks.
  * Each track contains a corresponding header, footer, and a series of MIDI clips.
@@ -16,7 +18,7 @@
 class TrackEditView final : public Component
 {
 public:
-    explicit TrackEditView ();
+    explicit TrackEditView (AppEngine& engine);
     ~TrackEditView() override;
 
     void setupButtons();
@@ -28,6 +30,8 @@ public:
     */
     std::function<void()> onBack;
 
+    std::function<void()> onOpenMix;
+
 private:
     std::shared_ptr<AppEngine> appEngine;
     std::unique_ptr<TrackListComponent> trackList;
@@ -38,5 +42,6 @@ private:
     // EditViewState &editViewState;
 
     TextButton backButton { "Back" }, newEditButton{"New"}, playPauseButton{"Play"}, stopButton{"Stop"},
-            openEditButton{"Open Edit"}, newTrackButton{"New Track"}, recordButton{"Record"};
+            openEditButton{"Open Edit"}, newTrackButton{"New Track"}, recordButton{"Record"}, outputButton{"Output Device"},
+            mixViewButton{"Mix View"};
 };

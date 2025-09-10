@@ -8,6 +8,9 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "../../DatabaseManager/DatabaseManager.h"
+#include "MixView/MixView.h"
+#include "TrackView/TrackEditView.h"
+#include "TutorialManager/TutorialManagerComponent.h"
 
 class AppEngine;
 using namespace juce;
@@ -22,6 +25,9 @@ public:
     void resized() override;
 
 private:
+    std::unique_ptr<TrackEditView> trackView;
+    std::unique_ptr<MixView>       mixView;
+    std::unique_ptr<TutorialManagerComponent> tutorialManager;
     juce::TextButton openTrackView { "Open Track View" };
     juce::TextButton openTutorialManager { "Tutorials" };
     TextButton deleteUserData { "Delete User Data" };
@@ -29,6 +35,9 @@ private:
     std::unique_ptr<juce::Component> currentView;
     AppEngine& appEngine;
     DatabaseManager& databaseManager;
+
+    void showTrack();
+    void showMix();
 };
 
 

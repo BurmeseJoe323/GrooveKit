@@ -9,7 +9,7 @@
 
 MainComponent::MainComponent()
 {
-    setSize(600, 400);
+    setSize(1200, 800);
     databaseManager.initialize();
 
     view = std::make_unique<WelcomeView>(appEngine, databaseManager);
@@ -48,7 +48,11 @@ void MainComponent::showInstrumentTutorial() {
     view->setBounds(getLocalBounds());
 }
 
-
+void MainComponent::resized()
+{
+    if (view)
+        view->setBounds(getLocalBounds());
+}
 
 void MainComponent::reportDatabaseSize()
 {

@@ -16,9 +16,8 @@ public:
     DrumSamplerEngineAdapter (te::Engine& eng, te::AudioTrack& trk)
         : engine (eng), track (trk)
     {
-        // Find or create a Sampler plugin on this track.
         sampler = findOrCreateSampler();
-        // Pre-name slots
+
         for (int i = 0; i < 16; ++i)
             slotNames[i] = "Pad " + juce::String (i + 1);
     }

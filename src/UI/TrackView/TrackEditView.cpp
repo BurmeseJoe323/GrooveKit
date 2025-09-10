@@ -1,9 +1,10 @@
 #include "TrackEditView.h"
 #include "../../AppEngine/AppEngine.h"
+#include "PopupWindows/OutputDevice/OutputDeviceWindow.h"
 
-TrackEditView::TrackEditView ()
+TrackEditView::TrackEditView(AppEngine& engine)
 {
-    appEngine = std::make_shared<AppEngine>();
+    appEngine = std::shared_ptr<AppEngine>(&engine, [](AppEngine*){});
     trackList = std::make_unique<TrackListComponent> (appEngine);
 
     viewport.setScrollBarsShown (true, false); // vertical only
@@ -11,7 +12,6 @@ TrackEditView::TrackEditView ()
 
     setupButtons();
     addAndMakeVisible (viewport);
-    setSize (800, 600);
 }
 
 TrackEditView::~TrackEditView() = default;
@@ -31,12 +31,14 @@ void TrackEditView::resized()
     auto topR = r.removeFromTop (30);
 
     backButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    newEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    openEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
+    //newEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
+    //openEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
     playPauseButton.setBounds (topR.removeFromLeft (w).reduced (2));
     stopButton.setBounds (topR.removeFromLeft (w).reduced (2));
     recordButton.setBounds (topR.removeFromLeft (w).reduced (2));
     newTrackButton.setBounds (topR.removeFromLeft (w).reduced (2));
+    outputButton.setBounds (topR.removeFromLeft (w).reduced (2));
+    mixViewButton.setBounds (topR.removeFromLeft (w).reduced (2));
 
     viewport.setBounds (r);
 }
@@ -56,9 +58,10 @@ void TrackEditView::setupButtons()
             int index = -1;
             if (choice == 1)      index = appEngine->addInstrumentTrack();
             else if (choice == 2) index = appEngine->addDrumTrack();
-
+            DBG("[TrackEditView] now " << appEngine->getNumTracks() << " tracks"); // insert here
             if (index >= 0) trackList->addNewTrack(index);
         });
+
     };
 
 
@@ -74,6 +77,21 @@ void TrackEditView::setupButtons()
     addAndMakeVisible (recordButton);
     addAndMakeVisible (openEditButton);
     addAndMakeVisible (newTrackButton);
+    addAndMakeVisible((outputButton));
+
+    outputButton.onClick = [this] {
+        auto* content = new OutputDeviceWindow (*appEngine);
+
+        content->setSize (360, 140);
+
+        auto screenBounds = outputButton.getScreenBounds();
+        juce::CallOutBox::launchAsynchronously (std::unique_ptr<Component>(content), screenBounds, nullptr);
+
+
+    };
+
+    addAndMakeVisible (mixViewButton);
+    mixViewButton.onClick = [this]{ if (onOpenMix) onOpenMix(); };
 
     addAndMakeVisible (backButton);
     backButton.onClick = [this] {

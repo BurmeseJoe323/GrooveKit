@@ -128,6 +128,11 @@ public:
     EditViewState& getEditViewState();
     te::Edit &getEdit();
 
+    bool setOutputDevice (const juce::String& name)        { return audioEngine->setOutputDeviceByName (name); }
+    bool setDefaultOutputDevice()                          { return audioEngine->setDefaultOutputDevice(); }
+    juce::StringArray listOutputDevices()            const { return audioEngine->listOutputDevices(); }
+    juce::String getCurrentOutputDeviceName()        const { return audioEngine->getCurrentOutputDeviceName(); }
+
 private:
     std::unique_ptr<tracktion::engine::Engine> engine;
     std::unique_ptr<tracktion::engine::Edit> edit;
