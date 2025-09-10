@@ -1,7 +1,7 @@
 #include "TrackEditView.h"
 #include "../../AppEngine/AppEngine.h"
 
-TrackEditView::TrackEditView ()
+TrackEditView::TrackEditView()
 {
     appEngine = std::make_shared<AppEngine>();
     trackList = std::make_unique<TrackListComponent> (appEngine);
@@ -16,12 +16,12 @@ TrackEditView::TrackEditView ()
 
 TrackEditView::~TrackEditView() = default;
 
-void TrackEditView::paint (Graphics& g)
+void TrackEditView::paint (juce::Graphics& g)
 {
-    g.fillAll (Colours::black);
-    g.setColour (Colours::white);
+    g.fillAll (juce::Colours::black);
+    g.setColour (juce::Colours::white);
     g.setFont (20.0f);
-    g.drawText ("TrackView", getLocalBounds(), Justification::centred, true);
+    g.drawText ("TrackView", getLocalBounds(), juce::Justification::centred, true);
 }
 
 void TrackEditView::resized()
@@ -43,24 +43,25 @@ void TrackEditView::resized()
 
 void TrackEditView::setupButtons()
 {
-    newTrackButton.onClick = [this]
-    {
+    newTrackButton.onClick = [this] {
         juce::PopupMenu m;
-        m.addItem(1, "Instrument (FourOsc)");
-        m.addItem(2, "Drum (Sampler)");
+        m.addItem (1, "Instrument (FourOsc)");
+        m.addItem (2, "Drum (Sampler)");
 
-        m.showMenuAsync(juce::PopupMenu::Options(), [this](int choice)
-        {
-            if (!trackList || choice == 0) return;
+        m.showMenuAsync (juce::PopupMenu::Options(), [this] (int choice) {
+            if (!trackList || choice == 0)
+                return;
 
             int index = -1;
-            if (choice == 1)      index = appEngine->addInstrumentTrack();
-            else if (choice == 2) index = appEngine->addDrumTrack();
+            if (choice == 1)
+                index = appEngine->addInstrumentTrack();
+            else if (choice == 2)
+                index = appEngine->addDrumTrack();
 
-            if (index >= 0) trackList->addNewTrack(index);
+            if (index >= 0)
+                trackList->addNewTrack (index);
         });
     };
-
 
     playPauseButton.onClick = [this] {
         appEngine->play();
@@ -78,6 +79,6 @@ void TrackEditView::setupButtons()
     addAndMakeVisible (backButton);
     backButton.onClick = [this] {
         if (onBack)
-            onBack(); 
+            onBack();
     };
 }
