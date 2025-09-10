@@ -5,10 +5,11 @@ TrackHeaderComponent::TrackHeaderComponent()
     // addAndMakeVisible(addClip);
     // addAndMakeVisible(deleteTrackButton);
     // addAndMakeVisible(pianoRollButton);
-    addAndMakeVisible(settingsButton);
+    addAndMakeVisible (settingsButton);
     addAndMakeVisible (trackNameLabel);
     addAndMakeVisible (muteTrackButton);
     addAndMakeVisible (soloTrackButton);
+    addAndMakeVisible (trackTypeLabel);
     // addAndMakeVisible (drumSamplerButton);
 
     // addClip.onClick = [this]() {
@@ -32,10 +33,10 @@ TrackHeaderComponent::TrackHeaderComponent()
     };
 
     muteTrackButton.setClickingTogglesState (true);
-    muteTrackButton.setColour(juce::TextButton::buttonOnColourId, juce::Colours::red);
-    muteTrackButton.setColour(juce::TextButton::buttonColourId, juce::Colours::darkgrey);
-    muteTrackButton.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
-    muteTrackButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
+    muteTrackButton.setColour (juce::TextButton::buttonOnColourId, juce::Colours::red);
+    muteTrackButton.setColour (juce::TextButton::buttonColourId, juce::Colours::darkgrey);
+    muteTrackButton.setColour (juce::TextButton::textColourOnId, juce::Colours::white);
+    muteTrackButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white);
     muteTrackButton.onClick = [this]() {
         const bool nowMuted = muteTrackButton.getToggleState();
         // updateMuteButtonVisuals();
@@ -60,6 +61,11 @@ TrackHeaderComponent::TrackHeaderComponent()
     trackNameLabel.setJustificationType (juce::Justification::centred);
     trackNameLabel.setText ("Track", juce::dontSendNotification);
 
+    // setup trackTypeLabel
+    trackTypeLabel.setFont (juce::Font (12.0f));
+    trackTypeLabel.setColour (juce::Label::textColourId, juce::Colours::lightgrey);
+    trackTypeLabel.setJustificationType (juce::Justification::centred);
+
     setTrackType (TrackType::Instrument);
 };
 
@@ -71,7 +77,14 @@ void TrackHeaderComponent::setTrackType (TrackType type)
     const bool isDrum = (trackType == TrackType::Drum);
     // drumSamplerButton.setVisible (isDrum);
     if (isDrum)
+    {
         setTrackName ("Drums");
+        trackTypeLabel.setText ("Drum Track", juce::dontSendNotification);
+    }
+    else
+    {
+        trackTypeLabel.setText ("Instrument", juce::dontSendNotification);
+    }
 }
 
 void TrackHeaderComponent::setMuted (bool shouldBeMuted)
@@ -168,10 +181,11 @@ void TrackHeaderComponent::resized()
     // mainFB.items.add (juce::FlexItem (buttonRowFB2).withHeight (30));
     // mainFB.performLayout (area);
 
-    fb.items.add(juce::FlexItem(trackNameLabel).withFlex(1.0f));
-    fb.items.add(juce::FlexItem(settingsButton).withHeight(buttonHeight).withMargin(margin));
-    fb.items.add(juce::FlexItem(muteTrackButton).withHeight(buttonHeight).withMargin(margin));
-    fb.items.add(juce::FlexItem(soloTrackButton).withHeight(buttonHeight).withMargin(margin));
+    fb.items.add (juce::FlexItem (trackTypeLabel).withHeight (15.0f));
+    fb.items.add (juce::FlexItem (trackNameLabel).withFlex (1.0f));
+    fb.items.add (juce::FlexItem (settingsButton).withHeight (buttonHeight).withMargin (margin));
+    fb.items.add (juce::FlexItem (muteTrackButton).withHeight (buttonHeight).withMargin (margin));
+    fb.items.add (juce::FlexItem (soloTrackButton).withHeight (buttonHeight).withMargin (margin));
 
-    fb.performLayout(bounds);
+    fb.performLayout (bounds);
 }

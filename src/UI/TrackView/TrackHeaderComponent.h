@@ -57,6 +57,7 @@ private:
     // juce::TextButton pianoRollButton { "Edit clip" };
     // juce::TextButton drumSamplerButton { "Drums" };
     juce::Label trackNameLabel { "Track" };
+    juce::Label trackTypeLabel {""};
     bool selected = false;
 
     TrackType trackType = TrackType::Instrument;
