@@ -1,41 +1,39 @@
-#include <juce_gui_basics/juce_gui_basics.h>
-
-#include "MainComponent.h"
 #include "AppEngine.h"
+#include "MainComponent.h"
+#include <juce_gui_basics/juce_gui_basics.h>
+#include <memory>
 
-
-class MainWindow : public juce::DocumentWindow
+class MainWindow final : public juce::DocumentWindow
 {
 public:
-    MainWindow(juce::String name)
-        : juce::DocumentWindow(name,
-                                juce::Desktop::getInstance().getDefaultLookAndFeel()
-                                    .findColour(juce::ResizableWindow::backgroundColourId),
-                                juce::DocumentWindow::allButtons)
+    explicit MainWindow (const juce::String& name)
+        : juce::DocumentWindow (name,
+              juce::Desktop::getInstance().getDefaultLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId),
+              juce::DocumentWindow::allButtons)
     {
-        setUsingNativeTitleBar(true);
-        setContentOwned(new MainComponent(), true);
-        centreWithSize(getWidth(), getHeight());
-        setVisible(true);
-        juce::Logger::outputDebugString("== APP STARTED ==");
+        setUsingNativeTitleBar (true);
+        setContentOwned (new MainComponent(), true);
+        setResizable (true, true);
+        centreWithSize (getWidth(), getHeight());
+        Component::setVisible (true);
+        juce::Logger::outputDebugString ("== APP STARTED ==");
     }
 
     void closeButtonPressed() override
     {
         juce::JUCEApplication::getInstance()->systemRequestedQuit();
     }
-
 };
 
-class GrooveKitApplication : public juce::JUCEApplication
+class GrooveKitApplication final : public juce::JUCEApplication
 {
 public:
     const juce::String getApplicationName() override       { return "GrooveKit"; }
     const juce::String getApplicationVersion() override    { return "1.0.0"; }
 
-    void initialise(const juce::String&) override
+    void initialise (const juce::String&) override
     {
-        mainWindow.reset(new MainWindow(getApplicationName()));
+        mainWindow = std::make_unique<MainWindow>(getApplicationName());
     }
 
     void shutdown() override
@@ -47,4 +45,4 @@ private:
     std::unique_ptr<MainWindow> mainWindow;
 };
 
-START_JUCE_APPLICATION(GrooveKitApplication)
+START_JUCE_APPLICATION (GrooveKitApplication)
