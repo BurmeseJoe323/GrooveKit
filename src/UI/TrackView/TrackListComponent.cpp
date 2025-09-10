@@ -1,35 +1,31 @@
-#pragma once
-
 #include "TrackListComponent.h"
-
-#include <juce_graphics/fonts/harfbuzz/hb-ot-head-table.hh>
-
 #include "DrumSamplerView/DrumSamplerLauncher.h"
 #include "DrumSamplerView/DrumSamplerView.h"
+#include <juce_graphics/fonts/harfbuzz/hb-ot-head-table.hh>
 
-TrackListComponent::TrackListComponent(std::shared_ptr<AppEngine> engine) : appEngine(engine),
-                                                                            playhead(engine->getEdit(),
-                                                                                     engine->getEditViewState())
+TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine) : appEngine (engine),
+                                                                                    playhead (engine->getEdit(),
+                                                                                        engine->getEditViewState())
 {
     //Add initial track pair
     //addNewTrack();
     setWantsKeyboardFocus (true); // setting keyboard focus?
-    addAndMakeVisible(playhead);
-    playhead.setAlwaysOnTop(true);
+    addAndMakeVisible (playhead);
+    playhead.setAlwaysOnTop (true);
     selectedTrackIndex = 0;
 }
 
 TrackListComponent::~TrackListComponent() = default;
 
-void TrackListComponent::paint (Graphics& g)
+void TrackListComponent::paint (juce::Graphics& g)
 {
-    g.fillAll (Colours::black);
+    g.fillAll (juce::Colours::black);
 }
 
 void TrackListComponent::resized()
 {
-    FlexBox mainFlex;
-    mainFlex.flexDirection = FlexBox::Direction::column;
+    juce::FlexBox mainFlex;
+    mainFlex.flexDirection = juce::FlexBox::Direction::column;
 
     const int headerWidth = 140;
     const int trackHeight = 100;
@@ -40,7 +36,7 @@ void TrackListComponent::resized()
     int contentH = numTracks * trackHeight + addButtonSpace;
 
     // Set the size to either default to the parent's height if the content height isn't tall enough
-    setSize(getParentWidth(), contentH > getParentHeight() ? contentH : getParentHeight());
+    setSize (getParentWidth(), contentH > getParentHeight() ? contentH : getParentHeight());
 
     auto bounds = getLocalBounds();
     bounds.removeFromBottom (addButtonSpace); // Space for add button
@@ -54,80 +50,89 @@ void TrackListComponent::resized()
     }
 
     // Set bounds for playhead
-    playhead.setBounds (getLocalBounds().withTrimmedLeft(headerWidth));
+    playhead.setBounds (getLocalBounds().withTrimmedLeft (headerWidth));
 }
 
 void TrackListComponent::addNewTrack (int engineIdx)
 {
-    auto* header   = new TrackHeaderComponent();
-    auto* newTrack = new TrackComponent(appEngine, engineIdx);
-    newTrack->setEngineIndex(engineIdx);
+    // Select random color from palette
+    auto newColor = trackColors[tracks.size() % trackColors.size()];
 
-    header->addListener(newTrack);
+    auto* header = new TrackHeaderComponent();
+    auto* newTrack = new TrackComponent (appEngine, engineIdx, newColor);
+    newTrack->setEngineIndex (engineIdx);
 
-    headers.add(header);
+    header->addListener (newTrack);
 
-    header->setTrackType(
-    appEngine->isDrumTrack(newTrack->getEngineIndex())
-        ? TrackHeaderComponent::TrackType::Drum
-        : TrackHeaderComponent::TrackType::Instrument
-);
+    // Set the track name on the header
+    const bool isDrum = appEngine->isDrumTrack (newTrack->getEngineIndex());
+    header->setTrackName (isDrum ? "Drums" : ("Track " + juce::String (tracks.size() + 1)));
 
+    headers.add (header);
 
-    tracks.add(newTrack);
+    // header->setTrackType (
+    //     appEngine->isDrumTrack (newTrack->getEngineIndex())
+    //         ? TrackHeaderComponent::TrackType::Drum
+    //         : TrackHeaderComponent::TrackType::Instrument);
 
-    addAndMakeVisible(header);
-    addAndMakeVisible(newTrack);
+    header->setTrackType (isDrum ? TrackHeaderComponent::TrackType::Drum
+                                 : TrackHeaderComponent::TrackType::Instrument);
+
+    tracks.add (newTrack);
+
+    addAndMakeVisible (header);
+    addAndMakeVisible (newTrack);
 
     updateTrackIndexes();
 
-    header->setMuted(appEngine->isTrackMuted(newTrack->getEngineIndex()));
-    header->setSolo (appEngine->isTrackSoloed(newTrack->getEngineIndex()));
+    header->setMuted (appEngine->isTrackMuted (newTrack->getEngineIndex()));
+    header->setSolo (appEngine->isTrackSoloed (newTrack->getEngineIndex()));
     refreshSoloVisuals();
 
-    newTrack->onRequestDeleteTrack = [this](int uiIndex) {
+    newTrack->onRequestDeleteTrack = [this] (int uiIndex) {
         if (uiIndex >= 0 && uiIndex < tracks.size())
         {
             const int engineIdxToDelete = tracks[uiIndex]->getEngineIndex();
-            removeChildComponent(headers[uiIndex]);
-            removeChildComponent(tracks[uiIndex]);
-            headers.remove(uiIndex);
-            tracks.remove(uiIndex);
-            appEngine->deleteMidiTrack(engineIdxToDelete);
+            removeChildComponent (headers[uiIndex]);
+            removeChildComponent (tracks[uiIndex]);
+            headers.remove (uiIndex);
+            tracks.remove (uiIndex);
+            appEngine->deleteMidiTrack (engineIdxToDelete);
             updateTrackIndexes();
             resized();
         }
     };
 
-    newTrack->onRequestOpenPianoRoll = [this](int uiIndex) {
-        if (pianoRollWindow != nullptr && pianoRollWindow->getTrackIndex() != uiIndex) {
+    newTrack->onRequestOpenPianoRoll = [this] (int uiIndex) {
+        if (pianoRollWindow != nullptr && pianoRollWindow->getTrackIndex() != uiIndex)
+        {
             // TODO: close current piano roll window and change to this one
         }
-        if (uiIndex >= 0 && uiIndex < tracks.size()) {
+        if (uiIndex >= 0 && uiIndex < tracks.size())
+        {
             int engineIdx = tracks[uiIndex]->getEngineIndex();
             selectedTrackIndex = engineIdx;
-            pianoRollWindow = std::make_unique<PianoRollWindow>(appEngine, engineIdx);
-            addAndMakeVisible(pianoRollWindow.get());
-            pianoRollWindow->addToDesktop(pianoRollWindow->getDesktopWindowStyleFlags());
-            pianoRollWindow->toFront(true);
-            pianoRollWindow->centreWithSize(pianoRollWindow->getWidth(), pianoRollWindow->getHeight());
+            pianoRollWindow = std::make_unique<PianoRollWindow> (appEngine, engineIdx);
+            addAndMakeVisible (pianoRollWindow.get());
+            pianoRollWindow->addToDesktop (pianoRollWindow->getDesktopWindowStyleFlags());
+            pianoRollWindow->toFront (true);
+            pianoRollWindow->centreWithSize (pianoRollWindow->getWidth(), pianoRollWindow->getHeight());
         }
     };
 
-    newTrack->onRequestOpenDrumSampler = [this](int uiIndex)
-    {
+    newTrack->onRequestOpenDrumSampler = [this] (int uiIndex) {
         if (uiIndex < 0 || uiIndex >= tracks.size())
             return;
 
         const int engineIdx = tracks[uiIndex]->getEngineIndex();
 
-        if (auto* eng = appEngine->getDrumAdapter(engineIdx))
+        if (auto* eng = appEngine->getDrumAdapter (engineIdx))
         {
-            auto* comp = new DrumSamplerView(static_cast<DrumSamplerEngine&>(*eng));
+            auto* comp = new DrumSamplerView (static_cast<DrumSamplerEngine&> (*eng));
 
             juce::DialogWindow::LaunchOptions opts;
-            comp->setSize(1000, 700);
-            opts.content.setOwned(comp);
+            comp->setSize (1000, 700);
+            opts.content.setOwned (comp);
             opts.dialogTitle = "Drum Sampler";
             opts.resizable = true;
             opts.useNativeTitleBar = true;
@@ -136,11 +141,8 @@ void TrackListComponent::addNewTrack (int engineIdx)
         }
     };
 
-
-
     resized();
 }
-
 
 void TrackListComponent::parentSizeChanged()
 {
@@ -150,7 +152,7 @@ void TrackListComponent::parentSizeChanged()
 void TrackListComponent::updateTrackIndexes()
 {
     for (int i = 0; i < tracks.size(); ++i)
-        tracks[i]->setTrackIndex(i);
+        tracks[i]->setTrackIndex (i);
 }
 
 void TrackListComponent::refreshSoloVisuals()
@@ -158,8 +160,8 @@ void TrackListComponent::refreshSoloVisuals()
     const bool anySolo = appEngine->anyTrackSoloed();
     for (int i = 0; i < headers.size(); ++i)
     {
-        const bool thisSolo = appEngine->isTrackSoloed(tracks[i]->getEngineIndex());
-        headers[i]->setDimmed(anySolo && !thisSolo);
+        const bool thisSolo = appEngine->isTrackSoloed (tracks[i]->getEngineIndex());
+        headers[i]->setDimmed (anySolo && !thisSolo);
     }
 }
 
