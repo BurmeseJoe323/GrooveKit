@@ -48,10 +48,20 @@ void TrackComponent::resized()
 void TrackComponent::onSettingsClicked()
 {
     juce::PopupMenu m;
+    const bool isDrumTrack = appEngine->isDrumTrack (engineIndex);
     m.addItem (1, "Add MIDI Clip");
-    m.addItem (2, "Open Editor");
     m.addSeparator();
-    m.addItem (3, "Delete Track");
+    if (isDrumTrack)
+    {
+        m.addItem (10, "Open Drum Sampler");
+        m.addItem (11, "Open Piano Roll");
+    }
+    else
+    {
+        m.addItem (11, "Open Piano Roll");
+    }
+    m.addSeparator();
+    m.addItem (100, "Delete Track");
 
     m.showMenuAsync ({}, [this] (int result) {
         switch (result)
@@ -62,22 +72,16 @@ void TrackComponent::onSettingsClicked()
                 resized();
                 numClips = 1;
                 break;
-            case 2: // Open Editor
-            {
-                bool isDrumTrack = appEngine->isDrumTrack (engineIndex);
-                if (isDrumTrack)
-                {
-                    if (onRequestOpenDrumSampler)
-                        onRequestOpenDrumSampler (trackIndex);
-                }
-                else
-                {
-                    if (onRequestOpenPianoRoll && numClips > 0)
-                        onRequestOpenPianoRoll (trackIndex);
-                }
-            }
-            break;
-            case 3: // Delete Track
+            case 10: // Open Drum Sampler
+                if (onRequestOpenDrumSampler)
+                    onRequestOpenDrumSampler (trackIndex);
+                break;
+            case 11: // Open Piano Roll
+                if (onRequestOpenPianoRoll && numClips > 0)
+                    onRequestOpenPianoRoll (trackIndex);
+                break;
+                break;
+            case 100: // Delete Track
                 if (onRequestDeleteTrack)
                     onRequestDeleteTrack (trackIndex);
                 break;
