@@ -9,6 +9,9 @@ using namespace juce;
 class TrackHeaderComponent : public Component
 {
 public:
+
+    enum class TrackType { Drum, Instrument };
+
     class Listener {
     public:
         virtual ~Listener() = default;
@@ -17,6 +20,7 @@ public:
         virtual void onPianoRollClicked() = 0;
         virtual void onMuteToggled(bool isMuted) = 0;
         virtual void onSoloToggled(bool isSolo) = 0;
+        virtual void onDrumSamplerClicked() = 0;
     };
 
     void addListener(Listener* listener) {listeners.add(listener);}
@@ -45,6 +49,7 @@ public:
     void setDimmed(bool dim);
 
     void setTrackName(juce::String name);
+    void setTrackType(TrackType type);
 
 private:
     juce::TextButton addClip {"+"};
@@ -52,8 +57,11 @@ private:
     juce::TextButton soloTrackButton{ "S" };
     juce::TextButton deleteTrackButton { "-" };
     juce::TextButton pianoRollButton{"Edit clip"};
+    juce::TextButton drumSamplerButton{"Drums"};
     juce::Label trackNameLabel {"Track"};
     bool selected = false;
+
+    TrackType trackType = TrackType::Instrument;
 
     void updateMuteButtonVisuals();
     void updateSoloButtonVisuals();

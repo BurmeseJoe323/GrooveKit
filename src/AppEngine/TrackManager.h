@@ -1,18 +1,27 @@
 #pragma once
 #include <tracktion_engine/tracktion_engine.h>
+#include "../DrumSamplerEngine/DrumSamplerEngineAdapter.h"
 #include "../MIDIEngine/MIDIEngine.h"
 namespace te = tracktion;
 class TrackManager
 {
 public:
+    enum class TrackType { Drum, Instrument };
+
     explicit TrackManager(te::Edit& editRef);
     ~TrackManager();
 
     int getNumTracks() const;
     te::AudioTrack* getTrack(int index);
 
+    int  addDrumTrack();
+    int  addInstrumentTrack();
+
     int addTrack();
     void deleteTrack(int index);
+
+    bool isDrumTrack(int index) const;
+    DrumSamplerEngineAdapter* getDrumAdapter(int index);
 
     void muteTrack(int index);
     void setTrackMuted(int index, bool mute);
@@ -26,4 +35,8 @@ public:
 
 private:
     te::Edit& edit;
+
+    std::vector<TrackType> types;
+    std::vector<std::unique_ptr<DrumSamplerEngineAdapter>> drumEngines;
+    void syncBookkeepingToEngine();
 };

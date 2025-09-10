@@ -6,4 +6,6 @@ target_link_libraries(app_engine
         tracktion_engine
         midi_engine
         audio_engine
+        drum_sampler_engine
+        GrooveKitResources
 )

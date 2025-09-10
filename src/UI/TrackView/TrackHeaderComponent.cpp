@@ -8,6 +8,7 @@ TrackHeaderComponent::TrackHeaderComponent() {
   addAndMakeVisible(trackNameLabel);
   addAndMakeVisible(muteTrackButton);
   addAndMakeVisible(soloTrackButton);
+  addAndMakeVisible(drumSamplerButton);
 
   addClip.onClick = [this]() {
     listeners.call([](Listener& l) { l.onAddClipClicked(); });
@@ -19,6 +20,10 @@ TrackHeaderComponent::TrackHeaderComponent() {
 
   pianoRollButton.onClick = [this]() {
     listeners.call([](Listener& l) { l.onPianoRollClicked(); });
+  };
+
+  drumSamplerButton.onClick = [this]() {
+    listeners.call([](Listener& l) { l.onDrumSamplerClicked(); });
   };
 
   muteTrackButton.setClickingTogglesState(true);
@@ -45,9 +50,20 @@ TrackHeaderComponent::TrackHeaderComponent() {
   trackNameLabel.setColour(juce::Label::textColourId, juce::Colours::black);
   trackNameLabel.setJustificationType(juce::Justification::centred);
   trackNameLabel.setText("Track", juce::dontSendNotification);
+
+  setTrackType(TrackType::Instrument);
 };
 
 TrackHeaderComponent::~TrackHeaderComponent() = default;
+
+
+void TrackHeaderComponent::setTrackType(TrackType type)
+{
+  trackType = type;
+  const bool isDrum = (trackType == TrackType::Drum);
+  drumSamplerButton.setVisible(isDrum);
+  if (isDrum) setTrackName("Drums");
+}
 
 void TrackHeaderComponent::setMuted(bool shouldBeMuted) {
   muteTrackButton.setToggleState(shouldBeMuted, juce::dontSendNotification);
@@ -91,50 +107,41 @@ void TrackHeaderComponent::paint(juce::Graphics &g) {
   g.fillAll(juce::Colours::beige);
 };
 
-void TrackHeaderComponent::resized() {
-  // this will be the main layout
-  // set as vertical layout
+void TrackHeaderComponent::resized()
+{
+  // Vertical layout
   juce::FlexBox mainFB;
   mainFB.flexDirection = juce::FlexBox::Direction::column;
-  mainFB.alignItems = juce::FlexBox::AlignItems::stretch;
+  mainFB.alignItems    = juce::FlexBox::AlignItems::stretch;
 
   auto area = getLocalBounds().reduced(5);
 
   // Row 1: Track name
   mainFB.items.add(juce::FlexItem(trackNameLabel)
-    .withWidth(50)
-    .withHeight(30)
-    .withAlignSelf(juce::FlexItem::AlignSelf::flexStart));
+      .withWidth(50)
+      .withHeight(30)
+      .withAlignSelf(juce::FlexItem::AlignSelf::flexStart));
 
-  // Row 2: Add clip button
+  // Row 2: Buttons
   juce::FlexBox buttonRowFB;
   buttonRowFB.flexDirection = juce::FlexBox::Direction::row;
   buttonRowFB.justifyContent = juce::FlexBox::JustifyContent::flexEnd;
 
-  buttonRowFB.items.add(juce::FlexItem(addClip)
-        .withWidth(50)
-        .withHeight(30));
+  buttonRowFB.items.add(juce::FlexItem(addClip).withWidth(50).withHeight(30));
+  buttonRowFB.items.add(juce::FlexItem(muteTrackButton).withWidth(50).withHeight(30));
+  buttonRowFB.items.add(juce::FlexItem(soloTrackButton).withWidth(50).withHeight(30));
+  buttonRowFB.items.add(juce::FlexItem(deleteTrackButton).withWidth(50).withHeight(30));
 
-  buttonRowFB.items.add(juce::FlexItem(muteTrackButton)
-        .withWidth(50)
-        .withHeight(30));
+  juce::FlexBox buttonRowFB2;
+  buttonRowFB2.flexDirection = juce::FlexBox::Direction::row;
+  buttonRowFB2.justifyContent = juce::FlexBox::JustifyContent::flexEnd;
 
-  buttonRowFB.items.add(juce::FlexItem(soloTrackButton)
-        .withWidth(50)
-        .withHeight(30));
+  buttonRowFB2.items.add(juce::FlexItem(pianoRollButton).withWidth(70).withHeight(30));
 
-  buttonRowFB.items.add(juce::FlexItem(deleteTrackButton)
-        .withWidth(50)
-        .withHeight(30));
+  if (drumSamplerButton.isVisible())
+    buttonRowFB2.items.add(juce::FlexItem(drumSamplerButton).withWidth(70).withHeight(30));
 
-  buttonRowFB.items.add(juce::FlexItem(pianoRollButton)
-        .withWidth(50)
-        .withHeight(30));
-
-  // Add the button row as a FlexItem to the main layout
-  mainFB.items.add(juce::FlexItem(buttonRowFB)
-      .withHeight(30)); // Fixed height for the button row
-
-  // Perform layout
+  mainFB.items.add(juce::FlexItem(buttonRowFB).withHeight(30));
+  mainFB.items.add(juce::FlexItem(buttonRowFB2).withHeight(30));
   mainFB.performLayout(area);
 }

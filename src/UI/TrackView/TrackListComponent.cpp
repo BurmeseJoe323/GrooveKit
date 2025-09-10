@@ -1,6 +1,11 @@
+#pragma once
+
 #include "TrackListComponent.h"
 
 #include <juce_graphics/fonts/harfbuzz/hb-ot-head-table.hh>
+
+#include "DrumSamplerView/DrumSamplerLauncher.h"
+#include "DrumSamplerView/DrumSamplerView.h"
 
 TrackListComponent::TrackListComponent(std::shared_ptr<AppEngine> engine) : appEngine(engine),
                                                                             playhead(engine->getEdit(),
@@ -61,6 +66,14 @@ void TrackListComponent::addNewTrack (int engineIdx)
     header->addListener(newTrack);
 
     headers.add(header);
+
+    header->setTrackType(
+    appEngine->isDrumTrack(newTrack->getEngineIndex())
+        ? TrackHeaderComponent::TrackType::Drum
+        : TrackHeaderComponent::TrackType::Instrument
+);
+
+
     tracks.add(newTrack);
 
     addAndMakeVisible(header);
@@ -100,6 +113,30 @@ void TrackListComponent::addNewTrack (int engineIdx)
             pianoRollWindow->centreWithSize(pianoRollWindow->getWidth(), pianoRollWindow->getHeight());
         }
     };
+
+    newTrack->onRequestOpenDrumSampler = [this](int uiIndex)
+    {
+        if (uiIndex < 0 || uiIndex >= tracks.size())
+            return;
+
+        const int engineIdx = tracks[uiIndex]->getEngineIndex();
+
+        if (auto* eng = appEngine->getDrumAdapter(engineIdx))
+        {
+            auto* comp = new DrumSamplerView(static_cast<DrumSamplerEngine&>(*eng));
+
+            juce::DialogWindow::LaunchOptions opts;
+            comp->setSize(1000, 700);
+            opts.content.setOwned(comp);
+            opts.dialogTitle = "Drum Sampler";
+            opts.resizable = true;
+            opts.useNativeTitleBar = true;
+
+            opts.launchAsync();
+        }
+    };
+
+
 
     resized();
 }

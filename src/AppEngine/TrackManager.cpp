@@ -1,10 +1,24 @@
 #include "TrackManager.h"
 #include <tracktion_engine/tracktion_engine.h>
+#include "../DrumSamplerEngine/DrumSamplerEngineAdapter.h"
+
+namespace {
+    static int asIndexChecked (int idx, int size) { return (idx >= 0 && idx < size) ? idx : -1; }
+}
+
 TrackManager::TrackManager(te::Edit& editRef)
     : edit(editRef) {
+    syncBookkeepingToEngine();
 }
 
 TrackManager::~TrackManager() = default;
+
+void TrackManager::syncBookkeepingToEngine()
+{
+    const int n = (int) te::getAudioTracks(edit).size();
+    types.resize(n, TrackType::Instrument);
+    drumEngines.resize(n); // nullptrs for non-drum
+}
 
 int TrackManager::getNumTracks() const {
     return getAudioTracks(edit).size();
@@ -16,42 +30,77 @@ te::AudioTrack* TrackManager::getTrack(int index) {
     return track;
 }
 
-int TrackManager::addTrack()
+int TrackManager::addDrumTrack()
 {
-    DBG("Track added");
+    const int newIndex = getNumTracks();
+    edit.ensureNumberOfAudioTracks(newIndex + 1);
 
-    const int currentNumTracks = te::getAudioTracks(edit).size();
-    edit.ensureNumberOfAudioTracks(currentNumTracks + 1);
+    auto* track = te::getAudioTracks(edit)[(size_t) newIndex];
 
-    auto* track = te::getAudioTracks(edit)[currentNumTracks];
+    auto adapter = std::make_unique<DrumSamplerEngineAdapter>(edit.engine, *track);
 
-    auto plugin = edit.getPluginCache().createNewPlugin(te::FourOscPlugin::xmlTypeName, {});
-    if (plugin)
-    {
-        track->pluginList.insertPlugin(std::move(plugin), 0, nullptr);
-        DBG("addTrack: engine had "
-            + juce::String(currentNumTracks) + " audio tracks; new index = "
-            + juce::String(currentNumTracks));
-        DBG("Track " + juce::String(currentNumTracks)
-            + " plugins: " + juce::String(track->pluginList.size()));
 
-    }
+    syncBookkeepingToEngine();
+    types[(size_t) newIndex] = TrackType::Drum;
+    drumEngines[(size_t) newIndex] = std::move(adapter);
 
     edit.getTransport().ensureContextAllocated();
+    return newIndex;
+}
 
-    edit.restartPlayback();
+int TrackManager::addInstrumentTrack()
+{
+    const int newIndex = getNumTracks();
+    edit.ensureNumberOfAudioTracks(newIndex + 1);
 
-    return currentNumTracks;
+    auto* track = te::getAudioTracks(edit)[(size_t) newIndex];
+
+    syncBookkeepingToEngine();
+    types[(size_t) newIndex] = TrackType::Instrument;
+    if ((int) drumEngines.size() > newIndex)
+        drumEngines[(size_t) newIndex].reset();
+
+    if (auto plugin = edit.getPluginCache().createNewPlugin(te::FourOscPlugin::xmlTypeName, {}))
+        track->pluginList.insertPlugin(std::move(plugin), 0, nullptr);
+
+    edit.getTransport().ensureContextAllocated();
+    return newIndex;
+}
+
+int TrackManager::addTrack()
+{
+    return addInstrumentTrack();
 }
 
 
 
-void TrackManager::deleteTrack(int index) {
+void TrackManager::deleteTrack(int index)
+{
     if (index < 0 || index >= getNumTracks())
         //should probably throw error or something
         return;
-    te::AudioTrack* track = getTrack(index);
-    edit.deleteTrack(track);
+
+    if (auto* track = getTrack(index))
+    {
+        edit.deleteTrack(track);
+
+        if ((int) types.size() > index)      types.erase(types.begin() + index);
+        if ((int) drumEngines.size() > index) drumEngines.erase(drumEngines.begin() + index);
+    }
+}
+
+bool TrackManager::isDrumTrack(int index) const
+{
+    if (index < 0 || index >= getNumTracks() || (int) types.size() <= index)
+        return false;
+    return types[(size_t) index] == TrackType::Drum;
+}
+
+DrumSamplerEngineAdapter* TrackManager::getDrumAdapter(int index)
+{
+    if (index < 0 || index >= getNumTracks() || (int) drumEngines.size() <= index)
+        return nullptr;
+    return drumEngines[(size_t) index].get();
 }
 
 void TrackManager::muteTrack(int index) {

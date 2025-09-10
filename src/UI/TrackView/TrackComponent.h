@@ -27,6 +27,7 @@ public:
     void onPianoRollClicked() override;
     void onMuteToggled(bool isMuted) override;
     void onSoloToggled(bool isSolo) override;
+    void onDrumSamplerClicked() override;
 
     void setTrackIndex(int index);
     void setEngineIndex (int i) { engineIndex = i; }
@@ -38,6 +39,7 @@ public:
 
     std::function<void(int)> onRequestDeleteTrack;
     std::function<void(int)> onRequestOpenPianoRoll;
+    std::function<void(int)> onRequestOpenDrumSampler;
 
 private:
     std::shared_ptr<AppEngine> appEngine;

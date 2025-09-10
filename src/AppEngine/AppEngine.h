@@ -101,6 +101,13 @@ public:
     void deleteMidiTrack(int index);
     void addMidiClipToTrack(int trackIndex);
 
+    bool isDrumTrack(int index) const;
+
+    DrumSamplerEngineAdapter* getDrumAdapter(int index);
+
+    int addDrumTrack();
+    int addInstrumentTrack();
+
     te::MidiClip *getMidiClipFromTrack(int trackIndex);
 
     void setTrackMuted(int index, bool mute) { trackManager->setTrackMuted(index, mute); }
@@ -110,6 +117,13 @@ public:
     void setTrackSoloed(int index, bool solo);
     bool isTrackSoloed(int index) const;
     bool anyTrackSoloed() const;
+
+    TrackManager& getTrackManager()       { return *trackManager; }
+    TrackManager* getTrackManagerPtr()    { return trackManager.get(); }
+
+    AudioEngine& getAudioEngine();
+    MIDIEngine& getMidiEngine();
+    juce::AudioProcessorValueTreeState& getAPVTS();
 
     EditViewState& getEditViewState();
     te::Edit &getEdit();

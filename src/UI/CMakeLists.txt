@@ -1,4 +1,17 @@
-add_library(app_ui)
+add_library(app_ui
+        DrumSamplerView/DrumSamplerView.h
+        DrumSamplerView/DrumSamplerLauncher.cpp
+        DrumSamplerView/DrumSamplerLauncher.h
+        DrumSamplerView/DrumSamplerEngine.h
+        DrumSamplerView/DrumPadComponent.h
+        DrumSamplerView/DrumSamplerComponent.h
+        DrumSamplerView/SampleLibraryComponent.h)
+target_link_libraries(app_ui
+        PRIVATE
+        GrooveKitResources
+        jive::jive_layouts
+        jive::jive_style_sheets
+)
 target_sources(app_ui
         PRIVATE
         MainComponent.cpp MainComponent.h
@@ -21,8 +34,24 @@ target_sources(app_ui
         TrackEditViewTutorial/TrackEditViewTutorial.cpp TrackEditViewTutorial/TrackEditViewTutorial.h
         TutorialManager/TutorialManagerComponent.cpp TutorialManager/TutorialManagerComponent.h
         InstrumentTutorial/InstrumentTutorial.cpp InstrumentTutorial/InstrumentTutorial.h
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/UI/DrumSamplerView/DefaultSampleLibrary.cpp
         # Resources
         ${CMAKE_SOURCE_DIR}/Resources/exampleGUISetup.cpp ${CMAKE_SOURCE_DIR}/Resources/exampleGUISetup.h
 )
-target_include_directories(app_ui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(app_ui PUBLIC juce::juce_gui_basics app_engine)
+
+target_include_directories(app_ui
+        PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src
+)
+target_link_libraries(app_ui
+        PUBLIC
+            juce::juce_gui_basics
+            app_engine
+            drum_sampler_engine
+            tracktion_engine
+        PRIVATE
+            GrooveKitResources
+)
+

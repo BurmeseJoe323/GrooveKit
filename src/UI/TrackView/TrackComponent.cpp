@@ -62,6 +62,12 @@ void TrackComponent::onPianoRollClicked() {
         onRequestOpenPianoRoll(trackIndex);
 }
 
+void TrackComponent::onDrumSamplerClicked() {
+    DBG("Drum Sampler clicked for track index: " << trackIndex);
+    if (onRequestOpenDrumSampler)
+        onRequestOpenDrumSampler(trackIndex);
+}
+
 void TrackComponent::setTrackIndex(int index)
 {
     this->trackIndex = index;
