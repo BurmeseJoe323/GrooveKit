@@ -1,17 +1,12 @@
-//
-// Created by Joseph Rockwell on 4/21/25.
-//
+#pragma once
 
-#ifndef PLAYHEADCOMPONENT_H
-#define PLAYHEADCOMPONENT_H
-
+#include "../../AppEngine/AppEngine.h"
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <tracktion_engine/tracktion_engine.h>
-#include "../../AppEngine/AppEngine.h"
 
 namespace te = tracktion;
 
-class PlayheadComponent : public juce::Component, private juce::Timer
+class PlayheadComponent final : public juce::Component, juce::Timer
 {
 public:
     PlayheadComponent (te::Edit&, EditViewState&);
@@ -31,7 +26,3 @@ private:
     int xPosition = 0;
     bool firstTimer = true;
 };
-
-
-
-#endif //PLAYHEADCOMPONENT_H

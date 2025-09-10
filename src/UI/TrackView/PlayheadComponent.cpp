@@ -1,12 +1,8 @@
-//
-// Created by Joseph Rockwell on 4/21/25.
-//
-
 #include "PlayheadComponent.h"
 
-PlayheadComponent::PlayheadComponent(te::Edit &e, EditViewState &evs) : edit(e), editViewState(evs)
+PlayheadComponent::PlayheadComponent (te::Edit& e, EditViewState& evs) : edit (e), editViewState (evs)
 {
-    startTimerHz(30);
+    startTimerHz (30);
 }
 
 void PlayheadComponent::paint (juce::Graphics& g)
@@ -56,4 +52,3 @@ void PlayheadComponent::timerCallback()
         xPosition = newX;
     }
 }
-
