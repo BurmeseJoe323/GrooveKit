@@ -1,21 +1,20 @@
-//
-// Created by ikera on 4/8/2025.
-//
-
 #include "TrackClip.h"
 
-TrackClip::TrackClip() {
-    // addAndMakeVisible()
-}
+TrackClip::TrackClip() {}
 
-// this is the destructor
 TrackClip::~TrackClip() = default;
 
-void TrackClip::paint(juce::Graphics &g) {
-    g.fillAll(juce::Colours::blueviolet);
+void TrackClip::paint (juce::Graphics& g)
+{
+    g.fillAll (clipColor);
+    g.setColour (juce::Colours::white);
+    g.drawText ("MIDI Clip", getLocalBounds(), juce::Justification::centred);
 }
 
-void TrackClip::resized() {
-    // this is where you modify the size of different
-    // subcomponents.
+void TrackClip::resized() {}
+
+void TrackClip::setColor (juce::Colour newColor)
+{
+    clipColor = newColor;
+    repaint();
 }
