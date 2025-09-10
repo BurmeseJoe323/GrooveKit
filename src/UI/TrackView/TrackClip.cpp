@@ -6,7 +6,7 @@ TrackClip::~TrackClip() = default;
 
 void TrackClip::paint (juce::Graphics& g)
 {
-    g.fillAll (clipColor);
+    g.fillAll (juce::Colours::cornflowerblue);
     g.setColour (juce::Colours::white);
     g.drawText ("MIDI Clip", getLocalBounds(), juce::Justification::centred);
 }
