@@ -17,17 +17,36 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
 
     auto track = te::getAudioTracks(edit)[trackIndex];
 
-    te::TimeRange oneBar(0s, edit.tempoSequence.toTime({1, te::BeatDuration()}));
+    auto endPos = edit.tempoSequence.toTime(8_bp);
+    te::TimeRange twoBars { 0s, endPos };
 
-    auto clip = track->insertNewClip(te::TrackItem::Type::midi, "Midi Clip", oneBar, nullptr);
+    auto clip = track->insertNewClip(te::TrackItem::Type::midi, "Midi Clip", twoBars, nullptr);
     auto midiClip = dynamic_cast<te::MidiClip*>(clip);
     DBG("Clip added to track: " << trackIndex);
+
+    // midiClip->setStart(true, true);
+    // midiClip->setLength(true, true);
 
     if (midiClip == nullptr)
         return;
 
     switch (trackIndex)
     {
+        case 0:
+            midiClip->getSequence().addNote(36, 0_bp, 0.5_bd, 112, 0, nullptr);
+            midiClip->getSequence().addNote(36, 4_bp, 0.5_bd, 112, 0, nullptr);
+
+            // Snare (per your mapping) on 2 & 4 (beats 2 and 6)
+            midiClip->getSequence().addNote(37, 2_bp, 0.5_bd, 108, 0, nullptr);
+            midiClip->getSequence().addNote(37, 6_bp, 0.5_bd, 108, 0, nullptr);
+
+            // Hi-hat 8ths across 2 bars (every 1/2 beat)
+            for (int i = 0; i < 16; ++i)
+            {
+                auto start = te::BeatPosition::fromBeats(0.5 * i);   // 0.0, 0.5, 1.0, ..., 7.5
+                midiClip->getSequence().addNote(38, start, te::BeatDuration::fromBeats(0.25), 92, 0, nullptr);
+            }
+            break;
         case 1:  // Bass
             midiClip->getSequence().addNote(36, 0_bp, 1_bd, 100, 0, nullptr);
             midiClip->getSequence().addNote(40, 1_bp, 1_bd, 100, 0, nullptr);

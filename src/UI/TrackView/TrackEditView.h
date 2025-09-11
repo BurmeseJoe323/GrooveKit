@@ -37,7 +37,8 @@ private:
     std::unique_ptr<TrackListComponent> trackList;
     std::unique_ptr<PianoRollWindow> pianoRollWindow;
     juce::Viewport viewport;
-
+    double pixelsPerSecond = 100.0;
+    te::TimePosition viewStart = 0s;
     // Do we need this here?
     // EditViewState &editViewState;
 

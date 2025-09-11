@@ -7,6 +7,9 @@ TrackEditView::TrackEditView(AppEngine& engine)
     appEngine = std::shared_ptr<AppEngine>(&engine, [](AppEngine*){});
     trackList = std::make_unique<TrackListComponent> (appEngine);
 
+    trackList->setPixelsPerSecond (pixelsPerSecond);
+    trackList->setViewStart (viewStart);
+
     viewport.setScrollBarsShown (true, false); // vertical only
     viewport.setViewedComponent (trackList.get(), false);
 
@@ -58,7 +61,12 @@ void TrackEditView::setupButtons()
             if (choice == 1)      index = appEngine->addInstrumentTrack();
             else if (choice == 2) index = appEngine->addDrumTrack();
             DBG("[TrackEditView] now " << appEngine->getNumTracks() << " tracks"); // insert here
-            if (index >= 0) trackList->addNewTrack(index);
+            if (index >= 0) {
+                trackList->addNewTrack(index);
+
+                trackList->setPixelsPerSecond (pixelsPerSecond);
+                trackList->setViewStart (viewStart);
+            }
         });
 
     };

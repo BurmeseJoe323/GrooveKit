@@ -62,6 +62,9 @@ void TrackListComponent::addNewTrack (int engineIdx)
     auto* newTrack = new TrackComponent (appEngine, engineIdx, newColor);
     newTrack->setEngineIndex (engineIdx);
 
+    newTrack->setPixelsPerSecond (100.0);
+    newTrack->setViewStart (0s);
+
     header->addListener (newTrack);
 
     // Set the track name on the header
@@ -163,6 +166,20 @@ void TrackListComponent::refreshSoloVisuals()
         const bool thisSolo = appEngine->isTrackSoloed (tracks[i]->getEngineIndex());
         headers[i]->setDimmed (anySolo && !thisSolo);
     }
+}
+
+void TrackListComponent::setPixelsPerSecond (double pps)
+{
+    for (auto* t : tracks)
+        if (t) t->setPixelsPerSecond (pps);
+    repaint();
+}
+
+void TrackListComponent::setViewStart (te::TimePosition t)
+{
+    for (auto* tc : tracks)
+        if (tc) tc->setViewStart(t);
+    repaint();
 }
 
 // bool EditComponent::keyPressed(const KeyPress& key) {

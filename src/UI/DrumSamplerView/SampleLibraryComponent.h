@@ -139,12 +139,13 @@ private:
 
         fileChooser->launchAsync(
             juce::FileBrowserComponent::openMode
-          | juce::FileBrowserComponent::canSelectMultipleItems
-          | juce::FileBrowserComponent::warnAboutOverwriting,
+            | juce::FileBrowserComponent::canSelectFiles
+            | juce::FileBrowserComponent::canSelectMultipleItems
+            | juce::FileBrowserComponent::warnAboutOverwriting,
             [this](const juce::FileChooser& fc)
             {
                 for (auto f : fc.getResults())
-                    if (f.hasFileExtension("wav;WAV"))
+                    if (f.hasFileExtension("wav;WAV;aif;aiff;flac;mp3"))
                         addFile (f);
 
                 refreshList();

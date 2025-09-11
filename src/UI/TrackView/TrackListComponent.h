@@ -21,6 +21,8 @@ public:
     void parentSizeChanged() override;
     void refreshSoloVisuals();
     void addNewTrack (int index);
+    void setPixelsPerSecond (double pps);
+    void setViewStart (te::TimePosition t);
 
 private:
     const std::shared_ptr<AppEngine> appEngine;

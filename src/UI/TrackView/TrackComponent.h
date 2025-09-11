@@ -30,6 +30,9 @@ public:
     void paint (juce::Graphics& g) override;
     void resized() override;
 
+    void setPixelsPerSecond(double pps){ pixelsPerSecond = pps;  resized(); }
+    void setViewStart(te::TimePosition t){ viewStart = t;          resized(); }
+
     std::function<void (int)> onRequestDeleteTrack;
     std::function<void (int)> onRequestOpenPianoRoll;
     std::function<void (int)> onRequestOpenDrumSampler;
@@ -43,6 +46,23 @@ private:
 
     TrackClip trackClip;
     TrackHeaderComponent trackHeader;
+
+    double pixelsPerSecond = 100.0;
+    te::TimePosition viewStart = 0s;
+
+    static int timeToX (te::TimePosition t, te::TimePosition view0, double pps)
+    {
+        return juce::roundToInt ((t - view0).inSeconds() * pps);
+    }
+    static int xFromTime (te::TimePosition t, te::TimePosition view0, double pps)
+    {
+        const double secs = (t - view0).inSeconds();
+        return (int) std::floor (secs * pps);
+    }
+    static int timeRangeToWidth (te::TimeRange r, double pps)
+    {
+        return juce::roundToInt (r.getLength().inSeconds() * pps);
+    }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackComponent)
 };

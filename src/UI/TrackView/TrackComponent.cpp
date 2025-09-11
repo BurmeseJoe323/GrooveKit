@@ -29,20 +29,27 @@ void TrackComponent::paint (juce::Graphics& g)
 
 void TrackComponent::resized()
 {
-    // juce::FlexBox mainFB;
-    // mainFB.flexDirection = juce::FlexBox::Direction::row;
-    // mainFB.alignItems = juce::FlexBox::AlignItems::stretch;
-    //
-    // const juce::FlexItem::Margin itemMargin (5.0f);
-    // mainFB.items.add (juce::FlexItem (trackClip)
-    //         .withWidth (125)
-    //         .withHeight (getHeight() - itemMargin.top - itemMargin.bottom)
-    //         .withMargin (itemMargin));
-    //
-    // mainFB.performLayout (getLocalBounds());
+    auto bounds = getLocalBounds().reduced (5);
 
-    // Set the clip's bounds directly, with a 5-pixel margin
-    trackClip.setBounds (getLocalBounds().reduced (5).withWidth (150));
+    // If we can find a clip on this track, size/position the UI clip from its time range.
+    if (auto* track = appEngine ? appEngine->getTrackManager().getTrack (engineIndex) : nullptr)
+        {
+            if (track->getClips().size() > 0)
+            {
+                auto* teClip = track->getClips().getUnchecked (0); // first clip in engine track
+                auto  tr     = teClip->getPosition().time;          // te::TimeRange in seconds
+
+                const int x0 = xFromTime (tr.getStart(), viewStart, pixelsPerSecond);
+                const int x1 = xFromTime (tr.getEnd(),   viewStart, pixelsPerSecond);
+                const int width = juce::jmax (1, x1 - x0);
+
+                trackClip.setBounds (getLocalBounds().reduced (5).withWidth (280));
+                return;
+            }
+        }
+
+
+    trackClip.setBounds (bounds.withWidth (juce::jmax (bounds.getHeight(), 40)));
 }
 
 void TrackComponent::onSettingsClicked()
