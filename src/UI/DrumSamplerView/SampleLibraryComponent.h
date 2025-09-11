@@ -105,7 +105,6 @@ public:
         list.setBounds (inner);
     }
 
-    // Same API your DrumSamplerComponent already uses
     void addFile (const juce::File& fileToImport)
     {
         if (! fileToImport.existsAsFile()) return;
@@ -119,7 +118,6 @@ public:
     }
 
 private:
-    // Dark rounded background
     struct DarkContainer : juce::Component
     {
         void paint(juce::Graphics& g) override

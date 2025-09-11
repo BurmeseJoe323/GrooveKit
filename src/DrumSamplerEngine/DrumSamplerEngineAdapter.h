@@ -7,7 +7,6 @@
 #include <utility>
 namespace te = tracktion;
 
-// Map 16 pads to GM drum range: 36..51
 static inline int padToMidiNote (int padIndex) { return 36 + juce::jlimit (0, 15, padIndex); }
 
 class DrumSamplerEngineAdapter : public DrumSamplerEngine
@@ -22,7 +21,6 @@ public:
             slotNames[i] = "Pad " + juce::String (i + 1);
     }
 
-    // -------- DrumSamplerEngine impl
     void loadSampleIntoSlot (int slot, const juce::File& file) override
     {
         if (! sampler) return;
@@ -31,27 +29,24 @@ public:
         const int note  = padToMidiNote (pad);
         const auto name = file.getFileNameWithoutExtension();
 
-        // If a sound already targets this note, just retarget its media + params
         if (int idx = findSoundForNote (note); idx >= 0)
         {
             sampler->setSoundMedia  (idx, file.getFullPathName());
-            sampler->setSoundParams (idx, note, note, note);     // root/min/max = this pad
+            sampler->setSoundParams (idx, note, note, note);
             sampler->setSoundName   (idx, name);
             DBG ("[Sampler] Reused sound idx=" << idx << " for note " << note << " -> " << file.getFileName());
         }
         else
         {
-            // Add a new sound and then set its note mapping
-            const double len   = fileLengthSeconds (file);       // seconds
+            const double len   = fileLengthSeconds (file);
             const int    before = sampler->getNumSounds();
 
-            sampler->addSound (file.getFullPathName(),           // path or item ID
+            sampler->addSound (file.getFullPathName(),
                                name,
-                               0.0,                               // start time
-                               len > 0.0 ? len : 1.0,             // length (fallback to 1s)
-                               0.0f);                              // gain dB
+                               0.0,
+                               len > 0.0 ? len : 1.0,
+                               0.0f);
 
-            // In TE, addSound appends; the new index is 'before'
             const int index = (sampler->getNumSounds() > before ? before
                                                                 : sampler->getNumSounds() - 1);
 
@@ -78,7 +73,6 @@ public:
         const juce::uint8 vel = (juce::uint8) juce::jlimit (1, 127,
                                    (int) juce::roundToInt (velocity * 127.0f));
 
-        // Sanity: confirm mapping exists
         const int mappedIdx = findSoundForNote (note);
         if (mappedIdx < 0)
         {
@@ -86,17 +80,13 @@ public:
             return;
         }
 
-        // Make sure the audio graph is alive
         track.edit.getTransport().ensureContextAllocated();
 
-        // Your TE wants an MPESourceID (constructor form works on your build)
         const te::MPESourceID source ((juce::uint8) 1);
 
-        // Note-on now…
         juce::MidiMessage on  = juce::MidiMessage::noteOn  (1, note, vel);
         track.injectLiveMidiMessage (te::MidiMessageWithSource (on, source));
 
-        // …and note-off a hair later so it actually sounds
         juce::MidiMessage off = juce::MidiMessage::noteOff (1, note);
         juce::Timer::callAfterDelay (80, [this, off, source]
         {
@@ -111,7 +101,6 @@ public:
 
     void setVolume (float linear01) override
     {
-        // Set track volume (safer than per-plugin gain—works for whole drum chain)
         track.getVolumePlugin()->setVolumeDb (juce::Decibels::gainToDecibels (juce::jlimit (0.0f, 1.0f, linear01)));
     }
 
@@ -129,14 +118,10 @@ public:
 private:
     te::SamplerPlugin* findOrCreateSampler()
     {
-        // 1) Look for an existing Sampler on this track
-        // In your TE build, getPlugins() returns a container of raw Plugin*
         for (auto* p : track.pluginList.getPlugins())
             if (auto* sp = dynamic_cast<te::SamplerPlugin*>(p))
                 return sp;
 
-        // 2) Otherwise create one via the Edit's PluginCache
-        // (this is the same creation path you already use for FourOsc elsewhere)
         te::Plugin::Ptr plugin = track.edit.getPluginCache()
                                      .createNewPlugin(te::SamplerPlugin::xmlTypeName, {});
         if (!plugin)

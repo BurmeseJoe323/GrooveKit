@@ -57,7 +57,6 @@ public:
             addAndMakeVisible (pads.getLast());
         }
 
-        // Optional: per-pad “Load” buttons still work and will populate the library
         for (int i = 0; i < 16; ++i)
         {
             auto& btn = *loadButtons.add (new juce::TextButton ("Load"));
