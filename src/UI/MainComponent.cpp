@@ -1,7 +1,3 @@
-#ifdef _WIN32
-#include <corecrt_io.h>
-#endif
-
 
 #include "TrackView/TrackEditView.h"
 #include "MainComponent.h"

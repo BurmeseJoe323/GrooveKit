@@ -47,6 +47,10 @@ target_sources(app_ui
         ${CMAKE_SOURCE_DIR}/src/UI/DrumSamplerView/DefaultSampleLibrary.cpp
         # Resources
         ${CMAKE_SOURCE_DIR}/Resources/exampleGUISetup.cpp ${CMAKE_SOURCE_DIR}/Resources/exampleGUISetup.h
+        MixView/MixView.cpp
+        MixView/MixerPanel.cpp
+        MixView/ChannelComponents/ChannelStrip.cpp
+        PopupWindows/OutputDevice/OutputDeviceWindow.cpp
 )
 
 target_include_directories(app_ui

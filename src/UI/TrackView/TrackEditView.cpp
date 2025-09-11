@@ -16,12 +16,12 @@ TrackEditView::TrackEditView(AppEngine& engine)
 
 TrackEditView::~TrackEditView() = default;
 
-void TrackEditView::paint (Graphics& g)
+void TrackEditView::paint (juce::Graphics& g)
 {
-    g.fillAll (Colours::black);
-    g.setColour (Colours::white);
+    g.fillAll (juce::Colours::black);
+    g.setColour (juce::Colours::white);
     g.setFont (20.0f);
-    g.drawText ("TrackView", getLocalBounds(), Justification::centred, true);
+    g.drawText ("TrackView", getLocalBounds(), juce::Justification::centred, true);
 }
 
 void TrackEditView::resized()
