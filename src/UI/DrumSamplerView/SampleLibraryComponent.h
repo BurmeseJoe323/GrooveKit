@@ -84,7 +84,7 @@ public:
         addButton.setTooltip("Add sample(s) to library");
         addButton.onClick = [this]{ openChooser(); };
 
-        searchBox.setTextToShowWhenEmpty ("Filter samples…", juce::Colours::white.withAlpha(0.5f));
+        searchBox.setTextToShowWhenEmpty ("Filter samples", juce::Colours::white.withAlpha(0.5f));
         searchBox.onTextChange = [this]{ applyFilter(); };
 
         list.setRowHeight (24);
