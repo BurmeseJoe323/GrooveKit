@@ -5,7 +5,16 @@ add_library(app_ui
         DrumSamplerView/DrumSamplerEngine.h
         DrumSamplerView/DrumPadComponent.h
         DrumSamplerView/DrumSamplerComponent.h
-        DrumSamplerView/SampleLibraryComponent.h)
+        DrumSamplerView/SampleLibraryComponent.h
+        PopupWindows/OutputDevice/OutputDeviceWindow.cpp
+        PopupWindows/OutputDevice/OutputDeviceWindow.h
+        MixView/MixView.cpp
+        MixView/MixView.h
+        MixView/MixerPanel.h
+        MixView/ChannelComponents/ChannelStripComponents/FaderComponent.h
+        MixView/ChannelComponents/ChannelStrip.h
+        MixView/ChannelComponents/ChannelStrip.cpp
+        MixView/MixerPanel.cpp)
 target_link_libraries(app_ui
         PRIVATE
         GrooveKitResources

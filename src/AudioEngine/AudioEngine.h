@@ -1,17 +1,29 @@
 #pragma once
 #include "../MIDIEngine/MIDIEngine.h"
+#include <juce_audio_devices/juce_audio_devices.h>
+#include <tracktion_engine/tracktion_engine.h>
 
 class AudioEngine
 {
 public:
-    AudioEngine(tracktion::engine::Edit& editRef);
+    AudioEngine (te::Edit& editRef, te::Engine& engine);
     ~AudioEngine();
 
     void play();
     void stop();
 
+    juce::StringArray listOutputDevices() const;
+    bool setOutputDeviceByName (const juce::String& deviceName);
+    bool setDefaultOutputDevice();
+    juce::String getCurrentOutputDeviceName() const;
+    juce::AudioDeviceManager& getAudioDeviceManager();
+    void initialiseDefaults (double sampleRate = 48000.0, int bufferSize = 512);
+
 private:
     tracktion::engine::Edit& edit;
     std::unique_ptr<MIDIEngine> midiEngine;
+    te::Engine& engine;
+    juce::AudioDeviceManager& adm() const;
+    bool applySetup (const juce::AudioDeviceManager::AudioDeviceSetup& setup);
 
 };

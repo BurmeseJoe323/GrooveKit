@@ -26,3 +26,4 @@ cmake/TracktionPath.cmake
 #ignore users database
 ./third-party/database/groovekit.db
 groovekit.db
+**/.DS_Store

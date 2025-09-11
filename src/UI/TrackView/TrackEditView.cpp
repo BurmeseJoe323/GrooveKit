@@ -1,9 +1,10 @@
 #include "TrackEditView.h"
 #include "../../AppEngine/AppEngine.h"
+#include "PopupWindows/OutputDevice/OutputDeviceWindow.h"
 
-TrackEditView::TrackEditView()
+TrackEditView::TrackEditView(AppEngine& engine)
 {
-    appEngine = std::make_shared<AppEngine>();
+    appEngine = std::shared_ptr<AppEngine>(&engine, [](AppEngine*){});
     trackList = std::make_unique<TrackListComponent> (appEngine);
 
     viewport.setScrollBarsShown (true, false); // vertical only
@@ -11,17 +12,16 @@ TrackEditView::TrackEditView()
 
     setupButtons();
     addAndMakeVisible (viewport);
-    setSize (800, 600);
 }
 
 TrackEditView::~TrackEditView() = default;
 
-void TrackEditView::paint (juce::Graphics& g)
+void TrackEditView::paint (Graphics& g)
 {
-    g.fillAll (juce::Colours::black);
-    g.setColour (juce::Colours::white);
+    g.fillAll (Colours::black);
+    g.setColour (Colours::white);
     g.setFont (20.0f);
-    g.drawText ("TrackView", getLocalBounds(), juce::Justification::centred, true);
+    g.drawText ("TrackView", getLocalBounds(), Justification::centred, true);
 }
 
 void TrackEditView::resized()
@@ -31,12 +31,14 @@ void TrackEditView::resized()
     auto topR = r.removeFromTop (30);
 
     backButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    newEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    openEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
+    //newEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
+    //openEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
     playPauseButton.setBounds (topR.removeFromLeft (w).reduced (2));
     stopButton.setBounds (topR.removeFromLeft (w).reduced (2));
     recordButton.setBounds (topR.removeFromLeft (w).reduced (2));
     newTrackButton.setBounds (topR.removeFromLeft (w).reduced (2));
+    outputButton.setBounds (topR.removeFromLeft (w).reduced (2));
+    mixViewButton.setBounds (topR.removeFromLeft (w).reduced (2));
 
     viewport.setBounds (r);
 }
@@ -53,15 +55,14 @@ void TrackEditView::setupButtons()
                 return;
 
             int index = -1;
-            if (choice == 1)
-                index = appEngine->addInstrumentTrack();
-            else if (choice == 2)
-                index = appEngine->addDrumTrack();
-
-            if (index >= 0)
-                trackList->addNewTrack (index);
+            if (choice == 1)      index = appEngine->addInstrumentTrack();
+            else if (choice == 2) index = appEngine->addDrumTrack();
+            DBG("[TrackEditView] now " << appEngine->getNumTracks() << " tracks"); // insert here
+            if (index >= 0) trackList->addNewTrack(index);
         });
+
     };
+
 
     playPauseButton.onClick = [this] {
         appEngine->play();
@@ -75,10 +76,25 @@ void TrackEditView::setupButtons()
     addAndMakeVisible (recordButton);
     addAndMakeVisible (openEditButton);
     addAndMakeVisible (newTrackButton);
+    addAndMakeVisible((outputButton));
+
+    outputButton.onClick = [this] {
+        auto* content = new OutputDeviceWindow (*appEngine);
+
+        content->setSize (360, 140);
+
+        auto screenBounds = outputButton.getScreenBounds();
+        juce::CallOutBox::launchAsynchronously (std::unique_ptr<Component>(content), screenBounds, nullptr);
+
+
+    };
+
+    addAndMakeVisible (mixViewButton);
+    mixViewButton.onClick = [this]{ if (onOpenMix) onOpenMix(); };
 
     addAndMakeVisible (backButton);
     backButton.onClick = [this] {
         if (onBack)
-            onBack();
+            onBack(); 
     };
 }
