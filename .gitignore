@@ -27,3 +27,6 @@ cmake/TracktionPath.cmake
 ./third-party/database/groovekit.db
 groovekit.db
 **/.DS_Store
+
+# Ignore Visual Studio Code settings
+.vscode/
