@@ -15,6 +15,16 @@ TrackEditView::TrackEditView (AppEngine& engine)
 
     setupButtons();
     addAndMakeVisible (viewport);
+
+    // Initialize and hide the piano roll editor
+    pianoRoll = std::make_unique<PianoRollEditor>(*appEngine, -1);
+    addAndMakeVisible(pianoRoll.get());
+    pianoRoll->setVisible(false);
+
+    // We'll use this to split the view vertically
+    verticalLayout.setItemLayout(0, -0.7, -0.7, -0.7); // Track list takes 70%
+    verticalLayout.setItemLayout(1, 5, 5, 5);          // 5-pixel splitter
+    verticalLayout.setItemLayout(2, -0.3, -0.3, -0.3); // Piano roll takes 30%
 }
 
 TrackEditView::~TrackEditView() = default;
@@ -43,7 +53,15 @@ void TrackEditView::resized()
     outputButton.setBounds (topR.removeFromLeft (w).reduced (2));
     mixViewButton.setBounds (topR.removeFromLeft (w).reduced (2));
 
-    viewport.setBounds (r);
+    if (pianoRoll->isVisible())
+    {
+        juce::Component *comps[] = { &viewport, nullptr, pianoRoll.get() };
+        verticalLayout.layOutComponents(comps, 3, r.getX(), r.getY(), r.getWidth(), r.getHeight(), true, true);
+    }
+    else
+    {
+        viewport.setBounds (r);
+    }
 }
 
 void TrackEditView::setupButtons()
@@ -103,4 +121,23 @@ void TrackEditView::setupButtons()
         if (onBack)
             onBack();
     };
+}
+
+void TrackEditView::showPianoRoll(int trackIndex)
+{
+    if (pianoRollTrackIndex != trackIndex)
+    {
+        pianoRollTrackIndex = trackIndex;
+        pianoRoll = std::make_unique<PianoRollEditor> (*appEngine, trackIndex);
+        addAndMakeVisible (pianoRoll.get());
+    }
+    pianoRoll->setVisible (true);
+    resized();
+}
+
+void TrackEditView::hidePianoRoll()
+{
+    pianoRoll->setVisible (false);
+    pianoRollTrackIndex = -1;
+    resized();
 }

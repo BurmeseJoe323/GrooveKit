@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../AppEngine/AppEngine.h"
-#include "../PopupWindows/PianoRollWindow.h"
+#include "../PopupWindows/PianoRollComponents/PianoRollEditor.h"
 #include "TrackListComponent.h"
 #include <juce_gui_basics/juce_gui_basics.h>
 
@@ -27,11 +27,18 @@ public:
     std::function<void()> onBack;
     std::function<void()> onOpenMix;
 
+    void showPianoRoll(int trackIndex);
+    void hidePianoRoll();
+
 private:
     std::shared_ptr<AppEngine> appEngine;
     std::unique_ptr<TrackListComponent> trackList;
-    std::unique_ptr<PianoRollWindow> pianoRollWindow;
     juce::Viewport viewport;
+
+    std::unique_ptr<PianoRollEditor> pianoRoll;
+    juce::StretchableLayoutManager verticalLayout;
+    int pianoRollTrackIndex = -1;
+
     double pixelsPerSecond = 100.0;
     te::TimePosition viewStart = 0s;
 

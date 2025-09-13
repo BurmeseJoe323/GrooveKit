@@ -1,6 +1,8 @@
 #include "TrackListComponent.h"
+
 #include "DrumSamplerView/DrumSamplerLauncher.h"
 #include "DrumSamplerView/DrumSamplerView.h"
+#include "TrackEditView.h"
 
 TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine) : appEngine (engine),
                                                                                     playhead (engine->getEdit(),
@@ -112,24 +114,8 @@ void TrackListComponent::addNewTrack (int engineIdx)
     };
 
     newTrack->onRequestOpenPianoRoll = [this] (int uiIndex) {
-        // int engineIdx = tracks[uiIndex]->getEngineIndex();
-        selectedTrackIndex = uiIndex;
-
-        // If the window doesn't exist, create it.
-        if (pianoRollWindow == nullptr)
-        {
-            pianoRollWindow = std::make_unique<PianoRollWindow> (*appEngine, uiIndex);
-            pianoRollWindow->addToDesktop (pianoRollWindow->getDesktopWindowStyleFlags());
-        }
-
-        // If it's a different track, set the new track index and update the editor
-        else if (pianoRollWindow->getTrackIndex() != uiIndex)
-        {
-            pianoRollWindow->setTrackIndex (uiIndex); // You will need to implement this function
-        }
-
-        pianoRollWindow->setVisible (true);
-        pianoRollWindow->toFront (true);
+        if (auto* parent = findParentComponentOfClass<TrackEditView>())
+            parent->showPianoRoll (uiIndex);
     };
 
     newTrack->onRequestOpenDrumSampler = [this] (int uiIndex) {
