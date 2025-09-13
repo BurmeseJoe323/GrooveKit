@@ -23,9 +23,14 @@ public:
     void onSoloToggled (bool isSolo) override;
     // void onDrumSamplerClicked() override;
 
+    /**
+     *
+     * @param index UI index
+     */
     void setTrackIndex (int index);
-    void setEngineIndex (int i) { engineIndex = i; }
-    int getEngineIndex() const { return engineIndex; }
+    int getTrackIndex ();
+    // void setEngineIndex (int i) { engineIndex = i; }
+    // int getEngineIndex() const { return engineIndex; }
 
     void paint (juce::Graphics& g) override;
     void resized() override;
@@ -41,7 +46,7 @@ private:
     std::shared_ptr<AppEngine> appEngine;
     juce::Colour trackColor;
     int trackIndex = -1;
-    int engineIndex = -1;
+    // int engineIndex = -1;
     int numClips = 0;
 
     TrackClip trackClip;
