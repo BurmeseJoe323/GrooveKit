@@ -2,9 +2,9 @@
 #include "../../AppEngine/AppEngine.h"
 #include "PopupWindows/OutputDevice/OutputDeviceWindow.h"
 
-TrackEditView::TrackEditView(AppEngine& engine)
+TrackEditView::TrackEditView (AppEngine& engine)
 {
-    appEngine = std::shared_ptr<AppEngine>(&engine, [](AppEngine*){});
+    appEngine = std::shared_ptr<AppEngine> (&engine, [] (AppEngine*) {});
     trackList = std::make_unique<TrackListComponent> (appEngine);
 
     trackList->setPixelsPerSecond (pixelsPerSecond);
@@ -58,19 +58,19 @@ void TrackEditView::setupButtons()
                 return;
 
             int index = -1;
-            if (choice == 1)      index = appEngine->addInstrumentTrack();
-            else if (choice == 2) index = appEngine->addDrumTrack();
-            DBG("[TrackEditView] now " << appEngine->getNumTracks() << " tracks"); // insert here
-            if (index >= 0) {
-                trackList->addNewTrack(index);
-
+            if (choice == 1)
+                index = appEngine->addInstrumentTrack();
+            else if (choice == 2)
+                index = appEngine->addDrumTrack();
+            DBG ("[TrackEditView] now " << appEngine->getNumTracks() << " tracks"); // insert here
+            if (index >= 0)
+            {
+                trackList->addNewTrack (index);
                 trackList->setPixelsPerSecond (pixelsPerSecond);
                 trackList->setViewStart (viewStart);
             }
         });
-
     };
-
 
     playPauseButton.onClick = [this] {
         appEngine->play();
@@ -84,7 +84,7 @@ void TrackEditView::setupButtons()
     addAndMakeVisible (recordButton);
     addAndMakeVisible (openEditButton);
     addAndMakeVisible (newTrackButton);
-    addAndMakeVisible((outputButton));
+    addAndMakeVisible ((outputButton));
 
     outputButton.onClick = [this] {
         auto* content = new OutputDeviceWindow (*appEngine);
@@ -92,17 +92,15 @@ void TrackEditView::setupButtons()
         content->setSize (360, 140);
 
         auto screenBounds = outputButton.getScreenBounds();
-        juce::CallOutBox::launchAsynchronously (std::unique_ptr<Component>(content), screenBounds, nullptr);
-
-
+        juce::CallOutBox::launchAsynchronously (std::unique_ptr<Component> (content), screenBounds, nullptr);
     };
 
     addAndMakeVisible (mixViewButton);
-    mixViewButton.onClick = [this]{ if (onOpenMix) onOpenMix(); };
+    mixViewButton.onClick = [this] { if (onOpenMix) onOpenMix(); };
 
     addAndMakeVisible (backButton);
     backButton.onClick = [this] {
         if (onBack)
-            onBack(); 
+            onBack();
     };
 }

@@ -1,7 +1,6 @@
 #include "TrackListComponent.h"
 #include "DrumSamplerView/DrumSamplerLauncher.h"
 #include "DrumSamplerView/DrumSamplerView.h"
-#include <juce_graphics/fonts/harfbuzz/hb-ot-head-table.hh>
 
 TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine) : appEngine (engine),
                                                                                     playhead (engine->getEdit(),
@@ -27,13 +26,12 @@ void TrackListComponent::resized()
     juce::FlexBox mainFlex;
     mainFlex.flexDirection = juce::FlexBox::Direction::column;
 
-    const int headerWidth = 140;
-    const int trackHeight = 100;
-    const int margin = 2;
-    const int addButtonSpace = 30;
+    constexpr int headerWidth = 140;
+    constexpr int trackHeight = 100;
+    constexpr int addButtonSpace = 30;
 
-    int numTracks = headers.size();
-    int contentH = numTracks * trackHeight + addButtonSpace;
+    const int numTracks = headers.size();
+    const int contentH = numTracks * trackHeight + addButtonSpace;
 
     // Set the size to either default to the parent's height if the content height isn't tall enough
     setSize (getParentWidth(), contentH > getParentHeight() ? contentH : getParentHeight());
@@ -42,6 +40,7 @@ void TrackListComponent::resized()
     bounds.removeFromBottom (addButtonSpace); // Space for add button
     for (int i = 0; i < numTracks; i++)
     {
+        constexpr int margin = 2;
         // Header on left, track on right in same row
         auto row = bounds.removeFromTop (trackHeight);
 
@@ -56,7 +55,7 @@ void TrackListComponent::resized()
 void TrackListComponent::addNewTrack (int engineIdx)
 {
     // Select random color from palette
-    auto newColor = trackColors[tracks.size() % trackColors.size()];
+    const auto newColor = trackColors[tracks.size() % trackColors.size()];
 
     auto* header = new TrackHeaderComponent();
     auto* newTrack = new TrackComponent (appEngine, engineIdx, newColor);

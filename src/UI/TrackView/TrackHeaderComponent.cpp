@@ -19,43 +19,41 @@ TrackHeaderComponent::TrackHeaderComponent()
     muteTrackButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white);
     muteTrackButton.onClick = [this]() {
         const bool nowMuted = muteTrackButton.getToggleState();
-        // updateMuteButtonVisuals();
         listeners.call ([&] (Listener& l) { l.onMuteToggled (nowMuted); });
     };
 
     soloTrackButton.setClickingTogglesState (true);
-    soloTrackButton.onClick = [this] {
-        const bool nowSolo = soloTrackButton.getToggleState();
-        // updateSoloButtonVisuals();
-        listeners.call ([&] (Listener& l) { l.onSoloToggled (nowSolo); });
-    };
-
     soloTrackButton.setColour (juce::TextButton::buttonOnColourId, juce::Colours::yellow);
     soloTrackButton.setColour (juce::TextButton::buttonColourId, juce::Colours::darkgrey);
     soloTrackButton.setColour (juce::TextButton::textColourOnId, juce::Colours::black);
     soloTrackButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white);
+    soloTrackButton.onClick = [this] {
+        const bool nowSolo = soloTrackButton.getToggleState();
+        listeners.call ([&] (Listener& l) { l.onSoloToggled (nowSolo); });
+    };
 
-    // setup trackNameLabel
     trackNameLabel.setFont (juce::Font (15.0f));
     trackNameLabel.setColour (juce::Label::textColourId, juce::Colours::black);
     trackNameLabel.setJustificationType (juce::Justification::centred);
     trackNameLabel.setText ("Track", juce::dontSendNotification);
 
-    // setup trackTypeLabel
     trackTypeLabel.setFont (juce::Font (12.0f));
     trackTypeLabel.setColour (juce::Label::textColourId, juce::Colours::lightgrey);
     trackTypeLabel.setJustificationType (juce::Justification::centred);
 
     setTrackType (TrackType::Instrument);
-};
+}
 
 TrackHeaderComponent::~TrackHeaderComponent() = default;
 
-void TrackHeaderComponent::setTrackType (TrackType type)
+void TrackHeaderComponent::setTrackName (juce::String name)
 {
-    trackType = type;
-    const bool isDrum = (trackType == TrackType::Drum);
-    if (isDrum)
+    trackNameLabel.setText (std::move (name), juce::dontSendNotification);
+}
+
+void TrackHeaderComponent::setTrackType (const TrackType type)
+{
+    if (type == TrackType::Drum)
     {
         setTrackName ("Drums");
         trackTypeLabel.setText ("Drum Track", juce::dontSendNotification);
@@ -66,26 +64,19 @@ void TrackHeaderComponent::setTrackType (TrackType type)
     }
 }
 
-void TrackHeaderComponent::setMuted (bool shouldBeMuted)
+bool TrackHeaderComponent::isMuted() const { return muteTrackButton.getToggleState(); }
+void TrackHeaderComponent::setMuted (const bool shouldBeMuted)
 {
     muteTrackButton.setToggleState (shouldBeMuted, juce::dontSendNotification);
 }
-bool TrackHeaderComponent::isMuted() const
-{
-    return muteTrackButton.getToggleState();
-}
-void TrackHeaderComponent::setTrackName (juce::String name)
-{
-    trackNameLabel.setText (std::move (name), juce::dontSendNotification);
-}
 
-void TrackHeaderComponent::setSolo (bool s)
-{
-    soloTrackButton.setToggleState (s, juce::dontSendNotification);
-}
 bool TrackHeaderComponent::isSolo() const { return soloTrackButton.getToggleState(); }
+void TrackHeaderComponent::setSolo (const bool shouldBeSolo)
+{
+    soloTrackButton.setToggleState (shouldBeSolo, juce::dontSendNotification);
+}
 
-void TrackHeaderComponent::setDimmed (bool dim)
+void TrackHeaderComponent::setDimmed (const bool dim)
 {
     setAlpha (dim ? 0.6f : 1.0f);
 }
@@ -93,7 +84,7 @@ void TrackHeaderComponent::setDimmed (bool dim)
 void TrackHeaderComponent::paint (juce::Graphics& g)
 {
     g.fillAll (juce::Colours::dimgrey);
-};
+}
 
 void TrackHeaderComponent::resized()
 {
@@ -102,8 +93,8 @@ void TrackHeaderComponent::resized()
     fb.justifyContent = juce::FlexBox::JustifyContent::flexStart;
     fb.alignItems = juce::FlexBox::AlignItems::stretch;
 
-    auto bounds = getLocalBounds().reduced (5);
-    const int buttonHeight = 25;
+    const auto bounds = getLocalBounds().reduced (5);
+    constexpr int buttonHeight = 25;
     const auto margin = juce::FlexItem::Margin (2, 0, 2, 0);
 
     fb.items.add (juce::FlexItem (trackTypeLabel).withHeight (15.0f));

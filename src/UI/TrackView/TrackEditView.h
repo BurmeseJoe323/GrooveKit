@@ -1,12 +1,8 @@
-//
-// Created by Bracken Asay on 4/2/25.
-//
-
 #pragma once
 
 #include "../../AppEngine/AppEngine.h"
-#include "TrackListComponent.h"
 #include "../PopupWindows/PianoRollWindow.h"
+#include "TrackListComponent.h"
 #include <juce_gui_basics/juce_gui_basics.h>
 
 class AppEngine;
@@ -29,7 +25,6 @@ public:
       Called when Back is pressed: should return to home screen.
     */
     std::function<void()> onBack;
-
     std::function<void()> onOpenMix;
 
 private:
@@ -39,10 +34,8 @@ private:
     juce::Viewport viewport;
     double pixelsPerSecond = 100.0;
     te::TimePosition viewStart = 0s;
-    // Do we need this here?
-    // EditViewState &editViewState;
 
-    juce::TextButton backButton { "Back" }, newEditButton{"New"}, playPauseButton{"Play"}, stopButton{"Stop"},
-            openEditButton{"Open Edit"}, newTrackButton{"New Track"}, recordButton{"Record"}, outputButton{"Output Device"},
-            mixViewButton{"Mix View"};
+    juce::TextButton backButton { "Back" }, newEditButton { "New" }, playPauseButton { "Play" }, stopButton { "Stop" },
+        openEditButton { "Open Edit" }, newTrackButton { "New Track" }, recordButton { "Record" }, outputButton { "Output Device" },
+        mixViewButton { "Mix View" };
 };

@@ -6,8 +6,8 @@ TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const 
 {
     trackClip.setColor (trackColor);
 
-    // Check if the track already has clips when created
-    if (auto* track = appEngine->getTrackManager().getTrack (trackIndex))
+    // Check if the track already has clips when created.
+    if (const auto* track = appEngine->getTrackManager().getTrack (trackIndex))
     {
         if (track->getClips().size() > 0)
         {
@@ -28,26 +28,17 @@ void TrackComponent::paint (juce::Graphics& g)
 
 void TrackComponent::resized()
 {
-    auto bounds = getLocalBounds().reduced (5);
+    const auto bounds = getLocalBounds().reduced (5);
 
     // If we can find a clip on this track, size/position the UI clip from its time range.
-    if (auto* track = appEngine ? appEngine->getTrackManager().getTrack (trackIndex) : nullptr)
+    if (const auto* track = appEngine ? appEngine->getTrackManager().getTrack (trackIndex) : nullptr)
+    {
+        if (track->getClips().size() > 0)
         {
-            if (track->getClips().size() > 0)
-            {
-                auto* teClip = track->getClips().getUnchecked (0); // first clip in engine track
-                auto  tr     = teClip->getPosition().time;          // te::TimeRange in seconds
-
-                const int x0 = xFromTime (tr.getStart(), viewStart, pixelsPerSecond);
-                const int x1 = xFromTime (tr.getEnd(),   viewStart, pixelsPerSecond);
-                const int width = juce::jmax (1, x1 - x0);
-
-                trackClip.setBounds (getLocalBounds().reduced (5).withWidth (280));
-                return;
-            }
+            trackClip.setBounds (getLocalBounds().reduced (5).withWidth (280));
+            return;
         }
-
-
+    }
     trackClip.setBounds (bounds.withWidth (juce::jmax (bounds.getHeight(), 40)));
 }
 
@@ -69,7 +60,7 @@ void TrackComponent::onSettingsClicked()
     m.addSeparator();
     m.addItem (100, "Delete Track");
 
-    m.showMenuAsync ({}, [this] (int result) {
+    m.showMenuAsync ({}, [this] (const int result) {
         switch (result)
         {
             case 1: // Add Clip
@@ -86,7 +77,6 @@ void TrackComponent::onSettingsClicked()
                 if (onRequestOpenPianoRoll && numClips > 0)
                     onRequestOpenPianoRoll (trackIndex);
                 break;
-                break;
             case 100: // Delete Track
                 if (onRequestDeleteTrack)
                     onRequestDeleteTrack (trackIndex);
@@ -97,55 +87,23 @@ void TrackComponent::onSettingsClicked()
     });
 }
 
-// void TrackComponent::onAddClipClicked()
-// {
-//     DBG ("Add clip -> UI " << trackIndex << " -> engine " << engineIndex);
-//
-//     appEngine->addMidiClipToTrack (engineIndex);
-//     addAndMakeVisible (trackClip);
-//     resized();
-//     numClips = 1;
-// }
-//
-// void TrackComponent::onDeleteTrackClicked()
-// {
-//     DBG ("Delete clicked for track index: " << trackIndex);
-//     if (onRequestDeleteTrack)
-//         onRequestDeleteTrack (trackIndex);
-//     // deleteAllChildren();
-// }
-//
-// void TrackComponent::onPianoRollClicked()
-// {
-//     DBG ("Piano Roll clicked for track index: " << trackIndex);
-//     if (onRequestOpenPianoRoll && numClips > 0)
-//         onRequestOpenPianoRoll (trackIndex);
-// }
-//
-// void TrackComponent::onDrumSamplerClicked()
-// {
-//     DBG ("Drum Sampler clicked for track index: " << trackIndex);
-//     if (onRequestOpenDrumSampler)
-//         onRequestOpenDrumSampler (trackIndex);
-// }
-
-void TrackComponent::setTrackIndex (int index)
+void TrackComponent::setTrackIndex (const int index)
 {
     this->trackIndex = index;
 }
 
-int TrackComponent::getTrackIndex ()
+int TrackComponent::getTrackIndex() const
 {
     return trackIndex;
 }
 
-void TrackComponent::onMuteToggled (bool isMuted)
+void TrackComponent::onMuteToggled (const bool isMuted)
 {
     if (appEngine)
         appEngine->setTrackMuted (trackIndex, isMuted);
 }
 
-void TrackComponent::onSoloToggled (bool isSolo)
+void TrackComponent::onSoloToggled (const bool isSolo)
 {
     if (appEngine)
         appEngine->setTrackSoloed (trackIndex, isSolo);
