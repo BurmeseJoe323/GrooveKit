@@ -29,7 +29,6 @@ public:
       Called when Back is pressed: should return to home screen.
     */
     std::function<void()> onBack;
-
     std::function<void()> onOpenMix;
 
 private:
@@ -39,8 +38,6 @@ private:
     juce::Viewport viewport;
     double pixelsPerSecond = 100.0;
     te::TimePosition viewStart = 0s;
-    // Do we need this here?
-    // EditViewState &editViewState;
 
     juce::TextButton backButton { "Back" }, playPauseButton{"Play"}, stopButton{"Stop"}, newEditButton{"New"},
             openEditButton{"Open"}, saveEditButton{"Save"}, saveEditAsButton{"Save As"}, newTrackButton{"New Track"}, recordButton{"Record"}, outputButton{"Output Device"},

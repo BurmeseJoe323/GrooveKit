@@ -41,7 +41,7 @@ private:
     juce::TextButton muteTrackButton { "M" };
     juce::TextButton soloTrackButton { "S" };
     juce::Label trackNameLabel { "Track" };
-    juce::Label trackTypeLabel {""};
+    juce::Label trackTypeLabel { "" };
     bool selected = false;
 
     TrackType trackType = TrackType::Instrument;
