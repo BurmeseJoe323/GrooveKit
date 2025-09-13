@@ -4,11 +4,10 @@
 TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const int trackIndex, const juce::Colour color)
     : appEngine (engine), trackColor (color), trackIndex (trackIndex)
 {
-    engineIndex = trackIndex;
     trackClip.setColor (trackColor);
 
     // Check if the track already has clips when created
-    if (auto* track = appEngine->getTrackManager().getTrack (engineIndex))
+    if (auto* track = appEngine->getTrackManager().getTrack (trackIndex))
     {
         if (track->getClips().size() > 0)
         {
@@ -32,7 +31,7 @@ void TrackComponent::resized()
     auto bounds = getLocalBounds().reduced (5);
 
     // If we can find a clip on this track, size/position the UI clip from its time range.
-    if (auto* track = appEngine ? appEngine->getTrackManager().getTrack (engineIndex) : nullptr)
+    if (auto* track = appEngine ? appEngine->getTrackManager().getTrack (trackIndex) : nullptr)
         {
             if (track->getClips().size() > 0)
             {
@@ -55,7 +54,7 @@ void TrackComponent::resized()
 void TrackComponent::onSettingsClicked()
 {
     juce::PopupMenu m;
-    const bool isDrumTrack = appEngine->isDrumTrack (engineIndex);
+    const bool isDrumTrack = appEngine->isDrumTrack (trackIndex);
     m.addItem (1, "Add MIDI Clip");
     m.addSeparator();
     if (isDrumTrack)
@@ -74,7 +73,7 @@ void TrackComponent::onSettingsClicked()
         switch (result)
         {
             case 1: // Add Clip
-                appEngine->addMidiClipToTrack (engineIndex);
+                appEngine->addMidiClipToTrack (trackIndex);
                 addAndMakeVisible (trackClip);
                 resized();
                 numClips = 1;
@@ -135,16 +134,21 @@ void TrackComponent::setTrackIndex (int index)
     this->trackIndex = index;
 }
 
+int TrackComponent::getTrackIndex ()
+{
+    return trackIndex;
+}
+
 void TrackComponent::onMuteToggled (bool isMuted)
 {
     if (appEngine)
-        appEngine->setTrackMuted (engineIndex, isMuted);
+        appEngine->setTrackMuted (trackIndex, isMuted);
 }
 
 void TrackComponent::onSoloToggled (bool isSolo)
 {
     if (appEngine)
-        appEngine->setTrackSoloed (engineIndex, isSolo);
+        appEngine->setTrackSoloed (trackIndex, isSolo);
     if (auto* p = findParentComponentOfClass<TrackListComponent>())
         p->refreshSoloVisuals();
 }

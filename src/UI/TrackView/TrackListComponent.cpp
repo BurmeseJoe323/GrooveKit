@@ -60,7 +60,7 @@ void TrackListComponent::addNewTrack (int engineIdx)
 
     auto* header = new TrackHeaderComponent();
     auto* newTrack = new TrackComponent (appEngine, engineIdx, newColor);
-    newTrack->setEngineIndex (engineIdx);
+    // newTrack->setEngineIndex (engineIdx);
 
     newTrack->setPixelsPerSecond (100.0);
     newTrack->setViewStart (0s);
@@ -68,7 +68,7 @@ void TrackListComponent::addNewTrack (int engineIdx)
     header->addListener (newTrack);
 
     // Set the track name on the header
-    const bool isDrum = appEngine->isDrumTrack (newTrack->getEngineIndex());
+    const bool isDrum = appEngine->isDrumTrack (newTrack->getTrackIndex());
     header->setTrackName (isDrum ? "Drums" : ("Track " + juce::String (tracks.size() + 1)));
 
     headers.add (header);
@@ -88,55 +88,58 @@ void TrackListComponent::addNewTrack (int engineIdx)
 
     updateTrackIndexes();
 
-    header->setMuted (appEngine->isTrackMuted (newTrack->getEngineIndex()));
-    header->setSolo (appEngine->isTrackSoloed (newTrack->getEngineIndex()));
+    header->setMuted (appEngine->isTrackMuted (newTrack->getTrackIndex()));
+    header->setSolo (appEngine->isTrackSoloed (newTrack->getTrackIndex()));
     refreshSoloVisuals();
 
     newTrack->onRequestDeleteTrack = [this] (int uiIndex) {
         if (uiIndex >= 0 && uiIndex < tracks.size())
         {
-            const int engineIdxToDelete = tracks[uiIndex]->getEngineIndex();
+            // If piano roll window is open and uiIndex is the right track
+            if (pianoRollWindow != nullptr && pianoRollWindow->getTrackIndex() == uiIndex)
+            {
+                // Release piano roll
+                pianoRollWindow = nullptr;
+            }
+            // const int engineIdxToDelete = tracks[uiIndex]->getEngineIndex();
             removeChildComponent (headers[uiIndex]);
             removeChildComponent (tracks[uiIndex]);
             headers.remove (uiIndex);
             tracks.remove (uiIndex);
-            appEngine->deleteMidiTrack (engineIdxToDelete);
+            appEngine->deleteMidiTrack (uiIndex);
             updateTrackIndexes();
             resized();
         }
     };
 
     newTrack->onRequestOpenPianoRoll = [this] (int uiIndex) {
-        if (uiIndex >= 0 && uiIndex < tracks.size())
+        // int engineIdx = tracks[uiIndex]->getEngineIndex();
+        selectedTrackIndex = uiIndex;
+
+        // If the window doesn't exist, create it.
+        if (pianoRollWindow == nullptr)
         {
-            int engineIdx = tracks[uiIndex]->getEngineIndex();
-            selectedTrackIndex = engineIdx;
-
-            // If the window doesn't exist, create it.
-            if (pianoRollWindow == nullptr)
-            {
-                pianoRollWindow = std::make_unique<PianoRollWindow> (*appEngine, engineIdx);
-                pianoRollWindow->addToDesktop (pianoRollWindow->getDesktopWindowStyleFlags());
-            }
-
-            // If it's a different track, set the new track index and update the editor
-            if (pianoRollWindow->getTrackIndex() != engineIdx)
-            {
-                pianoRollWindow->setTrackIndex (engineIdx); // You will need to implement this function
-            }
-
-            pianoRollWindow->setVisible (true);
-            pianoRollWindow->toFront (true);
+            pianoRollWindow = std::make_unique<PianoRollWindow> (*appEngine, uiIndex);
+            pianoRollWindow->addToDesktop (pianoRollWindow->getDesktopWindowStyleFlags());
         }
+
+        // If it's a different track, set the new track index and update the editor
+        else if (pianoRollWindow->getTrackIndex() != uiIndex)
+        {
+            pianoRollWindow->setTrackIndex (uiIndex); // You will need to implement this function
+        }
+
+        pianoRollWindow->setVisible (true);
+        pianoRollWindow->toFront (true);
     };
 
     newTrack->onRequestOpenDrumSampler = [this] (int uiIndex) {
         if (uiIndex < 0 || uiIndex >= tracks.size())
             return;
 
-        const int engineIdx = tracks[uiIndex]->getEngineIndex();
+        // const int engineIdx = tracks[uiIndex]->getEngineIndex();
 
-        if (auto* eng = appEngine->getDrumAdapter (engineIdx))
+        if (auto* eng = appEngine->getDrumAdapter (uiIndex))
         {
             auto* comp = new DrumSamplerView (static_cast<DrumSamplerEngine&> (*eng));
 
@@ -162,7 +165,16 @@ void TrackListComponent::parentSizeChanged()
 void TrackListComponent::updateTrackIndexes()
 {
     for (int i = 0; i < tracks.size(); ++i)
+    {
+        int oldTrackIndex = tracks[i]->getTrackIndex();
         tracks[i]->setTrackIndex (i);
+
+        // In case of mismatch between indices
+        if (pianoRollWindow != nullptr && oldTrackIndex == pianoRollWindow->getTrackIndex())
+        {
+            pianoRollWindow->setTrackIndex (i);
+        }
+    }
 }
 
 void TrackListComponent::refreshSoloVisuals()
@@ -170,7 +182,7 @@ void TrackListComponent::refreshSoloVisuals()
     const bool anySolo = appEngine->anyTrackSoloed();
     for (int i = 0; i < headers.size(); ++i)
     {
-        const bool thisSolo = appEngine->isTrackSoloed (tracks[i]->getEngineIndex());
+        const bool thisSolo = appEngine->isTrackSoloed (tracks[i]->getTrackIndex());
         headers[i]->setDimmed (anySolo && !thisSolo);
     }
 }
