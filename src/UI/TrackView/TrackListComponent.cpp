@@ -107,19 +107,26 @@ void TrackListComponent::addNewTrack (int engineIdx)
     };
 
     newTrack->onRequestOpenPianoRoll = [this] (int uiIndex) {
-        if (pianoRollWindow != nullptr && pianoRollWindow->getTrackIndex() != uiIndex)
-        {
-            // TODO: close current piano roll window and change to this one
-        }
         if (uiIndex >= 0 && uiIndex < tracks.size())
         {
             int engineIdx = tracks[uiIndex]->getEngineIndex();
             selectedTrackIndex = engineIdx;
-            pianoRollWindow = std::make_unique<PianoRollWindow> (appEngine, engineIdx);
-            addAndMakeVisible (pianoRollWindow.get());
-            pianoRollWindow->addToDesktop (pianoRollWindow->getDesktopWindowStyleFlags());
+
+            // If the window doesn't exist, create it.
+            if (pianoRollWindow == nullptr)
+            {
+                pianoRollWindow = std::make_unique<PianoRollWindow> (*appEngine, engineIdx);
+                pianoRollWindow->addToDesktop (pianoRollWindow->getDesktopWindowStyleFlags());
+            }
+
+            // If it's a different track, set the new track index and update the editor
+            if (pianoRollWindow->getTrackIndex() != engineIdx)
+            {
+                pianoRollWindow->setTrackIndex (engineIdx); // You will need to implement this function
+            }
+
+            pianoRollWindow->setVisible (true);
             pianoRollWindow->toFront (true);
-            pianoRollWindow->centreWithSize (pianoRollWindow->getWidth(), pianoRollWindow->getHeight());
         }
     };
 
@@ -171,14 +178,16 @@ void TrackListComponent::refreshSoloVisuals()
 void TrackListComponent::setPixelsPerSecond (double pps)
 {
     for (auto* t : tracks)
-        if (t) t->setPixelsPerSecond (pps);
+        if (t)
+            t->setPixelsPerSecond (pps);
     repaint();
 }
 
 void TrackListComponent::setViewStart (te::TimePosition t)
 {
     for (auto* tc : tracks)
-        if (tc) tc->setViewStart(t);
+        if (tc)
+            tc->setViewStart (t);
     repaint();
 }
 

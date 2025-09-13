@@ -5,21 +5,22 @@
 #ifndef PIANOROLLWINDOW_H
 #define PIANOROLLWINDOW_H
 
-#include <juce_gui_basics/juce_gui_basics.h>
-#include <tracktion_engine/tracktion_engine.h>
+#include "../../AppEngine/AppEngine.h"
 #include "PianoRollComponents/PianoRollMainComponent.h"
 #include "tracktion_graph/tracktion_graph.h"
-#include "../../AppEngine/AppEngine.h"
+#include <juce_gui_basics/juce_gui_basics.h>
+#include <tracktion_engine/tracktion_engine.h>
 
 namespace te = tracktion;
 
-class PianoRollWindow : public juce::DocumentWindow {
+class PianoRollWindow : public juce::DocumentWindow
+{
 public:
-    explicit PianoRollWindow(std::shared_ptr<AppEngine> engine, int trackIndex);
+    explicit PianoRollWindow (AppEngine& engine, int trackIndex);
     ~PianoRollWindow() override;
 
     int getTrackIndex() const { return trackIndex; }
-    // TODO: add setTrackIndex, or just destroy and reopen window?
+    void setTrackIndex (int newTrackIndex);
 
     void closeButtonPressed() override;
     void activeWindowStatusChanged() override;
@@ -27,5 +28,6 @@ public:
 private:
     int trackIndex;
     std::unique_ptr<PianoRollMainComponent> editor;
+    AppEngine& engine;
 };
 #endif //PIANOROLLWINDOW_H
