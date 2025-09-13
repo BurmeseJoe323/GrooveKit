@@ -31,7 +31,6 @@ target_sources(app_ui
         TrackView/TrackClip.cpp TrackView/TrackClip.h
         TrackView/TrackListComponent.cpp TrackView/TrackListComponent.h
         TrackView/PlayheadComponent.cpp TrackView/PlayheadComponent.h
-        PopupWindows/PianoRollWindow.cpp PopupWindows/PianoRollWindow.h
         PopupWindows/PianoRollComponents/PianoRollEditor.cpp PopupWindows/PianoRollComponents/PianoRollEditor.h
         PopupWindows/PianoRollComponents/KeyboardComponent.cpp PopupWindows/PianoRollComponents/KeyboardComponent.h
         PopupWindows/PianoRollComponents/NoteGridComponent.cpp PopupWindows/PianoRollComponents/NoteGridComponent.h

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../../AppEngine/AppEngine.h"
-#include "../PopupWindows/PianoRollWindow.h"
 #include "PlayheadComponent.h"
 #include "TrackComponent.h"
 #include "TrackHeaderComponent.h"
@@ -19,7 +18,7 @@ public:
     void paint (juce::Graphics& g) override;
     void resized() override;
     void parentSizeChanged() override;
-    void refreshSoloVisuals();
+    void refreshSoloVisuals() const;
     void addNewTrack (int index);
     void setPixelsPerSecond (double pps);
     void setViewStart (te::TimePosition t);
@@ -27,7 +26,6 @@ public:
 private:
     const std::shared_ptr<AppEngine> appEngine;
     PlayheadComponent playhead;
-    std::unique_ptr<PianoRollWindow> pianoRollWindow;
     int selectedTrackIndex;
 
     juce::OwnedArray<TrackComponent> tracks;
@@ -45,7 +43,7 @@ private:
         juce::Colour::fromString ("#fcc419")
     };
 
-    void updateTrackIndexes();
+    void updateTrackIndexes() const;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackListComponent)
 };
