@@ -96,6 +96,10 @@ void TrackListComponent::addNewTrack (int engineIdx)
     newTrack->onRequestDeleteTrack = [this] (int uiIndex) {
         if (uiIndex >= 0 && uiIndex < tracks.size())
         {
+            if (auto* parent = findParentComponentOfClass<TrackEditView>())
+                if (parent->getPianoRollIndex() == uiIndex)
+                    parent->hidePianoRoll();
+
             removeChildComponent (headers[uiIndex]);
             removeChildComponent (tracks[uiIndex]);
             headers.remove (uiIndex);
@@ -104,6 +108,7 @@ void TrackListComponent::addNewTrack (int engineIdx)
             updateTrackIndexes();
             resized();
         }
+
     };
 
     newTrack->onRequestOpenPianoRoll = [this] (int uiIndex) {

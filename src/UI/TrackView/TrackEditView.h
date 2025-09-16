@@ -29,6 +29,7 @@ public:
 
     void showPianoRoll (int trackIndex);
     void hidePianoRoll();
+    int getPianoRollIndex() const;
 
     class PianoRollResizerBar : public juce::StretchableLayoutResizerBar
     {

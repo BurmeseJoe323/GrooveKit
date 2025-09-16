@@ -147,15 +147,20 @@ void TrackEditView::hidePianoRoll()
     resized();
 }
 
+int TrackEditView::getPianoRollIndex() const
+{
+    return pianoRollTrackIndex;
+}
+
 void TrackEditView::PianoRollResizerBar::hasBeenMoved()
 {
-    DBG("X: " << this->getX() << " Y: " << this->getY());
+    // DBG("X: " << this->getX() << " Y: " << this->getY());
     resized();
 }
 
 void TrackEditView::PianoRollResizerBar::mouseDrag (const juce::MouseEvent& event)
 {
-    DBG("X: " << this->getX() << " Y: " << this->getY());
+    // DBG("X: " << this->getX() << " Y: " << this->getY());
     // this->setTopLeftPosition (this->getX(), event.getPosition().getY());
     hasBeenMoved();
 }
