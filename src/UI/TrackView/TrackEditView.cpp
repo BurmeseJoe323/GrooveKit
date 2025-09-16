@@ -21,10 +21,15 @@ TrackEditView::TrackEditView (AppEngine& engine)
     addAndMakeVisible(pianoRoll.get());
     pianoRoll->setVisible(false);
 
-    // We'll use this to split the view vertically
-    verticalLayout.setItemLayout(0, -0.7, -0.7, -0.7); // Track list takes 70%
+    // Split the view vertically
+    verticalLayout.setItemLayout(0, -0.45, -0.85, -0.6); // Track list takes 70%
     verticalLayout.setItemLayout(1, 5, 5, 5);          // 5-pixel splitter
-    verticalLayout.setItemLayout(2, -0.3, -0.3, -0.3); // Piano roll takes 30%
+    verticalLayout.setItemLayout(2, -0.15, -0.55, -0.4); // Piano roll takes 30%
+
+    // Create and add resizer bar (index 1 in components array)
+    resizerBar = std::make_unique<PianoRollResizerBar>(&verticalLayout, 1, false);
+    addAndMakeVisible(resizerBar.get());
+
 }
 
 TrackEditView::~TrackEditView() = default;
@@ -55,7 +60,7 @@ void TrackEditView::resized()
 
     if (pianoRoll->isVisible())
     {
-        juce::Component *comps[] = { &viewport, nullptr, pianoRoll.get() };
+        juce::Component *comps[] = { &viewport, resizerBar.get(), pianoRoll.get() };
         verticalLayout.layOutComponents(comps, 3, r.getX(), r.getY(), r.getWidth(), r.getHeight(), true, true);
     }
     else
@@ -141,3 +146,23 @@ void TrackEditView::hidePianoRoll()
     pianoRollTrackIndex = -1;
     resized();
 }
+
+void TrackEditView::PianoRollResizerBar::hasBeenMoved()
+{
+    DBG("X: " << this->getX() << " Y: " << this->getY());
+    resized();
+}
+
+void TrackEditView::PianoRollResizerBar::mouseDrag (const juce::MouseEvent& event)
+{
+    DBG("X: " << this->getX() << " Y: " << this->getY());
+    // this->setTopLeftPosition (this->getX(), event.getPosition().getY());
+    hasBeenMoved();
+}
+
+ TrackEditView::PianoRollResizerBar::PianoRollResizerBar (juce::StretchableLayoutManager* layoutToUse, int itemIndexInLayout, bool isBarVertical) : StretchableLayoutResizerBar(layoutToUse, itemIndexInLayout, isBarVertical)
+{
+}
+
+TrackEditView::PianoRollResizerBar::~PianoRollResizerBar()
+= default;

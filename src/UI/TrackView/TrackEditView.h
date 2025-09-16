@@ -22,21 +22,34 @@ public:
     void resized() override;
 
     /**
-      Called when Back is pressed: should return to home screen.
-    */
+     * Called when Back is pressed. Should return to home screen.
+     */
     std::function<void()> onBack;
     std::function<void()> onOpenMix;
 
-    void showPianoRoll(int trackIndex);
+    void showPianoRoll (int trackIndex);
     void hidePianoRoll();
+
+    class PianoRollResizerBar : public juce::StretchableLayoutResizerBar
+    {
+    public:
+        PianoRollResizerBar (juce::StretchableLayoutManager* layoutToUse, int itemIndexInLayout, bool isBarVertical);
+        ~PianoRollResizerBar() override;
+
+        void hasBeenMoved() override;
+        void mouseDrag (const juce::MouseEvent& event) override;
+    };
 
 private:
     std::shared_ptr<AppEngine> appEngine;
     std::unique_ptr<TrackListComponent> trackList;
     juce::Viewport viewport;
 
+    // void hasBeenMoved() override;
+
     std::unique_ptr<PianoRollEditor> pianoRoll;
     juce::StretchableLayoutManager verticalLayout;
+    std::unique_ptr<PianoRollResizerBar> resizerBar;
     int pianoRollTrackIndex = -1;
 
     double pixelsPerSecond = 100.0;
