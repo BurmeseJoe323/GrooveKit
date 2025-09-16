@@ -17,8 +17,8 @@ NoteGridComponent::NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, 
 
     // NOTE: key presses don't work in this current implementation. In the more polished piano roll, they
     // should work
-    // addKeyListener(this);
-    // setWantsKeyboardFocus(true);
+    addKeyListener(this);
+    setWantsKeyboardFocus(true);
     currentQValue = 1.f; // Assume quantisation to quarter-note beats
     firstDrag = false;
     firstCall = false;
@@ -503,63 +503,62 @@ void NoteGridComponent::mouseDoubleClick (const juce::MouseEvent& e)
     sendEdit();
 }
 
-// bool NoteGridComponent::keyPressed(const juce::KeyPress &key, Component *originatingComponent) {
-//     // #ifndef LIB_VERSION
-//     //     LOG_KEY_PRESS(key.getKeyCode(), 1, key.getModifiers().getRawFlags());
-//     // #endif
-//
-//     if (styleSheet.disableEditing) {
-//         return true;
-//     }
-//     if (key == juce::KeyPress::backspaceKey) {
-//         //
-//         deleteAllSelected();
-//         sendEdit();
-//         return true;
-//     } else if (key == juce::KeyPress::upKey || key == juce::KeyPress::downKey) {
-//         bool didMove = false;
-//         for (auto nComp: noteComps) {
-//             if (nComp->getState() == NoteComponent::eSelected) {
-//                 NoteModel nModel = nComp->getModel();
-//
-//                 (key == juce::KeyPress::upKey)
-//                     ? nModel.setNote(nModel.getNote() + 1)
-//                     : nModel.setNote(nModel.getNote() - 1);
-//
-//                 nModel.sendChange = sendChange;
-//                 nComp->setValues(nModel);
-//                 didMove = true;
-//             }
-//         }
-//         if (didMove) {
-//             sendEdit();
-//             resized();
-//             return true;
-//         }
-//     } else if (key == juce::KeyPress::leftKey || key == juce::KeyPress::rightKey) {
-//         bool didMove = false;
-//         const int nudgeAmount = currentQValue;
-//         for (auto noteComponent: noteComps) {
-//             if (noteComponent->getState() == NoteComponent::eSelected) {
-//                 NoteModel noteModel = noteComponent->getModel();
-//
-//                 (key == juce::KeyPress::rightKey)
-//                     ? noteModel.setStartTime(noteModel.getStartTime() + nudgeAmount)
-//                     : noteModel.setStartTime(noteModel.getStartTime() - nudgeAmount);
-//
-//                 noteModel.sendChange = sendChange;
-//                 noteComponent->setValues(noteModel);
-//                 didMove = true;
-//             }
-//         }
-//         if (didMove) {
-//             sendEdit();
-//             resized();
-//             return true;
-//         }
-//     }
-//     return false;
-// }
+bool NoteGridComponent::keyPressed(const juce::KeyPress &key, Component *originatingComponent) {
+    // #ifndef LIB_VERSION
+    //     LOG_KEY_PRESS(key.getKeyCode(), 1, key.getModifiers().getRawFlags());
+    // #endif
+
+    if (styleSheet.disableEditing) {
+        return true;
+    }
+    if (key == juce::KeyPress::backspaceKey) {
+        //
+        deleteAllSelected();
+        sendEdit();
+        return true;
+    } else if (key == juce::KeyPress::upKey || key == juce::KeyPress::downKey) {
+        bool didMove = false;
+        for (auto nComp: noteComps) {
+            if (nComp->getState() == NoteComponent::eSelected) {
+                te::MidiNote *nModel = nComp->getModel();
+
+                (key == juce::KeyPress::upKey)
+                    ? nModel->setNoteNumber(nModel->getNoteNumber() + 1, nullptr)
+                    : nModel->setNoteNumber(nModel->getNoteNumber() - 1, nullptr);
+
+                nComp->setModel(nModel);
+                didMove = true;
+            }
+        }
+        if (didMove) {
+            sendEdit(); // TODO : take out later
+            resized();
+            return true;
+        }
+    } else if (key == juce::KeyPress::leftKey || key == juce::KeyPress::rightKey) {
+        bool didMove = false;
+        const float nudgeAmount = currentQValue;
+        for (auto noteComponent: noteComps) {
+            if (noteComponent->getState() == NoteComponent::eSelected) {
+                te::MidiNote *noteModel = noteComponent->getModel();
+
+                // Moving MIDI note on timeline right or left (up and down)
+                (key == juce::KeyPress::rightKey)
+                    ? noteModel->setStartAndLength(te::BeatPosition::fromBeats (noteModel->getStartBeat().inBeats() + nudgeAmount), noteModel->getLengthBeats(), nullptr)
+                    : noteModel->setStartAndLength(te::BeatPosition::fromBeats (noteModel->getStartBeat().inBeats() - nudgeAmount), noteModel->getLengthBeats(), nullptr);
+
+                noteComponent->setModel(noteModel);
+                didMove = true;
+            }
+        }
+        if (didMove) {
+            sendEdit();
+            resized();
+            return true;
+        }
+    }
+    return false;
+}
 
 void NoteGridComponent::deleteAllSelected()
 {
@@ -598,42 +597,6 @@ te::MidiList& NoteGridComponent::getSequence()
     }
     return clip->getSequence();
 }
-
-// void NoteGridComponent::loadSequence() {
-//      const te::MidiList &sequence = appEngine->getMidiClipFromTrack(trackIndex);
-//     for (int i = 0; i < noteComps.size(); i++) {
-//         removeChildComponent(noteComps[i]);
-//         delete noteComps[i];
-//     }
-//     noteComps.clear();
-//
-//     noteComps.reserve(sequence.size());
-//
-//     for (auto event: sequence) {
-//         NoteComponent *newNote = new NoteComponent(styleSheet);
-//         newNote->onNoteSelect = [this](NoteComponent *n, const juce::MouseEvent &e) {
-//             this->noteCompSelected(n, e);
-//         };
-//         newNote->onPositionMoved = [this](NoteComponent *n) {
-//             this->noteCompPositionMoved(n);
-//         };
-//         newNote->onLengthChange = [this](NoteComponent *n, int diff) {
-//             this->noteCompLengthChanged(n, diff);
-//         };
-//         newNote->onDragging = [this](NoteComponent *n, const juce::MouseEvent &e) {
-//             this->noteCompDragging(n, e);
-//         };
-//         addAndMakeVisible(newNote);
-//         NoteModel nModel(event->getNoteNumber(), event->getVelocity(), event->getStartBeat().inTicks(), event->getLengthInTicks(), {});
-//         nModel.sendChange = sendChange;
-//         //        nModel.quantiseModel(PRE::defaultResolution / 8, true, true);
-//         newNote->setValues(nModel);
-//
-//         noteComps.push_back(newNote);
-//     }
-//     resized();
-//     repaint();
-// }
 
 juce::Array<te::MidiNote*> NoteGridComponent::getSelectedModels()
 {

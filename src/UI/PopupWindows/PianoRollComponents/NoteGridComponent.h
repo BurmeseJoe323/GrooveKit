@@ -31,7 +31,7 @@ public:
 /**
  * Grid where notes are drawn.
  */
-class NoteGridComponent : public juce::Component
+class NoteGridComponent : public juce::Component, public juce::KeyListener
 {
 public:
     // Public struct for defining time signatures
@@ -67,13 +67,11 @@ public:
     void setupGrid (float pixelsPerBar, float compHeight, const int bars);
     void setQuantisation (float newVal);
 
-    // bool keyPressed (const juce::KeyPress& key, Component* originatingComponent) override;
+    bool keyPressed (const juce::KeyPress& key, Component* originatingComponent) override;
     void deleteAllSelected();
 
     // From here you could convert this into MIDI or any other custom musical encoding.
     te::MidiList& getSequence();
-
-    // void loadSequence();
 
     float getNoteCompHeight() const;
     float getPixelsPerBar() const;
