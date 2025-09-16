@@ -73,17 +73,17 @@ void PianoRollEditor::showControlPanel (bool state)
 
 void PianoRollEditor::resized()
 {
-    gridView.setBounds (80, 50, getWidth() - 90, controlPanel.isVisible() ? getHeight() - 180 : getHeight() - 55);
+    gridView.setBounds (80, 50, getWidth() - 90, getHeight() - 100);
     timelineView.setBounds (gridView.getX(), 5, gridView.getWidth() - 10, gridView.getY() - 5);
     keyboardView.setBounds (5, gridView.getY(), 70, gridView.getHeight() - 10);
 
     noteGrid.setBounds (0, 0, 4000, 20 * 127);
-    noteGrid.setupGrid (900, 20, 10);
+    noteGrid.setupGrid (550, 15, 10);
     timeline.setBounds (0, 0, 100, timelineView.getHeight());
     timeline.setup (10, 900);
     keyboard.setBounds (0, 0, keyboardView.getWidth(), noteGrid.getHeight());
 
-    controlPanel.setBounds (5, gridView.getBottom() + 5, getWidth() - 10, 140);
+    controlPanel.setBounds (5, gridView.getBottom() + 5, getWidth() - 10, 80);
 }
 
 void PianoRollEditor::setStyleSheet (GridStyleSheet style)
