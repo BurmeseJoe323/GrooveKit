@@ -17,8 +17,8 @@ NoteGridComponent::NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, 
 
     // NOTE: key presses don't work in this current implementation. In the more polished piano roll, they
     // should work
-    addKeyListener(this);
-    setWantsKeyboardFocus(true);
+    addKeyListener (this);
+    setWantsKeyboardFocus (true);
     currentQValue = 1.f; // Assume quantisation to quarter-note beats
     firstDrag = false;
     firstCall = false;
@@ -249,11 +249,12 @@ void NoteGridComponent::noteCompPositionMoved (NoteComponent* comp, bool callRes
     }
 
     const float beatLength = xToBeats (static_cast<float> (comp->getWidth()));
+    auto* um = appEngine.getMidiClipFromTrack (trackIndex)->getUndoManager();
     te::MidiNote* nm = comp->getModel();
-    nm->setNoteNumber (note, nullptr);
+    nm->setNoteNumber (note, um);
     nm->setStartAndLength (te::BeatPosition::fromBeats (beatStart),
         te::BeatDuration::fromBeats (beatLength),
-        nullptr);
+        um);
     // TODO: figure out how Tracktion quantization works and apply here
     // nm.quantiseModel(currentQValue, true, true);
     // nm.sendChange = sendChange;
@@ -492,7 +493,14 @@ void NoteGridComponent::mouseDoubleClick (const juce::MouseEvent& e)
         return;
     }
     auto& seq = clip->getSequence();
-    auto newModel = seq.addNote (pitch, te::BeatPosition::fromBeats (beatStart), te::BeatDuration::fromBeats (beatLength), 100, 0, nullptr);
+    auto* um = appEngine.getMidiClipFromTrack (trackIndex)->getUndoManager();
+    auto newModel = seq.addNote (
+        pitch,
+        te::BeatPosition::fromBeats (beatStart),
+        te::BeatDuration::fromBeats (beatLength),
+        100,
+        0,
+        um);
 
     newNote->setModel (newModel);
 
@@ -503,55 +511,75 @@ void NoteGridComponent::mouseDoubleClick (const juce::MouseEvent& e)
     sendEdit();
 }
 
-bool NoteGridComponent::keyPressed(const juce::KeyPress &key, Component *originatingComponent) {
+bool NoteGridComponent::keyPressed (const juce::KeyPress& key, Component* originatingComponent)
+{
     // #ifndef LIB_VERSION
     //     LOG_KEY_PRESS(key.getKeyCode(), 1, key.getModifiers().getRawFlags());
     // #endif
 
-    if (styleSheet.disableEditing) {
+    if (styleSheet.disableEditing)
+    {
         return true;
     }
-    if (key == juce::KeyPress::backspaceKey) {
+    auto* um = appEngine.getMidiClipFromTrack (trackIndex)->getUndoManager();
+    if (key == juce::KeyPress::backspaceKey)
+    {
         //
         deleteAllSelected();
         sendEdit();
         return true;
-    } else if (key == juce::KeyPress::upKey || key == juce::KeyPress::downKey) {
+    }
+    else if (key == juce::KeyPress::upKey || key == juce::KeyPress::downKey)
+    {
         bool didMove = false;
-        for (auto nComp: noteComps) {
-            if (nComp->getState() == NoteComponent::eSelected) {
-                te::MidiNote *nModel = nComp->getModel();
+        for (auto nComp : noteComps)
+        {
+            if (nComp->getState() == NoteComponent::eSelected)
+            {
+                te::MidiNote* nModel = nComp->getModel();
 
                 (key == juce::KeyPress::upKey)
-                    ? nModel->setNoteNumber(nModel->getNoteNumber() + 1, nullptr)
-                    : nModel->setNoteNumber(nModel->getNoteNumber() - 1, nullptr);
+                    ? nModel->setNoteNumber (nModel->getNoteNumber() + 1, um)
+                    : nModel->setNoteNumber (nModel->getNoteNumber() - 1, um);
 
-                nComp->setModel(nModel);
+                nComp->setModel (nModel);
                 didMove = true;
             }
         }
-        if (didMove) {
+        if (didMove)
+        {
             sendEdit(); // TODO : take out later
             resized();
             return true;
         }
-    } else if (key == juce::KeyPress::leftKey || key == juce::KeyPress::rightKey) {
+    }
+    else if (key == juce::KeyPress::leftKey || key == juce::KeyPress::rightKey)
+    {
         bool didMove = false;
         const float nudgeAmount = currentQValue;
-        for (auto noteComponent: noteComps) {
-            if (noteComponent->getState() == NoteComponent::eSelected) {
-                te::MidiNote *noteModel = noteComponent->getModel();
+        for (auto noteComponent : noteComps)
+        {
+            if (noteComponent->getState() == NoteComponent::eSelected)
+            {
+                te::MidiNote* noteModel = noteComponent->getModel();
 
                 // Moving MIDI note on timeline right or left (up and down)
                 (key == juce::KeyPress::rightKey)
-                    ? noteModel->setStartAndLength(te::BeatPosition::fromBeats (noteModel->getStartBeat().inBeats() + nudgeAmount), noteModel->getLengthBeats(), nullptr)
-                    : noteModel->setStartAndLength(te::BeatPosition::fromBeats (noteModel->getStartBeat().inBeats() - nudgeAmount), noteModel->getLengthBeats(), nullptr);
+                    ? noteModel->setStartAndLength (
+                        te::BeatPosition::fromBeats (noteModel->getStartBeat().inBeats() + nudgeAmount),
+                        noteModel->getLengthBeats(),
+                        um)
+                    : noteModel->setStartAndLength (
+                        te::BeatPosition::fromBeats (noteModel->getStartBeat().inBeats() - nudgeAmount),
+                        noteModel->getLengthBeats(),
+                        um);
 
-                noteComponent->setModel(noteModel);
+                noteComponent->setModel (noteModel);
                 didMove = true;
             }
         }
-        if (didMove) {
+        if (didMove)
+        {
             sendEdit();
             resized();
             return true;
@@ -570,11 +598,12 @@ void NoteGridComponent::deleteAllSelected()
         return;
     }
     auto& seq = clip->getSequence();
+    auto* um = appEngine.getMidiClipFromTrack (trackIndex)->getUndoManager();
     for (int i = 0; i < noteComps.size(); i++)
     {
         if (noteComps[i]->getState() == NoteComponent::eSelected)
         {
-            seq.removeNote (*noteComps[i]->getModel(), nullptr);
+            seq.removeNote (*noteComps[i]->getModel(), um);
             removeChildComponent (noteComps[i]);
             delete noteComps[i];
         }
