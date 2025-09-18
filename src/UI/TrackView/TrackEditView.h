@@ -35,7 +35,24 @@ private:
     double pixelsPerSecond = 100.0;
     te::TimePosition viewStart = 0s;
 
-    juce::TextButton backButton { "Back" }, newEditButton { "New" }, playPauseButton { "Play" }, stopButton { "Stop" },
-        openEditButton { "Open Edit" }, newTrackButton { "New Track" }, recordButton { "Record" }, outputButton { "Output Device" },
-        mixViewButton { "Mix View" };
+    // --- Top Bar Components --- A native-style menu bar.
+    class MainMenuModel; // Forward-declare the model
+    std::unique_ptr<MainMenuModel> menuModel;
+    std::unique_ptr<juce::MenuBarComponent> menuBar;
+
+    // Center controls
+    juce::Label bpmLabel, clickLabel;
+    juce::ShapeButton playButton { "play", {}, {}, {} };
+    juce::ShapeButton stopButton { "stop", {}, {}, {} };
+    juce::ShapeButton recordButton { "record", {}, {}, {} };
+
+    // Right side (placeholder)
+    juce::TextButton switchButton { "|||" };
+
+    // Private helper methods for menu actions
+    void showNewTrackMenu();
+    void showOutputDeviceSettings();
+
+    // Friend class to allow the menu model to call private methods
+    friend class MainMenuModel;
 };
