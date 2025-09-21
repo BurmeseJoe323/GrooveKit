@@ -63,4 +63,3 @@ target_link_libraries(app_ui
         PRIVATE
             GrooveKitResources
 )
-

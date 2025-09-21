@@ -12,6 +12,14 @@ add_subdirectory(${TRACKTION_ENGINE_PATH}/modules/juce ${CMAKE_BINARY_DIR}/juce)
 juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_graph)
 juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_engine)
 
+# Melatonin Inspector
+Include (FetchContent)
+FetchContent_Declare (melatonin_inspector
+        GIT_REPOSITORY https://github.com/sudara/melatonin_inspector.git
+        GIT_TAG origin/main
+        SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/melatonin_inspector)
+FetchContent_MakeAvailable (melatonin_inspector)
+
 file(GLOB_RECURSE GROOVEKIT_DEFAULT_WAVS
         ${CMAKE_SOURCE_DIR}/src/resources/Samples/*.[Ww][Aa][Vv]
 )
@@ -53,4 +61,5 @@ add_subdirectory(apps/GrooveKit)
 target_link_libraries(GrooveKit
         PRIVATE
         GrooveKitResources
+        melatonin_inspector
 )
