@@ -11,7 +11,7 @@ class AppEngine;
  * Represents the track editor view, with functionality for adding and deleting tracks.
  * Each track contains a corresponding header, footer, and a series of MIDI clips.
  */
-class TrackEditView final : public juce::Component
+class TrackEditView final : public juce::Component, public juce::MenuBarModel
 {
 public:
     explicit TrackEditView (AppEngine& engine);
@@ -20,6 +20,11 @@ public:
     void setupButtons();
     void paint (juce::Graphics&) override;
     void resized() override;
+
+    // --- MenuBarModel overrides ---
+    juce::StringArray getMenuBarNames() override;
+    juce::PopupMenu getMenuForIndex (int topLevelMenuIndex, const juce::String& menuName) override;
+    void menuItemSelected (int menuItemID, int topLevelMenuIndex) override;
 
     /**
       Called when Back is pressed: should return to home screen.
@@ -35,10 +40,10 @@ private:
     double pixelsPerSecond = 100.0;
     te::TimePosition viewStart = 0s;
 
-    // --- Top Bar Components --- A native-style menu bar.
-    class MainMenuModel; // Forward-declare the model
-    std::unique_ptr<MainMenuModel> menuModel;
+    // --- Top Bar Components ---
+    #if !JUCE_MAC
     std::unique_ptr<juce::MenuBarComponent> menuBar;
+    #endif
 
     // Center controls
     juce::Label bpmLabel, clickLabel;
@@ -50,9 +55,6 @@ private:
     juce::TextButton switchButton { "|||" };
 
     // Private helper methods for menu actions
-    void showNewTrackMenu();
+    void showNewTrackMenu() const;
     void showOutputDeviceSettings();
-
-    // Friend class to allow the menu model to call private methods
-    friend class MainMenuModel;
 };

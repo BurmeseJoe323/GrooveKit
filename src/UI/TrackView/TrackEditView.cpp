@@ -2,73 +2,10 @@
 #include "../../AppEngine/AppEngine.h"
 #include "PopupWindows/OutputDevice/OutputDeviceWindow.h"
 
-/**
- * A class that defines the contents and behaviour of the main menu bar.
- */
-class TrackEditView::MainMenuModel final : public juce::MenuBarModel
-{
-public:
-    explicit MainMenuModel (TrackEditView* view) : trackEditView (view) {}
-
-    // Define unique IDs for our menu items
-    enum MenuIDs {
-        NewTrack = 1001,
-        OpenMixer = 1002,
-        ShowOutputSettings = 1003
-    };
-
-    juce::StringArray getMenuBarNames() override
-    {
-        return { "File", "View", "Track", "Help" };
-    }
-
-    juce::PopupMenu getMenuForIndex (int topLevelMenuIndex, const juce::String& /*menuName*/) override
-    {
-        juce::PopupMenu menu;
-
-        if (topLevelMenuIndex == 0) // File
-        {
-            menu.addItem (ShowOutputSettings, "Output Device Settings...");
-        }
-        else if (topLevelMenuIndex == 1) // View
-        {
-            menu.addItem (OpenMixer, "Mix View");
-        }
-        else if (topLevelMenuIndex == 2) // Track
-        {
-            menu.addItem (NewTrack, "New Track...");
-        }
-
-        return menu;
-    }
-
-    void menuItemSelected (const int menuItemID, int /*topLevelMenuIndex*/) override
-    {
-        switch (menuItemID)
-        {
-            case NewTrack:
-                trackEditView->showNewTrackMenu();
-                break;
-            case OpenMixer:
-                if (trackEditView->onOpenMix)
-                    trackEditView->onOpenMix();
-                break;
-            case ShowOutputSettings:
-                trackEditView->showOutputDeviceSettings();
-                break;
-            default:
-                break;
-        }
-    }
-
-private:
-    TrackEditView* trackEditView; // A pointer back to the main component
-};
-
 // Helper for styling the menu buttons
 void styleMenuButton (juce::TextButton& button)
 {
-    button.setColour (juce::TextButton::buttonColourId, juce::Colours::transparentBlack);
+    button.setColour (juce::TextButton::buttonColourId, juce::Colour (0x00000000));
     button.setColour (juce::TextButton::textColourOffId, juce::Colours::lightgrey);
     button.setColour (juce::TextButton::textColourOnId, juce::Colours::white);
 }
@@ -77,9 +14,12 @@ TrackEditView::TrackEditView (AppEngine& engine)
 {
     appEngine = std::shared_ptr<AppEngine> (&engine, [] (AppEngine*) {});
 
-    menuModel = std::make_unique<MainMenuModel> (this);
-    menuBar = std::make_unique<juce::MenuBarComponent> (menuModel.get());
+#if JUCE_MAC
+    juce::MenuBarModel::setMacMainMenu (this);
+#else
+    menuBar = std::make_unique<juce::MenuBarComponent> (this);
     addAndMakeVisible (menuBar.get());
+#endif
 
     trackList = std::make_unique<TrackListComponent> (appEngine);
 
@@ -109,13 +49,16 @@ void TrackEditView::paint (juce::Graphics& g)
 void TrackEditView::resized()
 {
     auto r = getLocalBounds();
-    auto topBar = r.removeFromTop (40);
+    const auto topBar = r.removeFromTop (40);
     viewport.setBounds (r);
 
     auto topBarContent = topBar.reduced (10, 0);
 
-    // --- Menu ---
-    menuBar->setBounds (topBarContent.removeFromLeft (200));
+// --- Menu ---
+#if !JUCE_MAC
+    if (menuBar)
+        menuBar->setBounds (topBarContent.removeFromLeft (200));
+#endif
 
     // --- Right side: Switch ---
     const auto switchArea = topBarContent.removeFromRight (50);
@@ -177,9 +120,59 @@ void TrackEditView::setupButtons()
     // --- Right Switch ---
     addAndMakeVisible (switchButton);
     styleMenuButton (switchButton);
+    switchButton.onClick = [this] { if (onOpenMix) onOpenMix(); };
 }
 
-void TrackEditView::showNewTrackMenu()
+juce::StringArray TrackEditView::getMenuBarNames()
+{
+    return { "File", "View", "Track", "Help" };
+}
+
+juce::PopupMenu TrackEditView::getMenuForIndex (int topLevelMenuIndex, const juce::String&)
+{
+    juce::PopupMenu menu;
+    enum MenuIDs {
+        NewTrack = 1001,
+        OpenMixer = 1002,
+        ShowOutputSettings = 1003
+    };
+
+    if (topLevelMenuIndex == 0) // File
+        menu.addItem (ShowOutputSettings, "Output Device Settings...");
+    else if (topLevelMenuIndex == 1) // View
+        menu.addItem (OpenMixer, "Mix View");
+    else if (topLevelMenuIndex == 2) // Track
+        menu.addItem (NewTrack, "New Track...");
+
+    return menu;
+}
+
+void TrackEditView::menuItemSelected (int menuItemID, int)
+{
+    enum MenuIDs {
+        NewTrack = 1001,
+        OpenMixer = 1002,
+        ShowOutputSettings = 1003
+    };
+
+    switch (menuItemID)
+    {
+        case NewTrack:
+            showNewTrackMenu();
+            break;
+        case OpenMixer:
+            if (onOpenMix)
+                onOpenMix();
+            break;
+        case ShowOutputSettings:
+            showOutputDeviceSettings();
+            break;
+        default:
+            break;
+    }
+}
+
+void TrackEditView::showNewTrackMenu() const
 {
     juce::PopupMenu m;
     m.addItem (1, "Instrument (FourOsc)");
@@ -210,6 +203,12 @@ void TrackEditView::showOutputDeviceSettings()
 
     content->setSize (360, 140);
 
-    auto screenBounds = menuBar->getScreenBounds();
+    juce::Rectangle<int> screenBounds;
+    #if JUCE_MAC
+        screenBounds = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea;
+        screenBounds = screenBounds.withHeight (25); // Approx height of mac menu bar
+    #else
+        if (menuBar) screenBounds = menuBar->getScreenBounds();
+    #endif
     juce::CallOutBox::launchAsynchronously (std::unique_ptr<Component> (content), screenBounds, nullptr);
 }
