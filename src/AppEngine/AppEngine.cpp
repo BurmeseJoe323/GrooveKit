@@ -31,27 +31,55 @@ AppEngine::~AppEngine() = default;
 
 void AppEngine::createOrLoadEdit()
 {
-    auto editFile = juce::File::getSpecialLocation(juce::File::tempDirectory)
-                        .getChildFile("GrooveKit")
-                        .getNonexistentChildFile("Test", ".tracktionedit", false);
+    auto baseDir = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory)
+                       .getChildFile("GrooveKit");
+    baseDir.createDirectory();
 
-    const bool exists = editFile.existsAsFile();
+    currentEditFile = "";
+    edit = tracktion::createEmptyEdit (*engine, baseDir.getNonexistentChildFile("Untitled", ".tracktionedit"));
 
-    if (exists)
-        edit = te::loadEditFromFile(*engine, editFile);
+    for (auto* t : tracktion::getAudioTracks(*edit))
+        edit->deleteTrack(t);
 
-    else
-        edit = te::createEmptyEdit(*engine, editFile);
-
-    edit->editFileRetriever = [editFile] { return editFile; };
+    edit->editFileRetriever = [] { return juce::File{}; };
     edit->playInStopEnabled = true;
 
-    if (!exists)
-    {
-        auto tracks = tracktion::getAudioTracks(*edit);
-        for (auto* t : tracks)
-            edit->deleteTrack(t);
-    }
+    markSaved();
+    edit->restartPlayback();
+
+}
+
+void AppEngine::newUntitledEdit()
+{
+    audioEngine.reset();
+
+    auto baseDir = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory)
+                       .getChildFile("GrooveKit");
+    baseDir.createDirectory();
+
+    auto placeholder = baseDir.getNonexistentChildFile("Untitled", ".tracktionedit", false);
+
+    edit = tracktion::createEmptyEdit(*engine, placeholder);
+
+    currentEditFile = juce::File();
+
+    edit->editFileRetriever = [placeholder]{ return placeholder; };
+    edit->playInStopEnabled = true;
+
+    for (auto* t : tracktion::getAudioTracks(*edit))
+        edit->deleteTrack(t);
+
+    midiEngine        = std::make_unique<MIDIEngine>(*edit);
+    audioEngine       = std::make_unique<AudioEngine>(*edit, *engine);
+    trackManager      = std::make_unique<TrackManager>(*edit);
+    selectionManager  = std::make_unique<te::SelectionManager>(*engine);
+    editViewState     = std::make_unique<EditViewState>(*edit, *selectionManager);
+
+    markSaved();
+
+    audioEngine->initialiseDefaults (48000.0, 512);
+
+    if (onEditLoaded) onEditLoaded();
 
     edit->restartPlayback();
 }
@@ -68,7 +96,7 @@ te::MidiClip *AppEngine::getMidiClipFromTrack(int trackIndex) {
     return midiEngine->getMidiClipFromTrack(trackIndex);
 }
 
-int AppEngine::getNumTracks() { return tracktion::getAudioTracks(*edit).size(); }
+int AppEngine::getNumTracks() { return trackManager ? trackManager->getNumTracks() : 0; }
 
 EditViewState &AppEngine::getEditViewState() { return *editViewState; }
 
@@ -95,4 +123,175 @@ bool AppEngine::anyTrackSoloed() const           { return trackManager->anyTrack
 
 AudioEngine& AppEngine::getAudioEngine() { return *audioEngine; }
 MIDIEngine&  AppEngine::getMidiEngine()  { return *midiEngine;  }
+
+int AppEngine::currentUndoTxn() const
+{
+    if (!edit) return 0;
+    if (auto xml = edit->state.createXml())
+        return (int) xml->toString().hashCode();
+    return 0;
+}
+
+bool AppEngine::isDirty() const noexcept
+{
+    return currentUndoTxn() != lastSavedTxn;
+}
+
+void AppEngine::markSaved()
+{
+    lastSavedTxn = currentUndoTxn();
+}
+
+bool AppEngine::writeEditToFile (const juce::File& file)
+{
+    if (!edit) return false;
+
+    if (auto xml = edit->state.createXml())
+    {
+        juce::TemporaryFile tf (file);
+        if (tf.getFile().replaceWithText (xml->toString())
+            && tf.overwriteTargetFileWithTemporary())
+        {
+            DBG("Saved edit to: " << file.getFullPathName());
+            return true;
+        }
+    }
+    return false;
+}
+
+bool AppEngine::saveEdit()
+{
+    if (!edit) return false;
+
+    if (currentEditFile.getFullPathName().isNotEmpty())
+    {
+        const bool ok = writeEditToFile (currentEditFile);
+        if (ok) markSaved();
+        return ok;
+    }
+
+    saveEditAsAsync();
+    return false;
+}
+
+
+void AppEngine::saveEditAsAsync (std::function<void (bool)> onDone)
+{
+    juce::File defaultDir = currentEditFile.existsAsFile()
+                           ? currentEditFile.getParentDirectory()
+                           : juce::File::getSpecialLocation (juce::File::userDocumentsDirectory)
+                                 .getChildFile ("GrooveKit");
+    defaultDir.createDirectory();
+
+    auto chooser = std::make_shared<juce::FileChooser> ("Save Project As...",
+                                                        defaultDir,
+                                                        "*.tracktionedit;*.xml");
+
+    chooser->launchAsync (juce::FileBrowserComponent::saveMode
+                        | juce::FileBrowserComponent::canSelectFiles,
+        [this, chooser, onDone] (const juce::FileChooser& fc)
+        {
+            const auto result = fc.getResult();
+            if (result == juce::File{})
+            {
+                if (onDone) onDone(false);
+                return;
+            }
+
+            auto chosen = result.withFileExtension (".tracktionedit");
+            const bool ok = writeEditToFile (chosen);
+            if (ok)
+            {
+                currentEditFile = chosen;
+                if (edit)
+                    edit->editFileRetriever = [f = currentEditFile] { return f; };
+                markSaved();
+            }
+            if (onDone) onDone(ok);
+        });
+}
+
+void AppEngine::setAutosaveMinutes (int minutes)
+{
+    if (minutes <= 0) { stopTimer(); return; }
+    startTimer (juce::jmax (1, minutes) * 60 * 1000);
+}
+
+juce::File AppEngine::getAutosaveFile() const
+{
+    if (currentEditFile.getFullPathName().isNotEmpty())
+        return currentEditFile.getSiblingFile (currentEditFile.getFileNameWithoutExtension()
+                                               + "_autosave.tracktionedit");
+    return juce::File::getSpecialLocation (juce::File::tempDirectory)
+               .getChildFile ("groovekit_autosave.tracktionedit");
+}
+
+void AppEngine::timerCallback()
+{
+    if (isDirty())
+        writeEditToFile (getAutosaveFile());
+}
+
+void AppEngine::openEditAsync (std::function<void (bool)> onDone)
+{
+    auto startDir = currentEditFile.existsAsFile()
+                  ? currentEditFile.getParentDirectory()
+                  : juce::File::getSpecialLocation (juce::File::userDocumentsDirectory)
+                        .getChildFile ("GrooveKit");
+    startDir.createDirectory();
+
+    auto chooser = std::make_shared<juce::FileChooser>(
+        "Open Project...", startDir, "*.tracktionedit;*.xml");
+
+    chooser->launchAsync (juce::FileBrowserComponent::openMode
+                        | juce::FileBrowserComponent::canSelectFiles,
+        [this, chooser, onDone] (const juce::FileChooser& fc)
+        {
+            auto f = fc.getResult();
+            bool ok = false;
+            if (f != juce::File{})
+                ok = loadEditFromFile (f);
+
+            if (onDone) onDone (ok);
+        });
+}
+
+bool AppEngine::loadEditFromFile (const juce::File& file)
+{
+    if (! file.existsAsFile() || ! engine) return false;
+
+    auto newEdit = tracktion::loadEditFromFile(*engine, file);
+    if (! newEdit) return false;
+
+    audioEngine.reset();
+
+    edit = std::move(newEdit);
+    currentEditFile = file;
+    edit->editFileRetriever = [f = currentEditFile] { return f; };
+
+    edit->getTransport().ensureContextAllocated();
+
+    markSaved();
+
+    trackManager     = std::make_unique<TrackManager>(*edit);
+    midiEngine       = std::make_unique<MIDIEngine>(*edit);
+    selectionManager = std::make_unique<te::SelectionManager>(*engine);
+    editViewState    = std::make_unique<EditViewState>(*edit, *selectionManager);
+
+    audioEngine      = std::make_unique<AudioEngine>(*edit, *engine);
+    audioEngine->initialiseDefaults(48000.0, 512);
+
+    markSaved();
+
+    if (onEditLoaded) onEditLoaded();
+
+    return true;
+}
+
+
+
+
+
+
+
 
