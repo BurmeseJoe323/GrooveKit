@@ -476,6 +476,7 @@ void TrackListComponent::rebuildFromEngine()
     resized();
 }
 
+<<<<<<< HEAD
 // Written by Claude Code
 void TrackListComponent::rebuildTrack (int trackIndex)
 {
@@ -602,6 +603,9 @@ void TrackListComponent::hideGhostClip()
     if (ghostClip)
         ghostClip->hide();
 }
+=======
+
+>>>>>>> f13de01 (file saving/loading done)
 
 // bool EditComponent::keyPressed(const KeyPress& key) {
 //     if (key == KeyPress::deleteKey) {

@@ -215,4 +215,10 @@ private:
 
     bool wasRecording = false;  ///< Track previous recording state to detect changes
 
+<<<<<<< HEAD
+=======
+    juce::TextButton backButton { "Back" }, playPauseButton{"Play"}, stopButton{"Stop"}, newEditButton{"New"},
+            openEditButton{"Open"}, saveEditButton{"Save"}, saveEditAsButton{"Save As"}, newTrackButton{"New Track"}, recordButton{"Record"}, outputButton{"Output Device"},
+            mixViewButton{"Mix View"};
+>>>>>>> f13de01 (file saving/loading done)
 };

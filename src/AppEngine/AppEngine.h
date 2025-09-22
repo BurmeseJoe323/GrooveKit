@@ -89,6 +89,10 @@ public:
     juce::ValueTree state;
 };
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> f13de01 (file saving/loading done)
 class AppEngine : private juce::Timer
 {
 public:
@@ -286,6 +290,7 @@ public:
     juce::StringArray listOutputDevices()            const { return audioEngine->listOutputDevices(); }
     juce::String getCurrentOutputDeviceName()        const { return audioEngine->getCurrentOutputDeviceName(); }
 
+<<<<<<< HEAD
     /**
      * @brief Returns available buffer sizes supported by the current audio device.
      *
@@ -342,6 +347,8 @@ public:
      */
     juce::StringArray listMidiInputDevices()         const { return audioEngine->listMidiInputDevices(); }
 
+=======
+>>>>>>> f13de01 (file saving/loading done)
     bool saveEdit();
     void saveEditAsAsync (std::function<void (bool success)> onDone = {});
 
@@ -353,6 +360,7 @@ public:
     void openEditAsync (std::function<void (bool success)> onDone = {});
     bool loadEditFromFile (const juce::File& file);
     std::function<void()> onEditLoaded;
+<<<<<<< HEAD
     std::function<void(double oldBpm, double newBpm, t::TimeRange oldLoopRange, t::TimePosition oldPlayheadPos)> onBpmChanged;
 
     void newUntitledEdit();
@@ -405,6 +413,11 @@ public:
     PluginManager& getPluginManager() { return *pluginManager; }
 
     bool exportAudio (const juce::File& destFile);
+=======
+
+    void newUntitledEdit();
+
+>>>>>>> f13de01 (file saving/loading done)
 
 
 private:
@@ -422,6 +435,7 @@ private:
     std::unique_ptr<MidiRecorder> midiRecorder;
     std::unique_ptr<MidiListenerKeyAdapter> qwertyForwarder_;
 
+<<<<<<< HEAD
     // Map from track index to its controller listener (TrackComponent) (Junie)
     juce::HashMap<int, TrackHeaderComponent::Listener*> trackListenerMap;
 
@@ -440,10 +454,20 @@ private:
     bool writeEditToFile (const juce::File& file);
     void markSaved();
     int currentUndoTxn() const;
+=======
+    juce::File currentEditFile;
+
+    int lastSavedTxn = 0;
+
+    bool writeEditToFile (const juce::File& file);
+    void markSaved();
+    int  currentUndoTxn() const;
+>>>>>>> f13de01 (file saving/loading done)
 
     juce::File getAutosaveFile() const;
     void timerCallback() override;
 
+<<<<<<< HEAD
 
     int selectedTrackIndex = -1;
 
@@ -453,4 +477,7 @@ private:
     double lastCopiedClipLengthBeats = 0.0; // Length in beats (Written by Claude Code)
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AppEngine)
+=======
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AppEngine)
+>>>>>>> f13de01 (file saving/loading done)
 };

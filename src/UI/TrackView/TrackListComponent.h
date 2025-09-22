@@ -119,6 +119,7 @@ public:
      * @param index Track index to add
      */
     void addNewTrack (int index);
+<<<<<<< HEAD
 
     /**
      * @brief Rebuilds all track UI components from engine state.
@@ -254,6 +255,11 @@ public:
     void hideGhostClip();
 
     int getSelectedTrackIndex() const { return selectedTrackIndex; }
+=======
+    void setPixelsPerSecond (double pps);
+    void setViewStart (te::TimePosition t);
+    void rebuildFromEngine();
+>>>>>>> f13de01 (file saving/loading done)
 
 private:
     //==============================================================================
