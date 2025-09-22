@@ -60,7 +60,7 @@ void NoteComponent::paint(juce::Graphics &g) {
 }
 
 void NoteComponent::resized() {
-    edgeResizer.setBounds(getWidth() - 10, getHeight(), 10, getHeight());
+    edgeResizer.setBounds(getWidth() - 10, 0, 10, getHeight());
 }
 
 void NoteComponent::setCustomColour(juce::Colour c) {
@@ -99,31 +99,63 @@ void NoteComponent::mouseExit(const juce::MouseEvent &) {
     repaint();
 }
 
-void NoteComponent::mouseDown(const juce::MouseEvent &e) {
+void NoteComponent::mouseDown (const juce::MouseEvent& e)
+{
     CHECK_EDIT
+    startX = getX();
+    startY = getY();
 
-    if (e.mods.isShiftDown()) {
+    const int handleW = juce::jmin(10, getWidth() / 2);
+
+    if (e.mods.isShiftDown())
+    {
         velocityEnabled = true;
         startVelocity = model->getVelocity();
-    } else if (getWidth() - e.getMouseDownX() < 10) {
+    }
+    else if (handleW > 0 && e.getMouseDownX() >= getWidth() - handleW)
+    {
         resizeEnabled = true;
         startWidth = getWidth();
-    } else {
-        startDraggingComponent(this, e);
     }
-    if (!resizeEnabled) {
+    else
+    {
+        setMouseCursor(juce::MouseCursor::DraggingHandCursor);
     }
 }
 
+void NoteComponent::mouseDrag (const juce::MouseEvent& e)
+{
+    CHECK_EDIT
+
+    if (resizeEnabled)
+    {
+        if (onLengthChange)
+            onLengthChange(this, startWidth - e.getPosition().getX());
+        return;
+    }
+
+    if (velocityEnabled)
+    {
+        const int velocityDiff = (int) std::round(e.getDistanceFromDragStartY() * -0.5);
+        int newVelocity = juce::jlimit(1, 127, startVelocity + velocityDiff);
+        if (model) model->setVelocity(newVelocity, nullptr);
+        repaint();
+        return;
+    }
+
+    setMouseCursor(juce::MouseCursor::DraggingHandCursor);
+    if (onDragging) onDragging(this, e);
+}
+
+
+
+
 void NoteComponent::mouseUp(const juce::MouseEvent &e) {
     CHECK_EDIT
-    if (onPositionMoved != nullptr) {
-        onPositionMoved(this);
-    }
-    if (onNoteSelect != nullptr) {
-        onNoteSelect(this, e);
-    }
-    startWidth = startX = startY - 1;
+    if (onPositionMoved) onPositionMoved(this);
+    if (onNoteSelect)    onNoteSelect(this, e);
+    startWidth = startX = startY = -1;
+
     mouseOver = false;
     resizeEnabled = false;
     velocityEnabled = false;
@@ -131,38 +163,10 @@ void NoteComponent::mouseUp(const juce::MouseEvent &e) {
     isMultiDrag = false;
 }
 
-void NoteComponent::mouseDrag(const juce::MouseEvent &e) {
-    CHECK_EDIT
-    //velocityEnabled
-    if (resizeEnabled) {
-        if (onLengthChange != nullptr) {
-            onLengthChange(this, startWidth - e.getPosition().getX());
-        }
-    } else if (velocityEnabled) {
-        int velocityDiff = e.getDistanceFromDragStartY() * -0.5;
-        int newVelocity = startVelocity + velocityDiff;
-        if (newVelocity < 1) {
-            newVelocity = 1;
-        } else if (newVelocity > 127) {
-            newVelocity = 127;
-        }
-        model->setVelocity(newVelocity, nullptr);
-        repaint();
-        //        std::cout << velocityDiff << "\n";
-    } else {
-        setMouseCursor(juce::MouseCursor::DraggingHandCursor);
-        dragComponent(this, e, nullptr);
-
-        if (onDragging != nullptr) {
-            //&& isMultiDrag
-            onDragging(this, e);
-        }
-    }
-}
-
 void NoteComponent::mouseMove(const juce::MouseEvent &e) {
     CHECK_EDIT
-    if (getWidth() - e.getMouseDownX() < 10) {
+    const int handleW = juce::jmin(10, getWidth() / 2);
+    if (handleW > 0 && e.getMouseDownX() >= getWidth() - handleW){
         setMouseCursor(juce::MouseCursor::RightEdgeResizeCursor);
     } else {
         setMouseCursor(juce::MouseCursor::NormalCursor);
