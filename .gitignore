@@ -30,3 +30,5 @@ groovekit.db
 
 # Ignore Visual Studio Code settings
 .vscode/
+# VSCode
+.vscode/
