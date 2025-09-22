@@ -128,31 +128,47 @@ juce::StringArray TrackEditView::getMenuBarNames()
     return { "File", "View", "Track", "Help" };
 }
 
-juce::PopupMenu TrackEditView::getMenuForIndex (int topLevelMenuIndex, const juce::String&)
+juce::PopupMenu TrackEditView::getMenuForIndex (const int topLevelMenuIndex, const juce::String&)
 {
     juce::PopupMenu menu;
     enum MenuIDs {
         NewTrack = 1001,
         OpenMixer = 1002,
-        ShowOutputSettings = 1003
+        ShowOutputSettings = 1003,
+        OpenEdit = 2001,
+        SaveEdit = 2002,
+        SaveEditAs = 2003
     };
 
     if (topLevelMenuIndex == 0) // File
+    {
+        menu.addItem (OpenEdit, "Open Edit...");
+        menu.addSeparator();
+        menu.addItem (SaveEdit, "Save Edit...");
+        menu.addItem (SaveEditAs, "Save Edit As...");
+        menu.addSeparator();
         menu.addItem (ShowOutputSettings, "Output Device Settings...");
+    }
     else if (topLevelMenuIndex == 1) // View
+    {
         menu.addItem (OpenMixer, "Mix View");
+    }
     else if (topLevelMenuIndex == 2) // Track
+    {
         menu.addItem (NewTrack, "New Track...");
-
+    }
     return menu;
 }
 
-void TrackEditView::menuItemSelected (int menuItemID, int)
+void TrackEditView::menuItemSelected (const int menuItemID, int)
 {
     enum MenuIDs {
         NewTrack = 1001,
         OpenMixer = 1002,
-        ShowOutputSettings = 1003
+        ShowOutputSettings = 1003,
+        OpenEdit = 2001,
+        SaveEdit = 2002,
+        SaveEditAs = 2003
     };
 
     switch (menuItemID)
@@ -165,7 +181,16 @@ void TrackEditView::menuItemSelected (int menuItemID, int)
                 onOpenMix();
             break;
         case ShowOutputSettings:
-            showOutputDeviceSettings();
+            showOutputDeviceSettings(); // TODO : fix positioning
+            break;
+        case OpenEdit:
+            DBG ("File -> Open Edit... selected");
+            break;
+        case SaveEdit:
+            DBG ("File -> Save Edit... selected");
+            break;
+        case SaveEditAs:
+            DBG ("File -> Save Edit As... selected");
             break;
         default:
             break;
@@ -204,11 +229,12 @@ void TrackEditView::showOutputDeviceSettings()
     content->setSize (360, 140);
 
     juce::Rectangle<int> screenBounds;
-    #if JUCE_MAC
-        screenBounds = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea;
-        screenBounds = screenBounds.withHeight (25); // Approx height of mac menu bar
-    #else
-        if (menuBar) screenBounds = menuBar->getScreenBounds();
-    #endif
+#if JUCE_MAC
+    screenBounds = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea;
+    screenBounds = screenBounds.withHeight (25); // Approx height of mac menu bar
+#else
+    if (menuBar)
+        screenBounds = menuBar->getScreenBounds();
+#endif
     juce::CallOutBox::launchAsynchronously (std::unique_ptr<Component> (content), screenBounds, nullptr);
 }
