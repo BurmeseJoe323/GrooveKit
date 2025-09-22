@@ -4,6 +4,21 @@
 TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const int trackIndex, const juce::Colour color)
     : appEngine (engine), trackColor (color), trackIndex (trackIndex)
 {
+    // If no color provided, pick one from a palette based on index
+    if (! trackColor.isOpaque())
+    {
+        static const juce::Colour palette[] = {
+            juce::Colour (0xff6fa8dc), // blue
+            juce::Colour (0xff93c47d), // green
+            juce::Colour (0xfff6b26b), // orange
+            juce::Colour (0xffe06666), // red
+            juce::Colour (0xff8e7cc3), // purple
+            juce::Colour (0xff76a5af), // teal
+            juce::Colour (0xffffd966)  // yellow
+        };
+        trackColor = palette[std::abs(trackIndex) % (int) (sizeof(palette) / sizeof(palette[0]))];
+    }
+
     trackClip.setColor (trackColor);
 
     // Check if the track already has clips when created.
@@ -21,9 +36,16 @@ TrackComponent::~TrackComponent() = default;
 
 void TrackComponent::paint (juce::Graphics& g)
 {
-    g.fillAll (trackColor.darker (0.4f));
-    g.setColour (juce::Colours::black.withAlpha (0.3f));
-    g.drawRect (getLocalBounds(), 1.0f);
+    auto r = getLocalBounds().toFloat().reduced (1.0f);
+    const float radius = 10.0f;
+
+    // Background
+    g.setColour (trackColor.darker (0.4f));
+    g.fillRoundedRectangle (r, radius);
+
+    // Rounded border
+    g.setColour (juce::Colours::white.withAlpha (0.35f));
+    g.drawRoundedRectangle (r, radius, 1.0f);
 }
 
 void TrackComponent::resized()
