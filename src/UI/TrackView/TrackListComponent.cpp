@@ -18,7 +18,7 @@ TrackListComponent::~TrackListComponent() = default;
 
 void TrackListComponent::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colours::black);
+    g.fillAll (juce::Colour (0xFF343A40)); // Dark background for track area
 }
 
 void TrackListComponent::resized()
