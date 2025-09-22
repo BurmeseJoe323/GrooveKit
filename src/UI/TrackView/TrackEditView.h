@@ -42,7 +42,7 @@ private:
     // Do we need this here?
     // EditViewState &editViewState;
 
-    juce::TextButton backButton { "Back" }, newEditButton{"New"}, playPauseButton{"Play"}, stopButton{"Stop"},
-            openEditButton{"Open Edit"}, newTrackButton{"New Track"}, recordButton{"Record"}, outputButton{"Output Device"},
+    juce::TextButton backButton { "Back" }, playPauseButton{"Play"}, stopButton{"Stop"}, newEditButton{"New"},
+            openEditButton{"Open"}, saveEditButton{"Save"}, saveEditAsButton{"Save As"}, newTrackButton{"New Track"}, recordButton{"Record"}, outputButton{"Output Device"},
             mixViewButton{"Mix View"};
 };
