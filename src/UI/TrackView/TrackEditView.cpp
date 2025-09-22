@@ -37,8 +37,6 @@ TrackEditView::~TrackEditView() = default;
 
 void TrackEditView::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colour (0xFF343A40)); // Dark background for track area
-
     const auto topBarBounds = getLocalBounds().removeFromTop (40);
     g.setColour (juce::Colour (0xFF212529)); // Even darker for top bar
     g.fillRect (topBarBounds);
@@ -135,16 +133,18 @@ juce::PopupMenu TrackEditView::getMenuForIndex (const int topLevelMenuIndex, con
         NewTrack = 1001,
         OpenMixer = 1002,
         ShowOutputSettings = 1003,
-        OpenEdit = 2001,
-        SaveEdit = 2002,
-        SaveEditAs = 2003
+        NewEdit = 2001,
+        OpenEdit = 2002,
+        SaveEdit = 2003,
+        SaveEditAs = 2004
     };
 
     if (topLevelMenuIndex == 0) // File
     {
+        menu.addItem (NewEdit, "New Edit");
         menu.addItem (OpenEdit, "Open Edit...");
         menu.addSeparator();
-        menu.addItem (SaveEdit, "Save Edit...");
+        menu.addItem (SaveEdit, "Save Edit");
         menu.addItem (SaveEditAs, "Save Edit As...");
         menu.addSeparator();
         menu.addItem (ShowOutputSettings, "Output Device Settings...");
@@ -166,9 +166,10 @@ void TrackEditView::menuItemSelected (const int menuItemID, int)
         NewTrack = 1001,
         OpenMixer = 1002,
         ShowOutputSettings = 1003,
-        OpenEdit = 2001,
-        SaveEdit = 2002,
-        SaveEditAs = 2003
+        NewEdit = 2001,
+        OpenEdit = 2002,
+        SaveEdit = 2003,
+        SaveEditAs = 2004
     };
 
     switch (menuItemID)
@@ -183,14 +184,17 @@ void TrackEditView::menuItemSelected (const int menuItemID, int)
         case ShowOutputSettings:
             showOutputDeviceSettings(); // TODO : fix positioning
             break;
+        case NewEdit:
+            DBG ("File -> New Edit selected");
+            break;
         case OpenEdit:
-            DBG ("File -> Open Edit... selected");
+            DBG ("File -> Open Edit selected");
             break;
         case SaveEdit:
-            DBG ("File -> Save Edit... selected");
+            DBG ("File -> Save Edit selected");
             break;
         case SaveEditAs:
-            DBG ("File -> Save Edit As... selected");
+            DBG ("File -> Save Edit As selected");
             break;
         default:
             break;
