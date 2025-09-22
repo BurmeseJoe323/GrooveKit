@@ -1,4 +1,6 @@
+// Created by Bracken Asay on 4/2/25.
 // Note: Junie (JetBrains AI) contributed code to this file on 2025-09-24.
+
 #pragma once
 
 #include "../../AppEngine/AppEngine.h"
@@ -97,7 +99,7 @@ private:
     void showNewEditMenu() const;
     void showOpenEditMenu() const;
 
-    juce::TextButton backButton { "Back" }, newEditButton { "New" }, playPauseButton { "Play" }, stopButton { "Stop" },
-        openEditButton { "Open Edit" }, newTrackButton { "New Track" }, recordButton { "Record" }, outputButton { "Output Device" },
+    juce::TextButton backButton { "Back" }, newEditButton { "New" },
+        openEditButton { "Open Edit" }, newTrackButton { "New Track" }, outputButton { "Output Device" },
         mixViewButton { "Mix View" };
 };

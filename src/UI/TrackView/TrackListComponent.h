@@ -1,4 +1,3 @@
-// Note: Junie (JetBrains AI) contributed code to this file on 2025-09-24.
 #pragma once
 
 #include "../../AppEngine/AppEngine.h"
