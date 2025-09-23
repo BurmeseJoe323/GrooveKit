@@ -6,6 +6,10 @@ namespace {
     static int asIndexChecked (int idx, int size) { return (idx >= 0 && idx < size) ? idx : -1; }
 }
 
+namespace GKIDs {
+    static const juce::Identifier isDrum ("gk_isDrum");
+}
+
 TrackManager::TrackManager(te::Edit& editRef)
     : edit(editRef) {
     syncBookkeepingToEngine();
@@ -15,9 +19,23 @@ TrackManager::~TrackManager() = default;
 
 void TrackManager::syncBookkeepingToEngine()
 {
-    const int n = (int) te::getAudioTracks(edit).size();
-    types.resize(n, TrackType::Instrument);
-    drumEngines.resize(n); // nullptrs for non-drum
+    auto audioTracks = te::getAudioTracks(edit);
+    const int n = (int) audioTracks.size();
+
+    types.clear();        types.resize(n, TrackType::Instrument);
+    drumEngines.clear();  drumEngines.resize(n);
+
+    for (int i = 0; i < n; ++i)
+    {
+        auto* track = audioTracks[(size_t) i];
+
+        const bool isDrum = (bool) track->state.getProperty(GKIDs::isDrum, false);
+        if (isDrum)
+        {
+            types[(size_t) i] = TrackType::Drum;
+            drumEngines[(size_t) i] = std::make_unique<DrumSamplerEngineAdapter>(edit.engine, *track);
+        }
+    }
 }
 
 int TrackManager::getNumTracks() const {
@@ -36,14 +54,13 @@ int TrackManager::addDrumTrack()
     edit.ensureNumberOfAudioTracks(newIndex + 1);
 
     auto* track = te::getAudioTracks(edit)[(size_t) newIndex];
+    track->state.setProperty (GKIDs::isDrum, true, nullptr);           // <-- persist
 
     auto adapter = std::make_unique<DrumSamplerEngineAdapter>(edit.engine, *track);
-
 
     syncBookkeepingToEngine();
     types[(size_t) newIndex] = TrackType::Drum;
     drumEngines[(size_t) newIndex] = std::move(adapter);
-
     edit.getTransport().ensureContextAllocated();
     return newIndex;
 }
@@ -54,7 +71,7 @@ int TrackManager::addInstrumentTrack()
     edit.ensureNumberOfAudioTracks(newIndex + 1);
 
     auto* track = te::getAudioTracks(edit)[(size_t) newIndex];
-
+    track->state.setProperty (GKIDs::isDrum, false, nullptr);
     syncBookkeepingToEngine();
     types[(size_t) newIndex] = TrackType::Instrument;
     if ((int) drumEngines.size() > newIndex)
