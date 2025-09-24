@@ -20,7 +20,7 @@ public:
     void setupButtons();
     void paint (juce::Graphics&) override;
     void resized() override;
-    bool keyPressed (const juce::KeyPress&, juce::Component *) override;
+    bool keyPressed (const juce::KeyPress&) override;
 
     // --- MenuBarModel overrides ---
     juce::StringArray getMenuBarNames() override;

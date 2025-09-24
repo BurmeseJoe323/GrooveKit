@@ -151,6 +151,22 @@ bool TrackEditView::keyPressed(const juce::KeyPress &key_press, juce::Component 
     return false;
 }
 
+bool TrackEditView::keyPressed(const juce::KeyPress &key_press, juce::Component *) {
+    if (key_press == juce::KeyPress::spaceKey)
+    {
+        if (appEngine->isPlaying())
+        {
+            appEngine->stop();
+        }
+       else
+       {
+           appEngine->play();
+       }
+        return true;
+    }
+    return false;
+}
+
 void TrackEditView::setupButtons()
 {
     // --- Left Controls ---
