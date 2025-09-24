@@ -4,11 +4,25 @@
 TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const int trackIndex, const juce::Colour color)
     : appEngine (engine), trackColor (color), trackIndex (trackIndex)
 {
-    engineIndex = trackIndex;
+    // If no color provided, pick one from a palette based on index
+    if (! trackColor.isOpaque())
+    {
+        static const juce::Colour palette[] = {
+            juce::Colour (0xff6fa8dc), // blue
+            juce::Colour (0xff93c47d), // green
+            juce::Colour (0xfff6b26b), // orange
+            juce::Colour (0xffe06666), // red
+            juce::Colour (0xff8e7cc3), // purple
+            juce::Colour (0xff76a5af), // teal
+            juce::Colour (0xffffd966)  // yellow
+        };
+        trackColor = palette[std::abs(trackIndex) % (int) (sizeof(palette) / sizeof(palette[0]))];
+    }
+
     trackClip.setColor (trackColor);
 
-    // Check if the track already has clips when created
-    if (auto* track = appEngine->getTrackManager().getTrack (engineIndex))
+    // Check if the track already has clips when created.
+    if (const auto* track = appEngine->getTrackManager().getTrack (trackIndex))
     {
         if (track->getClips().size() > 0)
         {
@@ -22,40 +36,38 @@ TrackComponent::~TrackComponent() = default;
 
 void TrackComponent::paint (juce::Graphics& g)
 {
-    g.fillAll (trackColor.darker (0.4f));
-    g.setColour (juce::Colours::black.withAlpha (0.3f));
-    g.drawRect (getLocalBounds(), 1.0f);
+    auto r = getLocalBounds().toFloat().reduced (1.0f);
+    const float radius = 10.0f;
+
+    // Background
+    g.setColour (trackColor.darker (0.4f));
+    g.fillRoundedRectangle (r, radius);
+
+    // Rounded border
+    g.setColour (juce::Colours::white.withAlpha (0.35f));
+    g.drawRoundedRectangle (r, radius, 1.0f);
 }
 
 void TrackComponent::resized()
 {
-    auto bounds = getLocalBounds().reduced (5);
+    const auto bounds = getLocalBounds().reduced (5);
 
     // If we can find a clip on this track, size/position the UI clip from its time range.
-    if (auto* track = appEngine ? appEngine->getTrackManager().getTrack (engineIndex) : nullptr)
+    if (const auto* track = appEngine ? appEngine->getTrackManager().getTrack (trackIndex) : nullptr)
+    {
+        if (track->getClips().size() > 0)
         {
-            if (track->getClips().size() > 0)
-            {
-                auto* teClip = track->getClips().getUnchecked (0); // first clip in engine track
-                auto  tr     = teClip->getPosition().time;          // te::TimeRange in seconds
-
-                const int x0 = xFromTime (tr.getStart(), viewStart, pixelsPerSecond);
-                const int x1 = xFromTime (tr.getEnd(),   viewStart, pixelsPerSecond);
-                const int width = juce::jmax (1, x1 - x0);
-
-                trackClip.setBounds (getLocalBounds().reduced (5).withWidth (280));
-                return;
-            }
+            trackClip.setBounds (getLocalBounds().reduced (5).withWidth (280));
+            return;
         }
-
-
+    }
     trackClip.setBounds (bounds.withWidth (juce::jmax (bounds.getHeight(), 40)));
 }
 
 void TrackComponent::onSettingsClicked()
 {
     juce::PopupMenu m;
-    const bool isDrumTrack = appEngine->isDrumTrack (engineIndex);
+    const bool isDrumTrack = appEngine->isDrumTrack (trackIndex);
     m.addItem (1, "Add MIDI Clip");
     m.addSeparator();
     if (isDrumTrack)
@@ -70,11 +82,11 @@ void TrackComponent::onSettingsClicked()
     m.addSeparator();
     m.addItem (100, "Delete Track");
 
-    m.showMenuAsync ({}, [this] (int result) {
+    m.showMenuAsync ({}, [this] (const int result) {
         switch (result)
         {
             case 1: // Add Clip
-                appEngine->addMidiClipToTrack (engineIndex);
+                appEngine->addMidiClipToTrack (trackIndex);
                 addAndMakeVisible (trackClip);
                 resized();
                 numClips = 1;
@@ -87,7 +99,6 @@ void TrackComponent::onSettingsClicked()
                 if (onRequestOpenPianoRoll && numClips > 0)
                     onRequestOpenPianoRoll (trackIndex);
                 break;
-                break;
             case 100: // Delete Track
                 if (onRequestDeleteTrack)
                     onRequestDeleteTrack (trackIndex);
@@ -98,53 +109,26 @@ void TrackComponent::onSettingsClicked()
     });
 }
 
-// void TrackComponent::onAddClipClicked()
-// {
-//     DBG ("Add clip -> UI " << trackIndex << " -> engine " << engineIndex);
-//
-//     appEngine->addMidiClipToTrack (engineIndex);
-//     addAndMakeVisible (trackClip);
-//     resized();
-//     numClips = 1;
-// }
-//
-// void TrackComponent::onDeleteTrackClicked()
-// {
-//     DBG ("Delete clicked for track index: " << trackIndex);
-//     if (onRequestDeleteTrack)
-//         onRequestDeleteTrack (trackIndex);
-//     // deleteAllChildren();
-// }
-//
-// void TrackComponent::onPianoRollClicked()
-// {
-//     DBG ("Piano Roll clicked for track index: " << trackIndex);
-//     if (onRequestOpenPianoRoll && numClips > 0)
-//         onRequestOpenPianoRoll (trackIndex);
-// }
-//
-// void TrackComponent::onDrumSamplerClicked()
-// {
-//     DBG ("Drum Sampler clicked for track index: " << trackIndex);
-//     if (onRequestOpenDrumSampler)
-//         onRequestOpenDrumSampler (trackIndex);
-// }
-
-void TrackComponent::setTrackIndex (int index)
+void TrackComponent::setTrackIndex (const int index)
 {
     this->trackIndex = index;
 }
 
-void TrackComponent::onMuteToggled (bool isMuted)
+int TrackComponent::getTrackIndex() const
 {
-    if (appEngine)
-        appEngine->setTrackMuted (engineIndex, isMuted);
+    return trackIndex;
 }
 
-void TrackComponent::onSoloToggled (bool isSolo)
+void TrackComponent::onMuteToggled (const bool isMuted)
 {
     if (appEngine)
-        appEngine->setTrackSoloed (engineIndex, isSolo);
+        appEngine->setTrackMuted (trackIndex, isMuted);
+}
+
+void TrackComponent::onSoloToggled (const bool isSolo)
+{
+    if (appEngine)
+        appEngine->setTrackSoloed (trackIndex, isSolo);
     if (auto* p = findParentComponentOfClass<TrackListComponent>())
         p->refreshSoloVisuals();
 }

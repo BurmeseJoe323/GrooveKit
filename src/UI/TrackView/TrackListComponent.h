@@ -13,7 +13,7 @@
 class TrackListComponent final : public juce::Component
 {
 public:
-    explicit TrackListComponent (const std::shared_ptr<AppEngine>& engine);
+    explicit TrackListComponent (const std::shared_ptr<AppEngine>& engine); // should this be a reference rather than shared pointer?
     ~TrackListComponent() override;
 
     void paint (juce::Graphics& g) override;
