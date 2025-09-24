@@ -11,7 +11,7 @@ class AppEngine;
  * Represents the track editor view, with functionality for adding and deleting tracks.
  * Each track contains a corresponding header, footer, and a series of MIDI clips.
  */
-class TrackEditView final : public juce::Component
+class TrackEditView final : public juce::Component, juce::KeyListener
 {
 public:
     explicit TrackEditView (AppEngine& engine);
@@ -20,6 +20,7 @@ public:
     void setupButtons();
     void paint (juce::Graphics&) override;
     void resized() override;
+    bool keyPressed (const juce::KeyPress&, juce::Component *) override;
 
     /**
       Called when Back is pressed: should return to home screen.

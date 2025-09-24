@@ -15,6 +15,9 @@ TrackEditView::TrackEditView (AppEngine& engine)
 
     setupButtons();
     addAndMakeVisible (viewport);
+
+    setWantsKeyboardFocus(true);
+    addKeyListener(this);
 }
 
 TrackEditView::~TrackEditView() = default;
@@ -44,6 +47,22 @@ void TrackEditView::resized()
     mixViewButton.setBounds (topR.removeFromLeft (w).reduced (2));
 
     viewport.setBounds (r);
+}
+
+bool TrackEditView::keyPressed(const juce::KeyPress &key_press, juce::Component *) {
+    if (key_press == juce::KeyPress::spaceKey)
+    {
+        if (appEngine->isPlaying())
+        {
+            appEngine->stop();
+        }
+       else
+       {
+           appEngine->play();
+       }
+        return true;
+    }
+    return false;
 }
 
 void TrackEditView::setupButtons()
