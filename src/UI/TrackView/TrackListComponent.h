@@ -1,3 +1,4 @@
+// Note: Junie (JetBrains AI) contributed code to this file on 2025-09-24.
 #pragma once
 
 #include "../../AppEngine/AppEngine.h"
@@ -251,6 +252,8 @@ public:
      * @brief Hides the ghost clip preview.
      */
     void hideGhostClip();
+
+    int getSelectedTrackIndex() const { return selectedTrackIndex; }
 
 private:
     //==============================================================================
