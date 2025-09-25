@@ -51,8 +51,6 @@ private:
     std::unique_ptr<TrackListComponent> trackList;
     juce::Viewport viewport;
 
-    // void hasBeenMoved() override;
-
     std::unique_ptr<PianoRollEditor> pianoRoll;
     juce::StretchableLayoutManager verticalLayout;
     std::unique_ptr<PianoRollResizerBar> resizerBar;
@@ -62,9 +60,7 @@ private:
     te::TimePosition viewStart = 0s;
 
     // --- Top Bar Components ---
-    #if !JUCE_MAC
     std::unique_ptr<juce::MenuBarComponent> menuBar;
-    #endif
 
     // Center controls
     juce::Label bpmLabel, clickLabel;

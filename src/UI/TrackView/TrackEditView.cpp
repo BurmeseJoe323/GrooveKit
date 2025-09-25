@@ -14,12 +14,8 @@ TrackEditView::TrackEditView (AppEngine& engine)
 {
     appEngine = std::shared_ptr<AppEngine> (&engine, [] (AppEngine*) {});
 
-#if JUCE_MAC
-    juce::MenuBarModel::setMacMainMenu (this);
-#else
-    menuBar = std::make_unique<juce::MenuBarComponent> (this);
+menuBar = std::make_unique<juce::MenuBarComponent> (this);
     addAndMakeVisible (menuBar.get());
-#endif
 
     trackList = std::make_unique<TrackListComponent> (appEngine);
 
@@ -81,10 +77,8 @@ void TrackEditView::resized()
     auto topBarContent = topBar.reduced (10, 0);
 
 // --- Menu ---
-#if !JUCE_MAC
-    if (menuBar)
+if (menuBar)
         menuBar->setBounds (topBarContent.removeFromLeft (200));
-#endif
 
     // --- Right side: Switch ---
     const auto switchArea = topBarContent.removeFromRight (50);
