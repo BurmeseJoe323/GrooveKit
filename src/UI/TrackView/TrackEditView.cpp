@@ -43,7 +43,6 @@ TrackEditView::TrackEditView (AppEngine& engine)
     };
 
     setupButtons();
-    addAndMakeVisible (viewport);
 
     // Initialize and hide the piano roll editor
     pianoRoll = std::make_unique<PianoRollEditor>(*appEngine, -1);
@@ -59,6 +58,7 @@ TrackEditView::TrackEditView (AppEngine& engine)
     resizerBar = std::make_unique<PianoRollResizerBar>(&verticalLayout, 1, false);
     addAndMakeVisible(resizerBar.get());
 
+    addAndMakeVisible (viewport);
 }
 
 TrackEditView::~TrackEditView() = default;
@@ -99,12 +99,32 @@ void TrackEditView::resized()
     constexpr int buttonGap = 10;
     constexpr int transportWidth = (buttonSize * 3) + (buttonGap * 2);
     auto transportBounds = centerArea.withSizeKeepingCentre (transportWidth, buttonSize);
-
     stopButton.setBounds (transportBounds.removeFromLeft (buttonSize));
     transportBounds.removeFromLeft (buttonGap);
     playButton.setBounds (transportBounds.removeFromLeft (buttonSize));
     transportBounds.removeFromLeft (buttonGap);
     recordButton.setBounds (transportBounds.removeFromLeft (buttonSize));
+
+    // Content area below top bar
+    // If the piano roll is hidden, just fill with the viewport and hide the resizer
+    if (!pianoRoll || !pianoRoll->isVisible())
+    {
+        viewport.setBounds(r);
+        if (resizerBar)
+            resizerBar->setVisible(false);
+        return;
+    }
+
+    // Piano roll is visible: use the stretchable layout to split vertically
+    if (resizerBar)
+        resizerBar->setVisible(true);
+
+    juce::Component* comps[] = { &viewport, resizerBar.get(), pianoRoll.get() };
+    verticalLayout.layOutComponents(comps, (int)std::size(comps), r.getX(), r.getY(), r.getWidth(), r.getHeight(), true, true);
+
+    // Ensure the resizer and piano roll are on top of the viewport
+    resizerBar->toFront(false);
+    pianoRoll->toFront(false);
 }
 
 void TrackEditView::setupButtons()
