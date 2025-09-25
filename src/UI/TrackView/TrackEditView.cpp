@@ -2,9 +2,25 @@
 #include "../../AppEngine/AppEngine.h"
 #include "PopupWindows/OutputDevice/OutputDeviceWindow.h"
 
+// Helper for styling the menu buttons
+void styleMenuButton (juce::TextButton& button)
+{
+    button.setColour (juce::TextButton::buttonColourId, juce::Colour (0x00000000));
+    button.setColour (juce::TextButton::textColourOffId, juce::Colours::lightgrey);
+    button.setColour (juce::TextButton::textColourOnId, juce::Colours::white);
+}
+
 TrackEditView::TrackEditView (AppEngine& engine)
 {
     appEngine = std::shared_ptr<AppEngine> (&engine, [] (AppEngine*) {});
+
+#if JUCE_MAC
+    juce::MenuBarModel::setMacMainMenu (this);
+#else
+    menuBar = std::make_unique<juce::MenuBarComponent> (this);
+    addAndMakeVisible (menuBar.get());
+#endif
+
     trackList = std::make_unique<TrackListComponent> (appEngine);
 
     trackList->setPixelsPerSecond (pixelsPerSecond);
@@ -12,6 +28,19 @@ TrackEditView::TrackEditView (AppEngine& engine)
 
     viewport.setScrollBarsShown (true, false); // vertical only
     viewport.setViewedComponent (trackList.get(), false);
+
+    trackList->rebuildFromEngine();
+
+    appEngine->onEditLoaded = [this] {
+        trackList = std::make_unique<TrackListComponent> (appEngine);
+        trackList->setPixelsPerSecond (pixelsPerSecond);
+        trackList->setViewStart (viewStart);
+
+        viewport.setViewedComponent (trackList.get(), false);
+        trackList->rebuildFromEngine();
+
+        repaint();
+    };
 
     setupButtons();
     addAndMakeVisible (viewport);
@@ -36,96 +65,277 @@ TrackEditView::~TrackEditView() = default;
 
 void TrackEditView::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colours::black);
-    g.setColour (juce::Colours::white);
-    g.setFont (20.0f);
-    g.drawText ("TrackView", getLocalBounds(), juce::Justification::centred, true);
+    const auto topBarBounds = getLocalBounds().removeFromTop (40);
+    g.setColour (juce::Colour (0xFF212529)); // Even darker for top bar
+    g.fillRect (topBarBounds);
+    g.setColour (juce::Colours::black.withAlpha (0.2f));
+    g.drawHorizontalLine (topBarBounds.getBottom(), 0.0f, static_cast<float> (getWidth()));
 }
 
 void TrackEditView::resized()
 {
     auto r = getLocalBounds();
-    const int w = r.getWidth() / 7;
-    auto topR = r.removeFromTop (30);
+    const auto topBar = r.removeFromTop (40);
+    viewport.setBounds (r);
 
-    backButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    //newEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    //openEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    playPauseButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    stopButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    recordButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    newTrackButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    outputButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    mixViewButton.setBounds (topR.removeFromLeft (w).reduced (2));
+    auto topBarContent = topBar.reduced (10, 0);
 
-    if (pianoRoll->isVisible())
-    {
-        juce::Component *comps[] = { &viewport, resizerBar.get(), pianoRoll.get() };
-        verticalLayout.layOutComponents(comps, 3, r.getX(), r.getY(), r.getWidth(), r.getHeight(), true, true);
-    }
-    else
-    {
-        viewport.setBounds (r);
-    }
+// --- Menu ---
+#if !JUCE_MAC
+    if (menuBar)
+        menuBar->setBounds (topBarContent.removeFromLeft (200));
+#endif
+
+    // --- Right side: Switch ---
+    const auto switchArea = topBarContent.removeFromRight (50);
+    switchButton.setBounds (switchArea);
+
+    // --- Center: Transport ---
+    auto centerArea = topBarContent;
+    bpmLabel.setBounds (centerArea.removeFromLeft (80));
+    clickLabel.setBounds (centerArea.removeFromLeft (50));
+
+    constexpr int buttonSize = 20;
+    constexpr int buttonGap = 10;
+    constexpr int transportWidth = (buttonSize * 3) + (buttonGap * 2);
+    auto transportBounds = centerArea.withSizeKeepingCentre (transportWidth, buttonSize);
+
+    stopButton.setBounds (transportBounds.removeFromLeft (buttonSize));
+    transportBounds.removeFromLeft (buttonGap);
+    playButton.setBounds (transportBounds.removeFromLeft (buttonSize));
+    transportBounds.removeFromLeft (buttonGap);
+    recordButton.setBounds (transportBounds.removeFromLeft (buttonSize));
 }
 
 void TrackEditView::setupButtons()
 {
-    newTrackButton.onClick = [this] {
-        juce::PopupMenu m;
-        m.addItem (1, "Instrument (FourOsc)");
-        m.addItem (2, "Drum (Sampler)");
+    // --- Left Controls ---
+    addAndMakeVisible (bpmLabel);
+    bpmLabel.setText ("BPM 120", juce::dontSendNotification);
+    bpmLabel.setColour (juce::Label::textColourId, juce::Colours::lightgrey);
+    bpmLabel.setJustificationType (juce::Justification::centred);
 
-        m.showMenuAsync (juce::PopupMenu::Options(), [this] (int choice) {
-            if (!trackList || choice == 0)
+    addAndMakeVisible (clickLabel);
+    clickLabel.setText ("Click", juce::dontSendNotification);
+    clickLabel.setColour (juce::Label::textColourId, juce::Colours::lightgrey);
+    clickLabel.setJustificationType (juce::Justification::centred);
+
+    // --- Transport Buttons ---
+    {
+        juce::Path stopShape;
+        stopShape.addRectangle (0.0f, 0.0f, 1.0f, 1.0f);
+        stopButton.setShape (stopShape, true, true, false);
+        stopButton.setColours (juce::Colours::lightgrey, juce::Colours::white, juce::Colours::darkgrey);
+        stopButton.onClick = [this] { appEngine->stop(); };
+        addAndMakeVisible (stopButton);
+
+        juce::Path playShape;
+        playShape.addTriangle (0.0f, 0.0f, 1.0f, 0.5f, 0.0f, 1.0f);
+        playButton.setShape (playShape, true, true, false);
+        playButton.setColours (juce::Colours::lightgrey, juce::Colours::white, juce::Colours::darkgrey);
+        playButton.onClick = [this] { appEngine->play(); };
+        addAndMakeVisible (playButton);
+
+        juce::Path recordShape;
+        recordShape.addEllipse (0.0f, 0.0f, 1.0f, 1.0f);
+        recordButton.setShape (recordShape, true, true, false);
+        recordButton.setColours (juce::Colours::red, juce::Colours::lightcoral, juce::Colours::maroon);
+        addAndMakeVisible (recordButton);
+    }
+
+    // --- Right Switch ---
+    addAndMakeVisible (switchButton);
+    styleMenuButton (switchButton);
+    switchButton.onClick = [this] { if (onOpenMix) onOpenMix(); };
+}
+
+juce::StringArray TrackEditView::getMenuBarNames()
+{
+    return { "File", "View", "Track", "Help" };
+}
+
+juce::PopupMenu TrackEditView::getMenuForIndex (const int topLevelMenuIndex, const juce::String&)
+{
+    juce::PopupMenu menu;
+    enum MenuIDs {
+        OpenMixer = 1002,
+        ShowOutputSettings = 1003,
+        NewEdit = 2001,
+        OpenEdit = 2002,
+        SaveEdit = 2003,
+        SaveEditAs = 2004,
+        NewInstrumentTrack = 3001,
+        NewDrumTrack = 3002
+    };
+
+    if (topLevelMenuIndex == 0) // File
+    {
+        menu.addItem (NewEdit, "New Edit");
+        menu.addItem (OpenEdit, "Open Edit...");
+        menu.addSeparator();
+        menu.addItem (SaveEdit, "Save Edit");
+        menu.addItem (SaveEditAs, "Save Edit As...");
+        menu.addSeparator();
+        menu.addItem (ShowOutputSettings, "Output Device Settings...");
+    }
+    else if (topLevelMenuIndex == 1) // View
+    {
+        menu.addItem (OpenMixer, "Mix View");
+    }
+    else if (topLevelMenuIndex == 2) // Track
+    {
+        menu.addItem (NewInstrumentTrack, "New Instrument Track");
+        menu.addItem (NewDrumTrack, "New Drum Track");
+    }
+    return menu;
+}
+
+void TrackEditView::menuItemSelected (const int menuItemID, int)
+{
+    enum MenuIDs {
+        OpenMixer = 1002,
+        ShowOutputSettings = 1003,
+        NewEdit = 2001,
+        OpenEdit = 2002,
+        SaveEdit = 2003,
+        SaveEditAs = 2004,
+        NewInstrumentTrack = 3001,
+        NewDrumTrack = 3002
+    };
+
+    switch (menuItemID)
+    {
+        case NewInstrumentTrack:
+        case NewDrumTrack:
+        {
+            if (!trackList)
                 return;
+            const int index = (menuItemID == NewInstrumentTrack) ? appEngine->addInstrumentTrack() : appEngine->addDrumTrack();
+            trackList->addNewTrack (index);
+            trackList->setPixelsPerSecond (pixelsPerSecond);
+            trackList->setViewStart (viewStart);
+            break;
+        }
+        case OpenMixer:
+            if (onOpenMix)
+                onOpenMix();
+            break;
+        case ShowOutputSettings:
+            showOutputDeviceSettings(); // TODO : fix positioning
+            break;
+        case NewEdit:
+            showNewEditMenu();
+            break;
+        case OpenEdit:
+            showOpenEditMenu();
+            break;
+        case SaveEdit:
+            appEngine->saveEdit();
+            break;
+        case SaveEditAs:
+            appEngine->saveEditAsAsync();
+            break;
+        default:
+            break;
+    }
+}
 
-            int index = -1;
-            if (choice == 1)
-                index = appEngine->addInstrumentTrack();
-            else if (choice == 2)
-                index = appEngine->addDrumTrack();
-            DBG ("[TrackEditView] now " << appEngine->getNumTracks() << " tracks"); // insert here
-            if (index >= 0)
-            {
-                trackList->addNewTrack (index);
-                trackList->setPixelsPerSecond (pixelsPerSecond);
-                trackList->setViewStart (viewStart);
+void TrackEditView::showOutputDeviceSettings()
+{
+    auto* content = new OutputDeviceWindow (*appEngine);
+
+    content->setSize (360, 140);
+
+    juce::Rectangle<int> screenBounds;
+#if JUCE_MAC
+    screenBounds = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea;
+    screenBounds = screenBounds.withHeight (25); // Approx height of mac menu bar
+#else
+    if (menuBar)
+        screenBounds = menuBar->getScreenBounds();
+#endif
+    juce::CallOutBox::launchAsynchronously (std::unique_ptr<Component> (content), screenBounds, nullptr);
+}
+
+void TrackEditView::showNewEditMenu() const
+{
+    if (appEngine->isDirty())
+    {
+        const auto opts = juce::MessageBoxOptions()
+                        .withIconType (juce::MessageBoxIconType::WarningIcon)
+                        .withTitle ("Save changes?")
+                        .withMessage ("You have unsaved changes.")
+                        .withButton ("Save")
+                        .withButton ("Discard")
+                        .withButton ("Cancel");
+
+        juce::AlertWindow::showAsync (opts, [this] (const int r) {
+            if (r == 1)
+            { // Save
+                const bool hasPath =
+                    appEngine->getCurrentEditFile().getFullPathName().isNotEmpty();
+                if (hasPath)
+                {
+                    if (appEngine->saveEdit())
+                        appEngine->newUntitledEdit();
+                }
+                else
+                {
+                    appEngine->saveEditAsAsync ([this] (const bool ok) {
+                        if (ok)
+                            appEngine->newUntitledEdit();
+                    });
+                }
+            }
+            else if (r == 2)
+            { // Discard
+                appEngine->newUntitledEdit();
             }
         });
-    };
+    }
+    else
+    {
+        appEngine->newUntitledEdit();
+    }
+}
 
-    playPauseButton.onClick = [this] {
-        appEngine->play();
-    };
+void TrackEditView::showOpenEditMenu() const
+{
+    if (!appEngine->isDirty())
+    {
+        appEngine->openEditAsync();
+        return;
+    }
 
-    stopButton.onClick = [this] { appEngine->stop(); };
+    const auto opts = juce::MessageBoxOptions()
+                          .withIconType (juce::MessageBoxIconType::WarningIcon)
+                          .withTitle ("Save changes?")
+                          .withMessage ("You have unsaved changes.")
+                          .withButton ("Save")
+                          .withButton ("Discard")
+                          .withButton ("Cancel");
 
-    addAndMakeVisible (newEditButton);
-    addAndMakeVisible (playPauseButton);
-    addAndMakeVisible (stopButton);
-    addAndMakeVisible (recordButton);
-    addAndMakeVisible (openEditButton);
-    addAndMakeVisible (newTrackButton);
-    addAndMakeVisible ((outputButton));
-
-    outputButton.onClick = [this] {
-        auto* content = new OutputDeviceWindow (*appEngine);
-
-        content->setSize (360, 140);
-
-        auto screenBounds = outputButton.getScreenBounds();
-        juce::CallOutBox::launchAsynchronously (std::unique_ptr<Component> (content), screenBounds, nullptr);
-    };
-
-    addAndMakeVisible (mixViewButton);
-    mixViewButton.onClick = [this] { if (onOpenMix) onOpenMix(); };
-
-    addAndMakeVisible (backButton);
-    backButton.onClick = [this] {
-        if (onBack)
-            onBack();
-    };
+    juce::AlertWindow::showAsync (opts, [this] (const int result) {
+        if (result == 1) // Save
+        {
+            if (appEngine->getCurrentEditFile().getFullPathName().isNotEmpty())
+            {
+                if (appEngine->saveEdit())
+                    appEngine->openEditAsync();
+            }
+            else
+            {
+                appEngine->saveEditAsAsync ([this] (const bool ok) {
+                    if (ok)
+                        appEngine->openEditAsync();
+                });
+            }
+        }
+        else if (result == 2) // Discard
+        {
+            appEngine->openEditAsync();
+        }
+    });
 }
 
 void TrackEditView::showPianoRoll(int trackIndex)

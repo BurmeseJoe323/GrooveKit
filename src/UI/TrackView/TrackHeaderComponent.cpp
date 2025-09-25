@@ -83,7 +83,17 @@ void TrackHeaderComponent::setDimmed (const bool dim)
 
 void TrackHeaderComponent::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colours::dimgrey);
+    auto bounds = getLocalBounds().toFloat().reduced (2.0f);
+
+    g.setColour (juce::Colour (0xFF495057));
+
+    // Rounded background
+    const float radius = 10.0f;
+    g.fillRoundedRectangle (bounds, radius);
+
+    // Border
+    g.setColour (juce::Colours::white.withAlpha (0.20f));
+    g.drawRoundedRectangle (bounds, radius, 1.5f);
 }
 
 void TrackHeaderComponent::resized()

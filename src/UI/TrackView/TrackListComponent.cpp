@@ -20,7 +20,7 @@ TrackListComponent::~TrackListComponent() = default;
 
 void TrackListComponent::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colours::black);
+    g.fillAll (juce::Colour (0xFF343A40)); // Dark background for track area
 }
 
 void TrackListComponent::resized()
@@ -174,6 +174,21 @@ void TrackListComponent::setViewStart (te::TimePosition t)
             tc->setViewStart (t);
     repaint();
 }
+
+void TrackListComponent::rebuildFromEngine()
+{
+    for (auto* h : headers) removeChildComponent(h);
+    for (auto* t : tracks)  removeChildComponent(t);
+    headers.clear(); tracks.clear();
+
+    const int n = appEngine->getNumTracks();
+    for (int i = 0; i < n; ++i)
+        addNewTrack(i);
+
+    resized();
+}
+
+
 
 // bool EditComponent::keyPressed(const KeyPress& key) {
 //     if (key == KeyPress::deleteKey) {

@@ -15,12 +15,7 @@ add_library(app_ui
         MixView/ChannelComponents/ChannelStrip.h
         MixView/ChannelComponents/ChannelStrip.cpp
         MixView/MixerPanel.cpp)
-target_link_libraries(app_ui
-        PRIVATE
-        GrooveKitResources
-        jive::jive_layouts
-        jive::jive_style_sheets
-)
+
 target_sources(app_ui
         PRIVATE
         MainComponent.cpp MainComponent.h
@@ -57,6 +52,7 @@ target_include_directories(app_ui
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/src
 )
+
 target_link_libraries(app_ui
         PUBLIC
             juce::juce_gui_basics
@@ -66,4 +62,3 @@ target_link_libraries(app_ui
         PRIVATE
             GrooveKitResources
 )
-

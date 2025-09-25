@@ -22,6 +22,7 @@ public:
     void addNewTrack (int index);
     void setPixelsPerSecond (double pps);
     void setViewStart (te::TimePosition t);
+    void rebuildFromEngine();
 
 private:
     const std::shared_ptr<AppEngine> appEngine;

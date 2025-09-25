@@ -8,22 +8,17 @@ include(${CMAKE_SOURCE_DIR}/cmake/TracktionPath.cmake)
 
 add_subdirectory(${TRACKTION_ENGINE_PATH}/modules/juce ${CMAKE_BINARY_DIR}/juce)
 
-# --- JIVE via CPM (bootstrap CPM into the build dir) ---
-file(DOWNLOAD
-        https://github.com/cpm-cmake/CPM.cmake/releases/download/v0.40.8/CPM.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake
-        EXPECTED_HASH SHA256=78ba32abdf798bc616bab7c73aac32a17bbd7b06ad9e26a6add69de8f3ae4791
-)
-include(${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake)
-
-# Either syntax works; this pins to the main branch:
-CPMAddPackage("gh:ImJimmi/JIVE#main")
-# (Alternative explicit form)
-# CPMAddPackage(NAME JIVE GITHUB_REPOSITORY ImJimmi/JIVE GIT_TAG main)
-
 # Tracktion-bundled JUCE
 juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_graph)
 juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_engine)
+
+# Melatonin Inspector
+Include (FetchContent)
+FetchContent_Declare (melatonin_inspector
+        GIT_REPOSITORY https://github.com/sudara/melatonin_inspector.git
+        GIT_TAG origin/main
+        SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/melatonin_inspector)
+FetchContent_MakeAvailable (melatonin_inspector)
 
 file(GLOB_RECURSE GROOVEKIT_DEFAULT_WAVS
         ${CMAKE_SOURCE_DIR}/src/resources/Samples/*.[Ww][Aa][Vv]
@@ -59,7 +54,6 @@ add_subdirectory(src/DrumSamplerEngine)
 add_subdirectory(src/UI)
 add_subdirectory(src/DatabaseManager)
 
-
 # ---- App target (defines GrooveKit)
 add_subdirectory(apps/GrooveKit)
 
@@ -67,17 +61,5 @@ add_subdirectory(apps/GrooveKit)
 target_link_libraries(GrooveKit
         PRIVATE
         GrooveKitResources
-        jive::jive_layouts
-        jive::jive_style_sheets
-)
-
-target_compile_definitions(GrooveKit PRIVATE
-        JIVE_GUI_ITEMS_HAVE_STYLE_SHEETS=1
-)
-
-
-target_link_libraries(GrooveKit
-        PRIVATE
-        jive::jive_layouts
-        jive::jive_style_sheets
+        melatonin_inspector
 )
