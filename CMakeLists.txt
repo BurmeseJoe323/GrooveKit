@@ -36,6 +36,12 @@ juce_add_binary_data(GrooveKitResources
         ${GROOVEKIT_RESOURCE_FILES}
 )
 
+add_compile_definitions(
+        JUCE_PLUGINHOST_VST3=1
+        JUCE_PLUGINHOST_AU=1
+        JUCE_MODAL_LOOPS_PERMITTED=1
+)
+
 target_sources(GrooveKitResources PRIVATE ${GROOVEKIT_DEFAULT_WAVS})
 
 # ---- Your libraries

@@ -29,13 +29,31 @@ void TrackManager::syncBookkeepingToEngine()
     {
         auto* track = audioTracks[(size_t) i];
 
-        const bool isDrum = (bool) track->state.getProperty(GKIDs::isDrum, false);
+        // Old behavior (property flag) – keep as a hint, but don’t rely on it:
+        bool isDrum = (bool) track->state.getProperty(GKIDs::isDrum, false);
+
+        // NEW: infer from the instrument actually on the track
+        if (!isDrum)
+        {
+            auto& list = track->pluginList;
+            for (int j = 0; j < list.size(); ++j)
+                if (auto* p = list[j])
+                    if (p->isSynth())
+                    {
+                        const auto name = p->getName();
+                        if (name.equalsIgnoreCase("Sampler"))    // or check xmlTypeName if you prefer
+                            isDrum = true;
+                        break;
+                    }
+        }
+
         if (isDrum)
         {
             types[(size_t) i] = TrackType::Drum;
             drumEngines[(size_t) i] = std::make_unique<DrumSamplerEngineAdapter>(edit.engine, *track);
         }
     }
+
 }
 
 int TrackManager::getNumTracks() const {
@@ -43,10 +61,30 @@ int TrackManager::getNumTracks() const {
 }
 
 te::AudioTrack* TrackManager::getTrack(int index) {
-    auto audioTracks = getAudioTracks(edit);
-    auto track = audioTracks[index];
-    return track;
+    auto tracks = te::getAudioTracks (edit);   // no null check, no *
+    if ((unsigned) index >= tracks.size()) return nullptr;
+    return tracks[(size_t) index];
 }
+
+int TrackManager::indexOfTrack (const te::AudioTrack* t) const
+{
+    auto tracks = te::getAudioTracks (edit);
+    for (int i = 0; i < (int) tracks.size(); ++i)
+        if (tracks[(size_t) i] == t) return i;
+    return -1;
+}
+
+te::AudioTrack* TrackManager::addMidiTrack (const juce::String& name)
+{
+    const int newIndex = getNumTracks();              // append position
+    edit.ensureNumberOfAudioTracks (newIndex + 1);    // grow list at end
+    auto* t = te::getAudioTracks (edit)[(size_t) newIndex];
+    t->setName (name);
+    return t;
+}
+
+
+void TrackManager::setSelectionManager (te::SelectionManager* sm) { selection = sm; }
 
 int TrackManager::addDrumTrack()
 {
@@ -83,11 +121,11 @@ int TrackManager::addInstrumentTrack()
     edit.getTransport().ensureContextAllocated();
     return newIndex;
 }
-
-int TrackManager::addTrack()
-{
-    return addInstrumentTrack();
-}
+//
+// int TrackManager::addTrack()
+// {
+//     return addInstrumentTrack();
+// }
 
 
 
@@ -166,7 +204,6 @@ bool TrackManager::anyTrackSoloed() const
         if (t->isSolo(false)) return true;
     return false;
 }
-
 
 
 

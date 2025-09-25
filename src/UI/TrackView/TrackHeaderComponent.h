@@ -12,6 +12,7 @@ public:
     {
     public:
         virtual ~Listener() = default;
+        virtual void onInstrumentPressed (juce::Component& anchor) = 0;
         virtual void onSettingsClicked() = 0;
         virtual void onMuteToggled (bool isMuted) = 0;
         virtual void onSoloToggled (bool isSolo) = 0;
@@ -37,6 +38,7 @@ public:
     void setTrackType (TrackType type);
 
 private:
+    juce::TextButton instButton { "INST" };
     juce::TextButton settingsButton { "..." };
     juce::TextButton muteTrackButton { "M" };
     juce::TextButton soloTrackButton { "S" };

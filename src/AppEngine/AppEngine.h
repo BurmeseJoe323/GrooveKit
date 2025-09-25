@@ -5,6 +5,8 @@
 #include "TrackManager.h"
 #include "../MIDIEngine/MIDIEngine.h"
 #include "../AudioEngine/AudioEngine.h"
+#include "../PluginManager/PluginManager.h"
+#include <unordered_map>
 
 namespace IDs
 {
@@ -85,19 +87,26 @@ public:
     juce::ValueTree state;
 };
 
-
 class AppEngine : private juce::Timer
 {
 public:
     AppEngine();
     ~AppEngine();
 
+    struct InstrumentChoice
+    {
+        enum class Kind { FourOSC, DrumSampler, External };
+        Kind kind;
+        juce::String displayName;
+        std::optional<juce::PluginDescription> external; // set if External
+    };
+
     void createOrLoadEdit();
     void play();
     void stop();
 
     int addMidiTrack();
-    int getNumTracks();
+    int getNumTracks() const;
     void deleteMidiTrack(int index);
     void addMidiClipToTrack(int trackIndex);
 
@@ -107,6 +116,29 @@ public:
 
     int addDrumTrack();
     int addInstrumentTrack();
+
+    std::vector<InstrumentChoice> getAvailableInstruments() const;
+
+    bool setTrackInstrument (te::AudioTrack& track, const InstrumentChoice& choice);
+    bool addEffectToTrack    (te::AudioTrack& track, const juce::PluginDescription& effectDesc);
+    void openInstrumentWhenReady (te::AudioTrack& track, juce::Component* anchor);
+    void showInstrumentMenuForTrack(te::AudioTrack& track,
+                                juce::Component& anchor,
+                                std::function<void()> onChanged);
+    void showFxMenuForTrack         (te::AudioTrack& track, juce::Component& anchor);
+    void openPluginWindow (te::Plugin& p, juce::Component* anchor = nullptr);
+    void closePluginWindow(te::Plugin& p);
+    void instrumentButtonPressed (te::AudioTrack& track,
+                              juce::Component& anchor,
+                              std::function<void()> onChanged);
+    te::Plugin* findInstrument (te::AudioTrack& track);
+
+
+    void removeFxAt (te::AudioTrack& track, int idx);
+    void setFxBypassed (te::AudioTrack& track, int idx, bool bypass);
+    bool isFxBypassed (te::AudioTrack& track, int idx) const;
+
+    static juce::String getInstrumentName (const te::AudioTrack& track);
 
     te::MidiClip *getMidiClipFromTrack(int trackIndex);
 
@@ -144,14 +176,15 @@ public:
     void openEditAsync (std::function<void (bool success)> onDone = {});
     bool loadEditFromFile (const juce::File& file);
     std::function<void()> onEditLoaded;
+    std::unordered_map<const te::Plugin*, juce::PluginDescription> descByPlugin;
 
     void newUntitledEdit();
 
 
 
 private:
-    std::unique_ptr<tracktion::engine::Engine> engine;
-    std::unique_ptr<tracktion::engine::Edit> edit;
+    std::unique_ptr<te::Engine> engine;
+    std::unique_ptr<te::Edit> edit;
     std::unique_ptr<te::SelectionManager> selectionManager;
 
     std::unique_ptr<EditViewState> editViewState;
@@ -159,6 +192,7 @@ private:
     std::unique_ptr<MIDIEngine> midiEngine;
     std::unique_ptr<AudioEngine> audioEngine;
     std::unique_ptr<TrackManager> trackManager;
+    std::unique_ptr<PluginManager> pluginManager;
 
     juce::File currentEditFile;
 

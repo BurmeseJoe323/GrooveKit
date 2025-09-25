@@ -68,28 +68,15 @@ void TrackEditView::resized()
 void TrackEditView::setupButtons()
 {
     newTrackButton.onClick = [this] {
-        juce::PopupMenu m;
-        m.addItem (1, "Instrument (FourOsc)");
-        m.addItem (2, "Drum (Sampler)");
-
-        m.showMenuAsync (juce::PopupMenu::Options(), [this] (int choice) {
-            if (!trackList || choice == 0)
-                return;
-
-            int index = -1;
-            if (choice == 1)
-                index = appEngine->addInstrumentTrack();
-            else if (choice == 2)
-                index = appEngine->addDrumTrack();
-            DBG ("[TrackEditView] now " << appEngine->getNumTracks() << " tracks"); // insert here
-            if (index >= 0)
-            {
-                trackList->addNewTrack (index);
-                trackList->setPixelsPerSecond (pixelsPerSecond);
-                trackList->setViewStart (viewStart);
-            }
-        });
+        const int engineIdx = appEngine->addMidiTrack();
+        if (engineIdx >= 0)
+        {
+            trackList->rebuildFromEngine();
+            trackList->setPixelsPerSecond (pixelsPerSecond);
+            trackList->setViewStart (viewStart);
+        }
     };
+
 
     playPauseButton.onClick = [this] {
         appEngine->play();

@@ -13,11 +13,15 @@ public:
 
     int getNumTracks() const;
     te::AudioTrack* getTrack(int index);
+    int indexOfTrack (const te::AudioTrack* t) const;
 
     int  addDrumTrack();
     int  addInstrumentTrack();
 
-    int addTrack();
+    //int addTrack();
+    te::AudioTrack* addMidiTrack (const juce::String& name = "MIDI Track");
+    void setSelectionManager (te::SelectionManager* sm);
+
     void deleteTrack(int index);
 
     bool isDrumTrack(int index) const;
@@ -33,10 +37,12 @@ public:
     bool anyTrackSoloed() const;
     //void clearAllTracks();
 
+    void syncBookkeepingToEngine();
+
 private:
     te::Edit& edit;
+    te::SelectionManager* selection = {};
 
     std::vector<TrackType> types;
     std::vector<std::unique_ptr<DrumSamplerEngineAdapter>> drumEngines;
-    void syncBookkeepingToEngine();
 };

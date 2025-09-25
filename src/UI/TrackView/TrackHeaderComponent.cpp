@@ -7,6 +7,11 @@ TrackHeaderComponent::TrackHeaderComponent()
     addAndMakeVisible (muteTrackButton);
     addAndMakeVisible (soloTrackButton);
     addAndMakeVisible (trackTypeLabel);
+    addAndMakeVisible (instButton);
+
+    instButton.onClick = [this] {
+        listeners.call ([&] (Listener& l) { l.onInstrumentPressed (instButton); });
+    };
 
     settingsButton.onClick = [this]() {
         listeners.call ([] (Listener& l) { l.onSettingsClicked(); });
@@ -97,6 +102,7 @@ void TrackHeaderComponent::resized()
     constexpr int buttonHeight = 25;
     const auto margin = juce::FlexItem::Margin (2, 0, 2, 0);
 
+    fb.items.add (juce::FlexItem (instButton).withHeight (buttonHeight).withMargin (margin));
     fb.items.add (juce::FlexItem (trackTypeLabel).withHeight (15.0f));
     fb.items.add (juce::FlexItem (trackNameLabel).withFlex (1.0f));
     fb.items.add (juce::FlexItem (settingsButton).withHeight (buttonHeight).withMargin (margin));
