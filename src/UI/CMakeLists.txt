@@ -19,7 +19,6 @@ add_library(app_ui
 target_sources(app_ui
         PRIVATE
         MainComponent.cpp MainComponent.h
-        MainViews/WelcomeView.cpp MainViews/WelcomeView.h
         TrackView/TrackEditView.cpp TrackView/TrackEditView.h
         TrackView/TrackComponent.cpp TrackView/TrackComponent.h
         TrackView/TrackHeaderComponent.cpp TrackView/TrackHeaderComponent.h
@@ -34,9 +33,6 @@ target_sources(app_ui
         PopupWindows/PianoRollComponents/GridStyleSheet.cpp PopupWindows/PianoRollComponents/GridStyleSheet.h
         PopupWindows/PianoRollComponents/NoteComponent.cpp PopupWindows/PianoRollComponents/NoteComponent.h
         PopupWindows/PianoRollComponents/PianoRollMainComponent.cpp PopupWindows/PianoRollComponents/PianoRollMainComponent.h
-        TrackEditViewTutorial/TrackEditViewTutorial.cpp TrackEditViewTutorial/TrackEditViewTutorial.h
-        TutorialManager/TutorialManagerComponent.cpp TutorialManager/TutorialManagerComponent.h
-        InstrumentTutorial/InstrumentTutorial.cpp InstrumentTutorial/InstrumentTutorial.h
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/UI/DrumSamplerView/DefaultSampleLibrary.cpp
         # Resources

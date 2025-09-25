@@ -52,7 +52,6 @@ add_subdirectory(src/MIDIEngine)
 add_subdirectory(src/AudioEngine)
 add_subdirectory(src/DrumSamplerEngine)
 add_subdirectory(src/UI)
-add_subdirectory(src/DatabaseManager)
 
 # ---- App target (defines GrooveKit)
 add_subdirectory(apps/GrooveKit)
