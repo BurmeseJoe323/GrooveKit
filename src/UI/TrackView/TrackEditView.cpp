@@ -14,8 +14,13 @@ TrackEditView::TrackEditView (AppEngine& engine)
 {
     appEngine = std::shared_ptr<AppEngine> (&engine, [] (AppEngine*) {});
 
-menuBar = std::make_unique<juce::MenuBarComponent> (this);
+   #if JUCE_MAC
+    // Use native macOS global menu bar
+    juce::MenuBarModel::setMacMainMenu (this);
+   #else
+    menuBar = std::make_unique<juce::MenuBarComponent> (this);
     addAndMakeVisible (menuBar.get());
+   #endif
 
     trackList = std::make_unique<TrackListComponent> (appEngine);
 
@@ -57,7 +62,13 @@ menuBar = std::make_unique<juce::MenuBarComponent> (this);
     addAndMakeVisible (viewport);
 }
 
-TrackEditView::~TrackEditView() = default;
+TrackEditView::~TrackEditView()
+{
+   #if JUCE_MAC
+    // Clear the native macOS menu bar to avoid assertions during shutdown
+    juce::MenuBarModel::setMacMainMenu (nullptr);
+   #endif
+}
 
 void TrackEditView::paint (juce::Graphics& g)
 {
@@ -76,8 +87,8 @@ void TrackEditView::resized()
 
     auto topBarContent = topBar.reduced (10, 0);
 
-// --- Menu ---
-if (menuBar)
+    // --- Menu ---
+    if (menuBar)
         menuBar->setBounds (topBarContent.removeFromLeft (200));
 
     // --- Right side: Switch ---
@@ -254,7 +265,7 @@ void TrackEditView::menuItemSelected (const int menuItemID, int)
     }
 }
 
-void TrackEditView::showOutputDeviceSettings()
+void TrackEditView::showOutputDeviceSettings() const
 {
     auto* content = new OutputDeviceWindow (*appEngine);
 

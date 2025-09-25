@@ -36,7 +36,7 @@ public:
     void hidePianoRoll();
     int getPianoRollIndex() const;
 
-    class PianoRollResizerBar : public juce::StretchableLayoutResizerBar
+    class PianoRollResizerBar final : public juce::StretchableLayoutResizerBar
     {
     public:
         PianoRollResizerBar (juce::StretchableLayoutManager* layoutToUse, int itemIndexInLayout, bool isBarVertical);
@@ -72,7 +72,7 @@ private:
     juce::TextButton switchButton { "|||" };
 
     // Private helper methods for menu actions
-    void showOutputDeviceSettings();
+    void showOutputDeviceSettings() const;
     void showNewEditMenu() const;
     void showOpenEditMenu() const;
 };
