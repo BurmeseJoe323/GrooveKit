@@ -1,3 +1,4 @@
+// Note: Junie (JetBrains AI) contributed code to this file on 2025-09-24.
 #pragma once
 
 #include "../../AppEngine/AppEngine.h"
@@ -23,6 +24,8 @@ public:
     void setPixelsPerSecond (double pps);
     void setViewStart (te::TimePosition t);
     void rebuildFromEngine();
+
+    int getSelectedTrackIndex() const { return selectedTrackIndex; }
 
 private:
     const std::shared_ptr<AppEngine> appEngine;
