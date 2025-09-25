@@ -60,6 +60,9 @@ TrackEditView::TrackEditView (AppEngine& engine)
     addAndMakeVisible(resizerBar.get());
 
     addAndMakeVisible (viewport);
+
+    setWantsKeyboardFocus(true);
+    addKeyListener(this);
 }
 
 TrackEditView::~TrackEditView()
@@ -130,6 +133,22 @@ void TrackEditView::resized()
     // Ensure the resizer and piano roll are on top of the viewport
     resizerBar->toFront(false);
     pianoRoll->toFront(false);
+}
+
+bool TrackEditView::keyPressed(const juce::KeyPress &key_press, juce::Component *) {
+    if (key_press == juce::KeyPress::spaceKey)
+    {
+        if (appEngine->isPlaying())
+        {
+            appEngine->stop();
+        }
+       else
+       {
+           appEngine->play();
+       }
+        return true;
+    }
+    return false;
 }
 
 void TrackEditView::setupButtons()
