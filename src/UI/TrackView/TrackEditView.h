@@ -55,6 +55,7 @@ private:
     juce::TextButton switchButton { "|||" };
 
     // Private helper methods for menu actions
-    void showNewTrackMenu() const;
     void showOutputDeviceSettings();
+    void showNewEditMenu() const;
+    void showOpenEditMenu() const;
 };

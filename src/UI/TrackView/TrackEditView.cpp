@@ -31,9 +31,8 @@ TrackEditView::TrackEditView (AppEngine& engine)
 
     trackList->rebuildFromEngine();
 
-    appEngine->onEditLoaded = [this]
-    {
-        trackList = std::make_unique<TrackListComponent>(appEngine);
+    appEngine->onEditLoaded = [this] {
+        trackList = std::make_unique<TrackListComponent> (appEngine);
         trackList->setPixelsPerSecond (pixelsPerSecond);
         trackList->setViewStart (viewStart);
 
@@ -41,7 +40,6 @@ TrackEditView::TrackEditView (AppEngine& engine)
         trackList->rebuildFromEngine();
 
         repaint();
-
     };
 
     setupButtons();
@@ -96,7 +94,7 @@ void TrackEditView::resized()
 
 void TrackEditView::setupButtons()
 {
-    // --- Center Controls ---
+    // --- Left Controls ---
     addAndMakeVisible (bpmLabel);
     bpmLabel.setText ("BPM 120", juce::dontSendNotification);
     bpmLabel.setColour (juce::Label::textColourId, juce::Colours::lightgrey);
@@ -145,13 +143,14 @@ juce::PopupMenu TrackEditView::getMenuForIndex (const int topLevelMenuIndex, con
 {
     juce::PopupMenu menu;
     enum MenuIDs {
-        NewTrack = 1001,
         OpenMixer = 1002,
         ShowOutputSettings = 1003,
         NewEdit = 2001,
         OpenEdit = 2002,
         SaveEdit = 2003,
-        SaveEditAs = 2004
+        SaveEditAs = 2004,
+        NewInstrumentTrack = 3001,
+        NewDrumTrack = 3002
     };
 
     if (topLevelMenuIndex == 0) // File
@@ -170,7 +169,8 @@ juce::PopupMenu TrackEditView::getMenuForIndex (const int topLevelMenuIndex, con
     }
     else if (topLevelMenuIndex == 2) // Track
     {
-        menu.addItem (NewTrack, "New Track...");
+        menu.addItem (NewInstrumentTrack, "New Instrument Track");
+        menu.addItem (NewDrumTrack, "New Drum Track");
     }
     return menu;
 }
@@ -178,20 +178,29 @@ juce::PopupMenu TrackEditView::getMenuForIndex (const int topLevelMenuIndex, con
 void TrackEditView::menuItemSelected (const int menuItemID, int)
 {
     enum MenuIDs {
-        NewTrack = 1001,
         OpenMixer = 1002,
         ShowOutputSettings = 1003,
         NewEdit = 2001,
         OpenEdit = 2002,
         SaveEdit = 2003,
-        SaveEditAs = 2004
+        SaveEditAs = 2004,
+        NewInstrumentTrack = 3001,
+        NewDrumTrack = 3002
     };
 
     switch (menuItemID)
     {
-        case NewTrack:
-            showNewTrackMenu();
+        case NewInstrumentTrack:
+        case NewDrumTrack:
+        {
+            if (!trackList)
+                return;
+            const int index = (menuItemID == NewInstrumentTrack) ? appEngine->addInstrumentTrack() : appEngine->addDrumTrack();
+            trackList->addNewTrack (index);
+            trackList->setPixelsPerSecond (pixelsPerSecond);
+            trackList->setViewStart (viewStart);
             break;
+        }
         case OpenMixer:
             if (onOpenMix)
                 onOpenMix();
@@ -216,31 +225,6 @@ void TrackEditView::menuItemSelected (const int menuItemID, int)
     }
 }
 
-void TrackEditView::showNewTrackMenu() const
-{
-    juce::PopupMenu m;
-    m.addItem (1, "Instrument (FourOsc)");
-    m.addItem (2, "Drum (Sampler)");
-
-    m.showMenuAsync (juce::PopupMenu::Options(), [this] (int choice) {
-        if (!trackList || choice == 0)
-            return;
-
-        int index = -1;
-        if (choice == 1)
-            index = appEngine->addInstrumentTrack();
-        else if (choice == 2)
-            index = appEngine->addDrumTrack();
-
-        if (index >= 0)
-        {
-            trackList->addNewTrack (index);
-            trackList->setPixelsPerSecond (pixelsPerSecond);
-            trackList->setViewStart (viewStart);
-        }
-    });
-}
-
 void TrackEditView::showOutputDeviceSettings()
 {
     auto* content = new OutputDeviceWindow (*appEngine);
@@ -258,21 +242,21 @@ void TrackEditView::showOutputDeviceSettings()
     juce::CallOutBox::launchAsynchronously (std::unique_ptr<Component> (content), screenBounds, nullptr);
 }
 
-void TrackEditView::showNewEditButton()
+void TrackEditView::showNewEditMenu() const
 {
     if (appEngine->isDirty())
     {
-        auto opts = juce::MessageBoxOptions()
-            .withIconType(juce::MessageBoxIconType::WarningIcon)
-            .withTitle("Save changes?")
-            .withMessage("You have unsaved changes.")
-            .withButton("Save")
-            .withButton("Discard")
-            .withButton("Cancel");
+        const auto opts = juce::MessageBoxOptions()
+                        .withIconType (juce::MessageBoxIconType::WarningIcon)
+                        .withTitle ("Save changes?")
+                        .withMessage ("You have unsaved changes.")
+                        .withButton ("Save")
+                        .withButton ("Discard")
+                        .withButton ("Cancel");
 
-        juce::AlertWindow::showAsync(opts, [this](int r)
-        {
-            if (r == 1) {                // Save
+        juce::AlertWindow::showAsync (opts, [this] (const int r) {
+            if (r == 1)
+            { // Save
                 const bool hasPath =
                     appEngine->getCurrentEditFile().getFullPathName().isNotEmpty();
                 if (hasPath)
@@ -282,13 +266,14 @@ void TrackEditView::showNewEditButton()
                 }
                 else
                 {
-                    appEngine->saveEditAsAsync([this](bool ok)
-                    {
-                        if (ok) appEngine->newUntitledEdit();
+                    appEngine->saveEditAsAsync ([this] (const bool ok) {
+                        if (ok)
+                            appEngine->newUntitledEdit();
                     });
                 }
             }
-            else if (r == 2) {           // Discard
+            else if (r == 2)
+            { // Discard
                 appEngine->newUntitledEdit();
             }
         });
@@ -299,7 +284,7 @@ void TrackEditView::showNewEditButton()
     }
 }
 
-void TrackEditView::showOpenEditView()
+void TrackEditView::showOpenEditMenu() const
 {
     if (!appEngine->isDirty())
     {
@@ -307,29 +292,25 @@ void TrackEditView::showOpenEditView()
         return;
     }
 
-    auto opts = juce::MessageBoxOptions()
-        .withIconType(juce::MessageBoxIconType::WarningIcon)
-        .withTitle("Save changes?")
-        .withMessage("You have unsaved changes.")
-        .withButton("Save")
-        .withButton("Discard")
-        .withButton("Cancel");
+    const auto opts = juce::MessageBoxOptions()
+                          .withIconType (juce::MessageBoxIconType::WarningIcon)
+                          .withTitle ("Save changes?")
+                          .withMessage ("You have unsaved changes.")
+                          .withButton ("Save")
+                          .withButton ("Discard")
+                          .withButton ("Cancel");
 
-    juce::AlertWindow::showAsync(opts, [this](int result)
-    {
-        if (result == 1)  // Save
+    juce::AlertWindow::showAsync (opts, [this] (const int result) {
+        if (result == 1) // Save
         {
-            const bool hasPath = appEngine->getCurrentEditFile().getFullPathName().isNotEmpty();
-
-            if (hasPath)
+            if (appEngine->getCurrentEditFile().getFullPathName().isNotEmpty())
             {
                 if (appEngine->saveEdit())
                     appEngine->openEditAsync();
             }
             else
             {
-                appEngine->saveEditAsAsync([this](bool ok)
-                {
+                appEngine->saveEditAsAsync ([this] (const bool ok) {
                     if (ok)
                         appEngine->openEditAsync();
                 });
