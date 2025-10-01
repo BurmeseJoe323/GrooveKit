@@ -33,6 +33,10 @@ void MixerPanel::refreshTracks()
         strip->setTrackName (t->getName());
         strip->bindToTrack (*t);
 
+        // Reuse existing TrackComponent controller via AppEngine registry (Junie)
+        if (auto* listener = appEngine.getTrackListener (i))
+            strip->addListener (listener);
+
         // Initialize UI state from engine
         strip->setMuted (appEngine.isTrackMuted (i));
         strip->setSolo  (appEngine.isTrackSoloed (i));

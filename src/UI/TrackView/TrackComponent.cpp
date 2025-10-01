@@ -4,6 +4,8 @@
 TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const int trackIndex, const juce::Colour color)
     : appEngine (engine), trackColor (color), trackIndex (trackIndex)
 {
+    if (appEngine)
+        appEngine->registerTrackListener (trackIndex, this);
     // If no color provided, pick one from a palette based on index
     if (! trackColor.isOpaque())
     {
@@ -32,7 +34,11 @@ TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const 
     }
 }
 
-TrackComponent::~TrackComponent() = default;
+TrackComponent::~TrackComponent()
+{
+    if (appEngine)
+        appEngine->unregisterTrackListener (trackIndex, this);
+}
 
 void TrackComponent::paint (juce::Graphics& g)
 {
@@ -111,7 +117,11 @@ void TrackComponent::onSettingsClicked()
 
 void TrackComponent::setTrackIndex (const int index)
 {
+    if (appEngine)
+        appEngine->unregisterTrackListener (trackIndex, this);
     this->trackIndex = index;
+    if (appEngine)
+        appEngine->registerTrackListener (trackIndex, this);
 }
 
 int TrackComponent::getTrackIndex() const

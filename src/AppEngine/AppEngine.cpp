@@ -28,6 +28,28 @@ AppEngine::AppEngine()
 
 AppEngine::~AppEngine() = default;
 
+// Listener registry methods (Junie)
+void AppEngine::registerTrackListener (const int index, TrackHeaderComponent::Listener* l)
+{
+    trackListenerMap.set (index, l);
+}
+
+void AppEngine::unregisterTrackListener (const int index, TrackHeaderComponent::Listener* l)
+{
+    if (trackListenerMap.contains (index))
+    {
+        if (trackListenerMap[index] == l)
+            trackListenerMap.remove (index);
+    }
+}
+
+TrackHeaderComponent::Listener* AppEngine::getTrackListener (const int index) const
+{
+    if (trackListenerMap.contains (index))
+        return trackListenerMap[index];
+    return nullptr;
+}
+
 
 void AppEngine::createOrLoadEdit()
 {
