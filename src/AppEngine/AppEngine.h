@@ -90,7 +90,7 @@ class AppEngine : private juce::Timer
 {
 public:
     AppEngine();
-    ~AppEngine();
+    ~AppEngine() override;
 
     void createOrLoadEdit();
     void play();
@@ -166,6 +166,8 @@ private:
 
     // Map from track index to its controller listener (TrackComponent) (Junie)
     juce::HashMap<int, TrackHeaderComponent::Listener*> trackListenerMap;
+
+    std::atomic_bool shuttingDown { false };
 
     juce::File currentEditFile;
 

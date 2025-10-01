@@ -1,8 +1,6 @@
-#include "TrackListComponent.h"
-
-#include "DrumSamplerView/DrumSamplerLauncher.h"
 #include "DrumSamplerView/DrumSamplerView.h"
 #include "TrackEditView.h"
+#include "TrackListComponent.h"
 
 TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine) : appEngine (engine),
                                                                                     playhead (engine->getEdit(),
@@ -32,7 +30,7 @@ void TrackListComponent::resized()
     constexpr int trackHeight = 100;
     constexpr int addButtonSpace = 30;
 
-    const int numTracks = headers.size();
+    const int numTracks = juce::jmin (headers.size(), tracks.size());
     const int contentH = numTracks * trackHeight + addButtonSpace;
 
     // Set the size to either default to the parent's height if the content height isn't tall enough
@@ -46,8 +44,10 @@ void TrackListComponent::resized()
         // Header on left, track on right in same row
         auto row = bounds.removeFromTop (trackHeight);
 
-        headers[i]->setBounds (row.removeFromLeft (headerWidth).reduced (margin));
-        tracks[i]->setBounds (row.reduced (margin));
+        if (headers[i] != nullptr)
+            headers[i]->setBounds (row.removeFromLeft (headerWidth).reduced (margin));
+        if (tracks[i] != nullptr)
+            tracks[i]->setBounds (row.reduced (margin));
     }
 
     // Set bounds for playhead
@@ -94,14 +94,16 @@ void TrackListComponent::addNewTrack (int engineIdx)
     refreshSoloVisuals();
 
     newTrack->onRequestDeleteTrack = [this] (int uiIndex) {
-        if (uiIndex >= 0 && uiIndex < tracks.size())
+        if (uiIndex >= 0 && uiIndex < tracks.size() && uiIndex < headers.size())
         {
             if (auto* parent = findParentComponentOfClass<TrackEditView>())
                 if (parent->getPianoRollIndex() == uiIndex)
                     parent->hidePianoRoll();
 
-            removeChildComponent (headers[uiIndex]);
-            removeChildComponent (tracks[uiIndex]);
+            if (headers[uiIndex] != nullptr)
+                removeChildComponent (headers[uiIndex]);
+            if (tracks[uiIndex] != nullptr)
+                removeChildComponent (tracks[uiIndex]);
             headers.remove (uiIndex);
             tracks.remove (uiIndex);
             appEngine->deleteMidiTrack (uiIndex);
@@ -145,17 +147,21 @@ void TrackListComponent::parentSizeChanged()
 
 void TrackListComponent::updateTrackIndexes() const
 {
-    for (int i = 0; i < tracks.size(); ++i)
-        tracks[i]->setTrackIndex (i);
+    const int n = tracks.size();
+    for (int i = 0; i < n; ++i)
+        if (tracks[i] != nullptr)
+            tracks[i]->setTrackIndex (i);
 }
 
 void TrackListComponent::refreshSoloVisuals() const
 {
     const bool anySolo = appEngine->anyTrackSoloed();
-    for (int i = 0; i < headers.size(); ++i)
+    const int n = juce::jmin (headers.size(), tracks.size());
+    for (int i = 0; i < n; ++i)
     {
-        const bool thisSolo = appEngine->isTrackSoloed (tracks[i]->getTrackIndex());
-        headers[i]->setDimmed (anySolo && !thisSolo);
+        const bool thisSolo = appEngine->isTrackSoloed (tracks[i] != nullptr ? tracks[i]->getTrackIndex() : i);
+        if (headers[i] != nullptr)
+            headers[i]->setDimmed (anySolo && !thisSolo);
     }
 }
 
