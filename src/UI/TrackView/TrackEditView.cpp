@@ -204,30 +204,32 @@ bool TrackEditView::keyPressed(const juce::KeyPress &key_press) {
     // if (midiKeyboard && midiKeyboard->keyPressed (key_press))
     //     return true;
 
-    return false;
+    // This is the top level of our application, so if the key press has not been consumed,
+    // it is not an implemented key command in GrooveKit
+    return true;
 }
 
 bool TrackEditView::keyStateChanged (bool isKeyDown)
 {
-    if (isKeyDown)
+    int noteNumber = keyboardBaseOctave * 12; // Starts at the C of whatever octave is set
+    for (const char key : noteKeys)
     {
-        if (juce::KeyPress::isKeyCurrentlyDown ('A') && !midiKeyboardState.isNoteOn (1, keyboardBaseOctave * 12 + 0))
+        if (isKeyDown)
         {
-            midiKeyboardState.noteOn (1, keyboardBaseOctave * 12 + 0, 0.5f);
+            if (juce::KeyPress::isKeyCurrentlyDown (key)
+                && !midiKeyboardState.isNoteOn (1, noteNumber))
+            {
+                midiKeyboardState.noteOn (1, noteNumber, 0.5f);
+                return true;
+            }
+        }
+        else if (!juce::KeyPress::isKeyCurrentlyDown (key)
+                 && midiKeyboardState.isNoteOn (1, noteNumber))
+        {
+            midiKeyboardState.noteOff (1, noteNumber, 0.5f);
             return true;
         }
-    }
-    else
-    {
-        // for (int i = 0; i < static_cast<int>(noteKeys.size()); i++)
-        // {
-        // int keyCode = noteKeys[i];
-        if (!juce::KeyPress::isKeyCurrentlyDown ('A') && midiKeyboardState.isNoteOn (1, keyboardBaseOctave * 12 + 0))
-        {
-            midiKeyboardState.noteOff (1, keyboardBaseOctave * 12 + 0, 0.5f);
-            return true;
-        }
-        // }
+        noteNumber++;
     }
 
     return false;
