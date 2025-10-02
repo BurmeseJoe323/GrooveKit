@@ -55,7 +55,7 @@ private:
     // Base octave for QWERTY mapping; adjusted with Z/X keys.
     int keyboardBaseOctave = 4;
 
-    juce::TextButton backButton { "Back" }, newEditButton { "New" }, playPauseButton { "Play" }, stopButton { "Stop" },
-        openEditButton { "Open Edit" }, newTrackButton { "New Track" }, recordButton { "Record" }, outputButton { "Output Device" },
-        mixViewButton { "Mix View" };
+    juce::TextButton backButton { "Back" }, playPauseButton{"Play"}, stopButton{"Stop"}, newEditButton{"New"},
+            openEditButton{"Open"}, saveEditButton{"Save"}, saveEditAsButton{"Save As"}, newTrackButton{"New Track"}, recordButton{"Record"}, outputButton{"Output Device"},
+            mixViewButton{"Mix View"};
 };

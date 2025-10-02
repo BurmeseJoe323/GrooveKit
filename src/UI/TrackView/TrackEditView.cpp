@@ -14,6 +14,22 @@ TrackEditView::TrackEditView (AppEngine& engine)
     viewport.setScrollBarsShown (true, false); // vertical only
     viewport.setViewedComponent (trackList.get(), false);
 
+    trackList->rebuildFromEngine();
+
+    appEngine->onEditLoaded = [this]
+    {
+        trackList = std::make_unique<TrackListComponent>(appEngine);
+        trackList->setPixelsPerSecond (pixelsPerSecond);
+        trackList->setViewStart (viewStart);
+
+        viewport.setViewedComponent (trackList.get(), false);
+        trackList->rebuildFromEngine();
+
+        repaint();
+
+    };
+
+
     setupButtons();
     addAndMakeVisible (viewport);
 
@@ -42,16 +58,19 @@ void TrackEditView::resized()
     auto r = getLocalBounds();
     const int w = r.getWidth() / 7;
     auto topR = r.removeFromTop (30);
+    auto bottomRow = r.removeFromTop (30) ;
 
     backButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    //newEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    //openEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
+    newEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
+    openEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
+    saveEditButton.setBounds (topR.removeFromLeft (w).reduced (2));
+    saveEditAsButton.setBounds (topR.removeFromLeft (w).reduced (2));
     playPauseButton.setBounds (topR.removeFromLeft (w).reduced (2));
     stopButton.setBounds (topR.removeFromLeft (w).reduced (2));
     recordButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    newTrackButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    outputButton.setBounds (topR.removeFromLeft (w).reduced (2));
-    mixViewButton.setBounds (topR.removeFromLeft (w).reduced (2));
+    newTrackButton.setBounds (bottomRow.removeFromLeft (w).reduced (2));
+    outputButton.setBounds (bottomRow.removeFromLeft (w).reduced (2));
+    mixViewButton.setBounds (bottomRow.removeFromLeft (w).reduced (2));
 
     viewport.setBounds (r);
 }
@@ -158,7 +177,10 @@ void TrackEditView::setupButtons()
     addAndMakeVisible (playPauseButton);
     addAndMakeVisible (stopButton);
     addAndMakeVisible (recordButton);
+    addAndMakeVisible (newEditButton);
     addAndMakeVisible (openEditButton);
+    addAndMakeVisible (saveEditButton);
+    addAndMakeVisible (saveEditAsButton);
     addAndMakeVisible (newTrackButton);
     addAndMakeVisible ((outputButton));
 
@@ -179,6 +201,97 @@ void TrackEditView::setupButtons()
         if (onBack)
             onBack();
     };
+
+    newEditButton.onClick = [this]
+    {
+        if (appEngine->isDirty())
+        {
+            auto opts = juce::MessageBoxOptions()
+                .withIconType(juce::MessageBoxIconType::WarningIcon)
+                .withTitle("Save changes?")
+                .withMessage("You have unsaved changes.")
+                .withButton("Save")
+                .withButton("Discard")
+                .withButton("Cancel");
+
+            juce::AlertWindow::showAsync(opts, [this](int r)
+            {
+                if (r == 1) {                // Save
+                    const bool hasPath =
+                        appEngine->getCurrentEditFile().getFullPathName().isNotEmpty();
+                    if (hasPath)
+                    {
+                        if (appEngine->saveEdit())
+                            appEngine->newUntitledEdit();
+                    }
+                    else
+                    {
+                        appEngine->saveEditAsAsync([this](bool ok)
+                        {
+                            if (ok) appEngine->newUntitledEdit();
+                        });
+                    }
+                }
+                else if (r == 2) {           // Discard
+                    appEngine->newUntitledEdit();
+                }
+            });
+        }
+        else
+        {
+            appEngine->newUntitledEdit();
+        }
+    };
+
+    openEditButton.onClick = [this]
+    {
+        if (!appEngine->isDirty())
+        {
+            appEngine->openEditAsync();
+            return;
+        }
+
+        auto opts = juce::MessageBoxOptions()
+            .withIconType(juce::MessageBoxIconType::WarningIcon)
+            .withTitle("Save changes?")
+            .withMessage("You have unsaved changes.")
+            .withButton("Save")
+            .withButton("Discard")
+            .withButton("Cancel");
+
+        juce::AlertWindow::showAsync(opts, [this](int result)
+        {
+            if (result == 1)  // Save
+            {
+                const bool hasPath = appEngine->getCurrentEditFile().getFullPathName().isNotEmpty();
+
+                if (hasPath)
+                {
+                    if (appEngine->saveEdit())
+                        appEngine->openEditAsync();
+                }
+                else
+                {
+                    appEngine->saveEditAsAsync([this](bool ok)
+                    {
+                        if (ok)
+                            appEngine->openEditAsync();
+                    });
+                }
+            }
+            else if (result == 2) // Discard
+            {
+                appEngine->openEditAsync();
+            }
+        });
+    };
+
+    saveEditButton.onClick = [this]
+    {
+        appEngine->saveEdit();
+    };
+    saveEditAsButton.onClick = [this] { appEngine->saveEditAsAsync(); };
+
 }
 
 void TrackEditView::handleNoteOn (juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity)

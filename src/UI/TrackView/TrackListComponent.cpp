@@ -202,6 +202,21 @@ void TrackListComponent::setViewStart (te::TimePosition t)
     repaint();
 }
 
+void TrackListComponent::rebuildFromEngine()
+{
+    for (auto* h : headers) removeChildComponent(h);
+    for (auto* t : tracks)  removeChildComponent(t);
+    headers.clear(); tracks.clear();
+
+    const int n = appEngine->getNumTracks();
+    for (int i = 0; i < n; ++i)
+        addNewTrack(i);
+
+    resized();
+}
+
+
+
 // bool EditComponent::keyPressed(const KeyPress& key) {
 //     if (key == KeyPress::deleteKey) {
 //         removeSelectedTracks();

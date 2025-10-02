@@ -24,6 +24,7 @@ public:
     void addNewTrack (int index);
     void setPixelsPerSecond (double pps);
     void setViewStart (te::TimePosition t);
+    void rebuildFromEngine();
 
     int getSelectedTrackIndex() const { return selectedTrackIndex; }
 

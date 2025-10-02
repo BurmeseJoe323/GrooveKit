@@ -86,7 +86,7 @@ public:
 };
 
 
-class AppEngine
+class AppEngine : private juce::Timer
 {
 public:
     AppEngine();
@@ -134,6 +134,22 @@ public:
     juce::StringArray listOutputDevices()            const { return audioEngine->listOutputDevices(); }
     juce::String getCurrentOutputDeviceName()        const { return audioEngine->getCurrentOutputDeviceName(); }
 
+    bool saveEdit();
+    void saveEditAsAsync (std::function<void (bool success)> onDone = {});
+
+    bool isDirty() const noexcept;
+    const juce::File& getCurrentEditFile() const noexcept { return currentEditFile; }
+
+    void setAutosaveMinutes (int minutes);
+
+    void openEditAsync (std::function<void (bool success)> onDone = {});
+    bool loadEditFromFile (const juce::File& file);
+    std::function<void()> onEditLoaded;
+
+    void newUntitledEdit();
+
+
+
 private:
     std::unique_ptr<tracktion::engine::Engine> engine;
     std::unique_ptr<tracktion::engine::Edit> edit;
@@ -144,6 +160,17 @@ private:
     std::unique_ptr<MIDIEngine> midiEngine;
     std::unique_ptr<AudioEngine> audioEngine;
     std::unique_ptr<TrackManager> trackManager;
+
+    juce::File currentEditFile;
+
+    int lastSavedTxn = 0;
+
+    bool writeEditToFile (const juce::File& file);
+    void markSaved();
+    int  currentUndoTxn() const;
+
+    juce::File getAutosaveFile() const;
+    void timerCallback() override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AppEngine)
 };
