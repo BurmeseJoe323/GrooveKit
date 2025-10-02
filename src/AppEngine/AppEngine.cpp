@@ -391,8 +391,6 @@ void AppEngine::stop()
             onRecordingStopped();
     }
 
-bool AppEngine::isPlaying() const { return audioEngine->isPlaying(); }
-
 void AppEngine::deleteMidiTrack(int index) { trackManager->deleteTrack(index); }
     audioEngine->stop();
 }

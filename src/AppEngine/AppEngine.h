@@ -104,7 +104,6 @@ public:
     void createOrLoadEdit();
     void play();
     void stop();
-    bool isPlaying() const;
 
     int addMidiTrack();
     int getNumTracks();
