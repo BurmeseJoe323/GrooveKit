@@ -41,7 +41,7 @@ private:
 
     bool processNoteKey (const char key);
 
-    std::set<char> noteKeys{ 'A', 'W', 'S', 'E', 'D', 'F', 'T', 'G', 'Y', 'H', 'U', 'J', 'K', 'O', 'L' };
+    juce::Array<char> noteKeys{ 'A', 'W', 'S', 'E', 'D', 'F', 'T', 'G', 'Y', 'H', 'U', 'J', 'K', 'O', 'L' };
 
     std::shared_ptr<AppEngine> appEngine;
     std::unique_ptr<TrackListComponent> trackList;
