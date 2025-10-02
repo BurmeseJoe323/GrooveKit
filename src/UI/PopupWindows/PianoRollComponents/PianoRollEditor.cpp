@@ -78,9 +78,9 @@ void PianoRollEditor::resized()
     keyboardView.setBounds (5, gridView.getY(), 70, gridView.getHeight() - 10);
 
     noteGrid.setBounds (0, 0, 4000, 20 * 127);
-    noteGrid.setupGrid (550, 15, 10);
+    noteGrid.setupGrid (pixelsPerBar, noteHeight, numBars);
     timeline.setBounds (0, 0, 100, timelineView.getHeight());
-    timeline.setup (10, 900);
+    timeline.setup (numBars, pixelsPerBar);
     keyboard.setBounds (0, 0, keyboardView.getWidth(), noteGrid.getHeight());
 
     controlPanel.setBounds (5, gridView.getBottom() + 5, getWidth() - 10, 80);
