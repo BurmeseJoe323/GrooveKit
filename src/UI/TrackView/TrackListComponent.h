@@ -1,3 +1,4 @@
+// Note: Junie (JetBrains AI) contributed code to this file on 2025-09-24.
 #pragma once
 
 #include "../../AppEngine/AppEngine.h"
@@ -13,7 +14,7 @@
 class TrackListComponent final : public juce::Component
 {
 public:
-    explicit TrackListComponent (const std::shared_ptr<AppEngine>& engine);
+    explicit TrackListComponent (const std::shared_ptr<AppEngine>& engine); // should this be a reference rather than shared pointer?
     ~TrackListComponent() override;
 
     void paint (juce::Graphics& g) override;
@@ -24,6 +25,8 @@ public:
     void setPixelsPerSecond (double pps);
     void setViewStart (te::TimePosition t);
     void rebuildFromEngine();
+
+    int getSelectedTrackIndex() const { return selectedTrackIndex; }
 
 private:
     const std::shared_ptr<AppEngine> appEngine;

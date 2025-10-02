@@ -31,6 +31,8 @@ void AudioEngine::stop() {
     }
 }
 
+bool AudioEngine::isPlaying() const { return edit.getTransport().isPlaying(); }
+
 AudioDeviceManager& AudioEngine::adm() const
 {
     return engine.getDeviceManager().deviceManager;
