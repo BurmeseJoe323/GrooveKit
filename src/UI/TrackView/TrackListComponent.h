@@ -24,6 +24,8 @@ public:
     void setViewStart (te::TimePosition t);
     void rebuildFromEngine();
 
+    int getSelectedTrackIndex() const { return selectedTrackIndex; }
+
 private:
     const std::shared_ptr<AppEngine> appEngine;
     PlayheadComponent playhead;
