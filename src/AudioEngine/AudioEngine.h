@@ -11,7 +11,6 @@ public:
 
     void play();
     void stop();
-    bool isPlaying() const;
 
     juce::StringArray listOutputDevices() const;
     bool setOutputDeviceByName (const juce::String& deviceName);
