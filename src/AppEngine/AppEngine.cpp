@@ -88,8 +88,6 @@ void AppEngine::play() { audioEngine->play(); }
 
 void AppEngine::stop() { audioEngine->stop(); }
 
-bool AppEngine::isPlaying() const { return audioEngine->isPlaying(); }
-
 void AppEngine::deleteMidiTrack(int index) { trackManager->deleteTrack(index); }
 
 void AppEngine::addMidiClipToTrack(int trackIndex) { midiEngine->addMidiClipToTrack(trackIndex); }
