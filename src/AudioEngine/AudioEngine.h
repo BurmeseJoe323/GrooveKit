@@ -52,7 +52,6 @@ public:
      * plugins to prevent stuck notes.
      */
     void stop();
-    bool isPlaying() const;
 
     /**
      * @brief Returns whether the transport is currently playing.
