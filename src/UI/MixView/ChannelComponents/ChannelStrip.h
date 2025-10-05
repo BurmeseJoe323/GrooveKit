@@ -1,3 +1,4 @@
+/// JUNIE
 #pragma once
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <tracktion_engine/tracktion_engine.h>
@@ -21,9 +22,21 @@ public:
 
     void setTrackName (juce::String s) { name.setText (s, juce::dontSendNotification); }
 
-    // Listener passthrough
-    void addListener (TrackHeaderComponent::Listener* l) { listeners.add (l); }
-    void removeListener (TrackHeaderComponent::Listener* l) { listeners.remove (l); }
+    // Listener passthrough (store as SafePointers to avoid dangling UI references) (Junie)
+    void addListener (TrackHeaderComponent::Listener* l)
+    {
+        if (auto* c = dynamic_cast<juce::Component*>(l))
+            listenerComponents.add (juce::Component::SafePointer<juce::Component> (c));
+    }
+    void removeListener (TrackHeaderComponent::Listener* l)
+    {
+        if (l == nullptr) return;
+        for (int i = listenerComponents.size(); --i >= 0;)
+        {
+            if (listenerComponents[i] == dynamic_cast<juce::Component*>(l))
+                listenerComponents.remove (i);
+        }
+    }
 
     // State helpers
     void setMuted (bool isMuted);
@@ -35,6 +48,11 @@ public:
     // void setMeterLevel(float lin)      { meter.setLevel(lin); }
     // void setMeterPeak(float lin)       { meter.setPeak(lin); }
 
+public:
+    // Fallback callbacks used when TrackComponents (listeners) are not present (e.g., in Mix view) (Junie)
+    std::function<void (bool)> onRequestMuteChange;
+    std::function<void (bool)> onRequestSoloChange;
+
 private:
     juce::TextButton muteButton, soloButton, recordButton;
     juce::Label name;
@@ -43,10 +61,10 @@ private:
     juce::Slider fader;
     juce::Slider pan;
 
-    te::VolumeAndPanPlugin::Ptr boundVnp;
+    te::VolumeAndPanPlugin* boundVnp { nullptr };
     bool ignoreSliderCallback { false };
 
-    juce::ListenerList<TrackHeaderComponent::Listener> listeners;
+    juce::Array<juce::Component::SafePointer<juce::Component>> listenerComponents;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ChannelStrip)
 };

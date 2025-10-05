@@ -1,3 +1,4 @@
+/// JUNIE
 #include "ChannelStrip.h"
 #include "../TrackView/TrackHeaderComponent.h"
 #include "MainComponent.h"
@@ -35,19 +36,45 @@ ChannelStrip::ChannelStrip()
     recordButton.setColour (juce::TextButton::buttonColourId, juce::Colour (0xFF6C757D));
     recordButton.setColour (juce::TextButton::buttonOnColourId, juce::Colour (0xFF872323));
 
-    // Notify TrackHeaderComponent listeners
+    // Notify TrackHeaderComponent listeners (safely via SafePointers) (Junie)
     muteButton.onClick = [this] {
         const bool nowMuted = muteButton.getToggleState();
-        listeners.call ([&] (TrackHeaderComponent::Listener& l) {
-            l.onMuteToggled (nowMuted);
-        });
+        for (int i = listenerComponents.size(); --i >= 0;)
+        {
+            if (auto* comp = listenerComponents[i].getComponent())
+            {
+                if (auto* l = dynamic_cast<TrackHeaderComponent::Listener*> (comp))
+                    l->onMuteToggled (nowMuted);
+                else
+                    listenerComponents.remove (i);
+            }
+            else
+            {
+                listenerComponents.remove (i);
+            }
+        }
+        if (onRequestMuteChange)
+            onRequestMuteChange (nowMuted);
     };
 
     soloButton.onClick = [this] {
         const bool nowSolo = soloButton.getToggleState();
-        listeners.call ([&] (TrackHeaderComponent::Listener& l) {
-            l.onSoloToggled (nowSolo);
-        });
+        for (int i = listenerComponents.size(); --i >= 0;)
+        {
+            if (auto* comp = listenerComponents[i].getComponent())
+            {
+                if (auto* l = dynamic_cast<TrackHeaderComponent::Listener*> (comp))
+                    l->onSoloToggled (nowSolo);
+                else
+                    listenerComponents.remove (i);
+            }
+            else
+            {
+                listenerComponents.remove (i);
+            }
+        }
+        if (onRequestSoloChange)
+            onRequestSoloChange (nowSolo);
     };
 
     addAndMakeVisible (name);
@@ -94,7 +121,7 @@ void ChannelStrip::setSolo (const bool isSolo)
 void ChannelStrip::bindToTrack (te::AudioTrack& track)
 {
     boundVnp = track.getVolumePlugin();
-    const double pos = boundVnp->getSliderPos();
+    const double pos = boundVnp ? boundVnp->getSliderPos() : 0.0;
     const double gain = te::volumeFaderPositionToGain (pos);
 
     ignoreSliderCallback = true;

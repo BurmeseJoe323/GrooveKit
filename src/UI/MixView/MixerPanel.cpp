@@ -37,6 +37,10 @@ void MixerPanel::refreshTracks()
         if (auto* listener = appEngine.getTrackListener (i))
             strip->addListener (listener);
 
+        // Always update engine state if listeners aren't present (e.g., Track view not active)
+        strip->onRequestMuteChange = [this, idx = i] (bool mute) { appEngine.setTrackMuted (idx, mute); };
+        strip->onRequestSoloChange = [this, idx = i] (bool solo) { appEngine.setTrackSoloed (idx, solo); };
+
         // Initialize UI state from engine
         strip->setMuted (appEngine.isTrackMuted (i));
         strip->setSolo  (appEngine.isTrackSoloed (i));
