@@ -26,7 +26,44 @@ AppEngine::AppEngine()
 
 }
 
-AppEngine::~AppEngine() = default;
+AppEngine::~AppEngine()
+{
+    // Signal shutdown early so UI listeners don't touch the registry while we tear down
+    shuttingDown = true;
+    // Clear listener map defensively to release any dangling pointers
+    trackListenerMap.clear();
+}
+
+// Listener registry methods (Junie)
+void AppEngine::registerTrackListener (const int index, TrackHeaderComponent::Listener* l)
+{
+    // Guard against invalid indices to avoid JUCE HashMap hash assertions
+    if (shuttingDown || index < 0 || l == nullptr)
+        return;
+    trackListenerMap.set (index, l);
+}
+
+void AppEngine::unregisterTrackListener (const int index, TrackHeaderComponent::Listener* l)
+{
+    if (shuttingDown || index < 0)
+        return;
+
+    if (trackListenerMap.contains (index))
+    {
+        if (trackListenerMap[index] == l)
+            trackListenerMap.remove (index);
+    }
+}
+
+TrackHeaderComponent::Listener* AppEngine::getTrackListener (const int index) const
+{
+    if (shuttingDown || index < 0)
+        return nullptr;
+
+    if (trackListenerMap.contains (index))
+        return trackListenerMap[index];
+    return nullptr;
+}
 
 
 void AppEngine::createOrLoadEdit()
