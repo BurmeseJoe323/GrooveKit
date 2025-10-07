@@ -1,10 +1,10 @@
 #pragma once
 
-#include <tracktion_engine/tracktion_engine.h>
-
-#include "TrackManager.h"
-#include "../MIDIEngine/MIDIEngine.h"
 #include "../AudioEngine/AudioEngine.h"
+#include "../MIDIEngine/MIDIEngine.h"
+#include "../UI/TrackView/TrackHeaderComponent.h"
+#include "TrackManager.h"
+#include <tracktion_engine/tracktion_engine.h>
 
 namespace IDs
 {
@@ -90,7 +90,7 @@ class AppEngine : private juce::Timer
 {
 public:
     AppEngine();
-    ~AppEngine();
+    ~AppEngine() override;
 
     void createOrLoadEdit();
     void play();
@@ -148,7 +148,10 @@ public:
 
     void newUntitledEdit();
 
-
+    // Track controller listener registry (Junie)
+    void registerTrackListener (int index, TrackHeaderComponent::Listener* l);
+    void unregisterTrackListener (int index, TrackHeaderComponent::Listener* l);
+    [[nodiscard]] TrackHeaderComponent::Listener* getTrackListener (int index) const;
 
 private:
     std::unique_ptr<tracktion::engine::Engine> engine;
@@ -160,6 +163,11 @@ private:
     std::unique_ptr<MIDIEngine> midiEngine;
     std::unique_ptr<AudioEngine> audioEngine;
     std::unique_ptr<TrackManager> trackManager;
+
+    // Map from track index to its controller listener (TrackComponent) (Junie)
+    juce::HashMap<int, TrackHeaderComponent::Listener*> trackListenerMap;
+
+    std::atomic_bool shuttingDown { false };
 
     juce::File currentEditFile;
 
