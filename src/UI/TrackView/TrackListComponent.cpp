@@ -29,7 +29,7 @@ void TrackListComponent::resized()
     mainFlex.flexDirection = juce::FlexBox::Direction::column;
 
     constexpr int headerWidth = 140;
-    constexpr int trackHeight = 100;
+    constexpr int trackHeight = 125;
     constexpr int addButtonSpace = 30;
 
     const int numTracks = headers.size();
