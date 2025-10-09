@@ -24,14 +24,11 @@ public:
     void setViewStart (te::TimePosition t);
     void rebuildFromEngine();
 
-    int getSelectedTrackIndex() const { return selectedTrackIndex; }
-
     void armTrack(int trackIndex, bool shouldBeArmed);
 
 private:
     const std::shared_ptr<AppEngine> appEngine;
     PlayheadComponent playhead;
-    int selectedTrackIndex = -1;
 
     juce::OwnedArray<TrackComponent> tracks;
     juce::OwnedArray<TrackHeaderComponent> headers;

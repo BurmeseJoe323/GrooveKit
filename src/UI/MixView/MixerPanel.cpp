@@ -5,7 +5,7 @@ MixerPanel::MixerPanel (AppEngine& engine)
 {
     refreshTracks();
 
-    appEngine.onSelectedTrackIndexChanged = [this]
+    appEngine.onArmedTrackChanged = [this]
     {
         refreshArmStates();
     };
@@ -47,15 +47,16 @@ void MixerPanel::refreshTracks()
         strip->onRequestMuteChange = [this, idx = i] (bool mute) { appEngine.setTrackMuted (idx, mute); };
         strip->onRequestSoloChange = [this, idx = i] (bool solo) { appEngine.setTrackSoloed (idx, solo); };
         strip->onRequestArmChange = [this, idx = i](bool armed) {
-            const int currentSelected = appEngine.getSelectedTrackIndex();
+            const int currentSelected = appEngine.getArmedTrackIndex();
             const int newSelected = armed ? idx : -1;
             if (currentSelected != newSelected)
-                appEngine.setSelectedTrackIndex (newSelected);
+                appEngine.setArmedTrack (newSelected);
         };
 
         // Initialize UI state from engine
         strip->setMuted (appEngine.isTrackMuted (i));
         strip->setSolo  (appEngine.isTrackSoloed (i));
+        strip->setArmed (appEngine.getArmedTrackIndex () == i);
 
         addAndMakeVisible (strip);
         trackStrips.add (strip);
@@ -75,7 +76,7 @@ void MixerPanel::refreshTracks()
 
 void MixerPanel::refreshArmStates()
 {
-    const int selectedTrack = appEngine.getSelectedTrackIndex();
+    const int selectedTrack = appEngine.getArmedTrackIndex();
     for (int i = 0; i < trackStrips.size(); ++i)
     {
         if (auto* strip = trackStrips[i])

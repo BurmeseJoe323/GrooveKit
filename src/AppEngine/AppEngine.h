@@ -119,9 +119,6 @@ public:
     bool isTrackSoloed(int index) const;
     bool anyTrackSoloed() const;
 
-    // void setTrackArmed(int index, bool armed);
-    // bool isTrackArmed(int index) const;
-
     TrackManager& getTrackManager()       { return *trackManager; }
     TrackManager* getTrackManagerPtr()    { return trackManager.get(); }
 
@@ -155,9 +152,10 @@ public:
     void unregisterTrackListener (int index, TrackHeaderComponent::Listener* l);
     [[nodiscard]] TrackHeaderComponent::Listener* getTrackListener (int index) const;
 
-    void setSelectedTrackIndex (int index);
-    int getSelectedTrackIndex() const;
-    std::function<void()> onSelectedTrackIndexChanged;
+    void setArmedTrack (int index);
+    int getArmedTrackIndex() const;
+    te::AudioTrack* getArmedTrack();
+    std::function<void()> onArmedTrackChanged;
     std::function<void()> onEditLoaded;
 
 private:

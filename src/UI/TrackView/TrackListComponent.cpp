@@ -12,8 +12,7 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
     addAndMakeVisible (playhead);
     playhead.setAlwaysOnTop (true);
 
-    appEngine->onSelectedTrackIndexChanged = [this] {
-        this->selectedTrackIndex = appEngine->getSelectedTrackIndex();
+    appEngine->onArmedTrackChanged = [this] {
         refreshTrackStates();
     };
 }
@@ -171,15 +170,15 @@ void TrackListComponent::refreshTrackStates() const
     for (int i = 0; i < headers.size(); ++i)
     {
         if (headers[i] != nullptr)
-            headers[i]->setArmed (i == selectedTrackIndex);
+            headers[i]->setArmed (appEngine->getArmedTrackIndex() == i);
     }
 }
 
 void TrackListComponent::armTrack (int trackIndex, bool shouldBeArmed)
 {
     const int newIndex = shouldBeArmed ? trackIndex : -1;
-    if (appEngine->getSelectedTrackIndex() != newIndex)
-        appEngine->setSelectedTrackIndex (newIndex);
+    if (appEngine->getArmedTrackIndex() != newIndex)
+        appEngine->setArmedTrack (newIndex);
 }
 
 void TrackListComponent::setPixelsPerSecond (double pps)

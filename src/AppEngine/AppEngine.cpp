@@ -116,18 +116,23 @@ void AppEngine::newUntitledEdit()
     edit->restartPlayback();
 }
 
-void AppEngine::setSelectedTrackIndex (int index)
+void AppEngine::setArmedTrack (int index)
 {
     if (selectedTrackIndex == index)
         return;
 
     selectedTrackIndex = index;
 
-    if (onSelectedTrackIndexChanged)
-        onSelectedTrackIndexChanged();
+    if (onArmedTrackChanged)
+        onArmedTrackChanged();
 }
 
-int AppEngine::getSelectedTrackIndex () const
+te::AudioTrack* AppEngine::getArmedTrack ()
+{
+    return getTrackManager().getTrack (selectedTrackIndex);
+}
+
+int AppEngine::getArmedTrackIndex () const
 {
     return selectedTrackIndex;
 }
