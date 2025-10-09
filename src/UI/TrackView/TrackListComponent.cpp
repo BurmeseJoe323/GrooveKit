@@ -11,6 +11,11 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
     setWantsKeyboardFocus (true); // setting keyboard focus?
     addAndMakeVisible (playhead);
     playhead.setAlwaysOnTop (true);
+
+    appEngine->onSelectedTrackIndexChanged = [this] {
+        this->selectedTrackIndex = appEngine->getSelectedTrackIndex();
+        refreshTrackStates();
+    };
 }
 
 TrackListComponent::~TrackListComponent() = default;
@@ -172,12 +177,9 @@ void TrackListComponent::refreshTrackStates() const
 
 void TrackListComponent::armTrack (int trackIndex, bool shouldBeArmed)
 {
-    if (shouldBeArmed)
-        selectedTrackIndex = trackIndex;
-    else
-        selectedTrackIndex = -1;
-
-    refreshTrackStates();
+    const int newIndex = shouldBeArmed ? trackIndex : -1;
+    if (appEngine->getSelectedTrackIndex() != newIndex)
+        appEngine->setSelectedTrackIndex (newIndex);
 }
 
 void TrackListComponent::setPixelsPerSecond (double pps)

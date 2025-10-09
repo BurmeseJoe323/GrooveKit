@@ -14,6 +14,7 @@ public:
 
     void refreshTracks();
     void resized() override;
+    void refreshArmStates();
 
 private:
     AppEngine& appEngine;

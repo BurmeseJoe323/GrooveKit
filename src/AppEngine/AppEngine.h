@@ -119,6 +119,9 @@ public:
     bool isTrackSoloed(int index) const;
     bool anyTrackSoloed() const;
 
+    // void setTrackArmed(int index, bool armed);
+    // bool isTrackArmed(int index) const;
+
     TrackManager& getTrackManager()       { return *trackManager; }
     TrackManager* getTrackManagerPtr()    { return trackManager.get(); }
 
@@ -144,7 +147,6 @@ public:
 
     void openEditAsync (std::function<void (bool success)> onDone = {});
     bool loadEditFromFile (const juce::File& file);
-    std::function<void()> onEditLoaded;
 
     void newUntitledEdit();
 
@@ -152,6 +154,11 @@ public:
     void registerTrackListener (int index, TrackHeaderComponent::Listener* l);
     void unregisterTrackListener (int index, TrackHeaderComponent::Listener* l);
     [[nodiscard]] TrackHeaderComponent::Listener* getTrackListener (int index) const;
+
+    void setSelectedTrackIndex (int index);
+    int getSelectedTrackIndex() const;
+    std::function<void()> onSelectedTrackIndexChanged;
+    std::function<void()> onEditLoaded;
 
 private:
     std::unique_ptr<tracktion::engine::Engine> engine;
@@ -179,6 +186,8 @@ private:
 
     juce::File getAutosaveFile() const;
     void timerCallback() override;
+
+    int selectedTrackIndex = -1;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AppEngine)
 };

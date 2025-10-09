@@ -45,6 +45,9 @@ public:
     void setSolo (bool isSolo);
     bool isSolo() const;
 
+    void setArmed (bool isArmed);
+    bool isArmed () const;
+
     // void setMeterLevel(float lin)      { meter.setLevel(lin); }
     // void setMeterPeak(float lin)       { meter.setPeak(lin); }
 
@@ -52,6 +55,7 @@ public:
     // Fallback callbacks used when TrackComponents (listeners) are not present (e.g., in Mix view) (Junie)
     std::function<void (bool)> onRequestMuteChange;
     std::function<void (bool)> onRequestSoloChange;
+    std::function<void (bool)> onRequestArmChange;
 
 private:
     juce::TextButton muteButton, soloButton, recordButton;

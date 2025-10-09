@@ -116,6 +116,22 @@ void AppEngine::newUntitledEdit()
     edit->restartPlayback();
 }
 
+void AppEngine::setSelectedTrackIndex (int index)
+{
+    if (selectedTrackIndex == index)
+        return;
+
+    selectedTrackIndex = index;
+
+    if (onSelectedTrackIndexChanged)
+        onSelectedTrackIndexChanged();
+}
+
+int AppEngine::getSelectedTrackIndex () const
+{
+    return selectedTrackIndex;
+}
+
 void AppEngine::play() { audioEngine->play(); }
 
 void AppEngine::stop() { audioEngine->stop(); }
