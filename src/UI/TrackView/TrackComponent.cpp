@@ -140,5 +140,11 @@ void TrackComponent::onSoloToggled (const bool isSolo)
     if (appEngine)
         appEngine->setTrackSoloed (trackIndex, isSolo);
     if (auto* p = findParentComponentOfClass<TrackListComponent>())
-        p->refreshSoloVisuals();
+        p->refreshTrackStates();
+}
+
+void TrackComponent::onRecordArmToggled (bool isArmed)
+{
+    if (auto* p = findParentComponentOfClass<TrackListComponent>())
+        p->armTrack(trackIndex, isArmed);
 }

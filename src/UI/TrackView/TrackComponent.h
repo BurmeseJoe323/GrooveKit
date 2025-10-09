@@ -17,6 +17,7 @@ public:
     void onSettingsClicked() override;
     void onMuteToggled (bool isMuted) override;
     void onSoloToggled (bool isSolo) override;
+    void onRecordArmToggled (bool isArmed) override;
 
     void setTrackIndex (int index);
     int getTrackIndex() const;
@@ -43,7 +44,7 @@ public:
 private:
     std::shared_ptr<AppEngine> appEngine;
     juce::Colour trackColor;
-    int trackIndex = -1;
+    int trackIndex;
     int numClips = 0;
 
     TrackClip trackClip;

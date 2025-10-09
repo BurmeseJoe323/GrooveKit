@@ -18,7 +18,7 @@ public:
     void paint (juce::Graphics& g) override;
     void resized() override;
     void parentSizeChanged() override;
-    void refreshSoloVisuals() const;
+    void refreshTrackStates() const;
     void addNewTrack (int index);
     void setPixelsPerSecond (double pps);
     void setViewStart (te::TimePosition t);
@@ -26,10 +26,12 @@ public:
 
     int getSelectedTrackIndex() const { return selectedTrackIndex; }
 
+    void armTrack(int trackIndex, bool shouldBeArmed);
+
 private:
     const std::shared_ptr<AppEngine> appEngine;
     PlayheadComponent playhead;
-    int selectedTrackIndex;
+    int selectedTrackIndex = -1;
 
     juce::OwnedArray<TrackComponent> tracks;
     juce::OwnedArray<TrackHeaderComponent> headers;

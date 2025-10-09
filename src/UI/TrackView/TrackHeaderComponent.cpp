@@ -8,6 +8,7 @@ TrackHeaderComponent::TrackHeaderComponent()
     addAndMakeVisible (trackNameLabel);
     addAndMakeVisible (muteTrackButton);
     addAndMakeVisible (soloTrackButton);
+    addAndMakeVisible (recordArmButton);
 
     settingsButton.onClick = [this]() {
         listeners.call ([] (Listener& l) { l.onSettingsClicked(); });
@@ -31,6 +32,16 @@ TrackHeaderComponent::TrackHeaderComponent()
     soloTrackButton.onClick = [this] {
         const bool nowSolo = soloTrackButton.getToggleState();
         listeners.call ([&] (Listener& l) { l.onSoloToggled (nowSolo); });
+    };
+
+    recordArmButton.setClickingTogglesState (true);
+    recordArmButton.setColour (juce::TextButton::buttonOnColourId, juce::Colours::darkred);
+    recordArmButton.setColour (juce::TextButton::buttonColourId, juce::Colours::darkgrey);
+    recordArmButton.setColour (juce::TextButton::textColourOnId, juce::Colours::black);
+    recordArmButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white);
+    recordArmButton.onClick = [this] {
+        const bool nowArmed = recordArmButton.getToggleState();
+        listeners.call ([&] (Listener& l) { l.onRecordArmToggled (nowArmed); });
     };
 
     trackNameLabel.setFont (juce::Font (juce::FontOptions (15.f)));
@@ -79,6 +90,12 @@ void TrackHeaderComponent::setSolo (const bool shouldBeSolo)
     soloTrackButton.setToggleState (shouldBeSolo, juce::dontSendNotification);
 }
 
+bool TrackHeaderComponent::isArmed() const { return recordArmButton.getToggleState(); }
+void TrackHeaderComponent::setArmed (const bool shouldBeArmed)
+{
+    recordArmButton.setToggleState (shouldBeArmed, juce::dontSendNotification);
+}
+
 void TrackHeaderComponent::setDimmed (const bool dim)
 {
     setAlpha (dim ? 0.6f : 1.0f);
@@ -114,6 +131,7 @@ void TrackHeaderComponent::resized()
     fb.items.add (juce::FlexItem (settingsButton).withHeight (buttonHeight).withMargin (margin));
     fb.items.add (juce::FlexItem (muteTrackButton).withHeight (buttonHeight).withMargin (margin));
     fb.items.add (juce::FlexItem (soloTrackButton).withHeight (buttonHeight).withMargin (margin));
+    fb.items.add (juce::FlexItem (recordArmButton).withHeight (buttonHeight).withMargin (margin));
 
     fb.performLayout (bounds);
 }
