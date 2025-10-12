@@ -48,8 +48,7 @@ private:
     int trackIndex;
     int numClips = 0;
 
-    TrackClip trackClip;
-    TrackHeaderComponent trackHeader;
+    std::unique_ptr<TrackClip> trackClip;
 
     double pixelsPerSecond = 100.0;
     te::TimePosition viewStart = 0s;

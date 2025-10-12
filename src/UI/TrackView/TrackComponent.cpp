@@ -6,8 +6,15 @@ TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const 
 {
     if (appEngine)
         appEngine->registerTrackListener (trackIndex, this);
+
+    // Determine clip pointer up-front
+    te::MidiClip* midiClip = appEngine ? appEngine->getMidiClipFromTrack (trackIndex) : nullptr;
+    // Construct TrackClip if we have a valid MidiClip
+    if (midiClip != nullptr)
+        trackClip = std::make_unique<TrackClip> (midiClip, 100.0f /* pixels per beat */);
+
     // If no color provided, pick one from a palette based on index
-    if (! trackColor.isOpaque())
+    if (!trackColor.isOpaque())
     {
         static const juce::Colour palette[] = {
             juce::Colour (0xff6fa8dc), // blue
@@ -16,19 +23,18 @@ TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const 
             juce::Colour (0xffe06666), // red
             juce::Colour (0xff8e7cc3), // purple
             juce::Colour (0xff76a5af), // teal
-            juce::Colour (0xffffd966)  // yellow
+            juce::Colour (0xffffd966) // yellow
         };
-        trackColor = palette[std::abs(trackIndex) % (int) (sizeof(palette) / sizeof(palette[0]))];
+        trackColor = palette[std::abs (trackIndex) % (int) (sizeof (palette) / sizeof (palette[0]))];
     }
 
-    trackClip.setColor (trackColor);
-
     // Check if the track already has clips when created.
-    if (const auto* track = appEngine->getTrackManager().getTrack (trackIndex))
+    if (const auto* track = appEngine ? appEngine->getTrackManager().getTrack (trackIndex) : nullptr)
     {
-        if (track->getClips().size() > 0)
+        if (track->getClips().size() > 0 && trackClip)
         {
-            addAndMakeVisible (trackClip);
+            addAndMakeVisible (trackClip.get());
+            trackClip->setColor (trackColor);
             numClips = track->getClips().size();
         }
     }
@@ -61,13 +67,19 @@ void TrackComponent::resized()
     // If we can find a clip on this track, size/position the UI clip from its time range.
     if (const auto* track = appEngine ? appEngine->getTrackManager().getTrack (trackIndex) : nullptr)
     {
-        if (track->getClips().size() > 0)
+        if (track->getClips().size() > 0 && trackClip)
         {
-            trackClip.setBounds (getLocalBounds().reduced (5).withWidth (280));
+            if (trackClip->getParentComponent() != this)
+                addAndMakeVisible (trackClip.get());
+
+            const int w = juce::jmax (1, trackClip->getWidth());
+            trackClip->setBounds (bounds.withWidth (w));
             return;
         }
     }
-    trackClip.setBounds (bounds.withWidth (juce::jmax (bounds.getHeight(), 40)));
+    // Otherwise, set default size if we have a clip component
+    if (trackClip)
+        trackClip->setBounds (bounds.withWidth (juce::jmax (bounds.getHeight(), 40)));
 }
 
 // TrackComponent.cpp
@@ -101,7 +113,16 @@ void TrackComponent::onSettingsClicked()
         {
             case 1: // Add Clip
                 appEngine->addMidiClipToTrack (trackIndex);
-                addAndMakeVisible (trackClip);
+                if (!trackClip)
+                {
+                    if (auto* midiClip = appEngine->getMidiClipFromTrack (trackIndex))
+                        trackClip = std::make_unique<TrackClip> (midiClip, 100.0f);
+                }
+                if (trackClip)
+                {
+                    addAndMakeVisible (trackClip.get());
+                    trackClip->setColor (trackColor);
+                }
                 resized();
                 numClips = 1;
                 break;
