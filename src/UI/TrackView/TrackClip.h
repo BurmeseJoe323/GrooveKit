@@ -1,3 +1,4 @@
+// JUNIE
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
@@ -6,7 +7,8 @@
 
 namespace te = tracktion;
 
-class TrackClip final : public juce::Component
+class TrackClip final : public juce::Component,
+                        private juce::ValueTree::Listener
 {
 public:
     explicit TrackClip(te::MidiClip* clip, float pixelsPerBeat);
@@ -21,7 +23,11 @@ public:
 private:
     void updateSizeFromClip();
 
+    // juce::ValueTree::Listener overrides
+    void valueTreePropertyChanged (juce::ValueTree& tree, const juce::Identifier& property) override;
+
     te::MidiClip* clip = nullptr; // not owned
+    juce::ValueTree clipState;    // to manage listener lifetime safely
     float pixelsPerBeat = 100.0f;
     juce::Colour clipColor { juce::Colours::blueviolet };
 

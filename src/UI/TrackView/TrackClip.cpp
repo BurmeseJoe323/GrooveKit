@@ -1,21 +1,32 @@
+// JUNIE
 #include "TrackClip.h"
 
 TrackClip::TrackClip(te::MidiClip* c, float pixelsPerBeat) : clip(c), pixelsPerBeat(pixelsPerBeat)
 {
     jassert(clip != nullptr);
-    clip->addListener(this);
+
+    // Attach to the clip's ValueTree state to listen for length changes
+    if (clip != nullptr)
+    {
+        clipState = clip->state;
+        if (clipState.isValid())
+            clipState.addListener(this);
+    }
+
     updateSizeFromClip();
 }
 
 TrackClip::~TrackClip()
 {
+    if (clipState.isValid())
+        clipState.removeListener(this);
 }
 
 void TrackClip::updateSizeFromClip()
 {
     if (!clip) return;
 
-    // Midiclip times are in seconds/beats
+    // MidiClip time accessors
     const double lengthBeats = clip->getLengthInBeats().inBeats();
     const int w = juce::roundToInt(lengthBeats * pixelsPerBeat);
 
@@ -32,8 +43,8 @@ void TrackClip::setPixelsPerBeat(float ppb) {
 
 void TrackClip::paint (juce::Graphics& g)
 {
-    auto r = getLocalBounds().toFloat();
-    const float radius = 8.0f;
+    const auto r = getLocalBounds().toFloat();
+    constexpr float radius = 8.0f;
 
     // Fill
     g.setColour (clipColor);
@@ -54,4 +65,20 @@ void TrackClip::setColor (juce::Colour newColor)
 {
     clipColor = newColor;
     repaint();
+}
+
+void TrackClip::valueTreePropertyChanged (juce::ValueTree& tree, const juce::Identifier& property)
+{
+    juce::ignoreUnused (tree);
+
+    if (property == te::IDs::length)
+    {
+        // Ensure UI updates happen on the message thread
+        juce::Component::SafePointer<TrackClip> safeThis (this);
+        juce::MessageManager::callAsync ([safeThis]
+        {
+            if (safeThis != nullptr)
+                safeThis->updateSizeFromClip();
+        });
+    }
 }
