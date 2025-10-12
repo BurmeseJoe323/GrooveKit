@@ -4,7 +4,7 @@
 
 #include "PianoRollEditor.h"
 
-PianoRollEditor::PianoRollEditor (AppEngine& engine, int trackIndex) : noteGrid (gridStyleSheet, engine, trackIndex), controlPanel (noteGrid, gridStyleSheet)
+PianoRollEditor::PianoRollEditor (AppEngine& engine, te::MidiClip* clip) : noteGrid (gridStyleSheet, engine, clip), controlPanel (noteGrid, gridStyleSheet)
 {
     // Setup note grid
     addAndMakeVisible (gridView);
@@ -161,4 +161,9 @@ void PianoRollEditor::disableEditing (bool value)
 GridControlPanel& PianoRollEditor::getControlPanel()
 {
     return controlPanel;
+}
+
+void PianoRollEditor::setClip (te::MidiClip* c)
+{
+    noteGrid.setClip (c);
 }

@@ -113,9 +113,9 @@ void TrackListComponent::addNewTrack (int engineIdx)
 
     };
 
-    newTrack->onRequestOpenPianoRoll = [this] (int uiIndex) {
+    newTrack->onRequestOpenPianoRoll = [this] (te::MidiClip* clip) {
         if (auto* parent = findParentComponentOfClass<TrackEditView>())
-            parent->showPianoRoll (uiIndex);
+            parent->showPianoRoll (clip);
     };
 
     newTrack->onRequestOpenDrumSampler = [this] (int uiIndex) {

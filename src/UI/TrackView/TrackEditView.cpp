@@ -49,7 +49,7 @@ TrackEditView::TrackEditView (AppEngine& engine)
     setupButtons();
 
     // Initialize and hide the piano roll editor
-    pianoRoll = std::make_unique<PianoRollEditor> (*appEngine, -1);
+    pianoRoll = std::make_unique<PianoRollEditor> (*appEngine, nullptr);
     addAndMakeVisible (pianoRoll.get());
     pianoRoll->setVisible (false);
 
@@ -448,28 +448,45 @@ void TrackEditView::showOpenEditMenu () const
         });
 }
 
-void TrackEditView::showPianoRoll (int trackIndex)
+void TrackEditView::showPianoRoll (te::MidiClip* clip)
 {
-    if (pianoRollTrackIndex != trackIndex)
+    if (pianoRoll == nullptr)
     {
-        pianoRollTrackIndex = trackIndex;
-        pianoRoll = std::make_unique<PianoRollEditor> (*appEngine, trackIndex);
+        pianoRoll = std::make_unique<PianoRollEditor> (*appEngine, clip);
         addAndMakeVisible (pianoRoll.get());
     }
+    else
+    {
+        pianoRoll->setClip (clip);
+    }
+
+    pianoRollClip = clip;
     pianoRoll->setVisible (true);
     resized();
 }
 
 void TrackEditView::hidePianoRoll ()
 {
-    pianoRoll->setVisible (false);
-    pianoRollTrackIndex = -1;
+    if (pianoRoll)
+        pianoRoll->setVisible (false);
+    pianoRollClip = nullptr;
     resized();
 }
 
 int TrackEditView::getPianoRollIndex () const
 {
-    return pianoRollTrackIndex;
+    if (pianoRollClip == nullptr || !appEngine)
+        return -1;
+
+    const int n = appEngine->getNumTracks();
+    for (int i = 0; i < n; ++i)
+    {
+        auto clips = appEngine->getMidiClipsFromTrack (i);
+        for (auto* mc : clips)
+            if (mc == pianoRollClip)
+                return i;
+    }
+    return -1;
 }
 
 void TrackEditView::handleNoteOn (juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity)
