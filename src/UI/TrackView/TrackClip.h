@@ -4,6 +4,7 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <tracktion_engine/tracktion_engine.h>
 #include "tracktion_graph/tracktion_graph.h"
+#include <functional>
 
 namespace te = tracktion;
 
@@ -21,6 +22,11 @@ public:
     void setPixelsPerBeat (float ppb);
 
     te::MidiClip* getMidiClip() const noexcept { return clip; }
+
+    // Callback invoked when this clip is clicked
+    std::function<void()> onClicked;
+
+    void mouseUp (const juce::MouseEvent& e) override;
 
 private:
     void updateSizeFromClip();

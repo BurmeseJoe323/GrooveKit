@@ -61,6 +61,13 @@ void TrackClip::paint (juce::Graphics& g)
 
 void TrackClip::resized() {}
 
+void TrackClip::mouseUp (const juce::MouseEvent& e)
+{
+    juce::ignoreUnused (e);
+    if (onClicked)
+        onClicked();
+}
+
 void TrackClip::setColor (juce::Colour newColor)
 {
     clipColor = newColor;
