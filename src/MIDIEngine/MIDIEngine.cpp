@@ -33,8 +33,8 @@ void MIDIEngine::addMidiClipToTrack (const int trackIndex) const
         }
     }
 
-    // Use a smaller default length for new empty clips (1 bar = 4 beats)
-    constexpr double lengthBeats = 4.0;
+    // Use a smaller default length for new empty clips (half bar = 2 beats)
+    constexpr double lengthBeats = 2.0;
 
     const auto startPos = edit.tempoSequence.toTime (te::BeatPosition::fromBeats (startBeats));
     const auto endPos = edit.tempoSequence.toTime (te::BeatPosition::fromBeats (startBeats + lengthBeats));
