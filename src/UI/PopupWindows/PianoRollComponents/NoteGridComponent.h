@@ -40,8 +40,11 @@ public:
         unsigned int beatsPerBar;
         unsigned int beatValue;
     };
-    NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, int trackIndex);
+    NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, te::MidiClip* clip);
     ~NoteGridComponent() override;
+
+    // Change the clip being edited/displayed
+    void setClip (te::MidiClip* newClip);
 
     void paint (juce::Graphics& g) override;
     void resized() override;
@@ -87,10 +90,9 @@ private:
 
     NoteComponent* addNewNoteComponent(te::MidiNote*);
 
-    // The appEngine is where all MIDI information is stored. The trackIndex is used to locate the correct track inside
-    // the engine
+    // The appEngine provides access to engine services; this component now targets a specific MIDI clip
     AppEngine& appEngine;
-    int trackIndex;
+    te::MidiClip* clip = nullptr; // not owned
 
     GridStyleSheet& styleSheet;
     SelectionBox selectorBox;

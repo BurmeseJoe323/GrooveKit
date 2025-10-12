@@ -31,7 +31,7 @@ TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const 
         {
             auto ui = std::make_unique<TrackClip> (mc, pixelsPerBeat);
             ui->setColor (trackColor);
-            ui->onClicked = [this]() { if (onRequestOpenPianoRoll) onRequestOpenPianoRoll (this->trackIndex); };
+            ui->onClicked = [this] (te::MidiClip* c) { if (onRequestOpenPianoRoll) onRequestOpenPianoRoll (c); };
             addAndMakeVisible (ui.get());
             trackClips.push_back (std::move (ui));
         }
@@ -127,7 +127,7 @@ void TrackComponent::onSettingsClicked()
                     {
                         auto ui = std::make_unique<TrackClip> (mc, pixelsPerBeat);
                         ui->setColor (trackColor);
-                        ui->onClicked = [this]() { if (onRequestOpenPianoRoll) onRequestOpenPianoRoll (this->trackIndex); };
+                        ui->onClicked = [this] (te::MidiClip* c) { if (onRequestOpenPianoRoll) onRequestOpenPianoRoll (c); };
                         addAndMakeVisible (ui.get());
                         trackClips.push_back (std::move (ui));
                     }
@@ -142,7 +142,7 @@ void TrackComponent::onSettingsClicked()
                 break;
             case 11: // Open Piano Roll
                 if (onRequestOpenPianoRoll && ! trackClips.empty())
-                    onRequestOpenPianoRoll (trackIndex);
+                    onRequestOpenPianoRoll (trackClips.front()->getMidiClip());
                 break;
             case 100: // Delete Track
                 if (onRequestDeleteTrack)

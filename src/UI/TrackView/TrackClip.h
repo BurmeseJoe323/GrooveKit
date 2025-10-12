@@ -24,7 +24,7 @@ public:
     te::MidiClip* getMidiClip() const noexcept { return clip; }
 
     // Callback invoked when this clip is clicked
-    std::function<void()> onClicked;
+    std::function<void(te::MidiClip*)> onClicked;
 
     void mouseUp (const juce::MouseEvent& e) override;
 

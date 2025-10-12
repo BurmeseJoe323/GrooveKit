@@ -6,7 +6,7 @@
 #include "AppEngine.h"
 
 
-NoteGridComponent::NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, int trackIndex) : styleSheet (sheet), appEngine (engine), trackIndex (trackIndex)
+NoteGridComponent::NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, te::MidiClip* clipIn) : styleSheet (sheet), appEngine (engine), clip (clipIn)
 {
     addChildComponent (&selectorBox);
 
@@ -28,14 +28,14 @@ NoteGridComponent::NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, 
     // TODO: refactor to not use NoteComponent?
     // Components for each note will likely impact performance. We will probably want to draw directly
     // on the grid instead, and also figure out a way to select notes and drag them
-    const auto clip = appEngine.getMidiClipFromTrack (trackIndex);
-    if (clip == nullptr)
+    auto* currentClip = clip;
+    if (currentClip == nullptr)
     {
         return;
     }
 
     // Add all existing notes from clip
-    for (te::MidiNote* note : clip->getSequence().getNotes())
+    for (te::MidiNote* note : currentClip->getSequence().getNotes())
         addNewNoteComponent (note);
 }
 
@@ -311,12 +311,9 @@ void NoteGridComponent::noteCompLengthChanged (NoteComponent* original)
     // The minimum value we want for a note length is the amount of pixels that corresponds to a 1/32 note
     const int newWidth = juce::jmax (20, n->getWidth());
     n->setSize (newWidth, n->getHeight());
-    auto* clip = appEngine.getMidiClipFromTrack (trackIndex);
-    if (!clip)
-    {
-        DBG ("Error: MIDI clip at " << trackIndex << " not found.");
-        return;
-    }
+    // auto* clip = appEngine.getMidiClipFromTrack (trackIndex);
+    if (!clip) { DBG("Error: NoteGridComponent has no clip set."); return; }
+
     auto* um = clip->getUndoManager();
 
     // preserve note position on length changed
@@ -353,8 +350,7 @@ void NoteGridComponent::noteCompPositionMoved (NoteComponent* comp, bool callRes
     te::MidiNote* nm = comp->getModel();
     const float beatLength = (float) nm->getLengthBeats().inBeats();
 
-    auto* clip = appEngine.getMidiClipFromTrack(trackIndex);
-    if (!clip) { DBG("Error: MIDI clip at " << trackIndex << " not found."); return; }
+    if (!clip) { DBG("Error: NoteGridComponent has no clip set."); return; }
     auto* um = clip->getUndoManager();
 
     nm->setNoteNumber(note, um);
@@ -476,11 +472,13 @@ void NoteGridComponent::mouseDoubleClick (const juce::MouseEvent& e)
     int pitch = yToPitch ((float) e.getMouseDownY());
     pitch = juce::jlimit (0, 127, pitch);
 
-    auto clip = appEngine.getMidiClipFromTrack (trackIndex);
-    if (!clip) { DBG("Error: MIDI clip at " << trackIndex << " not found."); return; }
+    auto* currentClip = clip;
+    // From Joseph's branch:
+    // auto clip = appEngine.getMidiClipFromTrack (trackIndex);
+    if (!currentClip) { DBG("Error: NoteGridComponent has no clip set."); return; }
 
-    auto& seq = clip->getSequence();
-    auto* um  = clip->getUndoManager();
+    auto& seq = currentClip->getSequence();
+    auto* um  = currentClip->getUndoManager();
 
     auto* newModel = seq.addNote(
         pitch,
@@ -498,6 +496,8 @@ void NoteGridComponent::mouseDoubleClick (const juce::MouseEvent& e)
     newNote->setState (NoteComponent::eSelected);
     newNote->toFront (true);
 
+    noteComps.push_back(newNote); // removed in Joseph's branch
+
     resized();
     repaint();
     sendEdit();
@@ -509,14 +509,13 @@ bool NoteGridComponent::keyPressed (const juce::KeyPress& key, Component*)
     //     LOG_KEY_PRESS(key.getKeyCode(), 1, key.getModifiers().getRawFlags());
     // #endif
 
-    auto clip = appEngine.getMidiClipFromTrack (trackIndex);
-    if (clip == nullptr)
-    {
-        DBG("Error: midi clip at track index " << trackIndex << " not found.");
-        return true;
-    }
-
-    auto* um = clip->getUndoManager();
+    // From Joseph's branch:
+    // auto clip = appEngine.getMidiClipFromTrack (trackIndex);
+    // if (clip == nullptr)
+    // {
+    //      return true;
+    // }
+    auto* um = clip ? clip->getUndoManager() : nullptr;
     // Delete all selected midi notes
     if (key == juce::KeyPress::backspaceKey)
     {
@@ -585,14 +584,15 @@ bool NoteGridComponent::keyPressed (const juce::KeyPress& key, Component*)
 
 void NoteGridComponent::deleteAllSelected()
 {
-    auto* clip = appEngine.getMidiClipFromTrack (trackIndex);
+    // from Joseph's branch:
+    // auto* clip = appEngine.getMidiClipFromTrack (trackIndex);
     if (clip == nullptr)
     {
-        DBG ("Error: MIDI clip at track " << trackIndex << "not found.");
+        DBG ("Error: NoteGridComponent has no clip set.");
         return;
     }
     auto& seq = clip->getSequence();
-    auto* um = appEngine.getMidiClipFromTrack (trackIndex)->getUndoManager();
+    auto* um = clip->getUndoManager();
 
     // Init vector for kept notes
     std::vector<NoteComponent*> itemsToKeep;
@@ -625,16 +625,49 @@ void NoteGridComponent::deleteAllSelected()
 // TODO: do we need this function?
 te::MidiList& NoteGridComponent::getSequence()
 {
-    auto clip = appEngine.getMidiClipFromTrack (trackIndex);
+    // from Joseph's branch:
+    // auto* clip = appEngine.getMidiClipFromTrack (trackIndex);
     if (clip == nullptr)
     {
-        DBG ("Error: MIDI clip not found at track " << trackIndex);
-        throw std::format ("Error: MIDI clip not found at track {}", trackIndex);
+        DBG ("Error: NoteGridComponent has no clip set.");
+        static te::MidiList dummy; // fallback to avoid UB; operations should guard against this
+        return dummy;
     }
     return clip->getSequence();
 }
 
-juce::Array<te::MidiNote*> NoteGridComponent::getSelectedModels()
+void NoteGridComponent::setClip (te::MidiClip* newClip)
+{
+    // Clear existing note components
+    for (auto* nc : noteComps)
+    {
+        removeChildComponent (nc);
+        delete nc;
+    }
+    noteComps.clear();
+
+    clip = newClip;
+
+    if (clip != nullptr)
+    {
+        for (te::MidiNote* note : clip->getSequence().getNotes())
+        {
+            auto* newNote = new NoteComponent (styleSheet);
+            newNote->onNoteSelect = [this] (NoteComponent* n, const juce::MouseEvent& e) { this->noteCompSelected (n, e); };
+            newNote->onPositionMoved = [this] (NoteComponent* n) { this->noteCompPositionMoved (n); };
+            newNote->onLengthChange  = [this] (NoteComponent* n) { this->noteCompLengthChanged (n); };
+            newNote->onDragging      = [this] (NoteComponent* n, const juce::MouseEvent& e) { this->noteCompDragging (n, e); };
+            newNote->setModel (note);
+            addAndMakeVisible (newNote);
+            noteComps.push_back (newNote);
+        }
+    }
+
+    resized();
+    repaint();
+}
+
+juce::Array<te::MidiNote*> NoteGridComponent::getSelectedModels() const
 {
     juce::Array<te::MidiNote*> noteModels;
     for (auto comp : noteComps)
@@ -671,6 +704,10 @@ NoteComponent *NoteGridComponent::addNewNoteComponent (te::MidiNote* model)
     newNote->onLengthChange = [this] (NoteComponent* n) {
         this->noteCompLengthChanged (n);
     };
+    // From Tommy's branch:
+//    newNote->onLengthChange = [this] (NoteComponent* n, int diff) {
+//        this->noteCompLengthChanged (n, diff);
+//    };
     newNote->onDragging = [this] (NoteComponent* n, const juce::MouseEvent& e) {
         this->noteCompDragging (n, e);
     };

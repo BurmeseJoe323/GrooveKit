@@ -39,8 +39,11 @@ public:
 class PianoRollEditor : public juce::Component
 {
 public:
-    PianoRollEditor (AppEngine& engine, int trackIndex);
-    ~PianoRollEditor() override = default;
+    PianoRollEditor (AppEngine& engine, te::MidiClip* clip);
+    ~PianoRollEditor () override = default;
+
+    // Change the currently viewed/edited clip
+    void setClip (te::MidiClip* clip);
 
     /*
      * Called after the constructor to determine the size of the grid

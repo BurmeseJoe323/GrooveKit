@@ -65,7 +65,7 @@ void TrackClip::mouseUp (const juce::MouseEvent& e)
 {
     juce::ignoreUnused (e);
     if (onClicked)
-        onClicked();
+        onClicked(clip);
 }
 
 void TrackClip::setColor (juce::Colour newColor)

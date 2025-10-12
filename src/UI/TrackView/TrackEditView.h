@@ -41,7 +41,7 @@ public:
     std::function<void()> onBack;
     std::function<void()> onOpenMix;
 
-    void showPianoRoll (int trackIndex);
+    void showPianoRoll (te::MidiClip* clip);
     void hidePianoRoll();
     int getPianoRollIndex() const;
 
@@ -76,7 +76,7 @@ private:
     std::unique_ptr<PianoRollEditor> pianoRoll;
     juce::StretchableLayoutManager verticalLayout;
     std::unique_ptr<PianoRollResizerBar> resizerBar;
-    int pianoRollTrackIndex = -1;
+    te::MidiClip* pianoRollClip = nullptr; // currently edited clip (if any)
 
     double pixelsPerSecond = 100.0;
     te::TimePosition viewStart = 0s;
