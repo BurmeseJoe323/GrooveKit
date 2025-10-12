@@ -1,18 +1,28 @@
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
+#include <tracktion_engine/tracktion_engine.h>
+#include "tracktion_graph/tracktion_graph.h"
+
+namespace te = tracktion;
 
 class TrackClip final : public juce::Component
 {
 public:
-    TrackClip();
+    explicit TrackClip(te::MidiClip* clip, float pixelsPerBeat);
     ~TrackClip() override;
 
     void paint (juce::Graphics& g) override;
     void resized() override;
+
     void setColor (juce::Colour newColor);
+    void setPixelsPerBeat (float ppb);
 
 private:
+    void updateSizeFromClip();
+
+    te::MidiClip* clip = nullptr; // not owned
+    float pixelsPerBeat = 100.0f;
     juce::Colour clipColor { juce::Colours::blueviolet };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackClip)

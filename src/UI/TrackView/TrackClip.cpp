@@ -1,8 +1,34 @@
 #include "TrackClip.h"
 
-TrackClip::TrackClip() {}
+TrackClip::TrackClip(te::MidiClip* c, float pixelsPerBeat) : clip(c), pixelsPerBeat(pixelsPerBeat)
+{
+    jassert(clip != nullptr);
+    clip->addListener(this);
+    updateSizeFromClip();
+}
 
-TrackClip::~TrackClip() = default;
+TrackClip::~TrackClip()
+{
+}
+
+void TrackClip::updateSizeFromClip()
+{
+    if (!clip) return;
+
+    // Midiclip times are in seconds/beats
+    const double lengthBeats = clip->getLengthInBeats().inBeats();
+    const int w = juce::roundToInt(lengthBeats * pixelsPerBeat);
+
+    // Keep Y/Height unchanged; only update width.
+    auto b = getBounds();
+    setBounds(b.withWidth(juce::jmax(1, w)));
+    repaint();
+}
+
+void TrackClip::setPixelsPerBeat(float ppb) {
+    pixelsPerBeat = ppb;
+    updateSizeFromClip();
+}
 
 void TrackClip::paint (juce::Graphics& g)
 {
