@@ -31,6 +31,7 @@ TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const 
         {
             auto ui = std::make_unique<TrackClip> (mc, pixelsPerBeat);
             ui->setColor (trackColor);
+            ui->onClicked = [this]() { if (onRequestOpenPianoRoll) onRequestOpenPianoRoll (this->trackIndex); };
             addAndMakeVisible (ui.get());
             trackClips.push_back (std::move (ui));
         }
@@ -118,6 +119,7 @@ void TrackComponent::onSettingsClicked()
                     {
                         auto ui = std::make_unique<TrackClip> (mc, pixelsPerBeat);
                         ui->setColor (trackColor);
+                        ui->onClicked = [this]() { if (onRequestOpenPianoRoll) onRequestOpenPianoRoll (this->trackIndex); };
                         addAndMakeVisible (ui.get());
                         trackClips.push_back (std::move (ui));
                     }
