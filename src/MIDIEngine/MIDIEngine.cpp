@@ -1,3 +1,4 @@
+// JUNIE
 #include "MIDIEngine.h"
 
 namespace te = tracktion;
@@ -74,23 +75,37 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
 
 }
 
-te::MidiClip *MIDIEngine::getMidiClipFromTrack(int trackIndex) {
+te::MidiClip* MIDIEngine::getMidiClipFromTrack(int trackIndex) {
     auto audioTracks = getAudioTracks(edit);
-    if (trackIndex < 0 || trackIndex >= audioTracks.size())
-        // Return nullptr if the trackIndex is invalid
+    if (trackIndex < 0 || trackIndex >= (int) audioTracks.size())
         return nullptr;
 
-    auto track = te::getAudioTracks(edit)[trackIndex];
-    auto clip = track->getClips().getFirst();
+    auto* track = te::getAudioTracks(edit)[(size_t) trackIndex];
+    auto* clip = track->getClips().getFirst();
 
-    if (clip == nullptr) {
+    if (clip == nullptr || ! clip->isMidi())
         return nullptr;
-    } else if (!clip->isMidi()) {
-        return nullptr;
-    }
 
-    auto *midiClip = dynamic_cast<te::MidiClip*>(clip);
-    return midiClip;
+    return dynamic_cast<te::MidiClip*>(clip);
+}
+
+std::vector<te::MidiClip*> MIDIEngine::getMidiClipsFromTrack(int trackIndex)
+{
+    std::vector<te::MidiClip*> midiClips;
+
+    auto audioTracks = getAudioTracks(edit);
+    if (trackIndex < 0 || trackIndex >= (int) audioTracks.size())
+        return midiClips;
+
+    auto* track = te::getAudioTracks(edit)[(size_t) trackIndex];
+    auto& clips = track->getClips();
+
+    for (auto* c : clips)
+        if (c != nullptr && c->isMidi())
+            if (auto* mc = dynamic_cast<te::MidiClip*>(c))
+                midiClips.push_back(mc);
+
+    return midiClips;
 }
 
 

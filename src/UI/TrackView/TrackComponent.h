@@ -1,3 +1,4 @@
+// JUNIE
 #pragma once
 
 #include "../../AppEngine/AppEngine.h"
@@ -44,11 +45,13 @@ private:
     std::shared_ptr<AppEngine> appEngine;
     juce::Colour trackColor;
     int trackIndex = -1;
-    int numClips = 0;
 
-    std::unique_ptr<TrackClip> trackClip;
+    // Multiple clip support
+    std::vector<std::unique_ptr<TrackClip>> trackClips;
 
-    double pixelsPerSecond = 100.0;
+    // Visual scaling
+    float pixelsPerBeat = 100.0f;
+    double pixelsPerSecond = 100.0; // currently unused for clip layout
     te::TimePosition viewStart = 0s;
 
     static int timeToX (const te::TimePosition t, const te::TimePosition view0, const double pps)

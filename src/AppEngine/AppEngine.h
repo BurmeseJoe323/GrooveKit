@@ -1,3 +1,4 @@
+// JUNIE
 #pragma once
 
 #include "../AudioEngine/AudioEngine.h"
@@ -110,6 +111,7 @@ public:
     int addInstrumentTrack();
 
     te::MidiClip *getMidiClipFromTrack(int trackIndex);
+    std::vector<te::MidiClip*> getMidiClipsFromTrack(int trackIndex);
 
     void setTrackMuted(int index, bool mute) { trackManager->setTrackMuted(index, mute); }
     bool isTrackMuted(int index) const { return trackManager->isTrackMuted(index); }

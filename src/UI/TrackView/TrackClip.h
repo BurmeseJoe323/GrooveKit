@@ -20,6 +20,8 @@ public:
     void setColor (juce::Colour newColor);
     void setPixelsPerBeat (float ppb);
 
+    te::MidiClip* getMidiClip() const noexcept { return clip; }
+
 private:
     void updateSizeFromClip();
 

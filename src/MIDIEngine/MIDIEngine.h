@@ -1,3 +1,4 @@
+// JUNIE
 #pragma once
 
 #include "../AppEngine/TrackManager.h"
@@ -20,20 +21,19 @@ public:
     void addMidiClipToTrack(int trackIndex);
 
     /**
-     * Returns an Array of MidiNote* from a track in the edit instance
-     * @param trackIndex the index of the track to get the Midi clip of.
-     * @return MidiList representing the sequence in this track
+     * Returns the first MidiClip* from a track in the edit instance (or nullptr if none)
      */
-    te::MidiClip *getMidiClipFromTrack(int trackIndex);
+    te::MidiClip* getMidiClipFromTrack(int trackIndex);
+
+    /**
+     * Returns all MIDI clips on the given track.
+     */
+    std::vector<te::MidiClip*> getMidiClipsFromTrack(int trackIndex);
 
     int addMidiTrack();
 
 private:
     tracktion::engine::Edit& edit;
-
-
-
-
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MIDIEngine)
 };
