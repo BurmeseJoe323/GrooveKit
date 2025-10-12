@@ -5,25 +5,45 @@ namespace te = tracktion;
 using namespace std::literals;
 using namespace te::literals;
 
-MIDIEngine::MIDIEngine(te::Edit& editRef)
-    : edit(editRef)
+MIDIEngine::MIDIEngine (te::Edit& editRef)
+    : edit (editRef)
 {
 }
 
-void MIDIEngine::addMidiClipToTrack(int trackIndex)
+void MIDIEngine::addMidiClipToTrack (const int trackIndex) const
 {
-    auto audioTracks = getAudioTracks(edit);
-    if (trackIndex < 0 || trackIndex >= audioTracks.size())
+    auto audioTracks = getAudioTracks (edit);
+    if (trackIndex < 0 || trackIndex >= (int) audioTracks.size())
         return;
 
-    auto track = te::getAudioTracks(edit)[trackIndex];
+    auto* track = te::getAudioTracks (edit)[static_cast<size_t> (trackIndex)];
 
-    auto endPos = edit.tempoSequence.toTime(8_bp);
-    te::TimeRange twoBars { 0s, endPos };
+    // Determine start position: place new clip after the last existing MIDI clip on this track
+    double startBeats = 0.0;
+    for (auto* c : track->getClips())
+    {
+        if (c != nullptr && c->isMidi())
+        {
+            if (const auto* mc = dynamic_cast<te::MidiClip*> (c))
+            {
+                const double s = mc->getStartBeat().inBeats();
+                const double len = mc->getLengthInBeats().inBeats();
+                startBeats = juce::jmax (startBeats, s + len);
+            }
+        }
+    }
 
-    auto clip = track->insertNewClip(te::TrackItem::Type::midi, "Midi Clip", twoBars, nullptr);
-    auto midiClip = dynamic_cast<te::MidiClip*>(clip);
-    DBG("Clip added to track: " << trackIndex);
+    // Use a smaller default length for new empty clips (1 bar = 4 beats)
+    constexpr double lengthBeats = 4.0;
+
+    const auto startPos = edit.tempoSequence.toTime (te::BeatPosition::fromBeats (startBeats));
+    const auto endPos = edit.tempoSequence.toTime (te::BeatPosition::fromBeats (startBeats + lengthBeats));
+    te::TimeRange range { startPos, endPos };
+
+    auto* clip = track->insertNewClip (te::TrackItem::Type::midi, "Midi Clip", range, nullptr);
+    auto* midiClip = dynamic_cast<te::MidiClip*> (clip);
+    juce::ignoreUnused (midiClip);
+    DBG ("Clip added to track: " << trackIndex << ", startBeat=" << startBeats << ", lengthBeats=" << lengthBeats);
 
     // midiClip->setStart(true, true);
     // midiClip->setLength(true, true);
@@ -71,41 +91,38 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
 
     edit.getTransport().ensureContextAllocated();
     edit.restartPlayback();
-
-
 }
 
-te::MidiClip* MIDIEngine::getMidiClipFromTrack(int trackIndex) {
-    auto audioTracks = getAudioTracks(edit);
+te::MidiClip* MIDIEngine::getMidiClipFromTrack (const int trackIndex) const
+{
+    auto audioTracks = getAudioTracks (edit);
     if (trackIndex < 0 || trackIndex >= (int) audioTracks.size())
         return nullptr;
 
-    auto* track = te::getAudioTracks(edit)[(size_t) trackIndex];
+    const auto* track = te::getAudioTracks (edit)[static_cast<size_t> (trackIndex)];
     auto* clip = track->getClips().getFirst();
 
-    if (clip == nullptr || ! clip->isMidi())
+    if (clip == nullptr || !clip->isMidi())
         return nullptr;
 
-    return dynamic_cast<te::MidiClip*>(clip);
+    return dynamic_cast<te::MidiClip*> (clip);
 }
 
-std::vector<te::MidiClip*> MIDIEngine::getMidiClipsFromTrack(int trackIndex)
+std::vector<te::MidiClip*> MIDIEngine::getMidiClipsFromTrack (const int trackIndex) const
 {
     std::vector<te::MidiClip*> midiClips;
 
-    auto audioTracks = getAudioTracks(edit);
+    auto audioTracks = getAudioTracks (edit);
     if (trackIndex < 0 || trackIndex >= (int) audioTracks.size())
         return midiClips;
 
-    auto* track = te::getAudioTracks(edit)[(size_t) trackIndex];
+    const auto* track = te::getAudioTracks (edit)[static_cast<size_t> (trackIndex)];
     auto& clips = track->getClips();
 
     for (auto* c : clips)
         if (c != nullptr && c->isMidi())
-            if (auto* mc = dynamic_cast<te::MidiClip*>(c))
-                midiClips.push_back(mc);
+            if (auto* mc = dynamic_cast<te::MidiClip*> (c))
+                midiClips.push_back (mc);
 
     return midiClips;
 }
-
-
