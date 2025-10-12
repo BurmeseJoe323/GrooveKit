@@ -1,3 +1,4 @@
+// JUNIE
 #include "TrackComponent.h"
 #include "TrackListComponent.h"
 
@@ -6,12 +7,6 @@ TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const 
 {
     if (appEngine)
         appEngine->registerTrackListener (trackIndex, this);
-
-    // Determine clip pointer up-front
-    te::MidiClip* midiClip = appEngine ? appEngine->getMidiClipFromTrack (trackIndex) : nullptr;
-    // Construct TrackClip if we have a valid MidiClip
-    if (midiClip != nullptr)
-        trackClip = std::make_unique<TrackClip> (midiClip, 100.0f /* pixels per beat */);
 
     // If no color provided, pick one from a palette based on index
     if (!trackColor.isOpaque())
@@ -25,17 +20,19 @@ TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const 
             juce::Colour (0xff76a5af), // teal
             juce::Colour (0xffffd966) // yellow
         };
-        trackColor = palette[std::abs (trackIndex) % (int) (sizeof (palette) / sizeof (palette[0]))];
+        trackColor = palette[std::abs (trackIndex) % static_cast<int> (std::size (palette))];
     }
 
-    // Check if the track already has clips when created.
-    if (const auto* track = appEngine ? appEngine->getTrackManager().getTrack (trackIndex) : nullptr)
+    // Build UI clips for any existing MIDI clips on this track
+    if (appEngine)
     {
-        if (track->getClips().size() > 0 && trackClip)
+        auto clips = appEngine->getMidiClipsFromTrack (trackIndex);
+        for (auto* mc : clips)
         {
-            addAndMakeVisible (trackClip.get());
-            trackClip->setColor (trackColor);
-            numClips = track->getClips().size();
+            auto ui = std::make_unique<TrackClip> (mc, pixelsPerBeat);
+            ui->setColor (trackColor);
+            addAndMakeVisible (ui.get());
+            trackClips.push_back (std::move (ui));
         }
     }
 }
@@ -48,8 +45,8 @@ TrackComponent::~TrackComponent()
 
 void TrackComponent::paint (juce::Graphics& g)
 {
-    auto r = getLocalBounds().toFloat().reduced (1.0f);
-    const float radius = 10.0f;
+    const auto r = getLocalBounds().toFloat().reduced (1.0f);
+    constexpr float radius = 10.0f;
 
     // Background
     g.setColour (trackColor.darker (0.4f));
@@ -62,24 +59,28 @@ void TrackComponent::paint (juce::Graphics& g)
 
 void TrackComponent::resized()
 {
-    const auto bounds = getLocalBounds().reduced (5);
+    const auto inner = getLocalBounds().reduced (5);
 
-    // If we can find a clip on this track, size/position the UI clip from its time range.
-    if (const auto* track = appEngine ? appEngine->getTrackManager().getTrack (trackIndex) : nullptr)
+    // Layout all clip components based on their start beats
+    int trackHeight = inner.getHeight();
+    for (auto& uiClip : trackClips)
     {
-        if (track->getClips().size() > 0 && trackClip)
-        {
-            if (trackClip->getParentComponent() != this)
-                addAndMakeVisible (trackClip.get());
+        if (! uiClip)
+            continue;
+        // keep width consistent with current pixelsPerBeat setting
+        uiClip->setPixelsPerBeat (pixelsPerBeat);
 
-            const int w = juce::jmax (1, trackClip->getWidth());
-            trackClip->setBounds (bounds.withWidth (w));
-            return;
+        int width = juce::jmax (1, uiClip->getWidth());
+
+        int x = 0;
+        if (auto* mc = uiClip->getMidiClip())
+        {
+            const double startBeats = mc->getStartBeat().inBeats();
+            x = juce::roundToInt (startBeats * (double) pixelsPerBeat);
         }
+
+        uiClip->setBounds (inner.getX() + x, inner.getY(), width, trackHeight);
     }
-    // Otherwise, set default size if we have a clip component
-    if (trackClip)
-        trackClip->setBounds (bounds.withWidth (juce::jmax (bounds.getHeight(), 40)));
 }
 
 // TrackComponent.cpp
@@ -111,27 +112,34 @@ void TrackComponent::onSettingsClicked()
     m.showMenuAsync ({}, [this] (const int result) {
         switch (result)
         {
-            case 1: // Add Clip
+            case 1: // Add Clip (Junie)
+            {
                 appEngine->addMidiClipToTrack (trackIndex);
-                if (!trackClip)
+
+                // Rebuild UI clips from engine state
+                trackClips.clear();
+
+                if (appEngine)
                 {
-                    if (auto* midiClip = appEngine->getMidiClipFromTrack (trackIndex))
-                        trackClip = std::make_unique<TrackClip> (midiClip, 100.0f);
+                    auto clips = appEngine->getMidiClipsFromTrack (trackIndex);
+                    for (auto* mc : clips)
+                    {
+                        auto ui = std::make_unique<TrackClip> (mc, pixelsPerBeat);
+                        ui->setColor (trackColor);
+                        addAndMakeVisible (ui.get());
+                        trackClips.push_back (std::move (ui));
+                    }
                 }
-                if (trackClip)
-                {
-                    addAndMakeVisible (trackClip.get());
-                    trackClip->setColor (trackColor);
-                }
+
                 resized();
-                numClips = 1;
                 break;
+            }
             case 10: // Open Drum Sampler
                 if (onRequestOpenDrumSampler)
                     onRequestOpenDrumSampler (trackIndex);
                 break;
             case 11: // Open Piano Roll
-                if (onRequestOpenPianoRoll && numClips > 0)
+                if (onRequestOpenPianoRoll && ! trackClips.empty())
                     onRequestOpenPianoRoll (trackIndex);
                 break;
             case 100: // Delete Track

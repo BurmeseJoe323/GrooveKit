@@ -1,3 +1,4 @@
+// JUNIE
 #include "AppEngine.h"
 #include "../DrumSamplerEngine/DefaultSampleLibrary.h"
 #include <tracktion_engine/tracktion_engine.h>
@@ -151,6 +152,13 @@ void AppEngine::addMidiClipToTrack (int trackIndex) { midiEngine->addMidiClipToT
 te::MidiClip* AppEngine::getMidiClipFromTrack (int trackIndex)
 {
     return midiEngine->getMidiClipFromTrack (trackIndex);
+}
+
+std::vector<te::MidiClip*> AppEngine::getMidiClipsFromTrack (int trackIndex)
+{
+    if (! midiEngine)
+        return {};
+    return midiEngine->getMidiClipsFromTrack (trackIndex);
 }
 
 int AppEngine::getNumTracks() { return trackManager ? trackManager->getNumTracks() : 0; }
