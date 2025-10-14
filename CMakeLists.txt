@@ -2,6 +2,14 @@ cmake_minimum_required(VERSION 3.15)
 project(GrooveKit VERSION 1.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
+
+# ---- Enable plugin hosting for ALL targets (headers & modules compiled everywhere)
+add_compile_definitions(JUCE_PLUGINHOST_VST3=1)
+
+if(APPLE)
+    add_compile_definitions(JUCE_PLUGINHOST_AU=1)
+endif()
 
 include(${CMAKE_SOURCE_DIR}/cmake/JUCEPath.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/TracktionPath.cmake)
@@ -61,4 +69,5 @@ target_link_libraries(GrooveKit
         PRIVATE
         GrooveKitResources
         melatonin_inspector
+        juce::juce_audio_processors
 )

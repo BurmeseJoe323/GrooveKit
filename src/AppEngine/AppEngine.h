@@ -153,7 +153,15 @@ public:
     void unregisterTrackListener (int index, TrackHeaderComponent::Listener* l);
     [[nodiscard]] TrackHeaderComponent::Listener* getTrackListener (int index) const;
 
+    bool attachExternalInstrumentMinimal (int trackIndex, const juce::String& pathOrAuId);
+    juce::String getInstrumentNameForTrack (int trackIndex) const;
+    void debugPrintTrackPluginChain (int trackIndex);
+    void printPluginDescriptions();
+    static std::optional<juce::PluginDescription>
+    resolveExactPluginDescription (const juce::String& idOrPath);
+
 private:
+    JUCE_DECLARE_WEAK_REFERENCEABLE(AppEngine)
     std::unique_ptr<tracktion::engine::Engine> engine;
     std::unique_ptr<tracktion::engine::Edit> edit;
     std::unique_ptr<te::SelectionManager> selectionManager;
@@ -179,6 +187,9 @@ private:
 
     juce::File getAutosaveFile() const;
     void timerCallback() override;
+
+    std::function<std::unique_ptr<juce::AudioPluginInstance>(const juce::PluginDescription&, double, int, juce::String&)>
+    makeMessageThreadCreator();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AppEngine)
 };

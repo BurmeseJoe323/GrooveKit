@@ -312,14 +312,32 @@ void TrackEditView::menuItemSelected (const int menuItemID, int)
     switch (menuItemID)
     {
         case NewInstrumentTrack:
-        case NewDrumTrack:
+            case NewDrumTrack:
         {
             if (!trackList)
                 return;
-            const int index = (menuItemID == NewInstrumentTrack) ? appEngine->addInstrumentTrack() : appEngine->addDrumTrack();
+
+            const bool isInstrument = (menuItemID == NewInstrumentTrack);
+            const int index = isInstrument
+                ? appEngine->addInstrumentTrack()
+                : appEngine->addDrumTrack();
+
             trackList->addNewTrack (index);
             trackList->setPixelsPerSecond (pixelsPerSecond);
             trackList->setViewStart (viewStart);
+
+            if (isInstrument) {
+                appEngine->attachExternalInstrumentMinimal (index,
+                            "/Library/Audio/Plug-Ins/VST3/TAL-NoiseMaker.vst3");
+
+                appEngine->addMidiClipToTrack (index);
+
+                appEngine->debugPrintTrackPluginChain (index);
+                juce::Timer::callAfterDelay (200, [this, index] {
+                    appEngine->debugPrintTrackPluginChain (index);
+                });
+            }
+
             break;
         }
         case OpenMixer:

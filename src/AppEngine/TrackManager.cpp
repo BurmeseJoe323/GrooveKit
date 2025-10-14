@@ -77,8 +77,8 @@ int TrackManager::addInstrumentTrack()
     if ((int) drumEngines.size() > newIndex)
         drumEngines[(size_t) newIndex].reset();
 
-    if (auto plugin = edit.getPluginCache().createNewPlugin(te::FourOscPlugin::xmlTypeName, {}))
-        track->pluginList.insertPlugin(std::move(plugin), 0, nullptr);
+    // if (auto plugin = edit.getPluginCache().createNewPlugin(te::FourOscPlugin::xmlTypeName, {}))
+    //     track->pluginList.insertPlugin(std::move(plugin), 0, nullptr);
 
     edit.getTransport().ensureContextAllocated();
     return newIndex;
