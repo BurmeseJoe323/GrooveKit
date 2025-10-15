@@ -15,8 +15,8 @@ add_library(app_ui
         MixView/ChannelComponents/ChannelStrip.h
         MixView/ChannelComponents/ChannelStrip.cpp
         MixView/MixerPanel.cpp
-        Plugins/FourOscGUI.h
-        Plugins/FourOscGUI.cpp)
+        Plugins/FourOsc/FourOscGUI.h
+        Plugins/FourOsc/FourOscGUI.cpp)
 
 target_sources(app_ui
         PRIVATE

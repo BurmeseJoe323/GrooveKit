@@ -487,6 +487,8 @@ FourOscWindow::FourOscWindow (te::Plugin& plug)
     setUsingNativeTitleBar (true);
     setContentOwned (&view, false);
 
+    setName (plug.getName());
+
     setResizable (true, true);
     setResizeLimits (700, 480, 2000, 1200);
     setSize (1200, 800);

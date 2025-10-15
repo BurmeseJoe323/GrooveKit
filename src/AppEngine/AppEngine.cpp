@@ -1,7 +1,7 @@
 #include "AppEngine.h"
 #include "../DrumSamplerEngine/DefaultSampleLibrary.h"
 #include <tracktion_engine/tracktion_engine.h>
-#include "../UI/Plugins/FourOscGUI.h"
+#include "../UI/Plugins/FourOsc/FourOscGUI.h"
 
 namespace te = tracktion;
 using namespace std::literals;

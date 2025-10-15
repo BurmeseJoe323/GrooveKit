@@ -5,7 +5,7 @@
 #include "../UI/TrackView/TrackHeaderComponent.h"
 #include "TrackManager.h"
 #include <tracktion_engine/tracktion_engine.h>
-#include "../UI/Plugins/FourOscGUI.h"
+#include "../UI/Plugins/FourOsc/FourOscGUI.h"
 
 
 namespace IDs
