@@ -25,7 +25,7 @@ NoteGridComponent::NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, 
     // Set ticks according to time signature's beatValue
     ticksPerTimeSignature = PRE::defaultResolution * timeSignature.beatsPerBar;
 
-    // TODO: refactor to not use NoteComponent
+    // TODO: refactor to not use NoteComponent?
     // Components for each note will likely impact performance. We will probably want to draw directly
     // on the grid instead, and also figure out a way to select notes and drag them
     const auto clip = appEngine.getMidiClipFromTrack (trackIndex);
@@ -33,28 +33,10 @@ NoteGridComponent::NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, 
     {
         return;
     }
+
+    // Add all existing notes from clip
     for (te::MidiNote* note : clip->getSequence().getNotes())
-    {
-        auto newNote = new NoteComponent (styleSheet);
-        newNote->onNoteSelect = [this] (NoteComponent* n, const juce::MouseEvent& e) {
-            this->noteCompSelected (n, e);
-        };
-        newNote->onPositionMoved = [this] (NoteComponent* n) {
-            this->noteCompPositionMoved (n);
-        };
-        newNote->onLengthChange = [this] (NoteComponent* n, int diff) {
-            this->noteCompLengthChanged (n, diff);
-        };
-        newNote->onDragging = [this] (NoteComponent* n, const juce::MouseEvent& e) {
-            this->noteCompDragging (n, e);
-        };
-        newNote->onEdgeDragging = [this] (NoteComponent* n, const juce::MouseEvent& e) {
-            this->noteEdgeDragging (n, e);
-        };
-        newNote->setModel (note);
-        addAndMakeVisible (newNote);
-        noteComps.push_back (newNote);
-    }
+        addNewNoteComponent (note);
 }
 
 NoteGridComponent::~NoteGridComponent()
@@ -246,50 +228,103 @@ void NoteGridComponent::noteCompDragging (NoteComponent* original, const juce::M
     }
 }
 
-void NoteGridComponent::noteEdgeDragging (NoteComponent* n, const juce::MouseEvent&)
+void NoteGridComponent::noteEdgeDragging (NoteComponent* original, const juce::MouseEvent& e)
 {
-    DBG ("Note edge on " << n->getModel()->getNoteNumber() << " dragged");
+    const float q = currentQValue;
+
+    // helpers
+    auto pxToBeats = [this](int xPx) -> float { return xToBeats((float) xPx); };
+    auto beatsToPx = [this](float beats) -> int { return (int) std::round(beatsToX(beats)); };
+
+    const int dx  = e.getDistanceFromDragStartX();
+
+    // TODO: might not need this
+    const int mdx = e.getMouseDownX(); // where inside the note you grabbed it
+
+    // latch anchors
+    if (original->startWidth == -1) { original->startWidth = original->getWidth(); }
+
+    // --- stable, jitter-free horizontal snap ---
+    // beat where the cursor was on mouse-down, relative to the note's left
+    const float startBeatsOrig     = pxToBeats(original->startWidth);
+    const float grabOffsetBeats    = pxToBeats(original->startWidth + mdx) - startBeatsOrig;
+
+    // beat where the cursor is now
+    const float cursorBeatsNow     = pxToBeats(original->startWidth + dx + mdx);
+
+    // proposed new right edge in beats (cursor minus fixed grab offset), then quantise
+    float newLengthBeats            = cursorBeatsNow - grabOffsetBeats;
+    // newStartBeats                  = std::round(newStartBeats / q) * q;   // use std::floor for left-align feel
+
+    // convert to pixels
+    const int origRightEdgePx    = juce::jmax(0, beatsToPx(newLengthBeats));
+
+    // set length of original using setSize
+    // original->setTopLeftPosition(origLeftSnappedPx, origTopSnappedPx);
+    original->setSize (origRightEdgePx, original->getHeight());
+
+    // delta to apply to any other selected notes (in beats, not pixels)
+    const float deltaBeats         = newLengthBeats - startBeatsOrig;
+
+    // resize other selected notes by the exact same beat delta (prevents drift/jitter)
+    // for (auto* n : noteComps)
+    // {
+    //     if (n == original || n->getState() != NoteComponent::eSelected)
+    //         continue;
+    //
+    //     n->isMultiDrag = true;
+    //     if (n->startWidth == -1) { n->startWidth = n->getWidth(); }
+    //
+    //     const float nStartBeats = pxToBeats(n->startX);
+    //     const int   newRightEdgePx   = juce::jmax(0, beatsToPx(nStartBeats + deltaBeats));
+    //
+    //     n->setSize(newRightEdgePx, n->getHeight());
+    // }
 }
 
-void NoteGridComponent::noteCompLengthChanged (NoteComponent* original, int diff)
+void NoteGridComponent::noteCompLengthChanged (NoteComponent* original)
 {
-    for (auto n : noteComps)
+    // TODO: we only want to iterate over each note component IF we are changing multiple note lengths simultaneously
+    // There might be a better way to do this (queue changed notes, etc.)
+
+    // for (auto n : noteComps)
+    // {
+    //     if (n->getState() == NoteComponent::eSelected || n == original)
+    //     {
+    auto n = original;
+    if (n->startWidth == -1)
     {
-        if (n->getState() == NoteComponent::eSelected || n == original)
-        {
-            if (n->startWidth == -1)
-            {
-                n->startWidth = n->getWidth();
-                n->coordinatesDiffer = true;
-            }
-
-            const int newWidth = n->startWidth - diff;
-            // TODO: experiment with different values?
-            if (newWidth > 20)
-            {
-                n->setSize (newWidth, n->getHeight());
-                auto* clip = appEngine.getMidiClipFromTrack (trackIndex);
-                if (!clip)
-                {
-                    DBG ("Error: MIDI clip at " << trackIndex << " not found.");
-                    return;
-                }
-                auto* um = clip->getUndoManager();
-
-                // preserve note position on length changed
-                te::BeatPosition beatStart = n->getModel()->getBeatPosition();
-                float beatLength = xToBeats (newWidth);
-                beatLength = std::round(beatLength / currentQValue) * currentQValue; // snap x
-                te::BeatDuration newDur = te::BeatDuration::fromBeats(beatLength);
-                n->getModel()->setStartAndLength(beatStart, newDur, um);
-            }
-        }
+        n->startWidth = n->getWidth();
+        n->coordinatesDiffer = true;
     }
+
+    // TODO: change the minimum value in this jmax call
+    // The minimum value we want for a note length is the amount of pixels that corresponds to a 1/32 note
+    const int newWidth = juce::jmax (20, n->getWidth());
+    n->setSize (newWidth, n->getHeight());
+    auto* clip = appEngine.getMidiClipFromTrack (trackIndex);
+    if (!clip)
+    {
+        DBG ("Error: MIDI clip at " << trackIndex << " not found.");
+        return;
+    }
+    auto* um = clip->getUndoManager();
+
+    // preserve note position on length changed
+    te::BeatPosition beatStart = n->getModel()->getBeatPosition();
+    float beatLength = xToBeats (newWidth);
+    beatLength = std::round (beatLength / currentQValue) * currentQValue; // snap x
+    te::BeatDuration newDur = te::BeatDuration::fromBeats (beatLength);
+    n->getModel()->setStartAndLength (beatStart, newDur, um);
+    //     }
+    // }
     sendEdit();
+    resized();
 }
 
 void NoteGridComponent::noteCompPositionMoved (NoteComponent* comp, bool callResize)
 {
+    // TODO: is this supposed to be a lock?
     if (!firstDrag)
     {
         firstDrag = true;
@@ -424,29 +459,10 @@ void NoteGridComponent::mouseUp (const juce::MouseEvent&)
 
 void NoteGridComponent::mouseDoubleClick (const juce::MouseEvent& e)
 {
-    /*
-     * Set up lambdas. Essentially each note component (child) sends messages back
-     * to parent (this) through a series of lambda callbacks
-     */
-    // NoteComponent* newNote = new NoteComponent (styleSheet);
-    // newNote->onNoteSelect = [this] (NoteComponent* n, const juce::MouseEvent& e) {
-    //     this->noteCompSelected (n, e);
-    // };
-    // newNote->onPositionMoved = [this] (NoteComponent* n) {
-    //     this->noteCompPositionMoved (n);
-    // };
-    // newNote->onLengthChange = [this] (NoteComponent* n, int diff) {
-    //     this->noteCompLengthChanged (n, diff);
-    // };
-    // newNote->onDragging = [this] (NoteComponent* n, const juce::MouseEvent& e) {
-    //     this->noteCompDragging (n, e);
-    // };
-    // addAndMakeVisible (newNote);
-
     const float q = currentQValue;
     const float beatStartRaw = xToBeats((float) e.getMouseDownX());
     const float beatStartQ   = std::floor(beatStartRaw / q) * q;
-    const float beatLength   = 1 * q;
+    const float beatLength   = q;
 
     int pitch = yToPitch ((float) e.getMouseDownY());
     pitch = juce::jlimit (0, 127, pitch);
@@ -466,7 +482,6 @@ void NoteGridComponent::mouseDoubleClick (const juce::MouseEvent& e)
         um);
 
     auto newNote = addNewNoteComponent(newModel);
-    // newNote->setModel(newModel);
 
     for (auto* c : noteComps)
         if (c != newNote) c->setState (NoteComponent::eNone);
@@ -487,10 +502,17 @@ bool NoteGridComponent::keyPressed (const juce::KeyPress& key, Component*)
     //     LOG_KEY_PRESS(key.getKeyCode(), 1, key.getModifiers().getRawFlags());
     // #endif
 
-    auto* um = appEngine.getMidiClipFromTrack (trackIndex)->getUndoManager();
+    auto clip = appEngine.getMidiClipFromTrack (trackIndex);
+    if (clip == nullptr)
+    {
+        DBG("Error: midi clip at track index " << trackIndex << " not found.");
+        return true;
+    }
+
+    auto* um = clip->getUndoManager();
+    // Delete all selected midi notes
     if (key == juce::KeyPress::backspaceKey)
     {
-        //
         deleteAllSelected();
         sendEdit();
         return true;
@@ -627,8 +649,8 @@ NoteComponent *NoteGridComponent::addNewNoteComponent (te::MidiNote* model)
     newNote->onPositionMoved = [this] (NoteComponent* n) {
         this->noteCompPositionMoved (n);
     };
-    newNote->onLengthChange = [this] (NoteComponent* n, int diff) {
-        this->noteCompLengthChanged (n, diff);
+    newNote->onLengthChange = [this] (NoteComponent* n) {
+        this->noteCompLengthChanged (n);
     };
     newNote->onDragging = [this] (NoteComponent* n, const juce::MouseEvent& e) {
         this->noteCompDragging (n, e);

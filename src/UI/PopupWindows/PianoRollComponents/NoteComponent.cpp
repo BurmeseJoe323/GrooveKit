@@ -138,11 +138,10 @@ void NoteComponent::mouseDrag (const juce::MouseEvent& e)
 {
     if (resizeEnabled)
     {
-        // if (onLengthChange)
-        //     onLengthChange (this, startWidth - e.getPosition().getX());
-        // return;
-        if (onEdgeDragging)
-            onEdgeDragging(this, e);
+        // TODO: this is only useful if we want to change the lengths of multiple selected notes at once
+        // Decide if we want this functionality or not
+        // if (onEdgeDragging)
+        //     onEdgeDragging(this, e);
         return;
     }
 
@@ -166,11 +165,11 @@ void NoteComponent::mouseUp (const juce::MouseEvent& e)
 {
     if (e.originalComponent == &edgeResizer)
     {
-        DBG("Mouse up on edge resizer");
-        // if (onLengthChange)
-        // {
-        //    onLengthChange(this, 0);
-        // }
+        if (onLengthChange)
+        {
+           onLengthChange(this);
+        }
+        setState (eState::eSelected);
         return;
     }
     if (onPositionMoved)
