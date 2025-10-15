@@ -267,10 +267,11 @@ void NoteGridComponent::noteCompLengthChanged (NoteComponent* original, int diff
                     return;
                 }
                 auto* um = clip->getUndoManager();
+
                 // preserve note position on length changed
                 te::BeatPosition beatStart = n->getModel()->getBeatPosition();
                 float beatLength = xToBeats (newWidth);
-                beatLength = std::round(beatLength / currentQValue) * currentQValue; // snap x
+                // beatLength = std::round(beatLength / currentQValue) * currentQValue; // snap x
                 te::BeatDuration newDur = te::BeatDuration::fromBeats(beatLength);
                 n->getModel()->setStartAndLength(beatStart, newDur, um);
             }
