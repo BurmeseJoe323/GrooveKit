@@ -15,8 +15,6 @@ NoteGridComponent::NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, 
 {
     addChildComponent (&selectorBox);
 
-    // NOTE: key presses don't work in this current implementation. In the more polished piano roll, they
-    // should work
     addKeyListener (this);
     setWantsKeyboardFocus (true);
     currentQValue = 1.f; // Assume quantisation to quarter-note beats
@@ -602,7 +600,7 @@ juce::Array<te::MidiNote*> NoteGridComponent::getSelectedModels()
     juce::Array<te::MidiNote*> noteModels;
     for (auto comp : noteComps)
     {
-        if (comp->getState())
+        if (comp->getState() == NoteComponent::eSelected)
         {
             noteModels.add (comp->getModel());
         }
