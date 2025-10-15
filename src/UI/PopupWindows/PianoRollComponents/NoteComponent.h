@@ -50,8 +50,10 @@ class NoteComponent : public juce::Component, public juce::ComponentDragger {
 
     std::function<void(NoteComponent *, const juce::MouseEvent &)> onNoteSelect;
     std::function<void(NoteComponent *)> onPositionMoved;
-    // Send the drag event to other components
+    // Send the drag event to all selected components
     std::function<void(NoteComponent *, const juce::MouseEvent &)> onDragging;
+    // Send the note length change event to all selected components
+    std::function<void(NoteComponent *, const juce::MouseEvent &)> onEdgeDragging;
     // Sends the difference as this is relative for all components
     std::function<void(NoteComponent *, int)> onLengthChange;
 

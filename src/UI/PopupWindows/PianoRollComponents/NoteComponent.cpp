@@ -138,8 +138,11 @@ void NoteComponent::mouseDrag (const juce::MouseEvent& e)
 {
     if (resizeEnabled)
     {
-        if (onLengthChange)
-            onLengthChange (this, startWidth - e.getPosition().getX());
+        // if (onLengthChange)
+        //     onLengthChange (this, startWidth - e.getPosition().getX());
+        // return;
+        if (onEdgeDragging)
+            onEdgeDragging(this, e);
         return;
     }
 
@@ -161,6 +164,15 @@ void NoteComponent::mouseDrag (const juce::MouseEvent& e)
 
 void NoteComponent::mouseUp (const juce::MouseEvent& e)
 {
+    if (e.originalComponent == &edgeResizer)
+    {
+        DBG("Mouse up on edge resizer");
+        // if (onLengthChange)
+        // {
+        //    onLengthChange(this, 0);
+        // }
+        return;
+    }
     if (onPositionMoved)
         onPositionMoved (this);
     if (onNoteSelect)
