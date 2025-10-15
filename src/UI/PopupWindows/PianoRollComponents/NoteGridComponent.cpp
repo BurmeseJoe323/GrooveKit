@@ -50,6 +50,9 @@ NoteGridComponent::NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, 
         newNote->onDragging = [this] (NoteComponent* n, const juce::MouseEvent& e) {
             this->noteCompDragging (n, e);
         };
+        newNote->onEdgeDragging = [this] (NoteComponent* n, const juce::MouseEvent& e) {
+            this->noteEdgeDragging (n, e);
+        };
         newNote->setModel (note);
         addAndMakeVisible (newNote);
         noteComps.push_back (newNote);
@@ -245,6 +248,11 @@ void NoteGridComponent::noteCompDragging (NoteComponent* original, const juce::M
     }
 }
 
+void NoteGridComponent::noteEdgeDragging (NoteComponent* n, const juce::MouseEvent&)
+{
+    DBG ("Note edge on " << n->getModel()->getNoteNumber() << " dragged");
+}
+
 void NoteGridComponent::noteCompLengthChanged (NoteComponent* original, int diff)
 {
     for (auto n : noteComps)
@@ -273,7 +281,7 @@ void NoteGridComponent::noteCompLengthChanged (NoteComponent* original, int diff
                 // preserve note position on length changed
                 te::BeatPosition beatStart = n->getModel()->getBeatPosition();
                 float beatLength = xToBeats (newWidth);
-                // beatLength = std::round(beatLength / currentQValue) * currentQValue; // snap x
+                beatLength = std::round(beatLength / currentQValue) * currentQValue; // snap x
                 te::BeatDuration newDur = te::BeatDuration::fromBeats(beatLength);
                 n->getModel()->setStartAndLength(beatStart, newDur, um);
             }
@@ -422,20 +430,20 @@ void NoteGridComponent::mouseDoubleClick (const juce::MouseEvent& e)
      * Set up lambdas. Essentially each note component (child) sends messages back
      * to parent (this) through a series of lambda callbacks
      */
-    NoteComponent* newNote = new NoteComponent (styleSheet);
-    newNote->onNoteSelect = [this] (NoteComponent* n, const juce::MouseEvent& e) {
-        this->noteCompSelected (n, e);
-    };
-    newNote->onPositionMoved = [this] (NoteComponent* n) {
-        this->noteCompPositionMoved (n);
-    };
-    newNote->onLengthChange = [this] (NoteComponent* n, int diff) {
-        this->noteCompLengthChanged (n, diff);
-    };
-    newNote->onDragging = [this] (NoteComponent* n, const juce::MouseEvent& e) {
-        this->noteCompDragging (n, e);
-    };
-    addAndMakeVisible (newNote);
+    // NoteComponent* newNote = new NoteComponent (styleSheet);
+    // newNote->onNoteSelect = [this] (NoteComponent* n, const juce::MouseEvent& e) {
+    //     this->noteCompSelected (n, e);
+    // };
+    // newNote->onPositionMoved = [this] (NoteComponent* n) {
+    //     this->noteCompPositionMoved (n);
+    // };
+    // newNote->onLengthChange = [this] (NoteComponent* n, int diff) {
+    //     this->noteCompLengthChanged (n, diff);
+    // };
+    // newNote->onDragging = [this] (NoteComponent* n, const juce::MouseEvent& e) {
+    //     this->noteCompDragging (n, e);
+    // };
+    // addAndMakeVisible (newNote);
 
     const float q = currentQValue;
     const float beatStartRaw = xToBeats((float) e.getMouseDownX());
@@ -459,7 +467,8 @@ void NoteGridComponent::mouseDoubleClick (const juce::MouseEvent& e)
         0,
         um);
 
-    newNote->setModel(newModel);
+    auto newNote = addNewNoteComponent(newModel);
+    // newNote->setModel(newModel);
 
     for (auto* c : noteComps)
         if (c != newNote) c->setState (NoteComponent::eNone);
@@ -474,7 +483,7 @@ void NoteGridComponent::mouseDoubleClick (const juce::MouseEvent& e)
     sendEdit();
 }
 
-bool NoteGridComponent::keyPressed (const juce::KeyPress& key, Component* originatingComponent)
+bool NoteGridComponent::keyPressed (const juce::KeyPress& key, Component*)
 {
     // #ifndef LIB_VERSION
     //     LOG_KEY_PRESS(key.getKeyCode(), 1, key.getModifiers().getRawFlags());
@@ -605,6 +614,34 @@ void NoteGridComponent::sendEdit()
     {
         this->onEdit();
     }
+}
+
+NoteComponent *NoteGridComponent::addNewNoteComponent (te::MidiNote* model)
+{
+    /*
+     * Set up lambdas. Essentially each note component (child) sends messages back
+     * to parent (this) through a series of lambda callbacks
+     */
+    auto newNote = new NoteComponent (styleSheet);
+    newNote->onNoteSelect = [this] (NoteComponent* n, const juce::MouseEvent& e) {
+        this->noteCompSelected (n, e);
+    };
+    newNote->onPositionMoved = [this] (NoteComponent* n) {
+        this->noteCompPositionMoved (n);
+    };
+    newNote->onLengthChange = [this] (NoteComponent* n, int diff) {
+        this->noteCompLengthChanged (n, diff);
+    };
+    newNote->onDragging = [this] (NoteComponent* n, const juce::MouseEvent& e) {
+        this->noteCompDragging (n, e);
+    };
+    newNote->onEdgeDragging = [this] (NoteComponent* n, const juce::MouseEvent& e) {
+        this->noteEdgeDragging (n, e);
+    };
+    newNote->setModel (model);
+    addAndMakeVisible (newNote);
+    noteComps.push_back (newNote);
+    return newNote;
 }
 
 float NoteGridComponent::beatsToX (float beats)

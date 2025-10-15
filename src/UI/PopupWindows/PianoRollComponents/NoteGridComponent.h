@@ -50,6 +50,7 @@ public:
     void noteCompPositionMoved (NoteComponent*, bool callResize = true);
     void noteCompLengthChanged (NoteComponent*, int diff);
     void noteCompDragging (NoteComponent*, const juce::MouseEvent&);
+    void noteEdgeDragging (NoteComponent*, const juce::MouseEvent&);
     void setPositions();
     void setTimeSignature (unsigned int beatsPerBar, unsigned int beatValue);
 
@@ -67,7 +68,7 @@ public:
     void setupGrid (float pixelsPerBar, float compHeight, const int bars);
     void setQuantisation (float newVal);
 
-    bool keyPressed (const juce::KeyPress& key, Component* originatingComponent) override;
+    bool keyPressed (const juce::KeyPress& key, Component*) override;
     void deleteAllSelected();
 
     // From here you could convert this into MIDI or any other custom musical encoding.
@@ -83,6 +84,8 @@ public:
 
 private:
     void sendEdit();
+
+    NoteComponent* addNewNoteComponent(te::MidiNote*);
 
     // The appEngine is where all MIDI information is stored. The trackIndex is used to locate the correct track inside
     // the engine
