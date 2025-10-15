@@ -144,7 +144,6 @@ public:
 
     void openEditAsync (std::function<void (bool success)> onDone = {});
     bool loadEditFromFile (const juce::File& file);
-    std::function<void()> onEditLoaded;
 
     void newUntitledEdit();
 
@@ -152,6 +151,12 @@ public:
     void registerTrackListener (int index, TrackHeaderComponent::Listener* l);
     void unregisterTrackListener (int index, TrackHeaderComponent::Listener* l);
     [[nodiscard]] TrackHeaderComponent::Listener* getTrackListener (int index) const;
+
+    void setArmedTrack (int index);
+    int getArmedTrackIndex() const;
+    te::AudioTrack* getArmedTrack();
+    std::function<void()> onArmedTrackChanged;
+    std::function<void()> onEditLoaded;
 
 private:
     std::unique_ptr<tracktion::engine::Engine> engine;
@@ -179,6 +184,8 @@ private:
 
     juce::File getAutosaveFile() const;
     void timerCallback() override;
+
+    int selectedTrackIndex = -1;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AppEngine)
 };

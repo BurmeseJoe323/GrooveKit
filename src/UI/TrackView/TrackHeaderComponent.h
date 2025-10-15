@@ -15,6 +15,7 @@ public:
         virtual void onSettingsClicked() = 0;
         virtual void onMuteToggled (bool isMuted) = 0;
         virtual void onSoloToggled (bool isSolo) = 0;
+        virtual void onRecordArmToggled(bool isArmed) = 0;
     };
 
     void addListener (Listener* listener) { listeners.add (listener); }
@@ -31,6 +32,9 @@ public:
 
     void setSolo (bool shouldBeSolo);
     bool isSolo() const;
+
+    void setArmed (bool shouldBeArmed);
+    bool isArmed() const;
     void setDimmed (bool dim);
 
     void setTrackName (juce::String name);
@@ -40,6 +44,7 @@ private:
     juce::TextButton settingsButton { "..." };
     juce::TextButton muteTrackButton { "M" };
     juce::TextButton soloTrackButton { "S" };
+    juce::TextButton recordArmButton { "R" };
     juce::Label trackNameLabel { "Track" };
     bool selected = false;
 

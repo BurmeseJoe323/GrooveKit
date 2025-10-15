@@ -495,11 +495,7 @@ void TrackEditView::injectNoteMessage (const juce::MidiMessage& msg)
     if (!appEngine)
         return;
 
-    int idx = 0;
-    if (trackList)
-        idx = trackList->getSelectedTrackIndex();
-
-    te::AudioTrack* track = appEngine->getTrackManager().getTrack (idx);
+    te::AudioTrack* track = appEngine->getArmedTrack();
     if (track == nullptr)
         return;
 

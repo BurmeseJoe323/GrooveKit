@@ -20,6 +20,7 @@ ChannelStrip::ChannelStrip()
     // Toggle behavior
     muteButton.setClickingTogglesState (true);
     soloButton.setClickingTogglesState (true);
+    recordButton.setClickingTogglesState (true);
 
     muteButton.setColour (juce::TextButton::textColourOffId, juce::Colours::red);
     muteButton.setColour (juce::TextButton::textColourOnId, juce::Colour (0xFF6C757D));
@@ -31,10 +32,10 @@ ChannelStrip::ChannelStrip()
     soloButton.setColour (juce::TextButton::buttonColourId, juce::Colour (0xFF6C757D));
     soloButton.setColour (juce::TextButton::buttonOnColourId, juce::Colours::yellow);
 
-    recordButton.setColour (juce::TextButton::textColourOffId, juce::Colour (0xFF872323));
-    recordButton.setColour (juce::TextButton::textColourOnId, juce::Colour (0xFF872323));
-    recordButton.setColour (juce::TextButton::buttonColourId, juce::Colour (0xFF6C757D));
-    recordButton.setColour (juce::TextButton::buttonOnColourId, juce::Colour (0xFF872323));
+    recordButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white);
+    recordButton.setColour (juce::TextButton::textColourOnId, juce::Colours::black);
+    recordButton.setColour (juce::TextButton::buttonColourId, juce::Colours::darkgrey);
+    recordButton.setColour (juce::TextButton::buttonOnColourId, juce::Colours::darkred);
 
     // Notify TrackHeaderComponent listeners (safely via SafePointers) (Junie)
     muteButton.onClick = [this] {
@@ -77,6 +78,26 @@ ChannelStrip::ChannelStrip()
             onRequestSoloChange (nowSolo);
     };
 
+    recordButton.onClick = [this] {
+        const bool nowArmed = recordButton.getToggleState();
+        for (int i = listenerComponents.size(); --i >= 0;)
+        {
+            if (auto* comp = listenerComponents[i].getComponent())
+            {
+                if (auto* l = dynamic_cast<TrackHeaderComponent::Listener*> (comp))
+                    l->onRecordArmToggled (nowArmed);
+                else
+                    listenerComponents.remove (i);
+            }
+            else
+            {
+                listenerComponents.remove (i);
+            }
+        }
+        if (onRequestArmChange)
+            onRequestArmChange (nowArmed);
+    };
+
     addAndMakeVisible (name);
     name.setText ("Track 1", juce::dontSendNotification);
     name.setJustificationType (juce::Justification::centred);
@@ -117,6 +138,13 @@ void ChannelStrip::setSolo (const bool isSolo)
 {
     soloButton.setToggleState (isSolo, juce::dontSendNotification);
 }
+
+bool ChannelStrip::isArmed() const { return recordButton.getToggleState(); }
+void ChannelStrip::setArmed (const bool isArmed)
+{
+    recordButton.setToggleState (isArmed, juce::dontSendNotification);
+}
+
 
 void ChannelStrip::bindToTrack (te::AudioTrack& track)
 {

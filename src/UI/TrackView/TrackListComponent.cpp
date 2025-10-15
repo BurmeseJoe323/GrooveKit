@@ -11,7 +11,10 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
     setWantsKeyboardFocus (true); // setting keyboard focus?
     addAndMakeVisible (playhead);
     playhead.setAlwaysOnTop (true);
-    selectedTrackIndex = 0;
+
+    appEngine->onArmedTrackChanged = [this] {
+        refreshTrackStates();
+    };
 }
 
 TrackListComponent::~TrackListComponent() = default;
@@ -91,7 +94,7 @@ void TrackListComponent::addNewTrack (int engineIdx)
 
     header->setMuted (appEngine->isTrackMuted (newTrack->getTrackIndex()));
     header->setSolo (appEngine->isTrackSoloed (newTrack->getTrackIndex()));
-    refreshSoloVisuals();
+    refreshTrackStates();
 
     newTrack->onRequestDeleteTrack = [this] (int uiIndex) {
         if (uiIndex >= 0 && uiIndex < tracks.size() && uiIndex < headers.size())
@@ -153,7 +156,7 @@ void TrackListComponent::updateTrackIndexes() const
             tracks[i]->setTrackIndex (i);
 }
 
-void TrackListComponent::refreshSoloVisuals() const
+void TrackListComponent::refreshTrackStates() const
 {
     const bool anySolo = appEngine->anyTrackSoloed();
     const int n = juce::jmin (headers.size(), tracks.size());
@@ -163,6 +166,19 @@ void TrackListComponent::refreshSoloVisuals() const
         if (headers[i] != nullptr)
             headers[i]->setDimmed (anySolo && !thisSolo);
     }
+
+    for (int i = 0; i < headers.size(); ++i)
+    {
+        if (headers[i] != nullptr)
+            headers[i]->setArmed (appEngine->getArmedTrackIndex() == i);
+    }
+}
+
+void TrackListComponent::armTrack (int trackIndex, bool shouldBeArmed)
+{
+    const int newIndex = shouldBeArmed ? trackIndex : -1;
+    if (appEngine->getArmedTrackIndex() != newIndex)
+        appEngine->setArmedTrack (newIndex);
 }
 
 void TrackListComponent::setPixelsPerSecond (double pps)
@@ -193,8 +209,6 @@ void TrackListComponent::rebuildFromEngine()
 
     resized();
 }
-
-
 
 // bool EditComponent::keyPressed(const KeyPress& key) {
 //     if (key == KeyPress::deleteKey) {
