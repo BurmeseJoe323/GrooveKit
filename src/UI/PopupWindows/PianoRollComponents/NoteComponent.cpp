@@ -19,6 +19,9 @@ NoteComponent::NoteComponent (GridStyleSheet styleSheet)
     state = eNone;
     startVelocity = 0;
 
+    edgeResizer.addMouseListener (this, false);
+    // setInterceptsMouseClicks (true, false);
+
     setCustomColour (juce::Colours::green);
 }
 
@@ -120,7 +123,7 @@ void NoteComponent::mouseDown (const juce::MouseEvent& e)
         velocityEnabled = true;
         startVelocity = model->getVelocity();
     }
-    else if (handleW > 0 && e.getMouseDownX() >= getWidth() - handleW)
+    else if (e.originalComponent == &edgeResizer)
     {
         resizeEnabled = true;
         startWidth = getWidth();
