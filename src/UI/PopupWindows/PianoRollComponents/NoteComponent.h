@@ -55,7 +55,7 @@ class NoteComponent : public juce::Component, public juce::ComponentDragger {
     // Send the note length change event to all selected components
     std::function<void(NoteComponent *, const juce::MouseEvent &)> onEdgeDragging;
     // Sends the difference as this is relative for all components
-    std::function<void(NoteComponent *, int)> onLengthChange;
+    std::function<void(NoteComponent *)> onLengthChange;
 
     int minWidth = 10;
      // Used when resizing the noteComponents length

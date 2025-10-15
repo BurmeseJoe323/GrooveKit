@@ -48,7 +48,7 @@ public:
 
     void noteCompSelected (NoteComponent*, const juce::MouseEvent&);
     void noteCompPositionMoved (NoteComponent*, bool callResize = true);
-    void noteCompLengthChanged (NoteComponent*, int diff);
+    void noteCompLengthChanged (NoteComponent*);
     void noteCompDragging (NoteComponent*, const juce::MouseEvent&);
     void noteEdgeDragging (NoteComponent*, const juce::MouseEvent&);
     void setPositions();
