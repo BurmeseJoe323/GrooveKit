@@ -122,19 +122,30 @@ void NoteGridComponent::paint (juce::Graphics& g)
 
 void NoteGridComponent::resized()
 {
-    for (auto component : noteComps)
+    // Create vector to keep track of still valid note components
+    std::vector<NoteComponent*> stillValid;
+    stillValid.reserve (noteComps.size());
+
+    for (auto* component : noteComps)
     {
+        auto* model = component ? component->getModel() : nullptr;
+        if (component == nullptr || component->getModel() == nullptr)
+            continue;
+
         if (component->coordinatesDiffer)
         {
             noteCompPositionMoved (component, false);
         }
+
         // Convert model-side information to component coordinates
         const float xPos = beatsToX (static_cast<float> (component->getModel()->getStartBeat().inBeats()));
         const float yPos = pitchToY (static_cast<float> (component->getModel()->getNoteNumber()));
         const float len = beatsToX (static_cast<float> (component->getModel()->getLengthBeats().inBeats()));
 
         component->setBounds (xPos, yPos, len, noteCompHeight);
+        stillValid.push_back (component);
     }
+    noteComps.swap(stillValid);
 }
 
 void NoteGridComponent::setupGrid (float pixelsPerBar, float compHeight, const int bars)
@@ -489,8 +500,6 @@ void NoteGridComponent::mouseDoubleClick (const juce::MouseEvent& e)
     newNote->setState (NoteComponent::eSelected);
     newNote->toFront (true);
 
-    noteComps.push_back(newNote);
-
     resized();
     repaint();
     sendEdit();
@@ -578,8 +587,7 @@ bool NoteGridComponent::keyPressed (const juce::KeyPress& key, Component*)
 
 void NoteGridComponent::deleteAllSelected()
 {
-    std::vector<NoteComponent*> itemsToKeep;
-    auto clip = appEngine.getMidiClipFromTrack (trackIndex);
+    auto* clip = appEngine.getMidiClipFromTrack (trackIndex);
     if (clip == nullptr)
     {
         DBG ("Error: MIDI clip at track " << trackIndex << "not found.");
@@ -587,20 +595,33 @@ void NoteGridComponent::deleteAllSelected()
     }
     auto& seq = clip->getSequence();
     auto* um = appEngine.getMidiClipFromTrack (trackIndex)->getUndoManager();
-    for (int i = 0; i < noteComps.size(); i++)
+
+    // Init vector for kept notes
+    std::vector<NoteComponent*> itemsToKeep;
+    itemsToKeep.reserve (noteComps.size());
+
+    // Init set for removed note components to guard against
+    // duplicate or stale components
+    std::set<NoteComponent*> removed;
+    for (auto* noteComp : noteComps)
     {
-        if (noteComps[i]->getState() == NoteComponent::eSelected)
+        if (noteComp == nullptr || removed.contains (noteComp))
+            continue;
+
+        if (noteComp->getState() == NoteComponent::eSelected)
         {
-            seq.removeNote (*noteComps[i]->getModel(), um);
-            removeChildComponent (noteComps[i]);
-            delete noteComps[i];
+            if (auto* model = noteComp->getModel())
+                seq.removeNote (*model, um);
+            removeChildComponent (noteComp);
+            removed.insert(noteComp);
+            delete noteComp;
         }
         else
         {
-            itemsToKeep.push_back (noteComps[i]);
+            itemsToKeep.push_back (noteComp);
         }
     }
-    noteComps = itemsToKeep;
+    noteComps.swap(itemsToKeep);
 }
 
 // TODO: do we need this function?
