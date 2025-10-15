@@ -5,11 +5,6 @@
 #include "NoteGridComponent.h"
 #include "AppEngine.h"
 
-#define RETURN_IF_EDITING_DISABLED \
-    if (styleSheet.disableEditing) \
-    {                              \
-        return;                    \
-    }
 
 NoteGridComponent::NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, int trackIndex) : styleSheet (sheet), appEngine (engine), trackIndex (trackIndex)
 {
@@ -171,8 +166,6 @@ void NoteGridComponent::setQuantisation (float newVal)
 
 void NoteGridComponent::noteCompSelected (NoteComponent* noteComponent, const juce::MouseEvent& e)
 {
-    RETURN_IF_EDITING_DISABLED
-
     const bool additive = e.mods.isShiftDown();
 
     for (auto* c : noteComps)
@@ -191,8 +184,6 @@ void NoteGridComponent::noteCompSelected (NoteComponent* noteComponent, const ju
 
 void NoteGridComponent::noteCompDragging (NoteComponent* original, const juce::MouseEvent& e)
 {
-    RETURN_IF_EDITING_DISABLED
-
     const float q = currentQValue;
 
     // helpers
@@ -254,8 +245,6 @@ void NoteGridComponent::noteCompDragging (NoteComponent* original, const juce::M
 
 void NoteGridComponent::noteCompLengthChanged (NoteComponent* original, int diff)
 {
-    RETURN_IF_EDITING_DISABLED
-
     for (auto n : noteComps)
     {
         if (n->getState() == NoteComponent::eSelected || n == original)
@@ -267,10 +256,23 @@ void NoteGridComponent::noteCompLengthChanged (NoteComponent* original, int diff
             }
 
             const int newWidth = n->startWidth - diff;
-            // TODO: this seems arbitary..
+            // TODO: experiment with different values?
             if (newWidth > 20)
             {
                 n->setSize (newWidth, n->getHeight());
+                auto* clip = appEngine.getMidiClipFromTrack (trackIndex);
+                if (!clip)
+                {
+                    DBG ("Error: MIDI clip at " << trackIndex << " not found.");
+                    return;
+                }
+                auto* um = clip->getUndoManager();
+                // preserve note position on length changed
+                te::BeatPosition beatStart = n->getModel()->getBeatPosition();
+                float beatLength = xToBeats (newWidth);
+                beatLength = std::round(beatLength / currentQValue) * currentQValue; // snap x
+                te::BeatDuration newDur = te::BeatDuration::fromBeats(beatLength);
+                n->getModel()->setStartAndLength(beatStart, newDur, um);
             }
         }
     }
@@ -279,8 +281,6 @@ void NoteGridComponent::noteCompLengthChanged (NoteComponent* original, int diff
 
 void NoteGridComponent::noteCompPositionMoved (NoteComponent* comp, bool callResize)
 {
-    RETURN_IF_EDITING_DISABLED
-
     if (!firstDrag)
     {
         firstDrag = true;
@@ -335,8 +335,6 @@ void NoteGridComponent::setTimeSignature (unsigned int beatsPerBar, unsigned int
 
 void NoteGridComponent::mouseDown (const juce::MouseEvent&)
 {
-    RETURN_IF_EDITING_DISABLED
-
     for (NoteComponent* component : noteComps)
     {
         component->setState (NoteComponent::eNone);
@@ -347,8 +345,6 @@ void NoteGridComponent::mouseDown (const juce::MouseEvent&)
 
 void NoteGridComponent::mouseDrag (const juce::MouseEvent& e)
 {
-    RETURN_IF_EDITING_DISABLED
-
     if (!selectorBox.isVisible())
     {
         selectorBox.setVisible (true);
@@ -396,8 +392,6 @@ void NoteGridComponent::mouseDrag (const juce::MouseEvent& e)
 
 void NoteGridComponent::mouseUp (const juce::MouseEvent&)
 {
-    RETURN_IF_EDITING_DISABLED
-
     if (selectorBox.isVisible())
     {
         for (NoteComponent* component : noteComps)
@@ -421,8 +415,6 @@ void NoteGridComponent::mouseUp (const juce::MouseEvent&)
 
 void NoteGridComponent::mouseDoubleClick (const juce::MouseEvent& e)
 {
-    RETURN_IF_EDITING_DISABLED
-
     /*
      * Set up lambdas. Essentially each note component (child) sends messages back
      * to parent (this) through a series of lambda callbacks
@@ -485,10 +477,6 @@ bool NoteGridComponent::keyPressed (const juce::KeyPress& key, Component* origin
     //     LOG_KEY_PRESS(key.getKeyCode(), 1, key.getModifiers().getRawFlags());
     // #endif
 
-    if (styleSheet.disableEditing)
-    {
-        return true;
-    }
     auto* um = appEngine.getMidiClipFromTrack (trackIndex)->getUndoManager();
     if (key == juce::KeyPress::backspaceKey)
     {

@@ -33,56 +33,47 @@ public:
         }
     }
 
-    std::function<void  (int, int)> positionMoved;
+    std::function<void (int, int)> positionMoved;
 };
 
 class PianoRollEditor : public juce::Component
 {
 public:
     PianoRollEditor (AppEngine& engine, int trackIndex);
-
-    ~PianoRollEditor () override = default;
+    ~PianoRollEditor() override = default;
 
     /*
      * Called after the constructor to determine the size of the grid
      * Number of bars can be updated with updateBars
      */
     void setup (const int bars, const int pixelsPerBar, const int noteHeight);
-
     void updateBars (const int newNumberOfBars);
 
     void setScroll (double x, double y);
-
     void paint (juce::Graphics& g) override;
-
     void paintOverChildren (juce::Graphics& g) override;
-
     void setPlaybackMarkerPosition (const st_int ticks, bool isVisible = true);
+    void resized() override;
 
-    void resized () override;
-
-    const te::MidiList& getSequence ();
-
+    const te::MidiList& getSequence();
     // void loadSequence();
-
-    void disableEditing (bool value);
 
     void setStyleSheet (GridStyleSheet styleSheet);
 
     void showControlPanel (bool state);
 
-    GridControlPanel& getControlPanel ();
+    GridControlPanel& getControlPanel();
 
     /*
      This is called when the grid is edited.
      */
-    std::function<void ()> onEdit;
+    std::function<void()> onEdit;
 
     /*
      You can use this to implement simple MIDI synthesis when notes are being edited,
      when notes are edited this function will be called
      */
-    std::function<void  (int note, int velocity)> sendChange;
+    std::function<void (int note, int velocity)> sendChange;
 
 private:
     // Adjustable parameters for pixels per bar and pixels per note
