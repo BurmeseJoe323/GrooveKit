@@ -241,8 +241,6 @@ void NoteGridComponent::noteCompDragging (NoteComponent* original, const juce::M
 
 void NoteGridComponent::noteEdgeDragging (NoteComponent* original, const juce::MouseEvent& e)
 {
-    const float q = currentQValue;
-
     // helpers
     auto pxToBeats = [this](int xPx) -> float { return xToBeats((float) xPx); };
     auto beatsToPx = [this](float beats) -> int { return (int) std::round(beatsToX(beats)); };
@@ -275,7 +273,7 @@ void NoteGridComponent::noteEdgeDragging (NoteComponent* original, const juce::M
     original->setSize (origRightEdgePx, original->getHeight());
 
     // delta to apply to any other selected notes (in beats, not pixels)
-    const float deltaBeats         = newLengthBeats - startBeatsOrig;
+    // const float deltaBeats         = newLengthBeats - startBeatsOrig;
 
     // resize other selected notes by the exact same beat delta (prevents drift/jitter)
     // for (auto* n : noteComps)
