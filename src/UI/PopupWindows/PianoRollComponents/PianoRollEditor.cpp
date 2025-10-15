@@ -152,12 +152,6 @@ void PianoRollEditor::setPlaybackMarkerPosition (const st_int ticks, bool isVisi
     repaint();
 }
 
-void PianoRollEditor::disableEditing (bool value)
-{
-    gridStyleSheet.disableEditing = value;
-    noteGrid.repaint();
-}
-
 GridControlPanel& PianoRollEditor::getControlPanel()
 {
     return controlPanel;

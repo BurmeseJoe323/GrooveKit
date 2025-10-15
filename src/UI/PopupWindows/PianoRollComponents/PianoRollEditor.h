@@ -58,7 +58,6 @@ public:
     const te::MidiList& getSequence();
     // void loadSequence();
 
-    void disableEditing (bool value);
     void setStyleSheet (GridStyleSheet styleSheet);
 
     void showControlPanel (bool state);
