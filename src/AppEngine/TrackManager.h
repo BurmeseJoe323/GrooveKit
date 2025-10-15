@@ -31,6 +31,7 @@ public:
     void setTrackSoloed(int index, bool solo);
     bool isTrackSoloed(int index) const;
     bool anyTrackSoloed() const;
+    tracktion_engine::Plugin* getInstrumentPluginOnTrack (int trackIndex);
     //void clearAllTracks();
 
 private:

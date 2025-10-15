@@ -5,6 +5,8 @@
 #include "../UI/TrackView/TrackHeaderComponent.h"
 #include "TrackManager.h"
 #include <tracktion_engine/tracktion_engine.h>
+#include "../UI/Plugins/FourOscGUI.h"
+
 
 namespace IDs
 {
@@ -144,6 +146,7 @@ public:
 
     void openEditAsync (std::function<void (bool success)> onDone = {});
     bool loadEditFromFile (const juce::File& file);
+    std::function<void()> onEditLoaded;
 
     void newUntitledEdit();
 
@@ -157,6 +160,9 @@ public:
     te::AudioTrack* getArmedTrack();
     std::function<void()> onArmedTrackChanged;
     std::function<void()> onEditLoaded;
+
+    void makeFourOscAuditionPatch (int trackIndex);
+    void openInstrumentEditor (int trackIndex);
 
 private:
     std::unique_ptr<tracktion::engine::Engine> engine;
@@ -175,6 +181,8 @@ private:
     std::atomic_bool shuttingDown { false };
 
     juce::File currentEditFile;
+
+    std::unique_ptr<FourOscWindow> instrumentWindow_;
 
     int lastSavedTxn = 0;
 

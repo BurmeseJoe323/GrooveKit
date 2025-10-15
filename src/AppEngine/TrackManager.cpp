@@ -167,6 +167,35 @@ bool TrackManager::anyTrackSoloed() const
     return false;
 }
 
+te::Plugin* TrackManager::getInstrumentPluginOnTrack (int trackIndex)
+{
+    if (trackIndex < 0 || trackIndex >= getNumTracks())
+        return nullptr;
+
+    if (auto* track = getTrack (trackIndex))
+    {
+        // getPlugins() → juce::Array<Plugin*>
+        for (auto* plug : track->pluginList.getPlugins())
+        {
+            if (!plug) continue;
+            DBG("Track " << trackIndex << " plugin: " << plug->getName());
+
+            // We’re targeting the built-in instrument right now
+            if (auto* four = dynamic_cast<te::FourOscPlugin*> (plug))
+                return four;
+
+            // If later you want “any instrument”, keep a generic path here:
+            // if (plug->getType().isInstrument()) return plug;  // only if your build exposes it
+        }
+    }
+    return nullptr;
+}
+
+
+
+
+
+
 
 
 

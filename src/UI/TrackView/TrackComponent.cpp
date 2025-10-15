@@ -70,6 +70,14 @@ void TrackComponent::resized()
     trackClip.setBounds (bounds.withWidth (juce::jmax (bounds.getHeight(), 40)));
 }
 
+// TrackComponent.cpp
+void TrackComponent::onInstrumentClicked()
+{
+    if (appEngine)
+        appEngine->openInstrumentEditor (trackIndex);
+}
+
+
 void TrackComponent::onSettingsClicked()
 {
     juce::PopupMenu m;

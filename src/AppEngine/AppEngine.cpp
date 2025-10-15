@@ -1,6 +1,7 @@
 #include "AppEngine.h"
 #include "../DrumSamplerEngine/DefaultSampleLibrary.h"
 #include <tracktion_engine/tracktion_engine.h>
+#include "../UI/Plugins/FourOscGUI.h"
 
 namespace te = tracktion;
 using namespace std::literals;
@@ -356,3 +357,52 @@ bool AppEngine::loadEditFromFile (const juce::File& file)
 
     return true;
 }
+void AppEngine::makeFourOscAuditionPatch (int trackIndex)
+{
+    if (!trackManager) return;
+    if (auto* plug = trackManager->getInstrumentPluginOnTrack (trackIndex))
+    {
+        auto params = plug->getAutomatableParameters();
+        auto set = [&] (const juce::String& key, float norm)
+        {
+            for (auto* p : params)
+                if (p && p->getParameterName().containsIgnoreCase (key))
+                { p->setParameter (norm, juce::sendNotification); break; }
+        };
+
+        set ("Level 1",   1.00f);
+        set ("Level 2",   0.00f);  set ("Level 3", 0.00f);  set ("Level 4", 0.00f);
+        set ("Cutoff",    0.40f);
+        set ("Resonance", 0.20f);
+        set ("Amp Attack",  0.01f);
+        set ("Amp Decay",   0.20f);
+        set ("Amp Sustain", 0.80f);
+        set ("Amp Release", 0.20f);
+    }
+}
+
+void AppEngine::openInstrumentEditor (int trackIndex)
+{
+    auto open = [this, trackIndex]
+    {
+        if (!trackManager) { DBG("AppEngine: no trackManager"); return; }
+
+        if (auto* plug = trackManager->getInstrumentPluginOnTrack (trackIndex))
+        {
+            DBG("Opening editor for plugin: " << plug->getName());
+            instrumentWindow_ = std::make_unique<FourOscWindow>(*plug);
+            instrumentWindow_->setVisible(true);
+            instrumentWindow_->toFront(true);
+        }
+        else
+        {
+            DBG("No instrument plugin found on track " << trackIndex);
+        }
+    };
+
+    if (juce::MessageManager::getInstance()->isThisTheMessageThread())
+        open();
+    else
+        juce::MessageManager::callAsync (open);
+}
+

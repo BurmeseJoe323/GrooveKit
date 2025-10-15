@@ -14,6 +14,7 @@ public:
     TrackComponent (const std::shared_ptr<AppEngine>& engine, int trackIndex, juce::Colour color);
     ~TrackComponent() override;
 
+    void onInstrumentClicked() override;
     void onSettingsClicked() override;
     void onMuteToggled (bool isMuted) override;
     void onSoloToggled (bool isSolo) override;
