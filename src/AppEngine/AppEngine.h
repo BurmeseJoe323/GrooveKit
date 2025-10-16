@@ -159,7 +159,6 @@ public:
     int getArmedTrackIndex() const;
     te::AudioTrack* getArmedTrack();
     std::function<void()> onArmedTrackChanged;
-    std::function<void()> onEditLoaded;
 
     void makeFourOscAuditionPatch (int trackIndex);
     void openInstrumentEditor (int trackIndex);
