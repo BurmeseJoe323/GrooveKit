@@ -63,7 +63,7 @@ protected:
     void layoutKnob (juce::Slider& knob, juce::Label& label,
                      juce::Rectangle<int> cell, const juce::String& text);
 
-    // optional per-panel tick after polling has synchronised all sliders
+    // per-panel tick after polling has synchronised all sliders
     virtual void panelTick() {}
 
     // Timer

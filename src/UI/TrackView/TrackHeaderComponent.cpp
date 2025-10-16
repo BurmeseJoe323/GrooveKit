@@ -131,7 +131,7 @@ void TrackHeaderComponent::resized()
     constexpr int buttonHeight = 25;
     const auto margin = juce::FlexItem::Margin (2, 0, 2, 0);
 
-    fb.items.add (juce::FlexItem (trackNameLabel).withHeight (20.f));
+    fb.items.add (juce::FlexItem (trackNameLabel).withHeight (25.f));
     fb.items.add (juce::FlexItem (instrumentButton).withHeight (buttonHeight).withMargin (margin)); // <-- add this line
     fb.items.add (juce::FlexItem (settingsButton).withHeight (buttonHeight).withMargin (margin));
     fb.items.add (juce::FlexItem (muteTrackButton).withHeight (buttonHeight).withMargin (margin));

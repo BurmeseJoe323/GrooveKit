@@ -174,7 +174,7 @@ void ParamPanelBase::timerCallback()
             b.slider->setValue (pv, juce::dontSendNotification);
     }
 
-    panelTick(); // optional per-panel hook
+    panelTick();
 }
 
 //==============================================================================
