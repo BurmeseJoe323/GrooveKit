@@ -101,6 +101,10 @@ te::AutomatableParameter* findParamExact (te::Plugin& plug,
 
 //==============================================================================
 // ParamPanelBase
+ParamPanelBase::~ParamPanelBase()
+{
+    stopPolling();
+}
 
 void ParamPanelBase::layoutKnob (juce::Slider& knob, juce::Label& label,
                                  juce::Rectangle<int> cell, const juce::String& text)
@@ -146,13 +150,6 @@ void ParamPanelBase::bind (juce::Slider& s, te::AutomatableParameter* p)
     };
 }
 
-void ParamPanelBase::startPolling (int hz)
-{
-    startTimerHz (hz);
-    // give the UI a moment to initialise; prevents combo sync on first set
-    juce::Timer::callAfterDelay (150, [this]{ initialising = false; });
-}
-
 void ParamPanelBase::timerCallback()
 {
     // Don't fight the user; defer for a short time after an edit
@@ -176,6 +173,13 @@ void ParamPanelBase::timerCallback()
 
     panelTick();
 }
+
+// Call when switching edits or replacing plugins
+void ParamPanelBase::detachFromPlugin()
+{
+    stopPolling();
+}
+
 
 //==============================================================================
 // OscStrip
@@ -248,15 +252,39 @@ OscStrip::~OscStrip()
 
 void OscStrip::panelTick()
 {
-    // Keep combo box reflecting engine wave choice (no write on open)
-    if (!fourOsc) return;
+    auto* fo = fourOsc;
+    if (fo == nullptr)
+    {
+        stopPolling();
+        return;
+    }
 
-    const int targetId = fourOsc->oscParams[osc - 1]->waveShapeValue.get() + 1;
-    if (waveSelector.isPopupActive()) return;
+    // Clamp osc index safely (we have exactly 4 oscs)
+    if (osc < 1 || osc > 4)
+        return;
+
+    const int oscIdx = osc - 1;
+
+    auto* params = fo->oscParams[oscIdx];
+    if (params == nullptr)
+        return;
+
+    const int targetId = params->waveShapeValue.get() + 1;
+
+    if (waveSelector.isPopupActive())
+        return;
 
     if (waveSelector.getSelectedId() != targetId)
         waveSelector.setSelectedId (targetId, juce::dontSendNotification);
 }
+
+
+void OscStrip::detachFromPlugin()
+{
+    stopPolling();   // ✅ use the wrapper, not stopTimer()
+    fourOsc = nullptr;
+}
+
 
 void OscStrip::resized()
 {
@@ -477,6 +505,18 @@ void FourOscView::resized()
     amp.setBounds (r.removeFromTop (ampH));
 }
 
+void FourOscView::detachAllPanels()
+{
+    // Stop polling and clear pointers on all panels
+    osc1.detachFromPlugin();
+    osc2.detachFromPlugin();
+    osc3.detachFromPlugin();
+    osc4.detachFromPlugin();
+    filter.detachFromPlugin();
+    amp.detachFromPlugin();
+}
+
+
 //==============================================================================
 // FourOscWindow
 
@@ -493,4 +533,9 @@ FourOscWindow::FourOscWindow (te::Plugin& plug)
     setResizeLimits (700, 480, 2000, 1200);
     setSize (1200, 800);
     centreWithSize (getWidth(), getHeight());
+}
+
+void FourOscWindow::detachAllPanels()
+{
+    view.detachAllPanels();
 }

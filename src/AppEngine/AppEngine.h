@@ -163,6 +163,8 @@ public:
     void makeFourOscAuditionPatch (int trackIndex);
     void openInstrumentEditor (int trackIndex);
 
+    void closeInstrumentWindow();
+
 private:
     std::unique_ptr<tracktion::engine::Engine> engine;
     std::unique_ptr<tracktion::engine::Edit> edit;

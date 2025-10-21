@@ -49,12 +49,16 @@ class ParamPanelBase : public juce::Component, private juce::Timer
 {
 public:
     explicit ParamPanelBase (te::Plugin& p) : plugin (p) {}
+    ~ParamPanelBase() override;
+
+    virtual void detachFromPlugin();
 
 protected:
     struct Binding { te::AutomatableParameter* param{}; juce::Slider* slider{}; };
 
     // lifecycle
-    void startPolling (int hz);           // begin param polling at given Hz
+    void startPolling (int ms) { startTimer (ms); }
+    void stopPolling()         { stopTimer(); }
 
     // binding
     void bind (juce::Slider& slider, te::AutomatableParameter* param);
@@ -86,6 +90,8 @@ public:
     ~OscStrip() override;
 
     void resized() override;
+
+    void detachFromPlugin() override;
 
 private:
     void panelTick() override;
@@ -150,6 +156,7 @@ class FourOscView : public juce::Component
 public:
     explicit FourOscView (te::Plugin& plug);
     void resized() override;
+    void detachAllPanels();
 
 private:
     te::Plugin& plugin;
@@ -170,6 +177,8 @@ public:
     explicit FourOscWindow (te::Plugin& plugin);
 
     void closeButtonPressed() override { setVisible (false); }
+
+    void detachAllPanels();
 
 private:
     FourOscView view;

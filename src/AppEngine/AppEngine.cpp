@@ -83,6 +83,8 @@ void AppEngine::createOrLoadEdit()
 
 void AppEngine::newUntitledEdit()
 {
+    closeInstrumentWindow();
+
     audioEngine.reset();
 
     auto baseDir = juce::File::getSpecialLocation (juce::File::userDocumentsDirectory)
@@ -325,6 +327,8 @@ void AppEngine::openEditAsync (std::function<void (bool)> onDone)
 
 bool AppEngine::loadEditFromFile (const juce::File& file)
 {
+    closeInstrumentWindow();
+    
     if (!file.existsAsFile() || !engine)
         return false;
 
@@ -405,4 +409,15 @@ void AppEngine::openInstrumentEditor (int trackIndex)
     else
         juce::MessageManager::callAsync (open);
 }
+
+void AppEngine::closeInstrumentWindow()
+{
+    if (instrumentWindow_ != nullptr)
+    {
+        instrumentWindow_->detachAllPanels();
+        instrumentWindow_->setVisible(false);
+        instrumentWindow_.reset();
+    }
+}
+
 
