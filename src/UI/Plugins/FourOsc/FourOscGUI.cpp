@@ -241,6 +241,8 @@ OscStrip::OscStrip (te::Plugin& plug, int oscIndex)
     bind (pan,    findParamExactOnly (plug, { "Pan " + n }));
 
     startPolling (30);
+
+    initialising.store (false);
 }
 
 OscStrip::~OscStrip()

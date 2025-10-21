@@ -328,7 +328,7 @@ void AppEngine::openEditAsync (std::function<void (bool)> onDone)
 bool AppEngine::loadEditFromFile (const juce::File& file)
 {
     closeInstrumentWindow();
-    
+
     if (!file.existsAsFile() || !engine)
         return false;
 
