@@ -8,6 +8,7 @@
 #include "../../../AppEngine/AppEngine.h"
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <tracktion_engine/tracktion_engine.h>
+#include <memory>
 
 #include "GridStyleSheet.h"
 #include "NoteComponent.h"
@@ -96,7 +97,7 @@ private:
 
     GridStyleSheet& styleSheet;
     SelectionBox selectorBox;
-    std::vector<NoteComponent*> noteComps;
+    std::vector<std::unique_ptr<NoteComponent>> noteComps;
 
     std::set<int> blackPitches = { 1, 3, 6, 8, 10 };
     float noteCompHeight;
