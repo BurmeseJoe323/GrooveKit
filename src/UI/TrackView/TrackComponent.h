@@ -47,7 +47,6 @@ private:
     std::shared_ptr<AppEngine> appEngine;
     juce::Colour trackColor;
     int trackIndex = -1;
-    int numClips = 0;
 
     // Multiple clip support
     std::vector<std::unique_ptr<TrackClip>> trackClips;
