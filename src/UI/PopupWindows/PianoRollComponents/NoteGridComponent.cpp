@@ -636,16 +636,7 @@ void NoteGridComponent::setClip (te::MidiClip* newClip)
     if (clip != nullptr)
     {
         for (te::MidiNote* note : clip->getSequence().getNotes())
-        {
-            auto newNote = std::make_unique<NoteComponent> (styleSheet);
-            newNote->onNoteSelect   = [this] (NoteComponent* n, const juce::MouseEvent& e) { this->noteCompSelected (n, e); };
-            newNote->onPositionMoved= [this] (NoteComponent* n) { this->noteCompPositionMoved (n); };
-            newNote->onLengthChange = [this] (NoteComponent* n) { this->noteCompLengthChanged (n); };
-            newNote->onDragging     = [this] (NoteComponent* n, const juce::MouseEvent& e) { this->noteCompDragging (n, e); };
-            newNote->setModel (note);
-            addAndMakeVisible (newNote.get());
-            noteComps.push_back (std::move(newNote));
-        }
+            addNewNoteComponent (note);
     }
 
     resized();
