@@ -13,7 +13,7 @@ namespace ValidationUtils
      */
     inline bool isValidNumeric(const std::string& text)
     {
-        return std::regex_match(text, std::regex("[\\d]*(\\.[\\d]*)?"));
+        return std::regex_match(text, std::regex("^\\d+\\.?\\d*$|^\\.\\d+$"));
     }
 
     /**
@@ -30,11 +30,10 @@ namespace ValidationUtils
                                        int decimalPlaces = 2)
     {
         // Constrain to valid range
-        if (value < minBpm) value = minBpm;
-        if (value > maxBpm) value = maxBpm;
+        double constrainedValue = juce::jlimit (minBpm, maxBpm, value);
 
         // Round to specified decimal places
         double multiplier = std::pow(10.0, decimalPlaces);
-        return std::round(value * multiplier) / multiplier;
+        return std::round(constrainedValue * multiplier) / multiplier;
     }
 }
