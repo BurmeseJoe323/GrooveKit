@@ -1,6 +1,7 @@
 // Note: Junie (JetBrains AI) contributed code to this file on 2025-09-24.
 #include "TrackEditView.h"
 #include "../../AppEngine/AppEngine.h"
+#include "../../AppEngine/ValidationUtils.h"
 #include "PopupWindows/OutputDevice/OutputDeviceWindow.h"
 #include <regex>
 
@@ -486,20 +487,17 @@ void TrackEditView::labelTextChanged (juce::Label* labelThatHasChanged)
     if (labelThatHasChanged == &bpmValue)
     {
         std::string text = labelThatHasChanged->getText().toStdString();
-        if (!std::regex_match(text, std::regex("[\\d]*(\\.[\\d]*)?")))
+
+        // Validate numeric input
+        if (!ValidationUtils::isValidNumeric(text))
         {
             labelThatHasChanged->setText (juce::String (appEngine->getBpm()), juce::NotificationType::dontSendNotification);
             return;
         }
 
-        // Cast to double
+        // Convert to double and apply constraints/rounding
         double bpmValue = std::stod(text);
-
-        // Constrain BPM between 20 and 250
-        bpmValue = juce::jlimit(20.0, 250.0, bpmValue);
-
-        // Round to 2 decimal places
-        bpmValue = std::round(bpmValue * 100.0) / 100.0;
+        bpmValue = ValidationUtils::constrainAndRoundBpm(bpmValue);
 
         // Update label with constrained and rounded value
         labelThatHasChanged->setText(juce::String(bpmValue, 2), juce::NotificationType::dontSendNotification);

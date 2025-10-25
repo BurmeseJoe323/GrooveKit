@@ -58,6 +58,13 @@ add_subdirectory(src/UI)
 # ---- App target (defines GrooveKit)
 add_subdirectory(apps/GrooveKit)
 
+# ---- Tests
+option(BUILD_TESTING "Build the testing tree" ON)
+if(BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
 # ---- Link once (cleaned)
 target_link_libraries(GrooveKit
         PRIVATE
