@@ -13,7 +13,7 @@ namespace ValidationUtils
      */
     inline bool isValidNumeric(const std::string& text)
     {
-        return std::regex_match(text, std::regex("[\\d]*(\\.[\\d]*)?"));
+        return std::regex_match(text, std::regex("^\\d+\\.?\\d*$|^\\.\\d+$"));
     }
 
     /**
