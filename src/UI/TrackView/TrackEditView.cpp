@@ -488,10 +488,24 @@ void TrackEditView::labelTextChanged (juce::Label* labelThatHasChanged)
         std::string text = labelThatHasChanged->getText().toStdString();
         if (!std::regex_match(text, std::regex("[\\d]*(\\.[\\d]*)?")))
         {
-            DBG("New BPM value is non-numeric");
             labelThatHasChanged->setText (juce::String (appEngine->getBpm()), juce::NotificationType::dontSendNotification);
             return;
         }
+
+        // Cast to double
+        double bpmValue = std::stod(text);
+
+        // Constrain BPM between 20 and 250
+        bpmValue = juce::jlimit(20.0, 250.0, bpmValue);
+
+        // Round to 2 decimal places
+        bpmValue = std::round(bpmValue * 100.0) / 100.0;
+
+        // Update label with constrained and rounded value
+        labelThatHasChanged->setText(juce::String(bpmValue, 2), juce::NotificationType::dontSendNotification);
+
+        // Update AppEngine with the constrained and rounded value
+        appEngine->setBpm(bpmValue);
     }
 }
 

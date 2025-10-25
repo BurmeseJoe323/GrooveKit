@@ -33,3 +33,6 @@ groovekit.db
 # VSCode
 .vscode/
 tracktion_engine/
+
+# Ignore Claude configuration file
+/CLAUDE.md
