@@ -182,6 +182,20 @@ void AppEngine::setTrackSoloed (int i, bool s) { trackManager->setTrackSoloed (i
 bool AppEngine::isTrackSoloed (int i) const { return trackManager->isTrackSoloed (i); }
 bool AppEngine::anyTrackSoloed() const { return trackManager->anyTrackSoloed(); }
 
+double AppEngine::getBpm () const
+{
+    return bpm;
+}
+
+void AppEngine::setBpm (double newBpm)
+{
+    // Constrain BPM between 20 BPM and 250 BPM
+    newBpm = juce::jlimit (20.0, 250.0, newBpm);
+    // GrooveKit does not have tempo changes, so just get the first one
+    edit->tempoSequence.getTempo (0)->setBpm (newBpm);
+    bpm = newBpm;
+}
+
 AudioEngine& AppEngine::getAudioEngine() { return *audioEngine; }
 MIDIEngine& AppEngine::getMidiEngine() { return *midiEngine; }
 

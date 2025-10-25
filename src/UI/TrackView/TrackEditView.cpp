@@ -2,6 +2,7 @@
 #include "TrackEditView.h"
 #include "../../AppEngine/AppEngine.h"
 #include "PopupWindows/OutputDevice/OutputDeviceWindow.h"
+#include <regex>
 
 // Helper for styling the menu buttons
 void styleMenuButton (juce::TextButton& button)
@@ -108,8 +109,12 @@ void TrackEditView::resized ()
 
     // --- Center: Transport ---
     auto centerArea = topBarContent;
-    bpmLabel.setBounds (centerArea.removeFromLeft (80));
-    clickLabel.setBounds (centerArea.removeFromLeft (50));
+    bpmLabel.setBounds (centerArea.removeFromLeft (50));
+    auto valueArea = centerArea.removeFromLeft (50);
+    int deltaHeight = valueArea.getHeight() / 8;
+    valueArea.removeFromBottom (deltaHeight);
+    valueArea.removeFromTop (deltaHeight);
+    bpmValue.setBounds (valueArea);
 
     constexpr int buttonSize = 20;
     constexpr int buttonGap = 10;
@@ -212,14 +217,18 @@ void TrackEditView::setupButtons ()
 {
     // --- Left Controls ---
     addAndMakeVisible (bpmLabel);
-    bpmLabel.setText ("BPM 120", juce::dontSendNotification);
+    bpmLabel.setText ("BPM:", juce::dontSendNotification);
     bpmLabel.setColour (juce::Label::textColourId, juce::Colours::lightgrey);
-    bpmLabel.setJustificationType (juce::Justification::centred);
+    bpmLabel.setJustificationType (juce::Justification::right);
 
-    addAndMakeVisible (clickLabel);
-    clickLabel.setText ("Click", juce::dontSendNotification);
-    clickLabel.setColour (juce::Label::textColourId, juce::Colours::lightgrey);
-    clickLabel.setJustificationType (juce::Justification::centred);
+    addAndMakeVisible (bpmValue);
+    bpmValue.setText ("120", juce::dontSendNotification);
+    bpmValue.setColour (juce::Label::textColourId, juce::Colours::lightgrey);
+    bpmValue.setColour (juce::Label::outlineColourId, juce::Colours::lightgrey.brighter (0.5f));
+    bpmValue.setColour (juce::Label::backgroundColourId, juce::Colours::darkgrey.darker ());
+    bpmValue.setJustificationType (juce::Justification::centred);
+    bpmValue.setEditable (true);
+    bpmValue.addListener (this);
 
     // --- Transport Buttons ---
     {
@@ -470,6 +479,20 @@ void TrackEditView::hidePianoRoll ()
 int TrackEditView::getPianoRollIndex () const
 {
     return pianoRollTrackIndex;
+}
+
+void TrackEditView::labelTextChanged (juce::Label* labelThatHasChanged)
+{
+    if (labelThatHasChanged == &bpmValue)
+    {
+        std::string text = labelThatHasChanged->getText().toStdString();
+        if (!std::regex_match(text, std::regex("[\\d]*(\\.[\\d]*)?")))
+        {
+            DBG("New BPM value is non-numeric");
+            labelThatHasChanged->setText (juce::String (appEngine->getBpm()), juce::NotificationType::dontSendNotification);
+            return;
+        }
+    }
 }
 
 void TrackEditView::handleNoteOn (juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity)
