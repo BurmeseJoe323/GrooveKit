@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/Users/brackenasay/Documents/School_Files_U_of_U/CS_4000/groovekit/cmake-build-mac10_15-x64/_deps/melatonin_inspector-subbuild/CMakeFiles/melatonin_inspector-populate"
+		},
+		{
+			"file" : "/Users/brackenasay/Documents/School_Files_U_of_U/CS_4000/groovekit/cmake-build-mac10_15-x64/_deps/melatonin_inspector-subbuild/CMakeFiles/melatonin_inspector-populate.rule"
+		},
+		{
+			"file" : "/Users/brackenasay/Documents/School_Files_U_of_U/CS_4000/groovekit/cmake-build-mac10_15-x64/_deps/melatonin_inspector-subbuild/CMakeFiles/melatonin_inspector-populate-complete.rule"
+		},
+		{
+			"file" : "/Users/brackenasay/Documents/School_Files_U_of_U/CS_4000/groovekit/cmake-build-mac10_15-x64/_deps/melatonin_inspector-subbuild/melatonin_inspector-populate-prefix/src/melatonin_inspector-populate-stamp/melatonin_inspector-populate-build.rule"
+		},
+		{
+			"file" : "/Users/brackenasay/Documents/School_Files_U_of_U/CS_4000/groovekit/cmake-build-mac10_15-x64/_deps/melatonin_inspector-subbuild/melatonin_inspector-populate-prefix/src/melatonin_inspector-populate-stamp/melatonin_inspector-populate-configure.rule"
+		},
+		{
+			"file" : "/Users/brackenasay/Documents/School_Files_U_of_U/CS_4000/groovekit/cmake-build-mac10_15-x64/_deps/melatonin_inspector-subbuild/melatonin_inspector-populate-prefix/src/melatonin_inspector-populate-stamp/melatonin_inspector-populate-download.rule"
+		},
+		{
+			"file" : "/Users/brackenasay/Documents/School_Files_U_of_U/CS_4000/groovekit/cmake-build-mac10_15-x64/_deps/melatonin_inspector-subbuild/melatonin_inspector-populate-prefix/src/melatonin_inspector-populate-stamp/melatonin_inspector-populate-install.rule"
+		},
+		{
+			"file" : "/Users/brackenasay/Documents/School_Files_U_of_U/CS_4000/groovekit/cmake-build-mac10_15-x64/_deps/melatonin_inspector-subbuild/melatonin_inspector-populate-prefix/src/melatonin_inspector-populate-stamp/melatonin_inspector-populate-mkdir.rule"
+		},
+		{
+			"file" : "/Users/brackenasay/Documents/School_Files_U_of_U/CS_4000/groovekit/cmake-build-mac10_15-x64/_deps/melatonin_inspector-subbuild/melatonin_inspector-populate-prefix/src/melatonin_inspector-populate-stamp/melatonin_inspector-populate-patch.rule"
+		},
+		{
+			"file" : "/Users/brackenasay/Documents/School_Files_U_of_U/CS_4000/groovekit/cmake-build-mac10_15-x64/_deps/melatonin_inspector-subbuild/melatonin_inspector-populate-prefix/src/melatonin_inspector-populate-stamp/melatonin_inspector-populate-test.rule"
+		},
+		{
+			"file" : "/Users/brackenasay/Documents/School_Files_U_of_U/CS_4000/groovekit/cmake-build-mac10_15-x64/_deps/melatonin_inspector-subbuild/melatonin_inspector-populate-prefix/src/melatonin_inspector-populate-stamp/melatonin_inspector-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"melatonin_inspector-populate"
+		],
+		"name" : "melatonin_inspector-populate"
+	}
+}

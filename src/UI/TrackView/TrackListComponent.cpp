@@ -1,10 +1,9 @@
 #include "DrumSamplerView/DrumSamplerView.h"
 #include "TrackEditView.h"
-#include "TrackListComponent.h"
 
-TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine) : appEngine (engine),
-                                                                                    playhead (engine->getEdit(),
-                                                                                        engine->getEditViewState())
+TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine) :
+    appEngine (engine),
+    playhead (engine->getEdit(),engine->getEditViewState())
 {
     //Add initial track pair
     //addNewTrack();

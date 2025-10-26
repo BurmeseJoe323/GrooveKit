@@ -1,0 +1,3 @@
+# Hashes of file build rules.
+091b8b390eb552d86cf8c4268c1f9c9f apps/GrooveKit/GrooveKit_artefacts/JuceLibraryCode/GrooveKit/PkgInfo
+ff072cce6e3b251cc61ca8dc4c69b648 juce_binarydata_GrooveKitResources/JuceLibraryCode/BinaryData1.cpp

@@ -7,11 +7,20 @@
 /dataSources/
 /dataSources.local.xml
 
+# === JUCE + Tracktion Generated Files ===
+**/JuceLibraryCode/
+**/GrooveKit_artefacts/
+
+
+**/melatonin_inspector/
+
 # Ignore CMake build directories
+cmake-build-*/
 cmake-build-debug/
 cmake-build-release/
 cmake-build-debug-visual-studio/
 CMakeBuild/
+out
 out/build/
 build/
 x64/Debug/

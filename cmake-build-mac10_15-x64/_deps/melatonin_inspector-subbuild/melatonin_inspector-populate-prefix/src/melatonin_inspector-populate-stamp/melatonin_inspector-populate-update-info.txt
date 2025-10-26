@@ -1,0 +1,7 @@
+# This is a generated file and its contents are an internal implementation detail.
+# The patch step will be re-executed if anything in this file changes.
+# No other meaning or use of this file is supported.
+
+command (connected)=/usr/local/bin/cmake;-Dcan_fetch=YES;-DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE;-P;/Users/brackenasay/Documents/School_Files_U_of_U/CS_4000/groovekit/cmake-build-mac10_15-x64/_deps/melatonin_inspector-subbuild/melatonin_inspector-populate-prefix/tmp/melatonin_inspector-populate-gitupdate.cmake
+command (disconnected)=/usr/local/bin/cmake;-Dcan_fetch=NO;-DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE;-P;/Users/brackenasay/Documents/School_Files_U_of_U/CS_4000/groovekit/cmake-build-mac10_15-x64/_deps/melatonin_inspector-subbuild/melatonin_inspector-populate-prefix/tmp/melatonin_inspector-populate-gitupdate.cmake
+work_dir=/Users/brackenasay/Documents/School_Files_U_of_U/CS_4000/groovekit/cmake-build-mac10_15-x64/melatonin_inspector
