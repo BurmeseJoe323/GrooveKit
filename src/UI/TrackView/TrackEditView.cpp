@@ -43,6 +43,8 @@ TrackEditView::TrackEditView (AppEngine& engine)
         viewport.setViewedComponent (trackList.get(), false);
         trackList->rebuildFromEngine();
 
+        hidePianoRoll();
+
         repaint();
     };
 

@@ -38,3 +38,5 @@ groovekit.db
 # VSCode
 .vscode/
 tracktion_engine/
+# Claude config
+/CLAUDE.md
