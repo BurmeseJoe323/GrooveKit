@@ -199,7 +199,5 @@ private:
 
     int selectedTrackIndex = -1;
 
-    double bpm = 120;
-
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AppEngine)
 };

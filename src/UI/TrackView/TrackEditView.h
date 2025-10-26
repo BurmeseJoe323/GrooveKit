@@ -89,7 +89,7 @@ private:
     std::unique_ptr<juce::MenuBarComponent> menuBar;
 
     // Center controls
-    juce::Label bpmLabel, bpmValue;
+    juce::Label bpmLabel, bpmEditField;
     juce::ShapeButton playButton { "play", {}, {}, {} };
     juce::ShapeButton stopButton { "stop", {}, {}, {} };
     juce::ShapeButton recordButton { "record", {}, {}, {} };

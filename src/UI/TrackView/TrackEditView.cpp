@@ -45,6 +45,8 @@ TrackEditView::TrackEditView (AppEngine& engine)
         viewport.setViewedComponent (trackList.get(), false);
         trackList->rebuildFromEngine();
 
+        bpmEditField.setText (juce::String (appEngine->getBpm()), juce::NotificationType::dontSendNotification);
+
         repaint();
     };
 
@@ -115,7 +117,7 @@ void TrackEditView::resized ()
     int deltaHeight = valueArea.getHeight() / 8;
     valueArea.removeFromBottom (deltaHeight);
     valueArea.removeFromTop (deltaHeight);
-    bpmValue.setBounds (valueArea);
+    bpmEditField.setBounds (valueArea);
 
     constexpr int buttonSize = 20;
     constexpr int buttonGap = 10;
@@ -222,14 +224,14 @@ void TrackEditView::setupButtons ()
     bpmLabel.setColour (juce::Label::textColourId, juce::Colours::lightgrey);
     bpmLabel.setJustificationType (juce::Justification::right);
 
-    addAndMakeVisible (bpmValue);
-    bpmValue.setText ("120", juce::dontSendNotification);
-    bpmValue.setColour (juce::Label::textColourId, juce::Colours::lightgrey);
-    bpmValue.setColour (juce::Label::outlineColourId, juce::Colours::lightgrey.brighter (0.5f));
-    bpmValue.setColour (juce::Label::backgroundColourId, juce::Colours::darkgrey.darker ());
-    bpmValue.setJustificationType (juce::Justification::centred);
-    bpmValue.setEditable (true);
-    bpmValue.addListener (this);
+    addAndMakeVisible (bpmEditField);
+    bpmEditField.setText ("120", juce::dontSendNotification);
+    bpmEditField.setColour (juce::Label::textColourId, juce::Colours::lightgrey);
+    bpmEditField.setColour (juce::Label::outlineColourId, juce::Colours::lightgrey.brighter (0.5f));
+    bpmEditField.setColour (juce::Label::backgroundColourId, juce::Colours::darkgrey.darker ());
+    bpmEditField.setJustificationType (juce::Justification::centred);
+    bpmEditField.setEditable (true);
+    bpmEditField.addListener (this);
 
     // --- Transport Buttons ---
     {
@@ -484,7 +486,7 @@ int TrackEditView::getPianoRollIndex () const
 
 void TrackEditView::labelTextChanged (juce::Label* labelThatHasChanged)
 {
-    if (labelThatHasChanged == &bpmValue)
+    if (labelThatHasChanged == &bpmEditField)
     {
         std::string text = labelThatHasChanged->getText().toStdString();
 
