@@ -1,5 +1,7 @@
 // JUNIE
 #include "TrackComponent.h"
+
+#include "TrackEditView.h"
 #include "TrackListComponent.h"
 
 TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const int trackIndex, const juce::Colour color)
@@ -216,6 +218,23 @@ void TrackComponent::rebuildClipsFromEngine()
             juce::ignoreUnused (c); // track determination is based on this component’s trackIndex
             if (appEngine) {
                 appEngine->pasteClipboardAt (trackIndex, pasteBeats);
+                rebuildClipsFromEngine();
+                resized();
+            }
+        };
+
+        ui->onDeleteRequested = [this] (te::MidiClip* c)
+        {
+            if (auto* parent = findParentComponentOfClass<TrackEditView>())
+            {
+                // If the piano roll is currently showing a clip from this track,
+                // hide it before removing the clip to avoid dangling UI state.
+                if (parent->getPianoRollIndex() == trackIndex)
+                    parent->hidePianoRoll();
+            }
+
+            if (appEngine) {
+                appEngine->deleteMidiClip (c);
                 rebuildClipsFromEngine();
                 resized();
             }

@@ -27,6 +27,7 @@ public:
     std::function<void(te::MidiClip*)> onCopyRequested;
     std::function<void(te::MidiClip*)> onDuplicateRequested;
     std::function<void(te::MidiClip*, double pasteAtBeats)> onPasteRequested; // paste location in beats
+    std::function<void(te::MidiClip*)> onDeleteRequested;
 
     void mouseUp (const juce::MouseEvent& e) override;
 

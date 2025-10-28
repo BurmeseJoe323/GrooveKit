@@ -70,6 +70,8 @@ void TrackClip::mouseUp (const juce::MouseEvent& e)
         m.addItem (1, "Copy");
         m.addItem (2, "Paste Here");
         m.addItem (3, "Duplicate");
+        m.addSeparator();
+        m.addItem (4, "Delete");
 
         // Determine paste position in beats relative to this clip
         const double clipStartBeats = clip ? clip->getStartBeat().inBeats() : 0.0;
@@ -90,6 +92,9 @@ void TrackClip::mouseUp (const juce::MouseEvent& e)
                     break;
                 case 3: // Duplicate
                     if (safe->onDuplicateRequested) safe->onDuplicateRequested (safe->clip);
+                    break;
+                case 4: // Delete
+                    if (safe->onDeleteRequested) safe->onDeleteRequested (safe->clip);
                     break;
                 default:
                     break;

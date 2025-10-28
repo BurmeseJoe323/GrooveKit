@@ -171,6 +171,8 @@ public:
     bool pasteClipboardAt (int trackIndex, double startBeats);
     // Duplicate a specific MIDI clip right after itself
     bool duplicateMidiClip (te::MidiClip* clip);
+    // Delete a specific MIDI clip
+    bool deleteMidiClip (te::MidiClip* clip);
 
 private:
     std::unique_ptr<tracktion::engine::Engine> engine;

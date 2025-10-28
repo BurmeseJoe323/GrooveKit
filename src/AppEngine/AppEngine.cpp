@@ -489,8 +489,19 @@ bool AppEngine::duplicateMidiClip (te::MidiClip* clip)
     {
         const int trackIndex = track->getIndexInEditTrackList();
         copyMidiClip (clip);
-        return pasteClipboardAt (trackIndex, destBeats+startBeats);
+        return pasteClipboardAt (trackIndex, destBeats);
     }
 
     return false;
+}
+
+bool AppEngine::deleteMidiClip (te::MidiClip* clip)
+{
+    if (clip == nullptr || edit == nullptr)
+        return false;
+
+    // Remove the clip from its parent track. Tracktion will record this in the
+    // edit state and make it undoable through the UndoManager.
+    clip->removeFromParent();
+    return true;
 }
