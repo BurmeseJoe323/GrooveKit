@@ -23,6 +23,7 @@ public:
 
     void setTrackIndex (int index);
     int getTrackIndex() const;
+    void rebuildClipsFromEngine();
 
     void paint (juce::Graphics& g) override;
     void resized() override;

@@ -23,19 +23,8 @@ TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const 
         trackColor = palette[std::abs (trackIndex) % static_cast<int> (std::size (palette))];
     }
 
-    // Build UI clips for any existing MIDI clips on this track
     if (appEngine)
-    {
-        auto clips = appEngine->getMidiClipsFromTrack (trackIndex);
-        for (auto* mc : clips)
-        {
-            auto ui = std::make_unique<TrackClip> (mc, pixelsPerBeat);
-            ui->setColor (trackColor);
-            ui->onClicked = [this] (te::MidiClip* c) { if (onRequestOpenPianoRoll) onRequestOpenPianoRoll (c); };
-            addAndMakeVisible (ui.get());
-            trackClips.push_back (std::move (ui));
-        }
-    }
+        rebuildClipsFromEngine();
 }
 
 TrackComponent::~TrackComponent()
@@ -97,6 +86,7 @@ void TrackComponent::onSettingsClicked()
     juce::PopupMenu m;
     const bool isDrumTrack = appEngine->isDrumTrack (trackIndex);
     m.addItem (1, "Add MIDI Clip");
+    m.addItem (2, "Paste at End");
     m.addSeparator();
     if (isDrumTrack)
     {
@@ -116,24 +106,21 @@ void TrackComponent::onSettingsClicked()
             case 1: // Add Clip (Junie)
             {
                 appEngine->addMidiClipToTrack (trackIndex);
-
-                // Rebuild UI clips from engine state
-                trackClips.clear();
-
+                rebuildClipsFromEngine();
+                break;
+            }
+            case 2:
+            {
                 if (appEngine)
                 {
-                    auto clips = appEngine->getMidiClipsFromTrack (trackIndex);
-                    for (auto* mc : clips)
-                    {
-                        auto ui = std::make_unique<TrackClip> (mc, pixelsPerBeat);
-                        ui->setColor (trackColor);
-                        ui->onClicked = [this] (te::MidiClip* c) { if (onRequestOpenPianoRoll) onRequestOpenPianoRoll (c); };
-                        addAndMakeVisible (ui.get());
-                        trackClips.push_back (std::move (ui));
-                    }
-                }
+                    // Place at end of last clip
+                    double startBeats = 0.0;
+                    for (auto* mc : appEngine->getMidiClipsFromTrack (trackIndex))
+                        startBeats = std::max (startBeats, mc->getStartBeat().inBeats() + mc->getLengthInBeats().inBeats());
 
-                resized();
+                    if (appEngine->pasteClipboardAt (trackIndex, startBeats))
+                        rebuildClipsFromEngine();
+                }
                 break;
             }
             case 10: // Open Drum Sampler
@@ -186,4 +173,57 @@ void TrackComponent::onRecordArmToggled (bool isArmed)
 {
     if (auto* p = findParentComponentOfClass<TrackListComponent>())
         p->armTrack(trackIndex, isArmed);
+}
+
+void TrackComponent::rebuildClipsFromEngine()
+{
+    // Remove existing UI clips
+    trackClips.clear();
+
+    if (! appEngine)
+        return;
+
+    auto clips = appEngine->getMidiClipsFromTrack (trackIndex);
+    for (auto* mc : clips)
+    {
+        auto ui = std::make_unique<TrackClip> (mc, pixelsPerBeat);
+        ui->setColor (trackColor);
+
+        // Existing open piano roll callback
+        ui->onClicked = [this] (te::MidiClip* c)
+        {
+            if (onRequestOpenPianoRoll)
+                onRequestOpenPianoRoll (c);
+        };
+
+        // New: clipboard callbacks
+        ui->onCopyRequested = [this] (te::MidiClip* c)
+        {
+            if (appEngine) appEngine->copyMidiClip (c);
+        };
+
+        ui->onDuplicateRequested = [this] (te::MidiClip* c)
+        {
+            if (appEngine) {
+                appEngine->duplicateMidiClip (c);
+                rebuildClipsFromEngine();
+                resized();
+            }
+        };
+
+        ui->onPasteRequested = [this] (te::MidiClip* c, double pasteBeats)
+        {
+            juce::ignoreUnused (c); // track determination is based on this component’s trackIndex
+            if (appEngine) {
+                appEngine->pasteClipboardAt (trackIndex, pasteBeats);
+                rebuildClipsFromEngine();
+                resized();
+            }
+        };
+
+        addAndMakeVisible (ui.get());
+        trackClips.push_back (std::move (ui));
+    }
+
+    resized();
 }

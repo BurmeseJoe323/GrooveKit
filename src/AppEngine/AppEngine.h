@@ -8,7 +8,6 @@
 #include <tracktion_engine/tracktion_engine.h>
 #include "../UI/Plugins/FourOsc/FourOscGUI.h"
 
-
 namespace IDs
 {
 #define DECLARE_ID(name)  const juce::Identifier name (#name);
@@ -164,8 +163,14 @@ public:
 
     void makeFourOscAuditionPatch (int trackIndex);
     void openInstrumentEditor (int trackIndex);
-
     void closeInstrumentWindow();
+
+    // Clipboard helpers for MIDI clips (Junie)
+    void copyMidiClip (te::MidiClip* clip);
+    // Paste clipboard content to a specific track at a beat position
+    bool pasteClipboardAt (int trackIndex, double startBeats);
+    // Duplicate a specific MIDI clip right after itself
+    bool duplicateMidiClip (te::MidiClip* clip);
 
 private:
     std::unique_ptr<tracktion::engine::Engine> engine;

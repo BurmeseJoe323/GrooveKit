@@ -23,8 +23,10 @@ public:
 
     te::MidiClip* getMidiClip() const noexcept { return clip; }
 
-    // Callback invoked when this clip is clicked
     std::function<void(te::MidiClip*)> onClicked;
+    std::function<void(te::MidiClip*)> onCopyRequested;
+    std::function<void(te::MidiClip*)> onDuplicateRequested;
+    std::function<void(te::MidiClip*, double pasteAtBeats)> onPasteRequested; // paste location in beats
 
     void mouseUp (const juce::MouseEvent& e) override;
 
