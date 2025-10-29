@@ -52,6 +52,17 @@ PianoRollEditor::PianoRollEditor (AppEngine& engine, te::MidiClip* clip)
 
     playbackTicks = 0;
     showPlaybackMarker = false;
+
+    addAndMakeVisible(closeButton);
+    closeButton.setTooltip("Close piano roll");
+    closeButton.onClick = [this]
+    {
+        if (onClose) onClose();
+    };
+
+    setWantsKeyboardFocus(true);
+    setFocusContainerType (juce::Component::FocusContainerType::focusContainer);
+
 }
 PianoRollEditor::PianoRollEditor (AppEngine& engine, int trackIndex)
     : PianoRollEditor (engine, [&]() -> te::MidiClip*
@@ -92,6 +103,11 @@ void PianoRollEditor::showControlPanel (bool state)
 
 void PianoRollEditor::resized()
 {
+    auto r = getLocalBounds();
+
+    // Header area for controls
+    auto header = r.removeFromTop(32);
+    closeButton.setBounds(header.removeFromRight(28).reduced(2));
     gridView.setBounds (80, 50, getWidth() - 90, getHeight() - 100);
     timelineView.setBounds (gridView.getX(), 5, gridView.getWidth() - 10, gridView.getY() - 5);
     keyboardView.setBounds (5, gridView.getY(), 70, gridView.getHeight() - 10);
@@ -103,6 +119,8 @@ void PianoRollEditor::resized()
     keyboard.setBounds (0, 0, keyboardView.getWidth(), noteGrid.getHeight());
 
     controlPanel.setBounds (5, gridView.getBottom() + 5, getWidth() - 10, 80);
+
+
 }
 
 void PianoRollEditor::setStyleSheet (GridStyleSheet style)
@@ -197,4 +215,13 @@ void PianoRollEditor::setPlaybackMarkerPosition (const st_int ticks, bool isVisi
 GridControlPanel& PianoRollEditor::getControlPanel()
 {
     return controlPanel;
+}
+bool PianoRollEditor::keyPressed (const juce::KeyPress& k)
+{
+    if (k == juce::KeyPress(juce::KeyPress::escapeKey))
+    {
+        if (onClose) onClose();
+        return true;
+    }
+    return false;
 }

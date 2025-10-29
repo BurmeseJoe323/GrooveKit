@@ -54,6 +54,7 @@ TrackEditView::TrackEditView (AppEngine& engine)
     pianoRoll = std::make_unique<PianoRollEditor> (*appEngine, -1);
     addAndMakeVisible (pianoRoll.get());
     pianoRoll->setVisible (false);
+    pianoRoll->onClose = [this] { hidePianoRoll(); };
 
     // Split the view vertically
     verticalLayout.setItemLayout (0, -0.45, -0.85, -0.6); // Track list takes 70%
@@ -455,22 +456,20 @@ void TrackEditView::showPianoRoll(te::MidiClip* clip)
     if (clip == nullptr) return;
 
     if (!pianoRoll)
-    {
         pianoRoll = std::make_unique<PianoRollEditor>(*appEngine, clip);
-        addAndMakeVisible(pianoRoll.get());
-        resized();
-    }
     else
-    {
         pianoRoll->setTargetClip(clip);
-        pianoRoll->setVisible(true);
-        resized();
-    }
 
+    pianoRoll->onClose = [this] { hidePianoRoll(); };
+    pianoRoll->setVisible(true);
     pianoRollVisible = true;
-    resized();              // layout to reveal the subpane
+    
+    pianoRoll->grabKeyboardFocus();
+
+    resized();
     pianoRoll->toFront(false);
 }
+
 
 void TrackEditView::hidePianoRoll()
 {

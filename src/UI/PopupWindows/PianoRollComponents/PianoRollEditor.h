@@ -63,8 +63,10 @@ public:
 
     void showControlPanel (bool state);
     void setTargetClip (te::MidiClip* clip);
-
+    bool keyPressed (const juce::KeyPress& key) override;
     GridControlPanel& getControlPanel();
+
+    std::function<void()> onClose;
 
     /*
      This is called when the grid is edited.
@@ -105,5 +107,7 @@ private:
 
     st_int playbackTicks;
     bool showPlaybackMarker;
+
+    juce::TextButton closeButton { "x" };
 };
 #endif
