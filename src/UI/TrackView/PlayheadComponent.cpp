@@ -19,22 +19,22 @@ bool PlayheadComponent::hitTest (int x, int)
     return false;
 }
 
-// void PlayheadComponent::mouseDown (const juce::MouseEvent&)
-// {
-//     edit.getTransport().setUserDragging (true);
-// }
-//
-// void PlayheadComponent::mouseUp (const juce::MouseEvent&)
-// {
-//     edit.getTransport().setUserDragging (false);
-// }
-//
-// void PlayheadComponent::mouseDrag (const juce::MouseEvent& e)
-// {
-//     auto t = editViewState.xToTime (e.x, getWidth());
-//     edit.getTransport().setPosition (t);
-//     timerCallback();
-// }
+void PlayheadComponent::mouseDown (const juce::MouseEvent&)
+{
+    edit.getTransport().setUserDragging (true);
+}
+
+void PlayheadComponent::mouseUp (const juce::MouseEvent&)
+{
+    edit.getTransport().setUserDragging (false);
+}
+
+void PlayheadComponent::mouseDrag (const juce::MouseEvent& e)
+{
+    auto t = editViewState.xToTime (e.x, getParentComponent()->getWidth());
+    edit.getTransport().setPosition (t);
+    timerCallback();
+}
 
 void PlayheadComponent::timerCallback()
 {
