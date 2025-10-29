@@ -68,6 +68,25 @@ void ui::TimelineComponent::paint (Graphics& g)
         g.drawLine ((float) playX + 0.5f, 0.0f, (float) playX + 0.5f, (float) r.getBottom());
     }
 
+    if (hasLoop)
+    {
+        const int x1 = timeSecToX(loopRange.getStart().inSeconds());
+        const int x2 = timeSecToX(loopRange.getEnd().inSeconds());
+        const int y  = 0, h = getHeight();
+
+        juce::Rectangle<int> rr (juce::jmin(x1, x2), y, std::abs(x2 - x1), h);
+
+        g.setColour (juce::Colours::darkorange.withAlpha (0.25f));
+        g.fillRect (rr);
+
+        g.setColour (juce::Colours::darkorange);
+        g.drawRect (rr, 2);
+
+        g.fillRect (juce::Rectangle<int>(rr.getX() - handleWidthPx/2, y, handleWidthPx, h));
+        g.fillRect (juce::Rectangle<int>(rr.getRight() - handleWidthPx/2, y, handleWidthPx, h));
+    }
+
+
 }
 
 void ui::TimelineComponent::setTransportPositionFromX (int x, bool dragging)
@@ -82,14 +101,126 @@ void ui::TimelineComponent::setTransportPositionFromX (int x, bool dragging)
     ignoreUnused (dragging); // no EditViewState dependency anymore
 }
 
-void ui::TimelineComponent::mouseDown (const MouseEvent& e)
+static bool near (int px, int target, int slop) { return std::abs(px - target) <= slop; }
+
+void ui::TimelineComponent::mouseDown (const juce::MouseEvent& e)
 {
-    setTransportPositionFromX (e.x, true);
+    const int mx = e.x;
+
+    if (!hasLoop)
+    {
+        const double start = xToTimeSec(mx);
+        const double defLenSec = 2.0; // seed length; change to a bar if you like
+
+        loopRange = te::TimeRange (te::TimePosition::fromSeconds(start),
+                                   te::TimePosition::fromSeconds(start + defLenSec));
+        hasLoop   = true;
+        dragMode  = DragMode::dragEnd;
+        originalStartSec = start;
+        originalEndSec   = start + defLenSec;
+
+        if (onLoopRangeChanged) onLoopRangeChanged(loopRange);
+        repaint();
+        return;
+    }
+
+    const int x1 = timeSecToX(loopRange.getStart().inSeconds());
+    const int x2 = timeSecToX(loopRange.getEnd().inSeconds());
+    const juce::Rectangle<int> rr (juce::jmin(x1, x2), 0, std::abs(x2 - x1), getHeight());
+
+    if (near(mx, rr.getX(), hitSlopPx))          dragMode = DragMode::dragStart;
+    else if (near(mx, rr.getRight(), hitSlopPx)) dragMode = DragMode::dragEnd;
+    else if (rr.contains (mx, e.y))
+    {
+        dragMode = DragMode::dragBody;
+        dragAnchorSec   = xToTimeSec(mx);
+        originalStartSec = loopRange.getStart().inSeconds();
+        originalEndSec   = loopRange.getEnd().inSeconds();
+    }
+    else
+    {
+        // click outside: start a new region at cursor
+        const double start = xToTimeSec(mx);
+        const double defLenSec = 2.0;
+
+        loopRange = te::TimeRange (te::TimePosition::fromSeconds(start),
+                                   te::TimePosition::fromSeconds(start + defLenSec));
+        hasLoop   = true;
+        dragMode  = DragMode::dragEnd;
+        originalStartSec = start;
+        originalEndSec   = start + defLenSec;
+
+        if (onLoopRangeChanged) onLoopRangeChanged(loopRange);
+    }
+
     repaint();
 }
 
-void ui::TimelineComponent::mouseDrag (const MouseEvent& e)
+void ui::TimelineComponent::mouseDrag (const juce::MouseEvent& e)
 {
-    setTransportPositionFromX (e.x, true);
+    if (dragMode == DragMode::none || !hasLoop) return;
+
+    const double t = xToTimeSec(e.x);
+    double s = loopRange.getStart().inSeconds();
+    double d = loopRange.getEnd().inSeconds();
+
+    switch (dragMode)
+    {
+        case DragMode::dragStart: s = juce::jlimit(-1e9, d, t); break;
+        case DragMode::dragEnd:   d = juce::jmax(s, t);         break;
+        case DragMode::dragBody:
+        {
+            const double delta = t - dragAnchorSec;
+            s = originalStartSec + delta;
+            d = originalEndSec   + delta;
+            break;
+        }
+        default: break;
+    }
+
+    snapSecondsToBeats(s);
+    snapSecondsToBeats(d);
+
+    loopRange = te::TimeRange (te::TimePosition::fromSeconds(s),
+                               te::TimePosition::fromSeconds(d));
+
+    if (onLoopRangeChanged) onLoopRangeChanged(loopRange);
     repaint();
 }
+
+void ui::TimelineComponent::mouseUp (const juce::MouseEvent&)
+{
+    dragMode = DragMode::none;
+}
+
+// right-click (or cmd/ctrl double-click) clears loop
+void ui::TimelineComponent::mouseDoubleClick (const juce::MouseEvent& e)
+{
+    if (e.mods.isRightButtonDown() || e.mods.isAnyModifierKeyDown())
+    {
+        hasLoop   = false;
+        loopRange = te::TimeRange (te::TimePosition::fromSeconds(0.0),
+                                   te::TimePosition::fromSeconds(0.0));
+        if (onLoopRangeChanged) onLoopRangeChanged(loopRange);
+        repaint();
+    }
+}
+
+
+void ui::TimelineComponent::setLoopRange (te::TimeRange r)
+{
+    loopRange = r;
+    hasLoop = loopRange.getLength().inSeconds() > 0.0;
+    repaint();
+}
+
+void ui::TimelineComponent::snapSecondsToBeats (double& seconds) const
+{
+    if (!snapToBeats || editForSnap == nullptr) return;
+
+    auto& ts = editForSnap->tempoSequence;
+    const auto beat   = ts.toBeats (te::TimePosition::fromSeconds(seconds)).inBeats();
+    const auto snappedBeat = std::round(beat);
+    seconds = ts.toTime (te::BeatPosition::fromBeats(snappedBeat)).inSeconds();
+}
+

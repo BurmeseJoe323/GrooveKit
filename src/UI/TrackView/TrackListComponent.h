@@ -60,6 +60,8 @@ private:
         juce::Colour::fromString ("#51cf66"),
         juce::Colour::fromString ("#fcc419")
     };
+    juce::TextButton loopButton { "loop" };
+
 
     void updateTrackIndexes() const;
 

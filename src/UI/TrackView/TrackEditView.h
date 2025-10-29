@@ -104,4 +104,6 @@ private:
     juce::TextButton backButton { "Back" }, newEditButton { "New" },
         openEditButton { "Open Edit" }, newTrackButton { "New Track" }, outputButton { "Output Device" },
         mixViewButton { "Mix View" };
+    juce::TextButton loopButton { "loop" };
+
 };

@@ -13,15 +13,15 @@ AudioEngine::AudioEngine(te::Edit& editRef, te::Engine& engine)
 
 AudioEngine::~AudioEngine() = default;
 
-void AudioEngine::play() {
-    if (&edit)
-    {
-        auto& transport = edit.getTransport();
-        transport.setPosition(0s);
-        transport.setLoopRange(tracktion::TimeRange::between(0s, 4s));
-        transport.looping = true;
+void AudioEngine::play()
+{
+    auto& transport = edit.getTransport();
+
+    if (transport.looping)
+        transport.setPosition(transport.getLoopRange().getStart());
+
+    if (!transport.isPlaying())
         transport.play(false);
-    }
 }
 
 void AudioEngine::stop() {

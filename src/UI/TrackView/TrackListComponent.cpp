@@ -21,11 +21,82 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
     addAndMakeVisible (timeline.get());
     timeline->setPixelsPerSecond (100.0);
     timeline->setViewStart (te::TimePosition::fromSeconds (0.0));
+    timeline->setEditForSnap(&appEngine->getEdit());
+    timeline->setSnapToBeats(true);
+
+    addAndMakeVisible(loopButton);
+    loopButton.setClickingTogglesState(true);
+
+    // use the same colour as the loop region
+    const auto loopColour = juce::Colours::darkorange;
+
+    // initial UI state based on transport
+    {
+        auto& tr = appEngine->getEdit().getTransport();
+        loopButton.setToggleState(tr.looping, juce::dontSendNotification);
+        loopButton.setColour(juce::TextButton::buttonColourId, tr.looping ? loopColour : juce::Colours::darkgrey);
+    }
+    // toggle handler
+    loopButton.onClick = [this, loopColour]
+    {
+        auto& tr = appEngine->getEdit().getTransport();
+        const bool enable = loopButton.getToggleState();
+
+        if (enable)
+        {
+            auto r = timeline->getLoopRange();
+            if (r.getLength().inSeconds() <= 0.0)
+            {
+                // seed ONCE (4s example)
+                const double start = timeline->getViewStart().inSeconds();
+                r = tracktion::TimeRange(tracktion::TimePosition::fromSeconds(start),
+                                         tracktion::TimePosition::fromSeconds(start + 4.0));
+                timeline->setLoopRange(r);
+                tr.setLoopRange(r);
+                tr.setPosition(r.getStart());
+            }
+            tr.looping = true;
+            // (optional) tr.ensureContextAllocated();
+            loopButton.setColour(juce::TextButton::buttonColourId, loopColour);
+        }
+        else
+        {
+            tr.looping = false;
+            loopButton.setColour(juce::TextButton::buttonColourId, juce::Colours::darkgrey);
+        }
+    };
+
+    timeline->onLoopRangeChanged = [this](tracktion::TimeRange r)
+    {
+        auto& tr = appEngine->getEdit().getTransport();
+
+        const bool hasLoop = r.getLength().inSeconds() > 0.0;
+        if (hasLoop)
+        {
+            tr.setLoopRange(r);
+            tr.looping = true;
+
+            const auto pos = tr.getPosition();
+            if (pos < r.getStart() || pos >= r.getEnd())
+                tr.setPosition(r.getStart());
+        }
+        else
+        {
+            tr.looping = false;
+        }
+
+        // reflect in the button
+        const auto loopColour = juce::Colours::darkorange;
+        loopButton.setToggleState(tr.looping, juce::dontSendNotification);
+        loopButton.setColour(juce::TextButton::buttonColourId, tr.looping ? loopColour : juce::Colours::darkgrey);
+    };
+
 
 
     appEngine->onArmedTrackChanged = [this] {
         refreshTrackStates();
     };
+
 }
 
 TrackListComponent::~TrackListComponent() = default;
@@ -37,49 +108,51 @@ void TrackListComponent::paint (juce::Graphics& g)
 
 void TrackListComponent::resized()
 {
-    juce::FlexBox mainFlex;
-    mainFlex.flexDirection = juce::FlexBox::Direction::column;
+    constexpr int headerWidth   = 140;
+    constexpr int trackHeight   = 125;
+    constexpr int addButtonSpace= 30;
 
-    constexpr int headerWidth = 140;
-    constexpr int trackHeight = 125;
-    constexpr int addButtonSpace = 30;
+    const int numTracks = juce::jmin(headers.size(), tracks.size());
+    const int contentH  = numTracks * trackHeight + addButtonSpace;
 
-    const int numTracks = juce::jmin (headers.size(), tracks.size());
-    const int contentH = numTracks * trackHeight + addButtonSpace;
-
-    // Set the size to either default to the parent's height if the content height isn't tall enough
-    setSize (getParentWidth(), contentH > getParentHeight() ? contentH : getParentHeight());
+    setSize(getParentWidth(), juce::jmax(contentH, getParentHeight()));
 
     auto bounds = getLocalBounds();
 
     {
-        auto timelineRow = bounds.removeFromTop (timelineHeight);
-        // left gutter for header column:
-        auto clipArea = timelineRow.withTrimmedLeft (headerWidth);
+        auto timelineRow = bounds.removeFromTop(timelineHeight);
+
+        auto controls = timelineRow.removeFromLeft(headerWidth);
+
+        if (loopButton.isShowing() || loopButton.getParentComponent() == this)
+            loopButton.setBounds(controls.reduced(6, 4)); // small padding
+
+        // Remaining area is the timeline
         if (timeline)
-            timeline->setBounds (clipArea);
+            timeline->setBounds(timelineRow);
     }
 
-    bounds.removeFromBottom (addButtonSpace); // Space for add button
+    bounds.removeFromBottom(addButtonSpace);
 
-    for (int i = 0; i < numTracks; i++)
+    // ── Track rows
+    for (int i = 0; i < numTracks; ++i)
     {
         constexpr int margin = 2;
-        // Header on left, track on right in same row
-        auto row = bounds.removeFromTop (trackHeight);
+        auto row = bounds.removeFromTop(trackHeight);
 
         if (headers[i] != nullptr)
-            headers[i]->setBounds (row.removeFromLeft (headerWidth).reduced (margin));
+            headers[i]->setBounds(row.removeFromLeft(headerWidth).reduced(margin));
+
         if (tracks[i] != nullptr)
-            tracks[i]->setBounds (row.reduced (margin));
+            tracks[i]->setBounds(row.reduced(margin));
     }
 
-    playhead.setBounds (getLocalBounds()
-                            .withTrimmedTop (0)
-                            .withTrimmedBottom (addButtonSpace)
-                            .withTrimmedLeft (headerWidth));
-    playhead.toFront (false);
+    playhead.setBounds(getLocalBounds()
+                           .withTrimmedBottom(addButtonSpace)
+                           .withTrimmedLeft(headerWidth));
+    playhead.toFront(false);
 }
+
 
 void TrackListComponent::addNewTrack (int engineIdx)
 {
