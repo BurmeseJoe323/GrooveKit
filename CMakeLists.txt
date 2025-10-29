@@ -6,13 +6,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include(${CMAKE_SOURCE_DIR}/cmake/JUCEPath.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/TracktionPath.cmake)
 
-add_subdirectory(${TRACKTION_ENGINE_PATH}/modules/juce ${CMAKE_BINARY_DIR}/juce)
+#add_subdirectory(${TRACKTION_ENGINE_PATH}/modules/juce ${CMAKE_BINARY_DIR}/juce)
 
-# Tracktion-bundled JUCE
-juce_add_modules(
-        ${TRACKTION_ENGINE_PATH}/modules/tracktion_graph
-        ${TRACKTION_ENGINE_PATH}/modules/tracktion_engine
-)
+## Tracktion-bundled JUCE
+#juce_add_modules(
+#        ${TRACKTION_ENGINE_PATH}/modules/tracktion_graph
+#        ${TRACKTION_ENGINE_PATH}/modules/tracktion_engine
+#)
 
 # Melatonin Inspector
 Include (FetchContent)

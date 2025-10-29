@@ -629,7 +629,8 @@ te::MidiList& NoteGridComponent::getSequence()
     if (clip == nullptr)
     {
         DBG ("Error: MIDI clip not found at track " << trackIndex);
-        throw std::format ("Error: MIDI clip not found at track {}", trackIndex);
+        throw std::runtime_error("Error: MIDI clip not found at track " + std::to_string(trackIndex));
+
     }
     return clip->getSequence();
 }
