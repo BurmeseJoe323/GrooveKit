@@ -7,8 +7,13 @@
 
 
 NoteGridComponent::NoteGridComponent(GridStyleSheet& sheet, AppEngine& engine, te::MidiClip* clip)
-  : styleSheet(sheet), appEngine(engine), trackIndex(-1), clipModel(clip){
-    addChildComponent (&selectorBox);
+  : styleSheet(sheet), appEngine(engine), trackIndex(-1), clipModel(clip)
+{
+    addChildComponent(&selectorBox);
+
+    if (auto* clipToUse = getActiveClip())
+        for (auto* note : clipToUse->getSequence().getNotes())
+            addNewNoteComponent(note);
 
     addKeyListener (this);
     setWantsKeyboardFocus (true);
@@ -166,32 +171,30 @@ void NoteGridComponent::setQuantisation (float newVal)
     currentQValue = newVal;
 }
 
-void NoteGridComponent::setActiveClip (te::MidiClip* clip)
+void NoteGridComponent::setActiveClip(te::MidiClip* clip)
 {
     if (clipModel == clip) return;
     clipModel = clip;
 
-    // Remove existing NoteComponent children
-    for (int i = getNumChildComponents(); --i >= 0; )
-        if (dynamic_cast<NoteComponent*>(getChildComponent(i)) != nullptr)
-            removeChildComponent(i);
+    // Fully destroy old note components
+    for (auto* c : noteComps)
+    {
+        removeChildComponent(c);
+        delete c;
+    }
+    noteComps.clear();
 
     if (clipModel != nullptr)
     {
-        // Rebuild note UIs from the clip’s sequence
         auto& seq = clipModel->getSequence();
         for (auto* n : seq.getNotes())
-            addNewNoteComponent(n);   // this is your existing helper that creates NoteComponent
+            addNewNoteComponent(n);
     }
-
-    // If your grid/timeline size depends on clip length, refresh that here.
-    // For example, if you have updateBars(int):
-    // const auto totalBeats = seq.getLength().inBeats(); // or compute from last note end
-    // updateBars(juce::roundToInt(std::ceil(totalBeats / beatsPerBar)));
 
     resized();
     repaint();
 }
+
 
 
 void NoteGridComponent::noteCompSelected (NoteComponent* noteComponent, const juce::MouseEvent& e)
@@ -619,14 +622,18 @@ bool NoteGridComponent::keyPressed (const juce::KeyPress& key, Component*)
 
 void NoteGridComponent::deleteAllSelected()
 {
-    auto* clip = appEngine.getMidiClipFromTrack (trackIndex);
+    auto* clip = (clipModel != nullptr)
+                   ? clipModel
+                   : appEngine.getMidiClipFromTrack(trackIndex);
+
     if (clip == nullptr)
     {
-        DBG ("Error: MIDI clip at track " << trackIndex << "not found.");
+        DBG("Error: no active MIDI clip (trackIndex=" << trackIndex << ").");
         return;
     }
+
     auto& seq = clip->getSequence();
-    auto* um = appEngine.getMidiClipFromTrack (trackIndex)->getUndoManager();
+    auto* um  = clip->getUndoManager();
 
     // Init vector for kept notes
     std::vector<NoteComponent*> itemsToKeep;
