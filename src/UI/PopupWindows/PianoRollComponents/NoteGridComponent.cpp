@@ -11,9 +11,6 @@ NoteGridComponent::NoteGridComponent(GridStyleSheet& sheet, AppEngine& engine, t
 {
     addChildComponent(&selectorBox);
 
-    if (auto* clipToUse = getActiveClip())
-        for (auto* note : clipToUse->getSequence().getNotes())
-            addNewNoteComponent(note);
 
     addKeyListener (this);
     setWantsKeyboardFocus (true);
@@ -29,6 +26,10 @@ NoteGridComponent::NoteGridComponent(GridStyleSheet& sheet, AppEngine& engine, t
     timeSignature.beatValue = 4;
     // Set ticks according to time signature's beatValue
     ticksPerTimeSignature = PRE::defaultResolution * timeSignature.beatsPerBar;
+
+    if (auto* clipToUse = getActiveClip())
+        for (auto* note : clipToUse->getSequence().getNotes())
+            addNewNoteComponent(note);
 
     // TODO: refactor to not use NoteComponent?
     // Components for each note will likely impact performance. We will probably want to draw directly
@@ -193,6 +194,19 @@ void NoteGridComponent::setActiveClip(te::MidiClip* clip)
 
     resized();
     repaint();
+}
+te::MidiClip* NoteGridComponent::getActiveClip()
+{
+    return (clipModel != nullptr)
+         ? clipModel
+         : appEngine.getMidiClipFromTrack(trackIndex);
+}
+
+const te::MidiClip* NoteGridComponent::getActiveClip() const
+{
+    return (clipModel != nullptr)
+         ? clipModel
+         : appEngine.getMidiClipFromTrack(trackIndex);
 }
 
 
@@ -390,8 +404,8 @@ void NoteGridComponent::noteCompPositionMoved (NoteComponent* comp, bool callRes
     te::MidiNote* nm = comp->getModel();
     const float beatLength = (float) nm->getLengthBeats().inBeats();
 
-    auto* clip = appEngine.getMidiClipFromTrack(trackIndex);
-    if (!clip) { DBG("Error: MIDI clip at " << trackIndex << " not found."); return; }
+    auto* clip = getActiveClip();
+    if (!clip) { DBG("Error: no active MIDI clip."); return; }
     auto* um = clip->getUndoManager();
 
     nm->setNoteNumber(note, um);

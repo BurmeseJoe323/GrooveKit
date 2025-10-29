@@ -80,8 +80,8 @@ public:
     float getPixelsPerBar() const;
 
     void setActiveClip (te::MidiClip* clip);
-    te::MidiClip* getActiveClip() const { return clipModel ? clipModel
-                                                           : const_cast<te::MidiClip*>(resolveClip()); }
+    te::MidiClip* getActiveClip();
+    const te::MidiClip* getActiveClip() const;
 
     juce::Array<te::MidiNote*> getSelectedModels();
 
