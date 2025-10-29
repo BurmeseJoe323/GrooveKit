@@ -182,6 +182,14 @@ void AppEngine::setTrackSoloed (int i, bool s) { trackManager->setTrackSoloed (i
 bool AppEngine::isTrackSoloed (int i) const { return trackManager->isTrackSoloed (i); }
 bool AppEngine::anyTrackSoloed() const { return trackManager->anyTrackSoloed(); }
 
+double AppEngine::getBpm () const { return edit->tempoSequence.getTempo (0)->getBpm(); }
+
+void AppEngine::setBpm (double newBpm)
+{
+    // GrooveKit does not have tempo changes, so just get the first one
+    edit->tempoSequence.getTempo (0)->setBpm (newBpm);
+}
+
 AudioEngine& AppEngine::getAudioEngine() { return *audioEngine; }
 MIDIEngine& AppEngine::getMidiEngine() { return *midiEngine; }
 

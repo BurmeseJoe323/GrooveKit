@@ -121,6 +121,9 @@ public:
     bool isTrackSoloed(int index) const;
     bool anyTrackSoloed() const;
 
+    double getBpm() const;
+    void setBpm(double newBpm);
+
     TrackManager& getTrackManager()       { return *trackManager; }
     TrackManager* getTrackManagerPtr()    { return trackManager.get(); }
 

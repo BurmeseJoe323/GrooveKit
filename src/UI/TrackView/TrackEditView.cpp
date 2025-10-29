@@ -1,7 +1,9 @@
 // Note: Junie (JetBrains AI) contributed code to this file on 2025-09-24.
 #include "TrackEditView.h"
 #include "../../AppEngine/AppEngine.h"
+#include "../../AppEngine/ValidationUtils.h"
 #include "PopupWindows/OutputDevice/OutputDeviceWindow.h"
+#include <regex>
 
 // Helper for styling the menu buttons
 void styleMenuButton (juce::TextButton& button)
@@ -44,6 +46,8 @@ TrackEditView::TrackEditView (AppEngine& engine)
         trackList->rebuildFromEngine();
 
         hidePianoRoll();
+
+        bpmEditField.setText (juce::String (appEngine->getBpm()), juce::NotificationType::dontSendNotification);
 
         repaint();
     };
@@ -111,8 +115,12 @@ void TrackEditView::resized ()
 
     // --- Center: Transport ---
     auto centerArea = topBarContent;
-    bpmLabel.setBounds (centerArea.removeFromLeft (80));
-    clickLabel.setBounds (centerArea.removeFromLeft (50));
+    bpmLabel.setBounds (centerArea.removeFromLeft (50));
+    auto valueArea = centerArea.removeFromLeft (50);
+    int deltaHeight = valueArea.getHeight() / 8;
+    valueArea.removeFromBottom (deltaHeight);
+    valueArea.removeFromTop (deltaHeight);
+    bpmEditField.setBounds (valueArea);
 
     constexpr int buttonSize = 20;
     constexpr int buttonGap = 10;
@@ -215,14 +223,19 @@ void TrackEditView::setupButtons ()
 {
     // --- Left Controls ---
     addAndMakeVisible (bpmLabel);
-    bpmLabel.setText ("BPM 120", juce::dontSendNotification);
+    bpmLabel.setText ("BPM:", juce::dontSendNotification);
     bpmLabel.setColour (juce::Label::textColourId, juce::Colours::lightgrey);
-    bpmLabel.setJustificationType (juce::Justification::centred);
+    bpmLabel.setJustificationType (juce::Justification::right);
 
-    addAndMakeVisible (clickLabel);
-    clickLabel.setText ("Click", juce::dontSendNotification);
-    clickLabel.setColour (juce::Label::textColourId, juce::Colours::lightgrey);
-    clickLabel.setJustificationType (juce::Justification::centred);
+    addAndMakeVisible (bpmEditField);
+    bpmEditField.setText ("120", juce::dontSendNotification);
+    bpmEditField.setColour (juce::Label::textColourId, juce::Colours::lightgrey);
+    bpmEditField.setColour (juce::Label::outlineColourId, juce::Colours::lightgrey.brighter (0.5f));
+    bpmEditField.setColour (juce::Label::backgroundColourId, juce::Colours::darkgrey.darker ());
+    bpmEditField.setJustificationType (juce::Justification::centred);
+    bpmEditField.setEditable (true);
+    bpmEditField.addListener (this);
+    bpmEditField.setMouseCursor (juce::MouseCursor::IBeamCursor);
 
     // --- Transport Buttons ---
     {
@@ -463,25 +476,48 @@ void TrackEditView::showPianoRoll(te::MidiClip* clip)
     pianoRoll->onClose = [this] { hidePianoRoll(); };
     pianoRoll->setVisible(true);
     pianoRollVisible = true;
-    
+
     pianoRoll->grabKeyboardFocus();
 
     resized();
     pianoRoll->toFront(false);
 }
 
-
-void TrackEditView::hidePianoRoll()
+void TrackEditView::hidePianoRoll ()
 {
     pianoRollVisible = false;
     if (pianoRoll) pianoRoll->setVisible(false);
     resized();
 }
 
-
 int TrackEditView::getPianoRollIndex () const
 {
     return pianoRollTrackIndex;
+}
+
+void TrackEditView::labelTextChanged (juce::Label* labelThatHasChanged)
+{
+    if (labelThatHasChanged == &bpmEditField)
+    {
+        std::string text = labelThatHasChanged->getText().toStdString();
+
+        // Validate numeric input
+        if (!ValidationUtils::isValidNumeric(text))
+        {
+            labelThatHasChanged->setText (juce::String (appEngine->getBpm()), juce::NotificationType::dontSendNotification);
+            return;
+        }
+
+        // Convert to double and apply constraints/rounding
+        double bpmValue = std::stod(text);
+        bpmValue = ValidationUtils::constrainAndRoundBpm(bpmValue);
+
+        // Update label with constrained and rounded value
+        labelThatHasChanged->setText(juce::String(bpmValue, 2), juce::NotificationType::dontSendNotification);
+
+        // Update AppEngine with the constrained and rounded value
+        appEngine->setBpm(bpmValue);
+    }
 }
 
 void TrackEditView::handleNoteOn (juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity)

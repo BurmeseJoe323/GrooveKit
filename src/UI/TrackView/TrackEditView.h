@@ -14,7 +14,8 @@ class AppEngine;
  * Represents the track editor view, with functionality for adding and deleting tracks.
  * Each track contains a corresponding header, footer, and a series of MIDI clips.
  */
-class TrackEditView final : public juce::Component, public juce::MidiKeyboardStateListener, public juce::MenuBarModel
+class TrackEditView final : public juce::Component, public juce::MidiKeyboardStateListener, public juce::MenuBarModel,
+                            public juce::Label::Listener
 {
 public:
     explicit TrackEditView (AppEngine& engine);
@@ -45,6 +46,8 @@ public:
     void hidePianoRoll();
 
     int getPianoRollIndex() const;
+
+    void labelTextChanged(juce::Label* labelThatHasChanged) override;
 
     class PianoRollResizerBar final : public juce::StretchableLayoutResizerBar
     {
@@ -88,7 +91,7 @@ private:
     std::unique_ptr<juce::MenuBarComponent> menuBar;
 
     // Center controls
-    juce::Label bpmLabel, clickLabel;
+    juce::Label bpmLabel, bpmEditField;
     juce::ShapeButton playButton { "play", {}, {}, {} };
     juce::ShapeButton stopButton { "stop", {}, {}, {} };
     juce::ShapeButton recordButton { "record", {}, {}, {} };

@@ -8,9 +8,7 @@
 /dataSources.local.xml
 
 # Ignore CMake build directories
-cmake-build-*/
-cmake-build-debug/
-cmake-build-release/
+cmake-build*/
 cmake-build-debug-visual-studio/
 CMakeBuild/
 out/build/
