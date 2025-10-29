@@ -22,6 +22,7 @@ target_sources(app_ui
         PRIVATE
         MainComponent.cpp MainComponent.h
         TrackView/TrackEditView.cpp TrackView/TrackEditView.h
+        TrackView/MidiListener.cpp TrackView/MidiListener.h
         TrackView/TrackComponent.cpp TrackView/TrackComponent.h
         TrackView/TrackHeaderComponent.cpp TrackView/TrackHeaderComponent.h
         TrackView/TrackClip.cpp TrackView/TrackClip.h
