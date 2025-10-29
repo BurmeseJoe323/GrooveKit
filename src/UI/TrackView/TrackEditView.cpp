@@ -232,6 +232,7 @@ void TrackEditView::setupButtons ()
     bpmEditField.setJustificationType (juce::Justification::centred);
     bpmEditField.setEditable (true);
     bpmEditField.addListener (this);
+    bpmEditField.setMouseCursor (juce::MouseCursor::IBeamCursor);
 
     // --- Transport Buttons ---
     {
