@@ -38,17 +38,13 @@ bool PlayheadComponent::hitTest (int x, int)
 
 void PlayheadComponent::timerCallback()
 {
-    if (firstTimer)
-    {
-        // On Linux, don't set the mouse cursor until after the Component has appeared
-        firstTimer = false;
-        setMouseCursor (juce::MouseCursor::LeftRightResizeCursor);
-    }
+    const double tSec = edit.getTransport().getPosition().inSeconds();
+    const int newX = (int) juce::roundToIntAccurate((tSec - viewStart.inSeconds()) * pixelsPerSecond);
 
-    int newX = editViewState.timeToX (edit.getTransport().getPosition(), getWidth());
     if (newX != xPosition)
     {
-        repaint (juce::jmin (newX, xPosition) - 1, 0, juce::jmax (newX, xPosition) - juce::jmin (newX, xPosition) + 3, getHeight());
+        repaint (juce::jmin(newX, xPosition) - 2, 0,
+                 std::abs(newX - xPosition) + 4, getHeight());
         xPosition = newX;
     }
 }

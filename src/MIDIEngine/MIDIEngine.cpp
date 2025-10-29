@@ -9,70 +9,72 @@ MIDIEngine::MIDIEngine(te::Edit& editRef)
 {
 }
 
+void MIDIEngine::addMidiClipToTrackAt(int trackIndex,
+                                      te::TimePosition start,
+                                      te::BeatDuration length)
+{
+    auto tracks = te::getAudioTracks(edit);
+    if (!juce::isPositiveAndBelow(trackIndex, tracks.size())) return;
+
+    auto* track = tracks.getUnchecked(trackIndex);
+
+    const auto startTime = start;
+
+    const auto startBeat = edit.tempoSequence.toBeats(startTime);
+    const auto endBeat   = startBeat + length;
+    const auto endTime   = edit.tempoSequence.toTime(endBeat);
+
+    te::TimeRange range { startTime, endTime };
+
+    if (auto* clip = track->insertNewClip(te::TrackItem::Type::midi, "MIDI", range, nullptr))
+        if (auto* mc = dynamic_cast<te::MidiClip*>(clip))
+            DBG("Added MIDI clip @" << startTime.inSeconds()
+                                    << "s len(beats)=" << length.inBeats());
+}
+
+
 void MIDIEngine::addMidiClipToTrack(int trackIndex)
 {
-    auto audioTracks = getAudioTracks(edit);
-    if (trackIndex < 0 || trackIndex >= audioTracks.size())
-        return;
+    auto tracks = getAudioTracks(edit);
+    if (!juce::isPositiveAndBelow(trackIndex, tracks.size())) return;
 
-    auto track = te::getAudioTracks(edit)[trackIndex];
+    auto* track = tracks.getUnchecked(trackIndex);
+    auto clips  = track->getClips();
 
-    auto endPos = edit.tempoSequence.toTime(8_bp);
-    te::TimeRange twoBars { 0s, endPos };
+    // default length = 8 beats
+    const auto defLenBeats = 8_bd;
 
-    auto clip = track->insertNewClip(te::TrackItem::Type::midi, "Midi Clip", twoBars, nullptr);
-    auto midiClip = dynamic_cast<te::MidiClip*>(clip);
-    DBG("Clip added to track: " << trackIndex);
+    // place at playhead OR just after the last existing clip end (whichever is later)
+    const auto playhead = edit.getTransport().getPosition();
+    te::TimePosition nextPos = playhead;
 
-    // midiClip->setStart(true, true);
-    // midiClip->setLength(true, true);
+    if (clips.size() > 0)
+    {
+        double lastEnd = 0.0;
+        for (auto* c : clips)
+            lastEnd = juce::jmax(lastEnd, c->getPosition().time.getEnd().inSeconds());
 
-    if (midiClip == nullptr)
-        return;
+        nextPos = te::TimePosition::fromSeconds(juce::jmax(lastEnd, playhead.inSeconds()));
+    }
 
-    // switch (trackIndex)
-    // {
-    //     case 0:
-    //         midiClip->getSequence().addNote(36, 0_bp, 0.5_bd, 112, 0, nullptr);
-    //         midiClip->getSequence().addNote(36, 4_bp, 0.5_bd, 112, 0, nullptr);
-    //
-    //         // Snare (per your mapping) on 2 & 4 (beats 2 and 6)
-    //         midiClip->getSequence().addNote(37, 2_bp, 0.5_bd, 108, 0, nullptr);
-    //         midiClip->getSequence().addNote(37, 6_bp, 0.5_bd, 108, 0, nullptr);
-    //
-    //         // Hi-hat 8ths across 2 bars (every 1/2 beat)
-    //         for (int i = 0; i < 16; ++i)
-    //         {
-    //             auto start = te::BeatPosition::fromBeats(0.5 * i);   // 0.0, 0.5, 1.0, ..., 7.5
-    //             midiClip->getSequence().addNote(38, start, te::BeatDuration::fromBeats(0.25), 92, 0, nullptr);
-    //         }
-    //         break;
-    //     case 1:  // Bass
-    //         midiClip->getSequence().addNote(36, 0_bp, 1_bd, 100, 0, nullptr);
-    //         midiClip->getSequence().addNote(40, 1_bp, 1_bd, 100, 0, nullptr);
-    //         midiClip->getSequence().addNote(43, 2_bp, 1_bd, 100, 0, nullptr);
-    //         break;
-    //     case 2:  // Chords
-    //         midiClip->getSequence().addNote(60, 0_bp, 1_bd, 100, 0, nullptr);
-    //         midiClip->getSequence().addNote(64, 0_bp, 1_bd, 100, 0, nullptr);
-    //         midiClip->getSequence().addNote(67, 0_bp, 1_bd, 100, 0, nullptr);
-    //         break;
-    //     case 3:  // melody
-    //         midiClip->getSequence().addNote(76, 0_bp, 0.5_bd, 100, 0, nullptr);
-    //         midiClip->getSequence().addNote(79, 1_bp, 0.5_bd, 100, 0, nullptr);
-    //         midiClip->getSequence().addNote(81, 2_bp, 0.5_bd, 100, 0, nullptr);
-    //         break;
-    //     default:
-    //         midiClip->getSequence().addNote(72, 0_bp, 1_bd, 100, 0, nullptr);
-    //         midiClip->getSequence().addNote(74, 1_bp, 1_bd, 100, 0, nullptr);
-    //         break;
-    // }
+    addMidiClipToTrackAt(trackIndex, nextPos, defLenBeats);
 
     edit.getTransport().ensureContextAllocated();
-    edit.restartPlayback();
-
-
+    // don’t force restart every time; leave transport state alone
 }
+
+juce::Array<te::MidiClip*> MIDIEngine::getMidiClipsFromTrack(int trackIndex)
+{
+    juce::Array<te::MidiClip*> out;
+    auto tracks = getAudioTracks(edit);
+    if (!juce::isPositiveAndBelow(trackIndex, tracks.size())) return out;
+
+    auto* track = tracks.getUnchecked(trackIndex);
+    for (auto* c : track->getClips())
+        if (auto* mc = dynamic_cast<te::MidiClip*>(c)) out.add(mc);
+    return out;
+}
+
 
 te::MidiClip *MIDIEngine::getMidiClipFromTrack(int trackIndex) {
     auto audioTracks = getAudioTracks(edit);

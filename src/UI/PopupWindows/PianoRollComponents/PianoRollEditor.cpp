@@ -4,7 +4,9 @@
 
 #include "PianoRollEditor.h"
 
-PianoRollEditor::PianoRollEditor (AppEngine& engine, int trackIndex) : noteGrid (gridStyleSheet, engine, trackIndex), controlPanel (noteGrid, gridStyleSheet)
+PianoRollEditor::PianoRollEditor (AppEngine& engine, te::MidiClip* clip)
+    : noteGrid (gridStyleSheet, engine, clip),
+      controlPanel (noteGrid, gridStyleSheet)
 {
     // Setup note grid
     addAndMakeVisible (gridView);
@@ -51,6 +53,23 @@ PianoRollEditor::PianoRollEditor (AppEngine& engine, int trackIndex) : noteGrid 
     playbackTicks = 0;
     showPlaybackMarker = false;
 }
+PianoRollEditor::PianoRollEditor (AppEngine& engine, int trackIndex)
+    : PianoRollEditor (engine, [&]() -> te::MidiClip*
+{
+    // resolve the first MIDI clip on that track, or nullptr
+    auto& edit = engine.getEdit();
+    auto audioTracks = te::getAudioTracks (edit);
+    if (! juce::isPositiveAndBelow (trackIndex, audioTracks.size()))
+        return nullptr;
+
+    if (auto* at = audioTracks.getUnchecked (trackIndex))
+        for (auto* c : at->getClips())
+            if (auto* mc = dynamic_cast<te::MidiClip*> (c))
+                return mc;
+
+    return nullptr;
+}())
+{}
 
 void PianoRollEditor::paint (juce::Graphics& g)
 {
@@ -79,7 +98,7 @@ void PianoRollEditor::resized()
 
     noteGrid.setBounds (0, 0, 4000, 20 * 127);
     noteGrid.setupGrid (pixelsPerBar, noteHeight, numBars);
-    timeline.setBounds (0, 0, 100, timelineView.getHeight());
+    timeline.setBounds (0, 0, noteGrid.getWidth(), timelineView.getHeight());
     timeline.setup (numBars, pixelsPerBar);
     keyboard.setBounds (0, 0, keyboardView.getWidth(), noteGrid.getHeight());
 
@@ -91,6 +110,18 @@ void PianoRollEditor::setStyleSheet (GridStyleSheet style)
     gridStyleSheet = style;
 }
 
+void PianoRollEditor::setTargetClip (te::MidiClip* clip)
+{
+    if (clip == nullptr) return;
+
+    // hand off to the grid to swap its data model
+    noteGrid.setActiveClip(clip);
+
+    // If your timeline width depends on clip length, you can also refresh it here.
+    // For now, a repaint is enough; the grid will trigger a resized() on us.
+    repaint();
+}
+
 void PianoRollEditor::setup (const int bars, const int pixelsPerBar, const int noteHeight)
 {
     // NOTE: there's probably a better way to do this. Depending on how we implement bars, we may not
@@ -98,7 +129,8 @@ void PianoRollEditor::setup (const int bars, const int pixelsPerBar, const int n
     if (bars > 1 && bars < 1000)
     {
         noteGrid.setupGrid (pixelsPerBar, noteHeight, bars);
-        timeline.setup (bars, pixelsPerBar);
+        timeline.setup (bars, noteGrid.getPixelsPerBar());
+        timeline.setSize (noteGrid.getWidth(), timeline.getHeight());
         keyboard.setSize (keyboardView.getWidth(), noteGrid.getHeight());
     }
     else
@@ -149,6 +181,16 @@ void PianoRollEditor::setPlaybackMarkerPosition (const st_int ticks, bool isVisi
 {
     showPlaybackMarker = isVisible;
     playbackTicks = ticks;
+
+    const float qnTicks       = (float) PRE::defaultResolution;      // ticks per quarter note
+    const float beatsNow      = playbackTicks / qnTicks;             // current beat position
+    const float beatsPerBar   = noteGrid.getBeatsPerBar();           // expose getter (see below)
+    const float pixelsPerBeat = noteGrid.getPixelsPerBar() / beatsPerBar;
+
+    const int x = (int) std::round(beatsNow * pixelsPerBeat);
+
+    const int xAbsolute = gridView.getViewPosition().getX();
+
     repaint();
 }
 

@@ -16,7 +16,7 @@
 class PianoRollMainComponent : public juce::Component, juce::Timer
 {
 public:
-    PianoRollMainComponent (AppEngine& engine, int trackIndex);
+    PianoRollMainComponent (AppEngine& engine, te::MidiClip* clip);
     ~PianoRollMainComponent() override = default;
 
     void resized() override;

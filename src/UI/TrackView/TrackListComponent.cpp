@@ -1,7 +1,8 @@
+#include "TrackListComponent.h"
 #include "DrumSamplerView/DrumSamplerView.h"
 #include "TrackEditView.h"
-#include "TrackListComponent.h"
 
+#include "PopupWindows/PianoRollComponents/PianoRollMainComponent.h"
 
 TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine) : appEngine (engine),
                                                                                     playhead (engine->getEdit(),
@@ -12,6 +13,9 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
     setWantsKeyboardFocus (true); // setting keyboard focus?
     addAndMakeVisible (playhead);
     playhead.setAlwaysOnTop (true);
+
+    playhead.setPixelsPerSecond(100.0);
+    playhead.setViewStart(te::TimePosition::fromSeconds(0.0));
 
     timeline = std::make_unique<ui::TimelineComponent>(appEngine->getEdit());
     addAndMakeVisible (timeline.get());
@@ -136,11 +140,20 @@ void TrackListComponent::addNewTrack (int engineIdx)
 
     };
 
-    newTrack->onRequestOpenPianoRoll = [this] (int uiIndex) {
-        if (auto* parent = findParentComponentOfClass<TrackEditView>())
-            parent->showPianoRoll (uiIndex);
+    newTrack->onRequestOpenPianoRoll =
+    [this](int trackIdx, te::MidiClip* clip)
+    {
+        // however you show your editor window:
+        auto* pr = new juce::DocumentWindow("Piano Roll",
+                                            juce::Colours::black,
+                                            juce::DocumentWindow::allButtons);
+        auto* content = new PianoRollMainComponent(*appEngine, clip);
+        pr->setContentOwned(content, true);
+        pr->centreWithSize(900, 640);
+        pr->setResizable(true, true);
+        pr->setUsingNativeTitleBar(true);
+        pr->setVisible(true);
     };
-
     newTrack->onRequestOpenDrumSampler = [this] (int uiIndex) {
         if (uiIndex < 0 || uiIndex >= tracks.size())
             return;
@@ -203,24 +216,17 @@ void TrackListComponent::armTrack (int trackIndex, bool shouldBeArmed)
 
 void TrackListComponent::setPixelsPerSecond (double pps)
 {
-    for (auto* t : tracks)
-        if (t) t->setPixelsPerSecond (pps);
-
-    if (timeline)
-        timeline->setPixelsPerSecond (pps);
-
+    for (auto* t : tracks) if (t) t->setPixelsPerSecond (pps);
+    if (timeline) timeline->setPixelsPerSecond (pps);
+    playhead.setPixelsPerSecond(pps);            // ← add this
     repaint();
 }
 
-
 void TrackListComponent::setViewStart (te::TimePosition t)
 {
-    for (auto* tc : tracks)
-        if (tc) tc->setViewStart (t);
-
-    if (timeline)
-        timeline->setViewStart (t);
-
+    for (auto* tc : tracks) if (tc) tc->setViewStart (t);
+    if (timeline) timeline->setViewStart (t);
+    playhead.setViewStart(t);                    // ← add this
     repaint();
 }
 

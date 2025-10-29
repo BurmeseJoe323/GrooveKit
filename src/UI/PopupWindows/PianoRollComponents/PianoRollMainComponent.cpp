@@ -4,7 +4,7 @@
 
 #include "PianoRollMainComponent.h"
 
-PianoRollMainComponent::PianoRollMainComponent (AppEngine& engine, int trackIndex) : editor (engine, trackIndex)
+PianoRollMainComponent::PianoRollMainComponent (AppEngine& engine, te::MidiClip* clip) : editor (engine, clip)
 {
     setSize (800, 600);
     addAndMakeVisible (editor);

@@ -39,6 +39,7 @@ public:
 class PianoRollEditor : public juce::Component
 {
 public:
+    PianoRollEditor (AppEngine& engine, te::MidiClip* clip);
     PianoRollEditor (AppEngine& engine, int trackIndex);
     ~PianoRollEditor() override = default;
 
@@ -61,6 +62,7 @@ public:
     void setStyleSheet (GridStyleSheet styleSheet);
 
     void showControlPanel (bool state);
+    void setTargetClip (te::MidiClip* clip);
 
     GridControlPanel& getControlPanel();
 

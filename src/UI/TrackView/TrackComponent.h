@@ -38,16 +38,20 @@ public:
         viewStart = t;
         resized();
     }
+    void rebuildFromEdit();
+
 
     std::function<void (int)> onRequestDeleteTrack;
-    std::function<void (int)> onRequestOpenPianoRoll;
+    std::function<void (int trackIndex, te::MidiClip* clip)> onRequestOpenPianoRoll;
     std::function<void (int)> onRequestOpenDrumSampler;
 
 private:
     std::shared_ptr<AppEngine> appEngine;
+    std::shared_ptr<MIDIEngine> midiEngine;
     juce::Colour trackColor;
     int trackIndex;
     int numClips = 0;
+    juce::OwnedArray<TrackClip> clipUIs;
 
     TrackClip trackClip;
     TrackHeaderComponent trackHeader;

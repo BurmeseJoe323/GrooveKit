@@ -18,6 +18,8 @@ public:
      * @param trackIndex the index of the track to add the clip to.
      */
     void addMidiClipToTrack(int trackIndex);
+    void addMidiClipToTrackAt(int trackIndex, te::TimePosition start, te::BeatDuration length);
+    juce::Array<te::MidiClip*> getMidiClipsFromTrack(int trackIndex);
 
     /**
      * Returns an Array of MidiNote* from a track in the edit instance

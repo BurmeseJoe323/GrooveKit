@@ -6,8 +6,8 @@
 #include "AppEngine.h"
 
 
-NoteGridComponent::NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, int trackIndex) : styleSheet (sheet), appEngine (engine), trackIndex (trackIndex)
-{
+NoteGridComponent::NoteGridComponent(GridStyleSheet& sheet, AppEngine& engine, te::MidiClip* clip)
+  : styleSheet(sheet), appEngine(engine), trackIndex(-1), clipModel(clip){
     addChildComponent (&selectorBox);
 
     addKeyListener (this);
@@ -28,7 +28,7 @@ NoteGridComponent::NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, 
     // TODO: refactor to not use NoteComponent?
     // Components for each note will likely impact performance. We will probably want to draw directly
     // on the grid instead, and also figure out a way to select notes and drag them
-    const auto clip = appEngine.getMidiClipFromTrack (trackIndex);
+    // const auto clip = appEngine.getMidiClipFromTrack (trackIndex);
     if (clip == nullptr)
     {
         return;
@@ -37,6 +37,12 @@ NoteGridComponent::NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, 
     // Add all existing notes from clip
     for (te::MidiNote* note : clip->getSequence().getNotes())
         addNewNoteComponent (note);
+
+    auto* clipToUse = getActiveClip();
+    if (!clipToUse) return;
+
+    for (te::MidiNote* note : clipToUse->getSequence().getNotes())
+        addNewNoteComponent(note);
 }
 
 NoteGridComponent::~NoteGridComponent()
@@ -159,6 +165,34 @@ void NoteGridComponent::setQuantisation (float newVal)
 {
     currentQValue = newVal;
 }
+
+void NoteGridComponent::setActiveClip (te::MidiClip* clip)
+{
+    if (clipModel == clip) return;
+    clipModel = clip;
+
+    // Remove existing NoteComponent children
+    for (int i = getNumChildComponents(); --i >= 0; )
+        if (dynamic_cast<NoteComponent*>(getChildComponent(i)) != nullptr)
+            removeChildComponent(i);
+
+    if (clipModel != nullptr)
+    {
+        // Rebuild note UIs from the clip’s sequence
+        auto& seq = clipModel->getSequence();
+        for (auto* n : seq.getNotes())
+            addNewNoteComponent(n);   // this is your existing helper that creates NoteComponent
+    }
+
+    // If your grid/timeline size depends on clip length, refresh that here.
+    // For example, if you have updateBars(int):
+    // const auto totalBeats = seq.getLength().inBeats(); // or compute from last note end
+    // updateBars(juce::roundToInt(std::ceil(totalBeats / beatsPerBar)));
+
+    resized();
+    repaint();
+}
+
 
 void NoteGridComponent::noteCompSelected (NoteComponent* noteComponent, const juce::MouseEvent& e)
 {
@@ -476,11 +510,10 @@ void NoteGridComponent::mouseDoubleClick (const juce::MouseEvent& e)
     int pitch = yToPitch ((float) e.getMouseDownY());
     pitch = juce::jlimit (0, 127, pitch);
 
-    auto clip = appEngine.getMidiClipFromTrack (trackIndex);
-    if (!clip) { DBG("Error: MIDI clip at " << trackIndex << " not found."); return; }
-
+    auto* clip = getActiveClip();
+    if (!clip) { DBG("Error: MIDI clip not found."); return; }
+    auto* um = clip->getUndoManager();
     auto& seq = clip->getSequence();
-    auto* um  = clip->getUndoManager();
 
     auto* newModel = seq.addNote(
         pitch,
@@ -509,7 +542,8 @@ bool NoteGridComponent::keyPressed (const juce::KeyPress& key, Component*)
     //     LOG_KEY_PRESS(key.getKeyCode(), 1, key.getModifiers().getRawFlags());
     // #endif
 
-    auto clip = appEngine.getMidiClipFromTrack (trackIndex);
+    auto* clip = (clipModel != nullptr) ? clipModel
+                                    : appEngine.getMidiClipFromTrack(trackIndex);
     if (clip == nullptr)
     {
         DBG("Error: midi clip at track index " << trackIndex << " not found.");
@@ -625,7 +659,8 @@ void NoteGridComponent::deleteAllSelected()
 // TODO: do we need this function?
 te::MidiList& NoteGridComponent::getSequence()
 {
-    auto clip = appEngine.getMidiClipFromTrack (trackIndex);
+    auto* clip = (clipModel != nullptr) ? clipModel
+                                    : appEngine.getMidiClipFromTrack(trackIndex);
     if (clip == nullptr)
     {
         DBG ("Error: MIDI clip not found at track " << trackIndex);
@@ -716,4 +751,10 @@ float NoteGridComponent::getNoteCompHeight() const
 float NoteGridComponent::getPixelsPerBar() const
 {
     return pixelsPerBar;
+}
+
+const te::MidiClip* NoteGridComponent::resolveClip() const
+{
+    // legacy fallback: your existing method
+    return appEngine.getMidiClipFromTrack(trackIndex);
 }

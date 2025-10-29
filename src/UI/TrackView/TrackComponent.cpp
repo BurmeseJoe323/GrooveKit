@@ -1,4 +1,7 @@
 #include "TrackComponent.h"
+
+#include "../../AppEngine/AppEngine.h"
+#include "TrackEditView.h"
 #include "TrackListComponent.h"
 
 TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const int trackIndex, const juce::Colour color)
@@ -21,17 +24,8 @@ TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const 
         trackColor = palette[std::abs(trackIndex) % (int) (sizeof(palette) / sizeof(palette[0]))];
     }
 
-    trackClip.setColor (trackColor);
 
-    // Check if the track already has clips when created.
-    if (const auto* track = appEngine->getTrackManager().getTrack (trackIndex))
-    {
-        if (track->getClips().size() > 0)
-        {
-            addAndMakeVisible (trackClip);
-            numClips = track->getClips().size();
-        }
-    }
+    rebuildFromEdit();
 }
 
 TrackComponent::~TrackComponent()
@@ -68,30 +62,77 @@ void TrackComponent::resized()
     const double pixelsPerSecond = tl ? tl->getPixelsPerSecond() : 100.0;
     const double viewStartSec    = tl ? tl->getViewStart().inSeconds() : 0.0;
 
-    // Make sure the track index is valid
-    if (const auto* track = trackManager.getTrack(trackIndex))
+    const double pps      = pixelsPerSecond;
+    const double viewS    = viewStartSec;
+
+    auto& edit =
+#ifdef HAS_APPENGINE_POINTER
+    appEngine->getEdit();
+    #else
+        appEngine->getEdit();
+    #endif
+    for (auto* ui : clipUIs)
     {
-        const auto& clips = track->getClips();
+        auto* midiClip = ui->getClip();
+        if (!midiClip) continue;
 
-        if (!clips.isEmpty())
+        const auto posRange = midiClip->getPosition().time;
+
+        te::TimeRange drawRange = posRange;
+        if (midiClip->isLooping())
         {
-            // Use your new helper methods
-            const double clipStart = trackManager.getClipStartSeconds(trackIndex, 0);
-            const double clipLen   = trackManager.getClipLengthSeconds(trackIndex, 0);
+            const auto loopRange = midiClip->getLoopRange();
+            drawRange = te::TimeRange(posRange.getStart(), posRange.getStart() + loopRange.getLength());
+        }
 
-            // Convert time → pixels using timeline scale
-            const int x = (int)((clipStart - viewStartSec) * pixelsPerSecond + 0.5);
-            const int w = (int)(clipLen * pixelsPerSecond + 0.5);
+        const double clipStart = drawRange.getStart().inSeconds();
+        const double clipLen   = drawRange.getLength().inSeconds();
 
-            // Ensure clip stays visible and minimum width
-            trackClip.setBounds(x, bounds.getY(), std::max(w, 20), bounds.getHeight());
-            return;
+        const int x = (int) juce::roundToIntAccurate((clipStart - viewStartSec) * pixelsPerSecond);
+        const int w = (int) juce::roundToIntAccurate(clipLen * pixelsPerSecond);
+
+        ui->setBounds(x, bounds.getY(), juce::jmax(w, 20), bounds.getHeight());
+    }
+
+}
+
+void TrackComponent::rebuildFromEdit()
+{
+    clipUIs.clear (true);
+
+    if (!appEngine) return;
+
+    auto& edit = appEngine->getEdit();
+    auto audioTracks = te::getAudioTracks(edit);
+    if (!juce::isPositiveAndBelow(trackIndex, audioTracks.size()))
+        return;
+
+    if (auto* teTrack = audioTracks.getUnchecked(trackIndex))
+    {
+        auto clips = teTrack->getClips();
+        for (auto* c : clips)
+        {
+            if (auto* mc = dynamic_cast<te::MidiClip*>(c))
+            {
+                auto* ui = new TrackClip();
+                ui->setClip(mc);
+                ui->setColor (trackColor);
+                ui->onOpen = [this](te::MidiClip* clicked)
+                {
+                    if (!clicked) return;
+                    if (auto* parent = findParentComponentOfClass<TrackEditView>())
+                        parent->showPianoRoll(clicked);
+                };
+
+                addAndMakeVisible(ui);
+                clipUIs.add(ui);
+            }
         }
     }
 
-    // Default fallback (no clips)
-    trackClip.setBounds(bounds.withWidth(std::max(bounds.getHeight(), 40)));
+    resized(); // lay them out
 }
+
 
 // TrackComponent.cpp
 void TrackComponent::onInstrumentClicked()
@@ -124,7 +165,7 @@ void TrackComponent::onSettingsClicked()
         {
             case 1: // Add Clip
                 appEngine->addMidiClipToTrack (trackIndex);
-                addAndMakeVisible (trackClip);
+                rebuildFromEdit();
                 resized();
                 numClips = 1;
                 break;
@@ -132,10 +173,7 @@ void TrackComponent::onSettingsClicked()
                 if (onRequestOpenDrumSampler)
                     onRequestOpenDrumSampler (trackIndex);
                 break;
-            case 11: // Open Piano Roll
-                if (onRequestOpenPianoRoll && numClips > 0)
-                    onRequestOpenPianoRoll (trackIndex);
-                break;
+
             case 100: // Delete Track
                 if (onRequestDeleteTrack)
                     onRequestDeleteTrack (trackIndex);
@@ -179,3 +217,5 @@ void TrackComponent::onRecordArmToggled (bool isArmed)
     if (auto* p = findParentComponentOfClass<TrackListComponent>())
         p->armTrack(trackIndex, isArmed);
 }
+
+

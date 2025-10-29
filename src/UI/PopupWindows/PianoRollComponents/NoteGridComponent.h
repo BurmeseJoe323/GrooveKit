@@ -25,6 +25,7 @@ public:
         g.fillAll (c);
     }
 
+
     int startX, startY;
 };
 
@@ -40,7 +41,7 @@ public:
         unsigned int beatsPerBar;
         unsigned int beatValue;
     };
-    NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, int trackIndex);
+    NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, te::MidiClip* clip);
     ~NoteGridComponent() override;
 
     void paint (juce::Graphics& g) override;
@@ -53,6 +54,7 @@ public:
     void noteEdgeDragging (NoteComponent*, const juce::MouseEvent&);
     void setPositions();
     void setTimeSignature (unsigned int beatsPerBar, unsigned int beatValue);
+    unsigned int getBeatsPerBar() const { return timeSignature.beatsPerBar; }
 
     /* optional
     void mouseEnter (const MouseEvent&);
@@ -76,6 +78,10 @@ public:
 
     float getNoteCompHeight() const;
     float getPixelsPerBar() const;
+
+    void setActiveClip (te::MidiClip* clip);
+    te::MidiClip* getActiveClip() const { return clipModel ? clipModel
+                                                           : const_cast<te::MidiClip*>(resolveClip()); }
 
     juce::Array<te::MidiNote*> getSelectedModels();
 
@@ -106,6 +112,9 @@ private:
     bool firstDrag;
     bool firstCall;
     int lastTrigger;
+
+    te::MidiClip* clipModel = nullptr;
+    const te::MidiClip* resolveClip() const;
 
     float beatsToX (float beats);
     float pitchToY (float pitch);

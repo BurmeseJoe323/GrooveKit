@@ -450,24 +450,35 @@ void TrackEditView::showOpenEditMenu () const
         });
 }
 
-void TrackEditView::showPianoRoll (int trackIndex)
+void TrackEditView::showPianoRoll(te::MidiClip* clip)
 {
-    if (pianoRollTrackIndex != trackIndex)
+    if (clip == nullptr) return;
+
+    if (!pianoRoll)
     {
-        pianoRollTrackIndex = trackIndex;
-        pianoRoll = std::make_unique<PianoRollEditor> (*appEngine, trackIndex);
-        addAndMakeVisible (pianoRoll.get());
+        pianoRoll = std::make_unique<PianoRollEditor>(*appEngine, clip);
+        addAndMakeVisible(pianoRoll.get());
+        resized();
     }
-    pianoRoll->setVisible (true);
+    else
+    {
+        pianoRoll->setTargetClip(clip);
+        pianoRoll->setVisible(true);
+        resized();
+    }
+
+    pianoRollVisible = true;
+    resized();              // layout to reveal the subpane
+    pianoRoll->toFront(false);
+}
+
+void TrackEditView::hidePianoRoll()
+{
+    pianoRollVisible = false;
+    if (pianoRoll) pianoRoll->setVisible(false);
     resized();
 }
 
-void TrackEditView::hidePianoRoll ()
-{
-    pianoRoll->setVisible (false);
-    pianoRollTrackIndex = -1;
-    resized();
-}
 
 int TrackEditView::getPianoRollIndex () const
 {
