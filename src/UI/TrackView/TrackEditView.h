@@ -14,8 +14,7 @@ class AppEngine;
  * Represents the track editor view, with functionality for adding and deleting tracks.
  * Each track contains a corresponding header, footer, and a series of MIDI clips.
  */
-class TrackEditView final : public juce::Component, public juce::MidiKeyboardStateListener, public juce::MenuBarModel,
-                            public juce::Label::Listener
+class TrackEditView final : public juce::Component, public juce::MidiKeyboardStateListener, public juce::MenuBarModel
 {
 public:
     explicit TrackEditView (AppEngine& engine);
@@ -46,8 +45,6 @@ public:
     void hidePianoRoll();
     int getPianoRollIndex() const;
 
-    void labelTextChanged(juce::Label* labelThatHasChanged) override;
-
     class PianoRollResizerBar final : public juce::StretchableLayoutResizerBar
     {
     public:
@@ -56,6 +53,46 @@ public:
 
         void hasBeenMoved() override;
         void mouseDrag (const juce::MouseEvent& event) override;
+    };
+
+    class BPMEditComponent final : public juce::Component
+    {
+    public:
+        BPMEditComponent();
+        ~BPMEditComponent() override = default;
+
+        void paint (juce::Graphics& g) override;
+        void resized() override;
+        void mouseDown (const juce::MouseEvent& e) override;
+        void mouseDrag (const juce::MouseEvent& e) override;
+        void mouseUp (const juce::MouseEvent& e) override;
+        void focusGained (juce::Component::FocusChangeType cause) override;
+        void focusLost (juce::Component::FocusChangeType cause) override;
+
+        void setValue (double newValue, juce::NotificationType notification = juce::sendNotification);
+        double getValue() const { return currentValue; }
+
+        std::function<void(double)> onValueChange;
+
+    private:
+        double currentValue = 120.0;
+        double minValue = 20.0;
+        double maxValue = 250.0;
+
+        bool isDragging = false;
+        bool isEditing = false;
+        bool isFocused = false;
+        juce::Point<int> dragStartPosition;
+        double dragStartValue = 0.0;
+
+        juce::Label textEditor;
+
+        void startEditing();
+        void stopEditing (bool applyChanges);
+        void updateValueFromDrag (int deltaY);
+        void updateValueFromText();
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (BPMEditComponent)
     };
 
 private:
@@ -89,7 +126,8 @@ private:
     std::unique_ptr<juce::MenuBarComponent> menuBar;
 
     // Center controls
-    juce::Label bpmLabel, bpmEditField;
+    juce::Label bpmLabel;
+    std::unique_ptr<BPMEditComponent> bpmEditField;
     juce::ShapeButton playButton { "play", {}, {}, {} };
     juce::ShapeButton stopButton { "stop", {}, {}, {} };
     juce::ShapeButton recordButton { "record", {}, {}, {} };
