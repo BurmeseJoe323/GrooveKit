@@ -3,6 +3,7 @@
 #include "../../AppEngine/AppEngine.h"
 #include "TrackClip.h"
 #include "TrackHeaderComponent.h"
+
 #include <juce_gui_basics/juce_gui_basics.h>
 
 /**

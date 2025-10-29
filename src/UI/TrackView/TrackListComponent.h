@@ -5,7 +5,7 @@
 #include "TrackComponent.h"
 #include "TrackHeaderComponent.h"
 #include <juce_gui_basics/juce_gui_basics.h>
-
+#include "TimelineComponent.h"
 /**
  * Represents the Component view holding tracks.
  */
@@ -20,15 +20,31 @@ public:
     void parentSizeChanged() override;
     void refreshTrackStates() const;
     void addNewTrack (int index);
-    void setPixelsPerSecond (double pps);
-    void setViewStart (te::TimePosition t);
+
     void rebuildFromEngine();
 
     void armTrack(int trackIndex, bool shouldBeArmed);
 
+    void setPixelsPerSecond (double pps);
+    void setViewStart (te::TimePosition t);
+    double getPixelsPerSecond() const
+    {
+        return timeline ? timeline->getPixelsPerSecond() : 100.0;
+    }
+
+    te::TimePosition getViewStart() const
+    {
+        return timeline ? timeline->getViewStart() : te::TimePosition::fromSeconds(0.0);
+    }
+
 private:
     const std::shared_ptr<AppEngine> appEngine;
     PlayheadComponent playhead;
+
+    std::unique_ptr<ui::TimelineComponent> timeline;
+    static constexpr int timelineHeight = 24;
+    static constexpr int headerWidth    = 140;
+
 
     juce::OwnedArray<TrackComponent> tracks;
     juce::OwnedArray<TrackHeaderComponent> headers;

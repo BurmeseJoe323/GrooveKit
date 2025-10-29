@@ -2,6 +2,7 @@
 #include "TrackEditView.h"
 #include "TrackListComponent.h"
 
+
 TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine) : appEngine (engine),
                                                                                     playhead (engine->getEdit(),
                                                                                         engine->getEditViewState())
@@ -11,6 +12,12 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
     setWantsKeyboardFocus (true); // setting keyboard focus?
     addAndMakeVisible (playhead);
     playhead.setAlwaysOnTop (true);
+
+    timeline = std::make_unique<ui::TimelineComponent>(appEngine->getEdit());
+    addAndMakeVisible (timeline.get());
+    timeline->setPixelsPerSecond (100.0);
+    timeline->setViewStart (te::TimePosition::fromSeconds (0.0));
+
 
     appEngine->onArmedTrackChanged = [this] {
         refreshTrackStates();
@@ -40,7 +47,17 @@ void TrackListComponent::resized()
     setSize (getParentWidth(), contentH > getParentHeight() ? contentH : getParentHeight());
 
     auto bounds = getLocalBounds();
+
+    {
+        auto timelineRow = bounds.removeFromTop (timelineHeight);
+        // left gutter for header column:
+        auto clipArea = timelineRow.withTrimmedLeft (headerWidth);
+        if (timeline)
+            timeline->setBounds (clipArea);
+    }
+
     bounds.removeFromBottom (addButtonSpace); // Space for add button
+
     for (int i = 0; i < numTracks; i++)
     {
         constexpr int margin = 2;
@@ -53,8 +70,11 @@ void TrackListComponent::resized()
             tracks[i]->setBounds (row.reduced (margin));
     }
 
-    // Set bounds for playhead
-    playhead.setBounds (getLocalBounds().withTrimmedLeft (headerWidth));
+    playhead.setBounds (getLocalBounds()
+                            .withTrimmedTop (0)
+                            .withTrimmedBottom (addButtonSpace)
+                            .withTrimmedLeft (headerWidth));
+    playhead.toFront (false);
 }
 
 void TrackListComponent::addNewTrack (int engineIdx)
@@ -184,16 +204,23 @@ void TrackListComponent::armTrack (int trackIndex, bool shouldBeArmed)
 void TrackListComponent::setPixelsPerSecond (double pps)
 {
     for (auto* t : tracks)
-        if (t)
-            t->setPixelsPerSecond (pps);
+        if (t) t->setPixelsPerSecond (pps);
+
+    if (timeline)
+        timeline->setPixelsPerSecond (pps);
+
     repaint();
 }
+
 
 void TrackListComponent::setViewStart (te::TimePosition t)
 {
     for (auto* tc : tracks)
-        if (tc)
-            tc->setViewStart (t);
+        if (tc) tc->setViewStart (t);
+
+    if (timeline)
+        timeline->setViewStart (t);
+
     repaint();
 }
 

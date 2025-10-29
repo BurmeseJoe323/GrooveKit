@@ -191,6 +191,50 @@ te::Plugin* TrackManager::getInstrumentPluginOnTrack (int trackIndex)
     return nullptr;
 }
 
+double TrackManager::getClipStartSeconds (int trackIndex, int clipIndex) const
+{
+    auto audioTracks = te::getAudioTracks(edit);
+    if (trackIndex < 0 || trackIndex >= (int)audioTracks.size())
+        return 0.0;
+
+    auto* track = audioTracks[(size_t)trackIndex];
+    if (!track)
+        return 0.0;
+
+    const auto& clips = track->getClips();
+    if (clipIndex < 0 || clipIndex >= clips.size())
+        return 0.0;
+
+    auto* clip = clips[(size_t)clipIndex];
+    if (!clip)
+        return 0.0;
+
+    return clip->getPosition().getStart().inSeconds();
+}
+
+double TrackManager::getClipLengthSeconds (int trackIndex, int clipIndex) const
+{
+    auto audioTracks = te::getAudioTracks(edit);
+    if (trackIndex < 0 || trackIndex >= (int)audioTracks.size())
+        return 0.0;
+
+    auto* track = audioTracks[(size_t)trackIndex];
+    if (!track)
+        return 0.0;
+
+    const auto& clips = track->getClips();
+    if (clipIndex < 0 || clipIndex >= clips.size())
+        return 0.0;
+
+    auto* clip = clips[(size_t)clipIndex];
+    if (!clip)
+        return 0.0;
+
+    return clip->getPosition().getLength().inSeconds();
+
+}
+
+
 
 
 

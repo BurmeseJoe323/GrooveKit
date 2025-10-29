@@ -34,6 +34,9 @@ public:
     tracktion_engine::Plugin* getInstrumentPluginOnTrack (int trackIndex);
     //void clearAllTracks();
 
+    double getClipStartSeconds (int trackIndex, int clipIndex) const;
+    double getClipLengthSeconds (int trackIndex, int clipIndex) const;
+
 private:
     te::Edit& edit;
 

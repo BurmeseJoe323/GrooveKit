@@ -56,18 +56,41 @@ void TrackComponent::paint (juce::Graphics& g)
 
 void TrackComponent::resized()
 {
-    const auto bounds = getLocalBounds().reduced (5);
+    const auto bounds = getLocalBounds().reduced(5);
 
-    // If we can find a clip on this track, size/position the UI clip from its time range.
-    if (const auto* track = appEngine ? appEngine->getTrackManager().getTrack (trackIndex) : nullptr)
+    if (!appEngine)
+        return;
+
+    auto& trackManager = appEngine->getTrackManager();
+
+    // Access the timeline scaling info through the parent TrackListComponent
+    auto* tl = findParentComponentOfClass<TrackListComponent>();
+    const double pixelsPerSecond = tl ? tl->getPixelsPerSecond() : 100.0;
+    const double viewStartSec    = tl ? tl->getViewStart().inSeconds() : 0.0;
+
+    // Make sure the track index is valid
+    if (const auto* track = trackManager.getTrack(trackIndex))
     {
-        if (track->getClips().size() > 0)
+        const auto& clips = track->getClips();
+
+        if (!clips.isEmpty())
         {
-            trackClip.setBounds (getLocalBounds().reduced (5).withWidth (280));
+            // Use your new helper methods
+            const double clipStart = trackManager.getClipStartSeconds(trackIndex, 0);
+            const double clipLen   = trackManager.getClipLengthSeconds(trackIndex, 0);
+
+            // Convert time → pixels using timeline scale
+            const int x = (int)((clipStart - viewStartSec) * pixelsPerSecond + 0.5);
+            const int w = (int)(clipLen * pixelsPerSecond + 0.5);
+
+            // Ensure clip stays visible and minimum width
+            trackClip.setBounds(x, bounds.getY(), std::max(w, 20), bounds.getHeight());
             return;
         }
     }
-    trackClip.setBounds (bounds.withWidth (juce::jmax (bounds.getHeight(), 40)));
+
+    // Default fallback (no clips)
+    trackClip.setBounds(bounds.withWidth(std::max(bounds.getHeight(), 40)));
 }
 
 // TrackComponent.cpp
