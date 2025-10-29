@@ -63,43 +63,16 @@ void TrackClip::resized() {}
 
 void TrackClip::mouseUp (const juce::MouseEvent& e)
 {
-    // Right click context menu with Copy, Paste Here, and Duplicate
+    // Right click: delegate context menu handling to the parent TrackComponent
     if (e.mods.isPopupMenu())
     {
-        juce::PopupMenu m;
-        m.addItem (1, "Copy");
-        m.addItem (2, "Paste Here");
-        m.addItem (3, "Duplicate");
-        m.addSeparator();
-        m.addItem (4, "Delete");
-
         // Determine paste position in beats relative to this clip
         const double clipStartBeats = clip ? clip->getStartBeat().inBeats() : 0.0;
         const double localXBeats    = static_cast<double> (e.getPosition().x) / juce::jmax (1.0f, pixelsPerBeat);
         const double pasteBeats     = clipStartBeats + juce::jmax (0.0, localXBeats);
 
-        m.showMenuAsync ({}, [safe = juce::Component::SafePointer<TrackClip>(this), pasteBeats] (int result) {
-            if (safe == nullptr || safe->clip == nullptr)
-                return;
-
-            switch (result)
-            {
-                case 1: // Copy
-                    if (safe->onCopyRequested) safe->onCopyRequested (safe->clip);
-                    break;
-                case 2: // Paste Here
-                    if (safe->onPasteRequested) safe->onPasteRequested (safe->clip, pasteBeats);
-                    break;
-                case 3: // Duplicate
-                    if (safe->onDuplicateRequested) safe->onDuplicateRequested (safe->clip);
-                    break;
-                case 4: // Delete
-                    if (safe->onDeleteRequested) safe->onDeleteRequested (safe->clip);
-                    break;
-                default:
-                    break;
-            }
-        });
+        if (onContextMenuRequested)
+            onContextMenuRequested (clip, pasteBeats);
         return;
     }
 

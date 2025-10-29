@@ -240,9 +240,104 @@ void TrackComponent::rebuildClipsFromEngine()
             }
         };
 
+        // Right-click context menu is owned by TrackComponent now
+        ui->onContextMenuRequested = [this] (te::MidiClip* c, double pasteBeats)
+        {
+            if (c == nullptr)
+                return;
+
+            juce::PopupMenu m;
+            m.addItem (1, "Copy");
+            m.addItem (2, "Duplicate");
+            m.addSeparator();
+            m.addItem (3, "Delete");
+
+            m.showMenuAsync ({}, [safeThis = juce::Component::SafePointer<TrackComponent>(this), clip = c] (int result)
+            {
+                if (safeThis == nullptr || safeThis->appEngine == nullptr)
+                    return;
+
+                switch (result)
+                {
+                    case 1: // Copy
+                        safeThis->appEngine->copyMidiClip (clip);
+                        break;
+                    case 2: // Duplicate
+                        safeThis->appEngine->duplicateMidiClip (clip);
+                        safeThis->rebuildClipsFromEngine();
+                        safeThis->resized();
+                        break;
+                    case 3: // Delete
+                    {
+                        if (auto* parent = safeThis->findParentComponentOfClass<TrackEditView>())
+                        {
+                            if (parent->getPianoRollIndex() == safeThis->trackIndex)
+                                parent->hidePianoRoll();
+                        }
+                        safeThis->appEngine->deleteMidiClip (clip);
+                        safeThis->rebuildClipsFromEngine();
+                        safeThis->resized();
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            });
+        };
+
         addAndMakeVisible (ui.get());
         trackClips.push_back (std::move (ui));
     }
 
     resized();
+}
+
+
+void TrackComponent::mouseUp (const juce::MouseEvent& e)
+{
+    // Only handle background right-clicks on the TrackComponent itself
+    if (! e.mods.isPopupMenu())
+        return;
+
+    // If the original component was a child (e.g., a TrackClip), let it handle its own menu
+    if (e.originalComponent != this)
+        return;
+
+    // Compute beat position from mouse X within the inner bounds used for layout
+    const auto inner = getLocalBounds().reduced (5);
+    const int localX = juce::jmax (0, e.getPosition().x - inner.getX());
+    const double beatPos = static_cast<double> (localX) / juce::jmax (1.0f, pixelsPerBeat);
+
+    juce::PopupMenu m;
+    m.addItem (1, "Paste Here");
+    m.addItem (2, "Add MIDI Clip Here");
+
+    m.showMenuAsync ({}, [safeThis = juce::Component::SafePointer<TrackComponent>(this), beatPos] (int result)
+    {
+        if (safeThis == nullptr || safeThis->appEngine == nullptr)
+            return;
+
+        switch (result)
+        {
+            case 1: // Paste Here
+            {
+                if (safeThis->appEngine->pasteClipboardAt (safeThis->trackIndex, beatPos))
+                {
+                    safeThis->rebuildClipsFromEngine();
+                    safeThis->resized();
+                }
+                break;
+            }
+            case 2: // Add MIDI Clip Here
+            {
+                if (safeThis->appEngine->addMidiClipToTrackAt (safeThis->trackIndex, beatPos))
+                {
+                    safeThis->rebuildClipsFromEngine();
+                    safeThis->resized();
+                }
+                break;
+            }
+            default: break;
+        }
+    });
 }

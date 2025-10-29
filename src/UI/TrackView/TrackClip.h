@@ -28,6 +28,8 @@ public:
     std::function<void(te::MidiClip*)> onDuplicateRequested;
     std::function<void(te::MidiClip*, double pasteAtBeats)> onPasteRequested; // paste location in beats
     std::function<void(te::MidiClip*)> onDeleteRequested;
+    // Request the parent TrackComponent to show a context menu for this clip at the given beat position
+    std::function<void(te::MidiClip*, double pasteAtBeats)> onContextMenuRequested;
 
     void mouseUp (const juce::MouseEvent& e) override;
 

@@ -103,6 +103,8 @@ public:
     int getNumTracks();
     void deleteMidiTrack(int index);
     void addMidiClipToTrack(int trackIndex);
+    // Add an empty MIDI clip at a specific beat on the given track (Junie)
+    bool addMidiClipToTrackAt(int trackIndex, double startBeats);
 
     bool isDrumTrack(int index) const;
 

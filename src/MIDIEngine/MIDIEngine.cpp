@@ -10,6 +10,32 @@ MIDIEngine::MIDIEngine (te::Edit& editRef)
 {
 }
 
+bool MIDIEngine::addMidiClipToTrackAt (const int trackIndex, const double startBeats) const
+{
+    auto audioTracks = getAudioTracks (edit);
+    if (trackIndex < 0 || trackIndex >= (int) audioTracks.size())
+        return false;
+
+    auto* track = te::getAudioTracks (edit)[static_cast<size_t> (trackIndex)];
+
+    // Default new clip length: half bar = 2 beats (consistent with addMidiClipToTrack)
+    constexpr double lengthBeats = 2.0;
+
+    const auto startPos = edit.tempoSequence.toTime (te::BeatPosition::fromBeats (juce::jmax (0.0, startBeats)));
+    const auto endPos   = edit.tempoSequence.toTime (te::BeatPosition::fromBeats (juce::jmax (0.0, startBeats) + lengthBeats));
+    te::TimeRange range { startPos, endPos };
+
+    if (auto* clip = track->insertNewClip (te::TrackItem::Type::midi, "Midi Clip", range, nullptr))
+    {
+        juce::ignoreUnused (clip);
+        // Ensure context allocated (do not force playback restart here)
+        edit.getTransport().ensureContextAllocated();
+        return true;
+    }
+
+    return false;
+}
+
 void MIDIEngine::addMidiClipToTrack (const int trackIndex) const
 {
     auto audioTracks = getAudioTracks (edit);

@@ -428,6 +428,13 @@ void AppEngine::closeInstrumentWindow()
     }
 }
 
+bool AppEngine::addMidiClipToTrackAt (const int trackIndex, const double startBeats)
+{
+    if (!midiEngine)
+        return false;
+    return midiEngine->addMidiClipToTrackAt (trackIndex, startBeats);
+}
+
 void AppEngine::copyMidiClip (te::MidiClip* clip)
 {
     if (clip == nullptr || edit == nullptr)

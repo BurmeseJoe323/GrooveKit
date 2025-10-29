@@ -18,6 +18,8 @@ public:
      * @param trackIndex the index of the track to add the clip to.
      */
     void addMidiClipToTrack (int trackIndex) const;
+    // Add a new empty MIDI clip at a specific beat on the given track (returns success)
+    bool addMidiClipToTrackAt (int trackIndex, double startBeats) const;
 
     /**
      * Returns the first MidiClip* from a track in the edit instance (or nullptr if none) (Junie).
