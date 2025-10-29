@@ -130,15 +130,42 @@ void TrackComponent::rebuildFromEdit()
         }
     }
 
-    resized(); // lay them out
+    resized();
+
+    if (auto* list = findParentComponentOfClass<TrackListComponent>())
+    {
+        int rightmost = 0;
+        // TrackComponent X is the left offset inside TrackList
+        const int trackLeftInList = getX();
+
+        for (auto* ui : clipUIs)
+            if (ui)
+                rightmost = std::max(rightmost, trackLeftInList + ui->getRight());
+
+        // Account for the header column (same value used in TrackListComponent)
+        constexpr int headerWidth = 140;
+        const int requiredWidth = headerWidth + std::max(rightmost, getParentWidth() - headerWidth);
+
+        if (requiredWidth > list->getWidth())
+            list->setSize(requiredWidth + 40 /* small pad */, list->getHeight());
+    }
 }
 
 
 // TrackComponent.cpp
 void TrackComponent::onInstrumentClicked()
 {
-    if (appEngine)
-        appEngine->openInstrumentEditor (trackIndex);
+    if (!appEngine)
+        return;
+
+    if (appEngine->isDrumTrack(trackIndex))
+    {
+        if (onRequestOpenDrumSampler)
+            onRequestOpenDrumSampler(trackIndex);
+        return;
+    }
+
+    appEngine->openInstrumentEditor(trackIndex);
 }
 
 
@@ -148,15 +175,7 @@ void TrackComponent::onSettingsClicked()
     const bool isDrumTrack = appEngine->isDrumTrack (trackIndex);
     m.addItem (1, "Add MIDI Clip");
     m.addSeparator();
-    if (isDrumTrack)
-    {
-        m.addItem (10, "Open Drum Sampler");
-        m.addItem (11, "Open Piano Roll");
-    }
-    else
-    {
-        m.addItem (11, "Open Piano Roll");
-    }
+
     m.addSeparator();
     m.addItem (100, "Delete Track");
 

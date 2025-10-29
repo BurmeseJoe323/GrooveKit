@@ -105,6 +105,18 @@ static bool near (int px, int target, int slop) { return std::abs(px - target) <
 
 void ui::TimelineComponent::mouseDown (const juce::MouseEvent& e)
 {
+
+    if (e.mods.isMiddleButtonDown() || (e.mods.isShiftDown() && e.mods.isLeftButtonDown()))
+    {
+        if (auto* vp = findParentComponentOfClass<juce::Viewport>())
+        {
+            panning = true;
+            panStartView = vp->getViewPosition();
+            panStartX = e.getPosition().x;
+            return;
+        }
+    }
+
     const int mx = e.x;
 
     if (!hasLoop)
@@ -158,6 +170,16 @@ void ui::TimelineComponent::mouseDown (const juce::MouseEvent& e)
 
 void ui::TimelineComponent::mouseDrag (const juce::MouseEvent& e)
 {
+    if (panning)
+    {
+        if (auto* vp = findParentComponentOfClass<juce::Viewport>())
+        {
+            const int dx = e.getPosition().x - panStartX;
+            vp->setViewPosition(juce::jmax(0, panStartView.x - dx), panStartView.y);
+        }
+        return;
+    }
+
     if (dragMode == DragMode::none || !hasLoop) return;
 
     const double t = xToTimeSec(e.x);
@@ -190,7 +212,10 @@ void ui::TimelineComponent::mouseDrag (const juce::MouseEvent& e)
 
 void ui::TimelineComponent::mouseUp (const juce::MouseEvent&)
 {
+
+    panning = false;
     dragMode = DragMode::none;
+
 }
 
 // right-click (or cmd/ctrl double-click) clears loop

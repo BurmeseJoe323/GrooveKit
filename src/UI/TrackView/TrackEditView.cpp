@@ -30,7 +30,7 @@ TrackEditView::TrackEditView (AppEngine& engine)
     trackList->setPixelsPerSecond (pixelsPerSecond);
     trackList->setViewStart (viewStart);
 
-    viewport.setScrollBarsShown (true, false); // vertical only
+    viewport.setScrollBarsShown (true, true);
     viewport.setViewedComponent (trackList.get(), false);
 
     trackList->rebuildFromEngine();
