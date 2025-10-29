@@ -108,33 +108,31 @@ void TrackListComponent::paint (juce::Graphics& g)
 
 void TrackListComponent::resized()
 {
-    constexpr int headerWidth   = 140;
-    constexpr int trackHeight   = 125;
-    constexpr int addButtonSpace= 30;
+    constexpr int headerWidth    = 140;
+    constexpr int trackHeight    = 125;
+    constexpr int addButtonSpace = 30;
 
     const int numTracks = juce::jmin(headers.size(), tracks.size());
     const int contentH  = numTracks * trackHeight + addButtonSpace;
 
-    setSize(getParentWidth(), juce::jmax(contentH, getParentHeight()));
-
+    // 1) First pass: lay out timeline, headers, and tracks
     auto bounds = getLocalBounds();
 
+    // timeline
     {
         auto timelineRow = bounds.removeFromTop(timelineHeight);
-
         auto controls = timelineRow.removeFromLeft(headerWidth);
 
         if (loopButton.isShowing() || loopButton.getParentComponent() == this)
-            loopButton.setBounds(controls.reduced(6, 4)); // small padding
+            loopButton.setBounds(controls.reduced(6, 4));
 
-        // Remaining area is the timeline
         if (timeline)
             timeline->setBounds(timelineRow);
     }
 
     bounds.removeFromBottom(addButtonSpace);
 
-    // ── Track rows
+    // rows
     for (int i = 0; i < numTracks; ++i)
     {
         constexpr int margin = 2;
@@ -144,13 +142,41 @@ void TrackListComponent::resized()
             headers[i]->setBounds(row.removeFromLeft(headerWidth).reduced(margin));
 
         if (tracks[i] != nullptr)
-            tracks[i]->setBounds(row.reduced(margin));
+            tracks[i]->setBounds(row.reduced(margin));  // <-- this triggers TrackComponent::resized()
     }
 
+    // playhead over everything
     playhead.setBounds(getLocalBounds()
                            .withTrimmedBottom(addButtonSpace)
                            .withTrimmedLeft(headerWidth));
     playhead.toFront(false);
+
+    // 2) Second pass: now that clip UIs have bounds, compute true rightmost
+    int rightmostClipPx = 0;
+    for (auto* t : tracks)
+    {
+        if (!t) continue;
+        const int trackLeftInList = t->getX();
+        for (int i = 0; i < t->getNumChildComponents(); ++i)
+        {
+            if (auto* child = t->getChildComponent(i))
+                rightmostClipPx = std::max(rightmostClipPx, trackLeftInList + child->getRight());
+        }
+    }
+
+    const double seconds    = appEngine->getEdit().getLength().inSeconds();
+    const double pps        = timeline ? timeline->getPixelsPerSecond() : 100.0;
+    const int    widthByEdit = (int) juce::roundToInt(seconds * pps);
+    const int    parentW     = getParentComponent() ? getParentComponent()->getWidth() : getWidth();
+
+    const int bodyMinW = std::max({ widthByEdit, rightmostClipPx, parentW - headerWidth });
+    const int desiredW = headerWidth + std::max(bodyMinW, 800);
+    const int desiredH = std::max(contentH, getParentHeight());
+
+    if (desiredW != getWidth() || desiredH != getHeight())
+    {
+        setSize(desiredW, desiredH);
+    }
 }
 
 

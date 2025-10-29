@@ -64,6 +64,10 @@ namespace ui
         int handleWidthPx = 6;
         int hitSlopPx     = 8;
 
+        juce::Point<int> panStartView{};
+        int panStartX = 0;
+        bool panning = false;
+
         // helpers for time<->x in *this* timeline’s coord system
         double xToTimeSec (int x) const
         { return viewStart.inSeconds() + (double) x / pixelsPerSecond; }
