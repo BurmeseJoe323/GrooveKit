@@ -431,35 +431,45 @@ void TrackEditView::showOpenEditMenu () const
         });
 }
 
-void TrackEditView::showPianoRoll(te::MidiClip* clip)
+void TrackEditView::showPianoRoll (te::MidiClip* clip)
 {
-    if (clip == nullptr) return;
-
-    if (!pianoRoll)
-        pianoRoll = std::make_unique<PianoRollEditor>(*appEngine, clip);
+    if (pianoRoll == nullptr)
+    {
+        pianoRoll = std::make_unique<PianoRollEditor> (*appEngine, clip);
+        addAndMakeVisible (pianoRoll.get());
+    }
     else
-        pianoRoll->setTargetClip(clip);
+    {
+        pianoRoll->setClip (clip);
+    }
 
-    pianoRoll->onClose = [this] { hidePianoRoll(); };
-    pianoRoll->setVisible(true);
-    pianoRollVisible = true;
-
-    pianoRoll->grabKeyboardFocus();
-
+    pianoRollClip = clip;
+    pianoRoll->setVisible (true);
     resized();
-    pianoRoll->toFront(false);
 }
 
 void TrackEditView::hidePianoRoll ()
 {
     pianoRollVisible = false;
     if (pianoRoll) pianoRoll->setVisible(false);
+    pianoRollClip = nullptr;
     resized();
 }
 
 int TrackEditView::getPianoRollIndex () const
 {
-    return pianoRollTrackIndex;
+    if (pianoRollClip == nullptr || !appEngine)
+        return -1;
+
+    const int n = appEngine->getNumTracks();
+    for (int i = 0; i < n; ++i)
+    {
+        auto clips = appEngine->getMidiClipsFromTrack (i);
+        for (auto* mc : clips)
+            if (mc == pianoRollClip)
+                return i;
+    }
+    return -1;
 }
 
 void TrackEditView::labelTextChanged (juce::Label* labelThatHasChanged)

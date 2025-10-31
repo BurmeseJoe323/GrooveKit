@@ -43,6 +43,9 @@ public:
     PianoRollEditor (AppEngine& engine, int trackIndex);
     ~PianoRollEditor() override = default;
 
+    // Change the currently viewed/edited clip
+    void setClip (te::MidiClip* clip);
+
     /*
      * Called after the constructor to determine the size of the grid
      * Number of bars can be updated with updateBars
@@ -62,8 +65,8 @@ public:
     void setStyleSheet (GridStyleSheet styleSheet);
 
     void showControlPanel (bool state);
-    void setTargetClip (te::MidiClip* clip);
     bool keyPressed (const juce::KeyPress& key) override;
+
     GridControlPanel& getControlPanel();
 
     std::function<void()> onClose;

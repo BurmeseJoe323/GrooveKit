@@ -1,8 +1,6 @@
-#include "TrackListComponent.h"
 #include "DrumSamplerView/DrumSamplerView.h"
 #include "TrackEditView.h"
-
-#include "PopupWindows/PianoRollComponents/PianoRollMainComponent.h"
+#include "TrackListComponent.h"
 
 TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine) : appEngine (engine),
                                                                                     playhead (engine->getEdit(),
@@ -91,12 +89,9 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
         loopButton.setColour(juce::TextButton::buttonColourId, tr.looping ? loopColour : juce::Colours::darkgrey);
     };
 
-
-
     appEngine->onArmedTrackChanged = [this] {
         refreshTrackStates();
     };
-
 }
 
 TrackListComponent::~TrackListComponent() = default;
@@ -179,7 +174,6 @@ void TrackListComponent::resized()
     }
 }
 
-
 void TrackListComponent::addNewTrack (int engineIdx)
 {
     // Select random color from palette
@@ -239,20 +233,11 @@ void TrackListComponent::addNewTrack (int engineIdx)
 
     };
 
-    newTrack->onRequestOpenPianoRoll =
-    [this](int trackIdx, te::MidiClip* clip)
-    {
-        // however you show your editor window:
-        auto* pr = new juce::DocumentWindow("Piano Roll",
-                                            juce::Colours::black,
-                                            juce::DocumentWindow::allButtons);
-        auto* content = new PianoRollMainComponent(*appEngine, clip);
-        pr->setContentOwned(content, true);
-        pr->centreWithSize(900, 640);
-        pr->setResizable(true, true);
-        pr->setUsingNativeTitleBar(true);
-        pr->setVisible(true);
+    newTrack->onRequestOpenPianoRoll = [this] (te::MidiClip* clip) {
+        if (auto* parent = findParentComponentOfClass<TrackEditView>())
+            parent->showPianoRoll (clip);
     };
+
     newTrack->onRequestOpenDrumSampler = [this] (int uiIndex) {
         if (uiIndex < 0 || uiIndex >= tracks.size())
             return;

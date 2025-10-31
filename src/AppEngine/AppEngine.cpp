@@ -1,3 +1,4 @@
+// JUNIE
 #include "AppEngine.h"
 #include "../DrumSamplerEngine/DefaultSampleLibrary.h"
 #include <tracktion_engine/tracktion_engine.h>
@@ -153,6 +154,13 @@ void AppEngine::addMidiClipToTrack (int trackIndex) { midiEngine->addMidiClipToT
 te::MidiClip* AppEngine::getMidiClipFromTrack (int trackIndex)
 {
     return midiEngine->getMidiClipFromTrack (trackIndex);
+}
+
+std::vector<te::MidiClip*> AppEngine::getMidiClipsFromTrack (int trackIndex)
+{
+    if (! midiEngine)
+        return {};
+    return midiEngine->getMidiClipsFromTrack (trackIndex);
 }
 
 int AppEngine::getNumTracks() { return trackManager ? trackManager->getNumTracks() : 0; }
@@ -428,4 +436,87 @@ void AppEngine::closeInstrumentWindow()
     }
 }
 
+bool AppEngine::addMidiClipToTrackAt (const int trackIndex, const double startBeats)
+{
+    if (!midiEngine)
+        return false;
+    return midiEngine->addMidiClipToTrackAt (trackIndex, startBeats);
+}
 
+void AppEngine::copyMidiClip (te::MidiClip* clip)
+{
+    if (clip == nullptr || edit == nullptr)
+        return;
+
+    auto* cb = te::Clipboard::getInstance();
+    if (cb == nullptr)
+        return;
+
+    auto clips = std::make_unique<te::Clipboard::Clips>();
+    // trackOffset = 0 keeps it on the same track relative to the insert point
+    clips->addClip (0, clip->state.createCopy());
+
+    cb->setContent (std::move (clips));
+}
+
+bool AppEngine::pasteClipboardAt (const int trackIndex, const double startBeats)
+{
+    if (edit == nullptr)
+        return false;
+
+    const auto* cb = te::Clipboard::getInstance();
+    if (cb == nullptr || cb->isEmpty())
+        return false;
+
+    const auto audioTracks = te::getAudioTracks (*edit);
+    if (trackIndex < 0 || trackIndex >= audioTracks.size())
+        return false;
+
+    te::EditInsertPoint ip (*edit);
+
+    // Resolve target track and time from beats
+    const auto targetTrack = te::Track::Ptr (audioTracks[static_cast<size_t> (trackIndex)]);
+    const auto time = edit->tempoSequence.toTime (te::BeatPosition::fromBeats (startBeats));
+
+    ip.setNextInsertPoint (time, targetTrack);
+
+    if (const auto* content = cb->getContent())
+    {
+        // SelectionManager is optional; pass nullptr if you don’t want selection behavior
+        return content->pasteIntoEdit (*edit, ip, selectionManager.get());
+    }
+
+    return false;
+}
+
+bool AppEngine::duplicateMidiClip (te::MidiClip* clip)
+{
+    if (clip == nullptr || edit == nullptr)
+        return false;
+
+    // Compute destination start in beats – right after the source clip
+    const double startBeats = clip->getStartBeat().inBeats();
+    const double lenBeats   = clip->getLengthInBeats().inBeats();
+    const double destBeats  = startBeats + lenBeats;
+
+    // Determine the track index of the clip
+    if (const auto* track = clip->getTrack())
+    {
+        const int trackIndex = track->getIndexInEditTrackList();
+        copyMidiClip (clip);
+        return pasteClipboardAt (trackIndex, destBeats);
+    }
+
+    return false;
+}
+
+bool AppEngine::deleteMidiClip (te::MidiClip* clip)
+{
+    if (clip == nullptr || edit == nullptr)
+        return false;
+
+    // Remove the clip from its parent track. Tracktion will record this in the
+    // edit state and make it undoable through the UndoManager.
+    clip->removeFromParent();
+    return true;
+}

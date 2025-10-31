@@ -37,7 +37,6 @@ target_sources(app_ui
         PopupWindows/PianoRollComponents/GridControlPanel.cpp PopupWindows/PianoRollComponents/GridControlPanel.h
         PopupWindows/PianoRollComponents/GridStyleSheet.cpp PopupWindows/PianoRollComponents/GridStyleSheet.h
         PopupWindows/PianoRollComponents/NoteComponent.cpp PopupWindows/PianoRollComponents/NoteComponent.h
-        PopupWindows/PianoRollComponents/PianoRollMainComponent.cpp PopupWindows/PianoRollComponents/PianoRollMainComponent.h
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/UI/DrumSamplerView/DefaultSampleLibrary.cpp
         # Resources

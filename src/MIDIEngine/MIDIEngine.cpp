@@ -1,11 +1,12 @@
+// JUNIE
 #include "MIDIEngine.h"
 
 namespace te = tracktion;
 using namespace std::literals;
 using namespace te::literals;
 
-MIDIEngine::MIDIEngine(te::Edit& editRef)
-    : edit(editRef)
+MIDIEngine::MIDIEngine (te::Edit& editRef)
+    : edit (editRef)
 {
 }
 
@@ -65,34 +66,34 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
 
 juce::Array<te::MidiClip*> MIDIEngine::getMidiClipsFromTrack(int trackIndex)
 {
-    juce::Array<te::MidiClip*> out;
-    auto tracks = getAudioTracks(edit);
-    if (!juce::isPositiveAndBelow(trackIndex, tracks.size())) return out;
+    juce::Array<te::MidiClip*> midiClips;
 
-    auto* track = tracks.getUnchecked(trackIndex);
-    for (auto* c : track->getClips())
-        if (auto* mc = dynamic_cast<te::MidiClip*>(c)) out.add(mc);
-    return out;
+    auto audioTracks = getAudioTracks (edit);
+    if (trackIndex < 0 || trackIndex >= (int) audioTracks.size())
+        return midiClips;
+
+    const auto* track = te::getAudioTracks (edit)[static_cast<size_t> (trackIndex)];
+    auto& clips = track->getClips();
+
+    for (auto* c : clips)
+        if (c != nullptr && c->isMidi())
+            if (auto* mc = dynamic_cast<te::MidiClip*> (c))
+                midiClips.add (mc);
+
+    return midiClips;
 }
 
-
-te::MidiClip *MIDIEngine::getMidiClipFromTrack(int trackIndex) {
-    auto audioTracks = getAudioTracks(edit);
-    if (trackIndex < 0 || trackIndex >= audioTracks.size())
-        // Return nullptr if the trackIndex is invalid
+te::MidiClip* MIDIEngine::getMidiClipFromTrack (int trackIndex)
+{
+    auto audioTracks = getAudioTracks (edit);
+    if (trackIndex < 0 || trackIndex >= (int) audioTracks.size())
         return nullptr;
 
-    auto track = te::getAudioTracks(edit)[trackIndex];
-    auto clip = track->getClips().getFirst();
+    const auto* track = te::getAudioTracks (edit)[trackIndex];
+    auto* clip = track->getClips().getFirst();
 
-    if (clip == nullptr) {
+    if (clip == nullptr || !clip->isMidi())
         return nullptr;
-    } else if (!clip->isMidi()) {
-        return nullptr;
-    }
 
-    auto *midiClip = dynamic_cast<te::MidiClip*>(clip);
-    return midiClip;
+    return dynamic_cast<te::MidiClip*> (clip);
 }
-
-

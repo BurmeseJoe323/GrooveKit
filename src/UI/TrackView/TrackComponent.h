@@ -1,9 +1,9 @@
+// JUNIE
 #pragma once
 
 #include "../../AppEngine/AppEngine.h"
 #include "TrackClip.h"
 #include "TrackHeaderComponent.h"
-
 #include <juce_gui_basics/juce_gui_basics.h>
 
 /**
@@ -24,8 +24,14 @@ public:
     void setTrackIndex (int index);
     int getTrackIndex() const;
 
+    /**
+     * Retrieves updated clip models from app engine, clears old UIs, and draws the updated models.
+     */
+    void rebuildClipsFromEngine();
+
     void paint (juce::Graphics& g) override;
     void resized() override;
+    void mouseUp (const juce::MouseEvent& e) override; // handles right clicks
 
     void setPixelsPerSecond (const double pps)
     {
@@ -38,8 +44,6 @@ public:
         viewStart = t;
         resized();
     }
-    void rebuildFromEdit();
-
 
     std::function<void (int)> onRequestDeleteTrack;
     std::function<void (int trackIndex, te::MidiClip* clip)> onRequestOpenPianoRoll;
@@ -49,14 +53,14 @@ private:
     std::shared_ptr<AppEngine> appEngine;
     std::shared_ptr<MIDIEngine> midiEngine;
     juce::Colour trackColor;
-    int trackIndex;
+    int trackIndex = -1;
     int numClips = 0;
+
     juce::OwnedArray<TrackClip> clipUIs;
 
-    TrackClip trackClip;
-    TrackHeaderComponent trackHeader;
-
-    double pixelsPerSecond = 100.0;
+    // Visual scaling
+    float pixelsPerBeat = 100.0f;
+    double pixelsPerSecond = 100.0; // currently unused for clip layout
     te::TimePosition viewStart = 0s;
 
     static int timeToX (const te::TimePosition t, const te::TimePosition view0, const double pps)

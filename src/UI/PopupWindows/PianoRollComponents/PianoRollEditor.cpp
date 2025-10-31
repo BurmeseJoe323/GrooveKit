@@ -119,25 +119,11 @@ void PianoRollEditor::resized()
     keyboard.setBounds (0, 0, keyboardView.getWidth(), noteGrid.getHeight());
 
     controlPanel.setBounds (5, gridView.getBottom() + 5, getWidth() - 10, 80);
-
-
 }
 
 void PianoRollEditor::setStyleSheet (GridStyleSheet style)
 {
     gridStyleSheet = style;
-}
-
-void PianoRollEditor::setTargetClip (te::MidiClip* clip)
-{
-    if (clip == nullptr) return;
-
-    // hand off to the grid to swap its data model
-    noteGrid.setActiveClip(clip);
-
-    // If your timeline width depends on clip length, you can also refresh it here.
-    // For now, a repaint is enough; the grid will trigger a resized() on us.
-    repaint();
 }
 
 void PianoRollEditor::setup (const int bars, const int pixelsPerBar, const int noteHeight)
@@ -216,6 +202,7 @@ GridControlPanel& PianoRollEditor::getControlPanel()
 {
     return controlPanel;
 }
+
 bool PianoRollEditor::keyPressed (const juce::KeyPress& k)
 {
     if (k == juce::KeyPress(juce::KeyPress::escapeKey))
@@ -224,4 +211,16 @@ bool PianoRollEditor::keyPressed (const juce::KeyPress& k)
         return true;
     }
     return false;
+}
+
+void PianoRollEditor::setClip (te::MidiClip* c)
+{
+    if (c == nullptr) return;
+
+    // Hand off to the note grid to swap its data model.
+    noteGrid.setClip(c);
+
+    // If your timeline width depends on clip length, you can also refresh it here.
+    // For now, a repaint is enough; the grid will trigger a resized() on us.
+    repaint();
 }
