@@ -149,14 +149,16 @@ bool AppEngine::isPlaying() const { return audioEngine->isPlaying(); }
 
 void AppEngine::deleteMidiTrack (int index) { trackManager->deleteTrack (index); }
 
-void AppEngine::addMidiClipToTrack (int trackIndex) { midiEngine->addMidiClipToTrack (trackIndex); }
+bool AppEngine::addMidiClipToTrack (int trackIndex) { midiEngine->addMidiClipToTrack (trackIndex); }
 
 te::MidiClip* AppEngine::getMidiClipFromTrack (int trackIndex)
 {
+    if (! midiEngine)
+        return nullptr;
     return midiEngine->getMidiClipFromTrack (trackIndex);
 }
 
-std::vector<te::MidiClip*> AppEngine::getMidiClipsFromTrack (int trackIndex)
+juce::Array<te::MidiClip*> AppEngine::getMidiClipsFromTrack (int trackIndex)
 {
     if (! midiEngine)
         return {};
@@ -436,12 +438,12 @@ void AppEngine::closeInstrumentWindow()
     }
 }
 
-bool AppEngine::addMidiClipToTrackAt (const int trackIndex, const double startBeats)
-{
-    if (!midiEngine)
-        return false;
-    return midiEngine->addMidiClipToTrackAt (trackIndex, startBeats);
-}
+// bool AppEngine::addMidiClipToTrackAt (const int trackIndex, const double startBeats)
+// {
+//     if (!midiEngine)
+//         return false;
+//     return midiEngine->addMidiClipToTrackAt (trackIndex, startBeats);
+// }
 
 void AppEngine::copyMidiClip (te::MidiClip* clip)
 {
