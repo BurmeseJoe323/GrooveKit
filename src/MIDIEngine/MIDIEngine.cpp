@@ -10,34 +10,36 @@ MIDIEngine::MIDIEngine (te::Edit& editRef)
 {
 }
 
-void MIDIEngine::addMidiClipToTrackAt(int trackIndex,
+bool MIDIEngine::addMidiClipToTrackAt(int trackIndex,
                                       te::TimePosition start,
                                       te::BeatDuration length)
 {
     auto tracks = te::getAudioTracks(edit);
-    if (!juce::isPositiveAndBelow(trackIndex, tracks.size())) return;
+    if (!juce::isPositiveAndBelow(trackIndex, tracks.size())) return false;
 
     auto* track = tracks.getUnchecked(trackIndex);
 
     const auto startTime = start;
-
     const auto startBeat = edit.tempoSequence.toBeats(startTime);
     const auto endBeat   = startBeat + length;
     const auto endTime   = edit.tempoSequence.toTime(endBeat);
 
     te::TimeRange range { startTime, endTime };
 
-    if (auto* clip = track->insertNewClip(te::TrackItem::Type::midi, "MIDI", range, nullptr))
-        if (auto* mc = dynamic_cast<te::MidiClip*>(clip))
-            DBG("Added MIDI clip @" << startTime.inSeconds()
-                                    << "s len(beats)=" << length.inBeats());
+    if (track->insertNewClip(te::TrackItem::Type::midi, "MIDI", range, nullptr))
+    {
+        DBG("Added MIDI clip @" << startTime.inSeconds()
+                                << "s len(beats)=" << length.inBeats());
+        return true;
+    }
+    
+    return false;
 }
 
-
-void MIDIEngine::addMidiClipToTrack(int trackIndex)
+bool MIDIEngine::addMidiClipToTrack(int trackIndex)
 {
     auto tracks = getAudioTracks(edit);
-    if (!juce::isPositiveAndBelow(trackIndex, tracks.size())) return;
+    if (!juce::isPositiveAndBelow(trackIndex, tracks.size())) return false;
 
     auto* track = tracks.getUnchecked(trackIndex);
     auto clips  = track->getClips();
@@ -57,11 +59,10 @@ void MIDIEngine::addMidiClipToTrack(int trackIndex)
 
         nextPos = te::TimePosition::fromSeconds(juce::jmax(lastEnd, playhead.inSeconds()));
     }
-
-    addMidiClipToTrackAt(trackIndex, nextPos, defLenBeats);
-
-    edit.getTransport().ensureContextAllocated();
     // don’t force restart every time; leave transport state alone
+    edit.getTransport().ensureContextAllocated();
+    
+    return addMidiClipToTrackAt(trackIndex, nextPos, defLenBeats);
 }
 
 juce::Array<te::MidiClip*> MIDIEngine::getMidiClipsFromTrack(int trackIndex)
