@@ -1,5 +1,6 @@
 // JUNIE
 #include "TrackClip.h"
+#include "TrackEditView.h"
 
 TrackClip::TrackClip(te::MidiClip* c, float pixelsPerBeat) : clip(c), pixelsPerBeat(pixelsPerBeat)
 {
@@ -65,20 +66,15 @@ void TrackClip::mouseUp (const juce::MouseEvent& e)
 {
     // Right click: delegate context menu handling to the parent TrackComponent
     if (e.mods.isPopupMenu())
-    {
-        // Determine paste position in beats relative to this clip
-        const double clipStartBeats = clip ? clip->getStartBeat().inBeats() : 0.0;
-        const double localXBeats    = static_cast<double> (e.getPosition().x) / juce::jmax (1.0f, pixelsPerBeat);
-        const double pasteBeats     = clipStartBeats + juce::jmax (0.0, localXBeats);
-
         if (onContextMenuRequested)
-            onContextMenuRequested (clip, pasteBeats);
-        return;
-    }
+            onContextMenuRequested (clip);
+}
 
-    // Left-click should open piano roll
-    if (onClicked)
-        onClicked(clip);
+void TrackClip::mouseDoubleClick (const juce::MouseEvent& e)
+{
+    if (e.mods.isLeftButtonDown())
+        if (e.mods.isLeftButtonDown() && onClicked)
+            onClicked (clip);
 }
 
 void TrackClip::setColor (juce::Colour newColor)
