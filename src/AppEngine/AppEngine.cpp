@@ -511,12 +511,25 @@ bool AppEngine::duplicateMidiClip (te::MidiClip* clip)
     const double lenBeats   = clip->getLengthInBeats().inBeats();
     const double destBeats  = startBeats + lenBeats;
 
-    // Determine the track index of the clip
-    if (const auto* track = clip->getTrack())
+    // Determine the audio track index of the clip (must match getAudioTracks order)
+    if (auto* clipTrack = dynamic_cast<te::AudioTrack*> (clip->getTrack()))
     {
-        const int trackIndex = track->getIndexInEditTrackList();
-        copyMidiClip (clip);
-        return pasteClipboardAt (trackIndex, destBeats);
+        const auto audioTracks = te::getAudioTracks (*edit);
+        int audioTrackIndex = -1;
+        for (int i = 0; i < audioTracks.size(); ++i)
+        {
+            if (audioTracks[(size_t) i] == clipTrack)
+            {
+                audioTrackIndex = i;
+                break;
+            }
+        }
+
+        if (audioTrackIndex >= 0)
+        {
+            copyMidiClip (clip);
+            return pasteClipboardAt (audioTrackIndex, destBeats);
+        }
     }
 
     return false;
