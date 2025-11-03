@@ -27,7 +27,7 @@ public:
      * @param length the length of the clip.
      * @return true if successful; false otherwise.
      */
-    bool addMidiClipToTrackAt(int trackIndex, te::TimePosition start, te::BeatDuration length);
+    bool addMidiClipToTrackAt (int trackIndex, te::TimePosition start, te::BeatDuration length);
 
     /**
      * Returns the first MidiClip* from a track in the edit instance (or nullptr if none) (Junie).

@@ -14,35 +14,37 @@ bool MIDIEngine::addMidiClipToTrackAt(int trackIndex,
                                       te::TimePosition start,
                                       te::BeatDuration length)
 {
-    auto tracks = te::getAudioTracks(edit);
-    if (!juce::isPositiveAndBelow(trackIndex, tracks.size())) return false;
+    auto tracks = te::getAudioTracks (edit);
+    if (!juce::isPositiveAndBelow (trackIndex, tracks.size()))
+        return false;
 
-    auto* track = tracks.getUnchecked(trackIndex);
+    auto* track = tracks.getUnchecked (trackIndex);
 
     const auto startTime = start;
-    const auto startBeat = edit.tempoSequence.toBeats(startTime);
-    const auto endBeat   = startBeat + length;
-    const auto endTime   = edit.tempoSequence.toTime(endBeat);
+    const auto startBeat = edit.tempoSequence.toBeats (startTime);
+    const auto endBeat = startBeat + length;
+    const auto endTime = edit.tempoSequence.toTime (endBeat);
 
     te::TimeRange range { startTime, endTime };
 
-    if (track->insertNewClip(te::TrackItem::Type::midi, "MIDI", range, nullptr))
+    if (track->insertNewClip (te::TrackItem::Type::midi, "MIDI", range, nullptr))
     {
-        DBG("Added MIDI clip @" << startTime.inSeconds()
-                                << "s len(beats)=" << length.inBeats());
+        DBG ("Added MIDI clip @" << startTime.inSeconds()
+                                 << "s len(beats)=" << length.inBeats());
         return true;
     }
-    
+
     return false;
 }
 
-bool MIDIEngine::addMidiClipToTrack(int trackIndex)
+bool MIDIEngine::addMidiClipToTrack (int trackIndex)
 {
-    auto tracks = getAudioTracks(edit);
-    if (!juce::isPositiveAndBelow(trackIndex, tracks.size())) return false;
+    auto tracks = getAudioTracks (edit);
+    if (!juce::isPositiveAndBelow (trackIndex, tracks.size()))
+        return false;
 
-    auto* track = tracks.getUnchecked(trackIndex);
-    auto clips  = track->getClips();
+    auto* track = tracks.getUnchecked (trackIndex);
+    auto clips = track->getClips();
 
     // default length = 8 beats
     const auto defLenBeats = 8_bd;
@@ -55,17 +57,17 @@ bool MIDIEngine::addMidiClipToTrack(int trackIndex)
     {
         double lastEnd = 0.0;
         for (auto* c : clips)
-            lastEnd = juce::jmax(lastEnd, c->getPosition().time.getEnd().inSeconds());
+            lastEnd = juce::jmax (lastEnd, c->getPosition().time.getEnd().inSeconds());
 
-        nextPos = te::TimePosition::fromSeconds(juce::jmax(lastEnd, playhead.inSeconds()));
+        nextPos = te::TimePosition::fromSeconds (juce::jmax (lastEnd, playhead.inSeconds()));
     }
     // don’t force restart every time; leave transport state alone
     edit.getTransport().ensureContextAllocated();
-    
-    return addMidiClipToTrackAt(trackIndex, nextPos, defLenBeats);
+
+    return addMidiClipToTrackAt (trackIndex, nextPos, defLenBeats);
 }
 
-juce::Array<te::MidiClip*> MIDIEngine::getMidiClipsFromTrack(int trackIndex)
+juce::Array<te::MidiClip*> MIDIEngine::getMidiClipsFromTrack (int trackIndex)
 {
     juce::Array<te::MidiClip*> midiClips;
 
