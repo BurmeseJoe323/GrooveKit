@@ -450,15 +450,25 @@ void AppEngine::copyMidiClip (te::MidiClip* clip)
     if (clip == nullptr || edit == nullptr)
         return;
 
-    auto* cb = te::Clipboard::getInstance();
-    if (cb == nullptr)
-        return;
+    if (auto* cb = te::Clipboard::getInstance())
+    {
+        // Ensure the clip's runtime state is flushed to its ValueTree before copying
+        clip->flushStateToValueTree();
 
-    auto clips = std::make_unique<te::Clipboard::Clips>();
-    // trackOffset = 0 keeps it on the same track relative to the insert point
-    clips->addClip (0, clip->state.createCopy());
+        // Make a copy of the state and normalise timing so paste uses the insert point
+        auto state = clip->state.createCopy();
 
-    cb->setContent (std::move (clips));
+        // Start should be relative to the paste insert point (0 seconds),
+        // and we preserve only the clip's internal content offset.
+        state.setProperty (te::IDs::start, 0.0, nullptr);
+        state.setProperty (te::IDs::offset, clip->getPosition().getOffset().inSeconds(), nullptr);
+
+        auto clips = std::make_unique<te::Clipboard::Clips>();
+        // trackOffset = 0 keeps it on the same track relative to the insert point
+        clips->addClip (0, state);
+
+        cb->setContent (std::move (clips));
+    }
 }
 
 bool AppEngine::pasteClipboardAt (const int trackIndex, const double startBeats)
