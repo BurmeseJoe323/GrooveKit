@@ -50,7 +50,7 @@ void TrackComponent::paint (juce::Graphics& g)
 
 void TrackComponent::resized()
 {
-    const auto bounds = getLocalBounds().reduced(5);
+    const auto bounds = getLocalBounds().reduced (5);
 
     if (!appEngine)
         return;
@@ -58,12 +58,13 @@ void TrackComponent::resized()
     // Access the timeline scaling info through the parent TrackListComponent
     auto* tl = findParentComponentOfClass<TrackListComponent>();
     const double pixelsPerSecond = tl ? tl->getPixelsPerSecond() : 100.0;
-    const double viewStartSec    = tl ? tl->getViewStart().inSeconds() : 0.0;
+    const double viewStartSec = tl ? tl->getViewStart().inSeconds() : 0.0;
 
     for (auto* ui : clipUIs)
     {
         auto* midiClip = ui->getMidiClip();
-        if (!midiClip) continue;
+        if (!midiClip)
+            continue;
 
         const auto posRange = midiClip->getPosition().time;
         te::TimeRange drawRange = posRange;
@@ -71,16 +72,16 @@ void TrackComponent::resized()
         if (midiClip->isLooping())
         {
             const auto loopRange = midiClip->getLoopRange();
-            drawRange = te::TimeRange(posRange.getStart(), posRange.getStart() + loopRange.getLength());
+            drawRange = te::TimeRange (posRange.getStart(), posRange.getStart() + loopRange.getLength());
         }
 
         const double clipStart = drawRange.getStart().inSeconds();
-        const double clipLen   = drawRange.getLength().inSeconds();
+        const double clipLen = drawRange.getLength().inSeconds();
 
-        const int x = (int) juce::roundToIntAccurate((clipStart - viewStartSec) * pixelsPerSecond);
-        const int w = (int) juce::roundToIntAccurate(clipLen * pixelsPerSecond);
+        const int x = (int) juce::roundToIntAccurate ((clipStart - viewStartSec) * pixelsPerSecond);
+        const int w = (int) juce::roundToIntAccurate (clipLen * pixelsPerSecond);
 
-        ui->setBounds(x, bounds.getY(), juce::jmax(w, 20), bounds.getHeight());
+        ui->setBounds (x, bounds.getY(), juce::jmax (w, 20), bounds.getHeight());
     }
 }
 
@@ -89,20 +90,19 @@ void TrackComponent::onInstrumentClicked()
     if (!appEngine)
         return;
 
-    if (appEngine->isDrumTrack(trackIndex))
+    if (appEngine->isDrumTrack (trackIndex))
     {
         if (onRequestOpenDrumSampler)
-            onRequestOpenDrumSampler(trackIndex);
+            onRequestOpenDrumSampler (trackIndex);
         return;
     }
 
-    appEngine->openInstrumentEditor(trackIndex);
+    appEngine->openInstrumentEditor (trackIndex);
 }
 
 void TrackComponent::onSettingsClicked()
 {
     juce::PopupMenu m;
-    const bool isDrumTrack = appEngine->isDrumTrack (trackIndex);
     m.addItem (1, "Add MIDI Clip");
     m.addItem (2, "Paste at End");
     m.addSeparator();
@@ -178,7 +178,7 @@ void TrackComponent::onSoloToggled (const bool isSolo)
 void TrackComponent::onRecordArmToggled (bool isArmed)
 {
     if (auto* p = findParentComponentOfClass<TrackListComponent>())
-        p->armTrack(trackIndex, isArmed);
+        p->armTrack (trackIndex, isArmed);
 }
 
 void TrackComponent::rebuildClipsFromEngine()
@@ -186,7 +186,7 @@ void TrackComponent::rebuildClipsFromEngine()
     // Remove existing UI clips
     clipUIs.clear();
 
-    if (! appEngine)
+    if (!appEngine)
         return;
 
     auto clips = appEngine->getMidiClipsFromTrack (trackIndex);
@@ -196,39 +196,37 @@ void TrackComponent::rebuildClipsFromEngine()
         ui->setColor (trackColor);
 
         // Existing open piano roll callback
-        ui->onClicked = [this] (te::MidiClip* c)
-        {
+        ui->onClicked = [this] (te::MidiClip* c) {
             if (onRequestOpenPianoRoll)
-                onRequestOpenPianoRoll (trackIndex, c);
+                onRequestOpenPianoRoll (c);
         };
 
         // New: clipboard callbacks
-        ui->onCopyRequested = [this] (te::MidiClip* c)
-        {
-            if (appEngine) appEngine->copyMidiClip (c);
+        ui->onCopyRequested = [this] (te::MidiClip* c) {
+            if (appEngine)
+                appEngine->copyMidiClip (c);
         };
 
-        ui->onDuplicateRequested = [this] (te::MidiClip* c)
-        {
-            if (appEngine) {
+        ui->onDuplicateRequested = [this] (te::MidiClip* c) {
+            if (appEngine)
+            {
                 appEngine->duplicateMidiClip (c);
                 rebuildClipsFromEngine();
                 resized();
             }
         };
 
-        ui->onPasteRequested = [this] (te::MidiClip* c, double pasteBeats)
-        {
+        ui->onPasteRequested = [this] (te::MidiClip* c, double pasteBeats) {
             juce::ignoreUnused (c); // track determination is based on this component’s trackIndex
-            if (appEngine) {
+            if (appEngine)
+            {
                 appEngine->pasteClipboardAt (trackIndex, pasteBeats);
                 rebuildClipsFromEngine();
                 resized();
             }
         };
 
-        ui->onDeleteRequested = [this] (te::MidiClip* c)
-        {
+        ui->onDeleteRequested = [this] (te::MidiClip* c) {
             if (auto* parent = findParentComponentOfClass<TrackEditView>())
             {
                 // If the piano roll is currently showing a clip from this track,
@@ -237,7 +235,8 @@ void TrackComponent::rebuildClipsFromEngine()
                     parent->hidePianoRoll();
             }
 
-            if (appEngine) {
+            if (appEngine)
+            {
                 appEngine->deleteMidiClip (c);
                 rebuildClipsFromEngine();
                 resized();
@@ -245,8 +244,7 @@ void TrackComponent::rebuildClipsFromEngine()
         };
 
         // Right-click context menu is owned by TrackComponent now
-        ui->onContextMenuRequested = [this] (te::MidiClip* c, double pasteBeats)
-        {
+        ui->onContextMenuRequested = [this] (te::MidiClip* c) {
             if (c == nullptr)
                 return;
 
@@ -256,8 +254,7 @@ void TrackComponent::rebuildClipsFromEngine()
             m.addSeparator();
             m.addItem (3, "Delete");
 
-            m.showMenuAsync ({}, [safeThis = juce::Component::SafePointer<TrackComponent>(this), clip = c] (int result)
-            {
+            m.showMenuAsync ({}, [safeThis = juce::Component::SafePointer<TrackComponent> (this), clip = c] (int result) {
                 if (safeThis == nullptr || safeThis->appEngine == nullptr)
                     return;
 
@@ -302,24 +299,23 @@ void TrackComponent::rebuildClipsFromEngine()
 
         for (auto* ui : clipUIs)
             if (ui)
-                rightmost = std::max(rightmost, trackLeftInList + ui->getRight());
+                rightmost = std::max (rightmost, trackLeftInList + ui->getRight());
 
         // Account for the header column (same value used in TrackListComponent)
         constexpr int headerWidth = 140;
-        const int requiredWidth = headerWidth + std::max(rightmost, getParentWidth() - headerWidth);
+        const int requiredWidth = headerWidth + std::max (rightmost, getParentWidth() - headerWidth);
 
         if (requiredWidth > list->getWidth())
-            list->setSize(requiredWidth + 40 /* small pad */, list->getHeight());
+            list->setSize (requiredWidth + 40 /* small pad */, list->getHeight());
     }
 
     resized(); // redraw
 }
 
-
 void TrackComponent::mouseUp (const juce::MouseEvent& e)
 {
     // Only handle background right-clicks on the TrackComponent itself
-    if (! e.mods.isPopupMenu())
+    if (!e.mods.isPopupMenu())
         return;
 
     // If the original component was a child (e.g., a TrackClip), let it handle its own menu
@@ -335,8 +331,7 @@ void TrackComponent::mouseUp (const juce::MouseEvent& e)
     m.addItem (1, "Paste Here");
     m.addItem (2, "Add MIDI Clip Here");
 
-    m.showMenuAsync ({}, [safeThis = juce::Component::SafePointer<TrackComponent>(this), beatPos] (int result)
-    {
+    m.showMenuAsync ({}, [safeThis = juce::Component::SafePointer<TrackComponent> (this), beatPos] (int result) {
         if (safeThis == nullptr || safeThis->appEngine == nullptr)
             return;
 
@@ -353,14 +348,15 @@ void TrackComponent::mouseUp (const juce::MouseEvent& e)
             }
             case 2: // Add MIDI Clip Here
             {
-                if (safeThis->appEngine->addMidiClipToTrackAt (safeThis->trackIndex, beatPos))
+                // if (safeThis->appEngine->addMidiClipToTrackAt (safeThis->trackIndex))
                 {
                     safeThis->rebuildClipsFromEngine();
                     safeThis->resized();
                 }
                 break;
             }
-            default: break;
+            default:
+                break;
         }
     });
 }
