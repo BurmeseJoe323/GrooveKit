@@ -3,14 +3,14 @@
 
 #include "../AudioEngine/AudioEngine.h"
 #include "../MIDIEngine/MIDIEngine.h"
+#include "../UI/Plugins/FourOsc/FourOscGUI.h"
 #include "../UI/TrackView/TrackHeaderComponent.h"
 #include "TrackManager.h"
 #include <tracktion_engine/tracktion_engine.h>
-#include "../UI/Plugins/FourOsc/FourOscGUI.h"
 
 namespace IDs
 {
-#define DECLARE_ID(name)  const juce::Identifier name (#name);
+#define DECLARE_ID(name) const juce::Identifier name (#name);
     DECLARE_ID (EDITVIEWSTATE)
     DECLARE_ID (showMasterTrack)
     DECLARE_ID (showGlobalTrack)
@@ -25,7 +25,7 @@ namespace IDs
     DECLARE_ID (showHeaders)
     DECLARE_ID (showFooters)
     DECLARE_ID (showArranger)
-    #undef DECLARE_ID
+#undef DECLARE_ID
 }
 
 namespace te = tracktion;
@@ -79,14 +79,13 @@ public:
     te::SelectionManager& selectionManager;
 
     juce::CachedValue<bool> showMasterTrack, showGlobalTrack, showMarkerTrack, showChordTrack, showArrangerTrack,
-                      drawWaveforms, showHeaders, showFooters, showMidiDevices, showWaveDevices;
+        drawWaveforms, showHeaders, showFooters, showMidiDevices, showWaveDevices;
 
     juce::CachedValue<te::TimePosition> viewX1, viewX2;
     juce::CachedValue<double> viewY;
 
     juce::ValueTree state;
 };
-
 
 class AppEngine : private juce::Timer
 {
@@ -101,31 +100,31 @@ public:
 
     int addMidiTrack();
     int getNumTracks();
-    void deleteMidiTrack(int index);
-    void addMidiClipToTrack(int trackIndex);
+    void deleteMidiTrack (int index);
+    void addMidiClipToTrack (int trackIndex);
     // Add an empty MIDI clip at a specific beat on the given track (Junie)
-    bool addMidiClipToTrackAt(int trackIndex, double startBeats);
+    // bool addMidiClipToTrackAt(int trackIndex, double startBeats);
 
-    bool isDrumTrack(int index) const;
+    bool isDrumTrack (int index) const;
 
-    DrumSamplerEngineAdapter* getDrumAdapter(int index);
+    DrumSamplerEngineAdapter* getDrumAdapter (int index);
 
     int addDrumTrack();
     int addInstrumentTrack();
 
-    te::MidiClip *getMidiClipFromTrack(int trackIndex);
-    std::vector<te::MidiClip*> getMidiClipsFromTrack(int trackIndex);
+    te::MidiClip* getMidiClipFromTrack (int trackIndex);
+    juce::Array<te::MidiClip*> getMidiClipsFromTrack (int trackIndex);
 
-    void setTrackMuted(int index, bool mute) { trackManager->setTrackMuted(index, mute); }
-    bool isTrackMuted(int index) const { return trackManager->isTrackMuted(index); }
+    void setTrackMuted (int index, bool mute) { trackManager->setTrackMuted (index, mute); }
+    bool isTrackMuted (int index) const { return trackManager->isTrackMuted (index); }
 
-    void soloTrack(int index);
-    void setTrackSoloed(int index, bool solo);
-    bool isTrackSoloed(int index) const;
+    void soloTrack (int index);
+    void setTrackSoloed (int index, bool solo);
+    bool isTrackSoloed (int index) const;
     bool anyTrackSoloed() const;
 
     double getBpm() const;
-    void setBpm(double newBpm);
+    void setBpm (double newBpm);
 
     TrackManager& getTrackManager()       { return *trackManager; }
     TrackManager* getTrackManagerPtr()    { return trackManager.get(); }
@@ -135,7 +134,7 @@ public:
     juce::AudioProcessorValueTreeState& getAPVTS();
 
     EditViewState& getEditViewState();
-    te::Edit &getEdit();
+    te::Edit& getEdit();
 
     bool setOutputDevice (const juce::String& name)        { return audioEngine->setOutputDeviceByName (name); }
     bool setDefaultOutputDevice()                          { return audioEngine->setDefaultOutputDevice(); }
@@ -203,12 +202,12 @@ private:
 
     bool writeEditToFile (const juce::File& file);
     void markSaved();
-    int  currentUndoTxn() const;
+    int currentUndoTxn() const;
 
     juce::File getAutosaveFile() const;
     void timerCallback() override;
 
     int selectedTrackIndex = -1;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AppEngine)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AppEngine)
 };
