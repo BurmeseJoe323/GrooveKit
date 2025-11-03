@@ -103,7 +103,8 @@ public:
     void deleteMidiTrack (int index);
     bool addMidiClipToTrack (int trackIndex);
     // Add an empty MIDI clip at a specific beat on the given track (Junie)
-    // bool addMidiClipToTrackAt(int trackIndex, double startBeats);
+    bool addMidiClipToTrackAt (int trackIndex, te::TimePosition start, te::BeatDuration length);
+
 
     bool isDrumTrack (int index) const;
 

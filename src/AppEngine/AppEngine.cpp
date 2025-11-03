@@ -438,12 +438,12 @@ void AppEngine::closeInstrumentWindow()
     }
 }
 
-// bool AppEngine::addMidiClipToTrackAt (const int trackIndex, const double startBeats)
-// {
-//     if (!midiEngine)
-//         return false;
-//     return midiEngine->addMidiClipToTrackAt (trackIndex, startBeats);
-// }
+bool AppEngine::addMidiClipToTrackAt(int trackIndex, te::TimePosition start, te::BeatDuration length)
+{
+    if (!midiEngine)
+        return false;
+    return midiEngine->addMidiClipToTrackAt (trackIndex, start, length);
+}
 
 void AppEngine::copyMidiClip (te::MidiClip* clip)
 {
