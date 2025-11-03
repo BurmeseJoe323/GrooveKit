@@ -315,23 +315,27 @@ void TrackComponent::rebuildClipsFromEngine()
 void TrackComponent::mouseUp (const juce::MouseEvent& e)
 {
     // Only handle background right-clicks on the TrackComponent itself
-    if (!e.mods.isPopupMenu())
-        return;
-
     // If the original component was a child (e.g., a TrackClip), let it handle its own menu
-    if (e.originalComponent != this)
+    if (!e.mods.isPopupMenu() || e.originalComponent != this)
         return;
 
-    // Compute beat position from mouse X within the inner bounds used for layout
+    // Compute start time from X using the same mapping as UI layout
     const auto inner = getLocalBounds().reduced (5);
     const int localX = juce::jmax (0, e.getPosition().x - inner.getX());
-    const double beatPos = static_cast<double> (localX) / juce::jmax (1.0f, pixelsPerBeat);
+
+    auto* tl = findParentComponentOfClass<TrackListComponent>();
+    const double pixelsPerSecond = tl ? tl->getPixelsPerSecond() : 100.0;
+    const double viewStartSec    = tl ? tl->getViewStart().inSeconds() : 0.0;
+
+    const double startSec = viewStartSec + (localX / juce::jmax (1.0, pixelsPerSecond));
+    const te::TimePosition startPos = te::TimePosition::fromSeconds (startSec);
 
     juce::PopupMenu m;
     m.addItem (1, "Paste Here");
     m.addItem (2, "Add MIDI Clip Here");
 
-    m.showMenuAsync ({}, [safeThis = juce::Component::SafePointer<TrackComponent> (this), beatPos] (int result) {
+    m.showMenuAsync ({}, [safeThis = juce::Component::SafePointer<TrackComponent> (this), startPos] (int result)
+    {
         if (safeThis == nullptr || safeThis->appEngine == nullptr)
             return;
 
@@ -339,7 +343,10 @@ void TrackComponent::mouseUp (const juce::MouseEvent& e)
         {
             case 1: // Paste Here
             {
-                if (safeThis->appEngine->pasteClipboardAt (safeThis->trackIndex, beatPos))
+                // Convert click time (seconds) to beats before pasting
+                const double pasteBeats =
+                    safeThis->appEngine->getEdit().tempoSequence.toBeats (startPos).inBeats();
+                if (safeThis->appEngine->pasteClipboardAt (safeThis->trackIndex, pasteBeats))
                 {
                     safeThis->rebuildClipsFromEngine();
                     safeThis->resized();
@@ -348,7 +355,8 @@ void TrackComponent::mouseUp (const juce::MouseEvent& e)
             }
             case 2: // Add MIDI Clip Here
             {
-                // if (safeThis->appEngine->addMidiClipToTrackAt (safeThis->trackIndex))
+                const auto length = te::BeatDuration::fromBeats (8.0);
+                if (safeThis->appEngine->addMidiClipToTrackAt (safeThis->trackIndex, startPos, length))
                 {
                     safeThis->rebuildClipsFromEngine();
                     safeThis->resized();
