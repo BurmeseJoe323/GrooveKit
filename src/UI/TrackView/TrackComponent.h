@@ -46,7 +46,7 @@ public:
     }
 
     std::function<void (int)> onRequestDeleteTrack;
-    std::function<void (int trackIndex, te::MidiClip* clip)> onRequestOpenPianoRoll;
+    std::function<void (te::MidiClip* clip)> onRequestOpenPianoRoll;
     std::function<void (int)> onRequestOpenDrumSampler;
 
 private:
