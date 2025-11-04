@@ -242,13 +242,51 @@ te::AutomatableParameter* MorphSynthPlugin::getParameterFromID (const juce::Stri
 
 juce::ValueTree MorphSynthPlugin::saveToValueTree()
 {
-    // Parameters are handled by Tracktion; keep a node for future custom data.
-    return juce::ValueTree ("MorphSynth");
+    // Write into a child of the existing plugin.state node that TE serializes
+    auto v = state.getOrCreateChildWithName ("MORPH_SYNTH", nullptr);
+    v.removeAllProperties (nullptr); // avoid stale values
+
+    te::AutomatableParameter* params[] = {
+        oscAType, oscBType, morph, pulseWidth,
+        filterType, cutoff, resonance,
+        aA, dA, sA, rA,
+        aF, dF, sF, rF, fEnvAmt,
+        semi, fine, glide,
+        lfoTarget, lfoRate, lfoDepth,
+        keyTrack,
+        gain
+    };
+
+    for (auto* p : params)
+        if (p != nullptr)
+            v.setProperty (p->paramID, p->getCurrentValue(), nullptr);
+
+    return v; // returning child for convenience
 }
 
-void MorphSynthPlugin::restoreFromValueTree (const juce::ValueTree& v)
+void MorphSynthPlugin::restoreFromValueTree (const juce::ValueTree& /*unused*/)
 {
-    juce::ignoreUnused (v);
+    // Read back from the child inside plugin.state
+    auto v = state.getChildWithName ("MORPH_SYNTH");
+    if (! v.isValid())
+        return;
+
+    te::AutomatableParameter* params[] = {
+        oscAType, oscBType, morph, pulseWidth,
+        filterType, cutoff, resonance,
+        aA, dA, sA, rA,
+        aF, dF, sF, rF, fEnvAmt,
+        semi, fine, glide,
+        lfoTarget, lfoRate, lfoDepth,
+        keyTrack,
+        gain
+    };
+
+    for (auto* p : params)
+        if (p != nullptr && v.hasProperty (p->paramID))
+            p->setParameter ((float) v.getProperty (p->paramID), juce::dontSendNotification);
+    // If your AP expects absolute values, setParameter is fine.
+    // If it expects normalised, use setCurrentValue instead.
 }
 
 //==============================================================================

@@ -39,10 +39,15 @@ public:
         centreWithSize (640, 800);
         setResizable (true, true);
         setVisible (true);
-        setWantsKeyboardFocus(true);
-        if (auto* cc = getContentComponent())
-            cc->grabKeyboardFocus();
-    }
+
+        juce::MessageManager::callAsync(
+        [safe = juce::Component::SafePointer<MorphSynthWindow>(this)]
+        {
+            if (safe != nullptr && safe->isShowing())
+                if (auto* cc = safe->getContentComponent())
+                    cc->grabKeyboardFocus();
+        });
+        }
 
     //==============================================================================
     /** Close button handler; either invokes the external callback or hides. */

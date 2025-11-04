@@ -188,12 +188,18 @@ bool TrackEditView::keyStateChanged (bool isKeyDown)
 
 void TrackEditView::parentHierarchyChanged()
 {
-    juce::MessageManager::callAsync ([this]{ if (isShowing()) grabKeyboardFocus(); });
+    juce::MessageManager::callAsync(
+        [safe = juce::Component::SafePointer<TrackEditView>(this)]
+        {
+            if (safe != nullptr && safe->isShowing())
+                safe->grabKeyboardFocus();
+        });
 }
 
-void TrackEditView::mouseDown (const juce::MouseEvent&)
+void TrackEditView::mouseDown (const juce::MouseEvent& e)
 {
     grabKeyboardFocus();
+    juce::Component::mouseDown(e);
 }
 
 void TrackEditView::setupButtons ()

@@ -240,6 +240,15 @@ bool AppEngine::writeEditToFile (const juce::File& file)
     if (!edit)
         return false;
 
+    for (auto* track : te::getAudioTracks (*edit))
+    {
+        if (! track) continue;
+
+        for (auto* p : track->pluginList)
+            if (auto* morph = dynamic_cast<MorphSynthPlugin*> (p))
+                morph->saveToValueTree();  // <-- no assignment; it mutates plugin.state’s child
+    }
+
     if (auto xml = edit->state.createXml())
     {
         juce::TemporaryFile tf (file);
@@ -262,7 +271,10 @@ bool AppEngine::saveEdit()
     {
         const bool ok = writeEditToFile (currentEditFile);
         if (ok)
+        {
             markSaved();
+        }
+
         return ok;
     }
 
@@ -384,6 +396,16 @@ bool AppEngine::loadEditFromFile (const juce::File& file)
 
     audioEngine = std::make_unique<AudioEngine> (*edit, *engine);
     audioEngine->initialiseDefaults (48000.0, 512);
+
+    for (auto* track : te::getAudioTracks (*edit))
+    {
+        if (!track) continue;
+
+        for (auto* p : track->pluginList)
+            if (auto* morph = dynamic_cast<MorphSynthPlugin*> (p))
+                if (morph->state.isValid())
+                    morph->restoreFromValueTree (morph->state);
+    }
 
     markSaved();
 

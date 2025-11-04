@@ -369,15 +369,20 @@ bool TrackListComponent::keyPressed (const juce::KeyPress& kp)
     return false;
 }
 
-void TrackListComponent::mouseDown (const juce::MouseEvent& e)
-{
-    grabKeyboardFocus();
-    juce::Component::mouseDown(e);
-}
-
 void TrackListComponent::parentHierarchyChanged()
 {
-    grabKeyboardFocus();
+    juce::MessageManager::callAsync(
+        [safe = juce::Component::SafePointer<TrackListComponent>(this)]
+        {
+            if (safe != nullptr && safe->isShowing())
+                safe->grabKeyboardFocus();
+        });
+}
+
+void TrackListComponent::mouseDown (const juce::MouseEvent& e)
+{
+    grabKeyboardFocus();                 // user click = fine
+    juce::Component::mouseDown(e);
 }
 
 

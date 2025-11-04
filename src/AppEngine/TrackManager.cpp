@@ -80,8 +80,21 @@ int TrackManager::addInstrumentTrack()
 
     // if (auto plugin = edit.getPluginCache().createNewPlugin(te::FourOscPlugin::xmlTypeName, {}))
     //     track->pluginList.insertPlugin(std::move(plugin), 0, nullptr);
-    if (auto plugin = edit.getPluginCache().createNewPlugin(MorphSynthPlugin::pluginType, {}))
-        track->pluginList.insertPlugin(std::move(plugin), 0, nullptr);
+    if (auto plugin = edit.getPluginCache().createNewPlugin (MorphSynthPlugin::pluginType, {}))
+    {
+        // Insert MorphSynth into the track
+        track->pluginList.insertPlugin (std::move (plugin), 0, nullptr);
+
+        // Safely loop through all plugins on this track and find the MorphSynth instance
+        for (auto* p : track->pluginList)
+        {
+            if (auto* morph = dynamic_cast<MorphSynthPlugin*> (p))
+            {
+                if (morph->state.isValid())
+                    morph->restoreFromValueTree (morph->state);
+            }
+        }
+    }
 
     edit.getTransport().ensureContextAllocated();
     return newIndex;
