@@ -31,7 +31,9 @@ void PlayheadComponent::mouseUp (const juce::MouseEvent&)
 
 void PlayheadComponent::mouseDrag (const juce::MouseEvent& e)
 {
-    auto t = editViewState.xToTime (e.x, getParentComponent()->getWidth());
+    // Convert mouse x to time using the playhead's own coordinate system
+    const double tSec = e.x / pixelsPerSecond + viewStart.inSeconds();
+    auto t = te::TimePosition::fromSeconds(juce::jmax(0.0, tSec));
     edit.getTransport().setPosition (t);
     timerCallback();
 }
