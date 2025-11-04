@@ -1,9 +1,10 @@
 #include "AudioEngine.h"
 using namespace juce;
 
-namespace te = tracktion;
+namespace te = tracktion::engine;
+namespace t = tracktion;
 using namespace std::literals;
-using namespace te::literals;
+using namespace t::literals;
 
 AudioEngine::AudioEngine(te::Edit& editRef, te::Engine& engine)
     : edit(editRef), engine(engine)

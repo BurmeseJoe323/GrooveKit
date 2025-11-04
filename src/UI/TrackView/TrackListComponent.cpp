@@ -1,5 +1,11 @@
+#include "TrackListComponent.h"
 #include "DrumSamplerView/DrumSamplerView.h"
 #include "TrackEditView.h"
+#include <tracktion_engine/tracktion_engine.h>
+
+#include "PopupWindows/PianoRollComponents/PianoRollMainComponent.h"
+namespace t = tracktion;
+namespace te = tracktion::engine;
 #include "TrackListComponent.h"
 
 TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine) : appEngine (engine),
@@ -13,12 +19,12 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
     playhead.setAlwaysOnTop (true);
 
     playhead.setPixelsPerSecond(100.0);
-    playhead.setViewStart(te::TimePosition::fromSeconds(0.0));
+    playhead.setViewStart(t::TimePosition::fromSeconds(0.0));
 
     timeline = std::make_unique<ui::TimelineComponent>(appEngine->getEdit());
     addAndMakeVisible (timeline.get());
     timeline->setPixelsPerSecond (100.0);
-    timeline->setViewStart (te::TimePosition::fromSeconds (0.0));
+    timeline->setViewStart (t::TimePosition::fromSeconds (0.0));
     timeline->setEditForSnap(&appEngine->getEdit());
     timeline->setSnapToBeats(true);
 
@@ -47,8 +53,8 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
             {
                 // seed ONCE (4s example)
                 const double start = timeline->getViewStart().inSeconds();
-                r = tracktion::TimeRange(tracktion::TimePosition::fromSeconds(start),
-                                         tracktion::TimePosition::fromSeconds(start + 4.0));
+                r = t::TimeRange(t::TimePosition::fromSeconds(start),
+                                         t::TimePosition::fromSeconds(start + 4.0));
                 timeline->setLoopRange(r);
                 tr.setLoopRange(r);
                 tr.setPosition(r.getStart());
@@ -64,7 +70,7 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
         }
     };
 
-    timeline->onLoopRangeChanged = [this](tracktion::TimeRange r)
+    timeline->onLoopRangeChanged = [this](t::TimeRange r)
     {
         auto& tr = appEngine->getEdit().getTransport();
 
@@ -306,7 +312,7 @@ void TrackListComponent::setPixelsPerSecond (double pps)
     repaint();
 }
 
-void TrackListComponent::setViewStart (te::TimePosition t)
+void TrackListComponent::setViewStart (t::TimePosition t)
 {
     for (auto* tc : tracks) if (tc) tc->setViewStart (t);
     if (timeline) timeline->setViewStart (t);
@@ -348,3 +354,30 @@ void TrackListComponent::rebuildFromEngine()
 //     }
 //     resized();
 // }
+
+bool TrackListComponent::keyStateChanged (bool isKeyDown)
+{
+    if (auto* tev = findParentComponentOfClass<TrackEditView>())
+        return tev->keyStateChanged (isKeyDown);
+    return false;
+}
+
+bool TrackListComponent::keyPressed (const juce::KeyPress& kp)
+{
+    if (auto* tev = findParentComponentOfClass<TrackEditView>())
+        return tev->keyPressed (kp);
+    return false;
+}
+
+void TrackListComponent::mouseDown (const juce::MouseEvent& e)
+{
+    grabKeyboardFocus();
+    juce::Component::mouseDown(e);
+}
+
+void TrackListComponent::parentHierarchyChanged()
+{
+    grabKeyboardFocus();
+}
+
+

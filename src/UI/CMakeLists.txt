@@ -18,7 +18,12 @@ add_library(app_ui
         Plugins/FourOsc/FourOscGUI.h
         Plugins/FourOsc/FourOscGUI.cpp
         TrackView/TimelineComponent.h
-        TrackView/TimelineComponent.cpp)
+        TrackView/TimelineComponent.cpp
+        Plugins/Synthesizer/MorphSynthView.h
+        Plugins/Synthesizer/MorphSynthView.cpp
+        Plugins/Synthesizer/MorphSynthWindow.h
+        Plugins/Synthesizer/MorphLookAndFeel.h
+)
 
 target_sources(app_ui
         PRIVATE

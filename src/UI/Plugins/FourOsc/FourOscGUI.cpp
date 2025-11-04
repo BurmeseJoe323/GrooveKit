@@ -17,7 +17,7 @@ namespace
     FourOscLookAndFeel gFourOscLNF;
 }
 
-namespace te = tracktion;
+namespace te = tracktion::engine;
 
 //==============================================================================
 // local helpers (used below)

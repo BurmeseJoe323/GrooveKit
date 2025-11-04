@@ -4,7 +4,7 @@
 #include "../../AppEngine/AppEngine.h"
 #include "ChannelComponents/ChannelStrip.h"
 
-namespace te = tracktion;
+namespace te = tracktion::engine;
 
 class MixerPanel : public juce::Component
 {

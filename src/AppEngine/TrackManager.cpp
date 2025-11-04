@@ -1,6 +1,7 @@
 #include "TrackManager.h"
 #include <tracktion_engine/tracktion_engine.h>
 #include "../DrumSamplerEngine/DrumSamplerEngineAdapter.h"
+#include "../UI/Plugins/Synthesizer/MorphSynthPlugin.h"
 
 namespace {
     static int asIndexChecked (int idx, int size) { return (idx >= 0 && idx < size) ? idx : -1; }
@@ -77,7 +78,9 @@ int TrackManager::addInstrumentTrack()
     if ((int) drumEngines.size() > newIndex)
         drumEngines[(size_t) newIndex].reset();
 
-    if (auto plugin = edit.getPluginCache().createNewPlugin(te::FourOscPlugin::xmlTypeName, {}))
+    // if (auto plugin = edit.getPluginCache().createNewPlugin(te::FourOscPlugin::xmlTypeName, {}))
+    //     track->pluginList.insertPlugin(std::move(plugin), 0, nullptr);
+    if (auto plugin = edit.getPluginCache().createNewPlugin(MorphSynthPlugin::pluginType, {}))
         track->pluginList.insertPlugin(std::move(plugin), 0, nullptr);
 
     edit.getTransport().ensureContextAllocated();

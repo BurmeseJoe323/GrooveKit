@@ -1,18 +1,18 @@
-// JUNIE
 #include "MIDIEngine.h"
 
-namespace te = tracktion;
+namespace te = tracktion::engine;
+namespace t = tracktion;
 using namespace std::literals;
-using namespace te::literals;
+using namespace t::literals;
 
 MIDIEngine::MIDIEngine (te::Edit& editRef)
     : edit (editRef)
 {
 }
 
-bool MIDIEngine::addMidiClipToTrackAt(int trackIndex,
-                                      te::TimePosition start,
-                                      te::BeatDuration length)
+void MIDIEngine::addMidiClipToTrackAt(int trackIndex,
+                                      t::TimePosition start,
+                                      t::BeatDuration length)
 {
     auto tracks = te::getAudioTracks (edit);
     if (!juce::isPositiveAndBelow (trackIndex, tracks.size()))
@@ -25,7 +25,7 @@ bool MIDIEngine::addMidiClipToTrackAt(int trackIndex,
     const auto endBeat = startBeat + length;
     const auto endTime = edit.tempoSequence.toTime (endBeat);
 
-    te::TimeRange range { startTime, endTime };
+    t::TimeRange range { startTime, endTime };
 
     if (track->insertNewClip (te::TrackItem::Type::midi, "MIDI", range, nullptr))
     {
@@ -51,7 +51,7 @@ bool MIDIEngine::addMidiClipToTrack (int trackIndex)
 
     // place at playhead OR just after the last existing clip end (whichever is later)
     const auto playhead = edit.getTransport().getPosition();
-    te::TimePosition nextPos = playhead;
+    t::TimePosition nextPos = playhead;
 
     if (clips.size() > 0)
     {
@@ -59,7 +59,7 @@ bool MIDIEngine::addMidiClipToTrack (int trackIndex)
         for (auto* c : clips)
             lastEnd = juce::jmax (lastEnd, c->getPosition().time.getEnd().inSeconds());
 
-        nextPos = te::TimePosition::fromSeconds (juce::jmax (lastEnd, playhead.inSeconds()));
+        nextPos = t::TimePosition::fromSeconds(juce::jmax(lastEnd, playhead.inSeconds()));
     }
     // don’t force restart every time; leave transport state alone
     edit.getTransport().ensureContextAllocated();

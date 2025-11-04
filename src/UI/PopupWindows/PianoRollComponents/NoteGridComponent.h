@@ -14,7 +14,7 @@
 #include "NoteComponent.h"
 #include "PConstants.h"
 
-namespace te = tracktion;
+namespace te = tracktion::engine;
 
 class SelectionBox : public juce::Component
 {

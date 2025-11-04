@@ -5,7 +5,7 @@
 #include <juce_audio_formats/juce_audio_formats.h>
 
 #include <utility>
-namespace te = tracktion;
+namespace te = tracktion::engine;
 
 static inline int padToMidiNote (int padIndex) { return 36 + juce::jlimit (0, 15, padIndex); }
 

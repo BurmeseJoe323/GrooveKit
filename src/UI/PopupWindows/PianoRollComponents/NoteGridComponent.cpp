@@ -1,7 +1,8 @@
 // JUNIE
 #include "NoteGridComponent.h"
 #include "AppEngine.h"
-
+namespace t = tracktion;
+namespace te = tracktion::engine;
 
 NoteGridComponent::NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, te::MidiClip* clip)
   : styleSheet(sheet), appEngine(engine), clipModel(clip)
@@ -312,10 +313,10 @@ void NoteGridComponent::noteCompLengthChanged (NoteComponent* original)
     auto* um = clip->getUndoManager();
 
     // preserve note position on length changed
-    te::BeatPosition beatStart = n->getModel()->getBeatPosition();
+    t::BeatPosition beatStart = n->getModel()->getBeatPosition();
     float beatLength = xToBeats (newWidth);
     beatLength = std::round (beatLength / currentQValue) * currentQValue; // snap x
-    te::BeatDuration newDur = te::BeatDuration::fromBeats (beatLength);
+    t::BeatDuration newDur = t::BeatDuration::fromBeats (beatLength);
     n->getModel()->setStartAndLength (beatStart, newDur, um);
     //     }
     // }
@@ -352,8 +353,8 @@ void NoteGridComponent::noteCompPositionMoved (NoteComponent* comp, bool callRes
     auto* um = clip->getUndoManager();
 
     nm->setNoteNumber(note, um);
-    nm->setStartAndLength(te::BeatPosition::fromBeats(beatStart),
-                          te::BeatDuration::fromBeats(beatLength),
+    nm->setStartAndLength(t::BeatPosition::fromBeats(beatStart),
+                          t::BeatDuration::fromBeats(beatLength),
                           um);
 
     comp->startY = comp->startX = -1;
@@ -476,8 +477,8 @@ void NoteGridComponent::mouseDoubleClick (const juce::MouseEvent& e)
 
     auto* newModel = seq.addNote(
         pitch,
-        te::BeatPosition::fromBeats(beatStartQ),   // << use the quantised start
-        te::BeatDuration::fromBeats(beatLength),
+        t::BeatPosition::fromBeats(beatStartQ),   // << use the quantised start
+        t::BeatDuration::fromBeats(beatLength),
         100,
         0,
         um);
@@ -553,11 +554,11 @@ bool NoteGridComponent::keyPressed (const juce::KeyPress& key, Component*)
                 // Moving MIDI note on timeline right or left (up and down)
                 (key == juce::KeyPress::rightKey)
                     ? noteModel->setStartAndLength (
-                        te::BeatPosition::fromBeats (noteModel->getStartBeat().inBeats() + nudgeAmount),
+                        t::BeatPosition::fromBeats (noteModel->getStartBeat().inBeats() + nudgeAmount),
                         noteModel->getLengthBeats(),
                         um)
                     : noteModel->setStartAndLength (
-                        te::BeatPosition::fromBeats (noteModel->getStartBeat().inBeats() - nudgeAmount),
+                        t::BeatPosition::fromBeats (noteModel->getStartBeat().inBeats() - nudgeAmount),
                         noteModel->getLengthBeats(),
                         um);
 

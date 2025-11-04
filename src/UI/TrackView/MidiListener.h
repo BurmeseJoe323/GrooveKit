@@ -5,7 +5,7 @@
 #include <tracktion_engine/tracktion_engine.h>
 #include <memory>
 
-namespace te = tracktion;
+namespace te = tracktion::engine;
 
 class AppEngine;
 

@@ -3,6 +3,8 @@
 #include <juce_audio_devices/juce_audio_devices.h>
 #include <tracktion_engine/tracktion_engine.h>
 
+namespace te = tracktion::engine;
+
 class AudioEngine
 {
 public:
@@ -21,7 +23,7 @@ public:
     void initialiseDefaults (double sampleRate = 48000.0, int bufferSize = 512);
 
 private:
-    tracktion::engine::Edit& edit;
+    te::Edit& edit;
     std::unique_ptr<MIDIEngine> midiEngine;
     te::Engine& engine;
     juce::AudioDeviceManager& adm() const;

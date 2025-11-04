@@ -1,16 +1,16 @@
-// JUNIE
 #pragma once
 
 #include "../AppEngine/TrackManager.h"
 #include "tracktion_graph/tracktion_graph.h"
 #include <tracktion_engine/tracktion_engine.h>
 
-namespace te = tracktion;
+namespace te = tracktion::engine;
+namespace t = tracktion;
 
 class MIDIEngine
 {
 public:
-    explicit MIDIEngine (tracktion::engine::Edit& editRef);
+    explicit MIDIEngine(te::Edit& editRef);
     ~MIDIEngine() = default;
 
     /**
@@ -27,6 +27,9 @@ public:
      * @param length the length of the clip.
      * @return true if successful; false otherwise.
      */
+    void addMidiClipToTrack(int trackIndex);
+    void addMidiClipToTrackAt(int trackIndex, t::TimePosition start, t::BeatDuration length);
+    juce::Array<te::MidiClip*> getMidiClipsFromTrack(int trackIndex);
     bool addMidiClipToTrackAt (int trackIndex, te::TimePosition start, te::BeatDuration length);
 
     /**
@@ -44,7 +47,7 @@ public:
     int addMidiTrack();
 
 private:
-    tracktion::engine::Edit& edit;
+    te::Edit& edit;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MIDIEngine)
 };

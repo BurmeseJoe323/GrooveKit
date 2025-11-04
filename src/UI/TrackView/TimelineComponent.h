@@ -2,7 +2,8 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <tracktion_engine/tracktion_engine.h>
 
-namespace te = tracktion;
+namespace te = tracktion::engine;
+namespace t = tracktion;
 
 namespace ui
 {
@@ -15,12 +16,12 @@ namespace ui
 
         // Zoom/scroll API
         void setPixelsPerSecond(double pps);
-        void setViewStart(te::TimePosition t);
+        void setViewStart(t::TimePosition t);
         double getPixelsPerSecond() const { return pixelsPerSecond; }
-        te::TimePosition getViewStart() const { return viewStart; }
+        t::TimePosition getViewStart() const { return viewStart; }
 
         // Optional: callback while scrubbing
-        std::function<void (te::TimePosition)> onScrub;
+        std::function<void (t::TimePosition)> onScrub;
 
         void paint (juce::Graphics& g) override;
         void mouseDown (const juce::MouseEvent& e) override;
@@ -28,9 +29,9 @@ namespace ui
         void mouseUp   (const juce::MouseEvent& e) override;
         void mouseDoubleClick (const juce::MouseEvent& e) override;
 
-        void setLoopRange (te::TimeRange r);
-        te::TimeRange getLoopRange() const { return loopRange; }
-        std::function<void (te::TimeRange)> onLoopRangeChanged;
+        void setLoopRange (t::TimeRange r);
+        t::TimeRange getLoopRange() const { return loopRange; }
+        std::function<void (t::TimeRange)> onLoopRangeChanged;
 
         void setSnapToBeats (bool shouldSnap) { snapToBeats = shouldSnap; }
         void setEditForSnap (te::Edit* e)     { editForSnap = e; }
@@ -39,19 +40,19 @@ namespace ui
         te::Edit& edit;
 
         double pixelsPerSecond = 100.0;
-        te::TimePosition viewStart { te::TimePosition::fromSeconds (0.0) };
+        t::TimePosition viewStart { t::TimePosition::fromSeconds (0.0) };
 
-        te::TimePosition xToTime (int x) const
+        t::TimePosition xToTime (int x) const
         {
             const auto secs = viewStart.inSeconds() + (double) x / pixelsPerSecond;
-            return te::TimePosition::fromSeconds (juce::jmax (0.0, secs));
+            return t::TimePosition::fromSeconds (juce::jmax (0.0, secs));
         }
 
         void setTransportPositionFromX (int x, bool dragging);
 
-        te::TimeRange loopRange {
-            te::TimePosition::fromSeconds(0.0),
-            te::TimePosition::fromSeconds(0.0)
+        t::TimeRange loopRange {
+            t::TimePosition::fromSeconds(0.0),
+            t::TimePosition::fromSeconds(0.0)
         };
         bool hasLoop = false;
 

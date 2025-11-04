@@ -8,6 +8,9 @@
 #include "TrackListComponent.h"
 #include <juce_gui_basics/juce_gui_basics.h>
 
+namespace te = tracktion::engine;
+namespace t = tracktion;
+
 class AppEngine;
 class MidiListener;
 
@@ -76,7 +79,7 @@ private:
     bool pianoRollVisible = false;
 
     double pixelsPerSecond = 100.0;
-    te::TimePosition viewStart = 0s;
+    t::TimePosition viewStart = 0s;
 
     // --- Top Bar Components ---
     std::unique_ptr<juce::MenuBarComponent> menuBar;
@@ -94,6 +97,9 @@ private:
     void showOutputDeviceSettings() const;
     void showNewEditMenu() const;
     void showOpenEditMenu() const;
+
+    void parentHierarchyChanged() override;
+    void mouseDown (const juce::MouseEvent&) override;
 
     juce::TextButton backButton { "Back" }, newEditButton { "New" },
         openEditButton { "Open Edit" }, newTrackButton { "New Track" }, outputButton { "Output Device" },

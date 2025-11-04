@@ -16,7 +16,7 @@
 #include <atomic>
 #include <vector>
 
-namespace te = tracktion;
+namespace te = tracktion::engine;
 
 //==============================================================================
 // Small rotary knob (Slider wrapper) with common JUCE settings

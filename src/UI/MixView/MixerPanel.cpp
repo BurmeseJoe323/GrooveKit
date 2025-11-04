@@ -1,4 +1,5 @@
 #include "MixerPanel.h"
+namespace te = tracktion::engine;
 
 MixerPanel::MixerPanel (AppEngine& engine)
     : appEngine (engine)
@@ -28,8 +29,8 @@ void MixerPanel::refreshTracks()
     auto& edit = appEngine.getEdit();
     auto audioTracks = te::getAudioTracks (edit);
 
-    DBG ("Mixer sees " << tracktion::getAudioTracks (appEngine.getEdit()).size() << " tracks");
-    for (auto* t : tracktion::getAudioTracks (appEngine.getEdit()))
+    DBG ("Mixer sees " << te::getAudioTracks (appEngine.getEdit()).size() << " tracks");
+    for (auto* t : te::getAudioTracks (appEngine.getEdit()))
         DBG ("  " << t->getName());
 
     for (int i = 0; i < audioTracks.size(); ++i)

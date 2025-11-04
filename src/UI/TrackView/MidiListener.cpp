@@ -94,5 +94,10 @@ bool MidiListener::handleKeyPress(const juce::KeyPress& keyPress)
         return true;
     }
 
+    const auto c = (char) keyPress.getTextCharacter();
+    static const juce::String noteKeySet = "awsedf tgyhujko l"; // your mapping (with spaces if you had them)
+    if (noteKeySet.containsChar (juce::CharacterFunctions::toLowerCase (c)))
+        return true;
+
     return false;
 }

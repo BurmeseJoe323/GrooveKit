@@ -6,6 +6,9 @@ static constexpr int kTickBottom    = 22;
 static constexpr int kMajorTickLen  = 10;
 static constexpr int kMinorTickLen  = 5;
 
+namespace te = tracktion::engine;
+namespace t = tracktion;
+
 void ui::TimelineComponent::setPixelsPerSecond(double pps)
 {
     // Ensure the zoom level never gets ridiculously small or negative
@@ -15,7 +18,7 @@ void ui::TimelineComponent::setPixelsPerSecond(double pps)
     repaint();
 }
 
-void ui::TimelineComponent::setViewStart(te::TimePosition t)
+void ui::TimelineComponent::setViewStart(t::TimePosition t)
 {
     // Update where the visible region of the timeline starts (in seconds)
     viewStart = t;
@@ -124,8 +127,8 @@ void ui::TimelineComponent::mouseDown (const juce::MouseEvent& e)
         const double start = xToTimeSec(mx);
         const double defLenSec = 2.0; // seed length; change to a bar if you like
 
-        loopRange = te::TimeRange (te::TimePosition::fromSeconds(start),
-                                   te::TimePosition::fromSeconds(start + defLenSec));
+        loopRange = t::TimeRange (t::TimePosition::fromSeconds(start),
+                                   t::TimePosition::fromSeconds(start + defLenSec));
         hasLoop   = true;
         dragMode  = DragMode::dragEnd;
         originalStartSec = start;
@@ -155,8 +158,8 @@ void ui::TimelineComponent::mouseDown (const juce::MouseEvent& e)
         const double start = xToTimeSec(mx);
         const double defLenSec = 2.0;
 
-        loopRange = te::TimeRange (te::TimePosition::fromSeconds(start),
-                                   te::TimePosition::fromSeconds(start + defLenSec));
+        loopRange = t::TimeRange (t::TimePosition::fromSeconds(start),
+                                   t::TimePosition::fromSeconds(start + defLenSec));
         hasLoop   = true;
         dragMode  = DragMode::dragEnd;
         originalStartSec = start;
@@ -203,8 +206,8 @@ void ui::TimelineComponent::mouseDrag (const juce::MouseEvent& e)
     snapSecondsToBeats(s);
     snapSecondsToBeats(d);
 
-    loopRange = te::TimeRange (te::TimePosition::fromSeconds(s),
-                               te::TimePosition::fromSeconds(d));
+    loopRange = t::TimeRange (t::TimePosition::fromSeconds(s),
+                               t::TimePosition::fromSeconds(d));
 
     if (onLoopRangeChanged) onLoopRangeChanged(loopRange);
     repaint();
@@ -224,15 +227,15 @@ void ui::TimelineComponent::mouseDoubleClick (const juce::MouseEvent& e)
     if (e.mods.isRightButtonDown() || e.mods.isAnyModifierKeyDown())
     {
         hasLoop   = false;
-        loopRange = te::TimeRange (te::TimePosition::fromSeconds(0.0),
-                                   te::TimePosition::fromSeconds(0.0));
+        loopRange = t::TimeRange (t::TimePosition::fromSeconds(0.0),
+                                   t::TimePosition::fromSeconds(0.0));
         if (onLoopRangeChanged) onLoopRangeChanged(loopRange);
         repaint();
     }
 }
 
 
-void ui::TimelineComponent::setLoopRange (te::TimeRange r)
+void ui::TimelineComponent::setLoopRange (t::TimeRange r)
 {
     loopRange = r;
     hasLoop = loopRange.getLength().inSeconds() > 0.0;
@@ -244,8 +247,8 @@ void ui::TimelineComponent::snapSecondsToBeats (double& seconds) const
     if (!snapToBeats || editForSnap == nullptr) return;
 
     auto& ts = editForSnap->tempoSequence;
-    const auto beat   = ts.toBeats (te::TimePosition::fromSeconds(seconds)).inBeats();
+    const auto beat   = ts.toBeats (t::TimePosition::fromSeconds(seconds)).inBeats();
     const auto snappedBeat = std::round(beat);
-    seconds = ts.toTime (te::BeatPosition::fromBeats(snappedBeat)).inSeconds();
+    seconds = ts.toTime (t::BeatPosition::fromBeats(snappedBeat)).inSeconds();
 }
 

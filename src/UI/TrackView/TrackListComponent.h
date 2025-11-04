@@ -6,6 +6,9 @@
 #include "TrackHeaderComponent.h"
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "TimelineComponent.h"
+
+namespace te = tracktion::engine;
+namespace t = tracktion;
 /**
  * Represents the Component view holding tracks.
  */
@@ -26,16 +29,21 @@ public:
     void armTrack(int trackIndex, bool shouldBeArmed);
 
     void setPixelsPerSecond (double pps);
-    void setViewStart (te::TimePosition t);
+    void setViewStart (t::TimePosition t);
     double getPixelsPerSecond() const
     {
         return timeline ? timeline->getPixelsPerSecond() : 100.0;
     }
 
-    te::TimePosition getViewStart() const
+    t::TimePosition getViewStart() const
     {
-        return timeline ? timeline->getViewStart() : te::TimePosition::fromSeconds(0.0);
+        return timeline ? timeline->getViewStart() : t::TimePosition::fromSeconds(0.0);
     }
+
+    bool keyPressed (const juce::KeyPress&) override;
+    bool keyStateChanged (bool isKeyDown) override;
+    void mouseDown (const juce::MouseEvent&) override;
+    void parentHierarchyChanged() override;
 
 private:
     const std::shared_ptr<AppEngine> appEngine;

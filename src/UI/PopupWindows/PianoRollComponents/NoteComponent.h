@@ -11,7 +11,7 @@
 
 #include <tracktion_engine/tracktion_engine.h>
 
-namespace te = tracktion;
+namespace te = tracktion::engine;
 
 class NoteComponent : public juce::Component, public juce::ComponentDragger {
     public:

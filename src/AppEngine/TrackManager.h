@@ -2,7 +2,7 @@
 #include <tracktion_engine/tracktion_engine.h>
 #include "../DrumSamplerEngine/DrumSamplerEngineAdapter.h"
 #include "../MIDIEngine/MIDIEngine.h"
-namespace te = tracktion;
+namespace te = tracktion::engine;
 class TrackManager
 {
 public:
@@ -31,7 +31,7 @@ public:
     void setTrackSoloed(int index, bool solo);
     bool isTrackSoloed(int index) const;
     bool anyTrackSoloed() const;
-    tracktion_engine::Plugin* getInstrumentPluginOnTrack (int trackIndex);
+    te::Plugin* getInstrumentPluginOnTrack (int trackIndex);
     //void clearAllTracks();
 
     double getClipStartSeconds (int trackIndex, int clipIndex) const;

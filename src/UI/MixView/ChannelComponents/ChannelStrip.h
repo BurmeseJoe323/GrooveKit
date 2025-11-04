@@ -5,7 +5,7 @@
 #include "ChannelStripComponents/FaderComponent.h"
 #include "../TrackView/TrackHeaderComponent.h"
 
-namespace te = tracktion;
+namespace te = tracktion::engine;
 
 class ChannelStrip final : public juce::Component
 {

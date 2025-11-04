@@ -1,8 +1,7 @@
-// JUNIE
 #include "TrackComponent.h"
 #include "TrackEditView.h"
 #include "TrackListComponent.h"
-
+namespace t = tracktion;
 TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const int trackIndex, const juce::Colour color)
     : appEngine (engine), trackColor (color), trackIndex (trackIndex)
 {
@@ -67,12 +66,12 @@ void TrackComponent::resized()
             continue;
 
         const auto posRange = midiClip->getPosition().time;
-        te::TimeRange drawRange = posRange;
 
+        t::TimeRange drawRange = posRange;
         if (midiClip->isLooping())
         {
             const auto loopRange = midiClip->getLoopRange();
-            drawRange = te::TimeRange (posRange.getStart(), posRange.getStart() + loopRange.getLength());
+            drawRange = t::TimeRange(posRange.getStart(), posRange.getStart() + loopRange.getLength());
         }
 
         const double clipStart = drawRange.getStart().inSeconds();
@@ -328,7 +327,7 @@ void TrackComponent::mouseUp (const juce::MouseEvent& e)
     const double viewStartSec    = tl ? tl->getViewStart().inSeconds() : 0.0;
 
     const double startSec = viewStartSec + (localX / juce::jmax (1.0, pixelsPerSecond));
-    const te::TimePosition startPos = te::TimePosition::fromSeconds (startSec);
+    const t::TimePosition startPos = te::TimePosition::fromSeconds (startSec);
 
     juce::PopupMenu m;
     m.addItem (1, "Paste Here");

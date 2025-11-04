@@ -1,8 +1,8 @@
-// JUNIE
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <tracktion_engine/tracktion_engine.h>
+namespace te = tracktion::engine;
 #include "tracktion_graph/tracktion_graph.h"
 #include <functional>
 

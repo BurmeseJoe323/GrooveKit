@@ -1,16 +1,20 @@
-// JUNIE
 #include "AppEngine.h"
 #include "../DrumSamplerEngine/DefaultSampleLibrary.h"
 #include <tracktion_engine/tracktion_engine.h>
 #include "../UI/Plugins/FourOsc/FourOscGUI.h"
+#include "../UI/Plugins/Synthesizer/MorphSynthRegistration.h"
+#include "../UI/Plugins/Synthesizer/MorphSynthView.h"
+#include "../UI/Plugins/Synthesizer/MorphSynthWindow.h"
 
-namespace te = tracktion;
+namespace te = tracktion::engine;
+namespace t = tracktion;
 using namespace std::literals;
 using namespace te::literals;
 
 AppEngine::AppEngine()
 {
     engine = std::make_unique<te::Engine> ("GrooveKitEngine");
+    registerMorphSynthCompat(*engine);
 
     createOrLoadEdit();
 
@@ -22,6 +26,9 @@ AppEngine::AppEngine()
     editViewState = std::make_unique<EditViewState> (*edit, *selectionManager);
 
     audioEngine->initialiseDefaults (48000.0, 512);
+
+    auto self = std::shared_ptr<AppEngine>(this, [] (AppEngine*) {});
+    midiListener = std::make_shared<MidiListener>(self);
 }
 
 AppEngine::~AppEngine()
@@ -70,9 +77,9 @@ void AppEngine::createOrLoadEdit()
     baseDir.createDirectory();
 
     currentEditFile = "";
-    edit = tracktion::createEmptyEdit (*engine, baseDir.getNonexistentChildFile ("Untitled", ".tracktionedit"));
+    edit = te::createEmptyEdit (*engine, baseDir.getNonexistentChildFile ("Untitled", ".tracktionedit"));
 
-    for (auto* t : tracktion::getAudioTracks (*edit))
+    for (auto* t : te::getAudioTracks (*edit))
         edit->deleteTrack (t);
 
     edit->editFileRetriever = [] { return juce::File {}; };
@@ -94,14 +101,14 @@ void AppEngine::newUntitledEdit()
 
     auto placeholder = baseDir.getNonexistentChildFile ("Untitled", ".tracktionedit", false);
 
-    edit = tracktion::createEmptyEdit (*engine, placeholder);
+    edit = te::createEmptyEdit (*engine, placeholder);
 
     currentEditFile = juce::File();
 
     edit->editFileRetriever = [placeholder] { return placeholder; };
     edit->playInStopEnabled = true;
 
-    for (auto* t : tracktion::getAudioTracks (*edit))
+    for (auto* t : te::getAudioTracks (*edit))
         edit->deleteTrack (t);
 
     midiEngine = std::make_unique<MIDIEngine> (*edit);
@@ -415,31 +422,56 @@ void AppEngine::openInstrumentEditor (int trackIndex)
     {
         if (!trackManager) { DBG("AppEngine: no trackManager"); return; }
 
-        if (auto* plug = trackManager->getInstrumentPluginOnTrack (trackIndex))
+        if (auto* track = trackManager->getTrack (trackIndex))
         {
-            DBG("Opening editor for plugin: " << plug->getName());
-            instrumentWindow_ = std::make_unique<FourOscWindow>(*plug);
-            instrumentWindow_->setVisible(true);
-            instrumentWindow_->toFront(true);
-        }
-        else
-        {
+            te::Plugin* plug = nullptr;
+
+            // Prefer the first MorphSynth on the track
+            for (auto* p : track->pluginList)
+                if (p && p->getPluginType() == MorphSynthPlugin::pluginType)
+                { plug = p; break; }
+
+            // Fallback: whatever your old helper returns
+            if (!plug)
+                plug = trackManager->getInstrumentPluginOnTrack (trackIndex);
+
+            if (plug)
+            {
+                if (auto* morph = dynamic_cast<MorphSynthPlugin*>(plug))
+                {
+                    // If already open, just bring it to front
+                    if (instrumentWindow_ != nullptr)
+                    {
+                        instrumentWindow_->toFront (true);
+                        return;
+                    }
+
+                    instrumentWindow_ = std::make_unique<MorphSynthWindow>(
+                        *morph,
+                        [this] { this->closeInstrumentWindow(); }
+                    );
+
+                    auto self = std::shared_ptr<AppEngine>(this, [] (AppEngine*) {});
+                    static_cast<MorphSynthWindow*>(instrumentWindow_.get())->setAppEngine(self);
+
+                    instrumentWindow_->toFront (true);
+                    return;
+                }
+
+            }
             DBG("No instrument plugin found on track " << trackIndex);
         }
     };
 
-    if (juce::MessageManager::getInstance()->isThisTheMessageThread())
-        open();
-    else
-        juce::MessageManager::callAsync (open);
+    if (juce::MessageManager::getInstance()->isThisTheMessageThread()) open();
+    else juce::MessageManager::callAsync (open);
 }
 
 void AppEngine::closeInstrumentWindow()
 {
     if (instrumentWindow_ != nullptr)
     {
-        instrumentWindow_->detachAllPanels();
-        instrumentWindow_->setVisible(false);
+        instrumentWindow_->setVisible (false);
         instrumentWindow_.reset();
     }
 }

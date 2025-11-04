@@ -1,6 +1,6 @@
 #pragma once
 #include <tracktion_engine/tracktion_engine.h>
-namespace te = tracktion;
+namespace te = tracktion::engine;
 
 class PluginManager {
 public:

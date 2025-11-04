@@ -1,10 +1,10 @@
-// JUNIE
 #pragma once
 
 #include "../../AppEngine/AppEngine.h"
 #include "TrackClip.h"
 #include "TrackHeaderComponent.h"
 #include <juce_gui_basics/juce_gui_basics.h>
+namespace t = tracktion;
 
 /**
  * Houses TrackHeader and TrackClip components.
@@ -39,7 +39,7 @@ public:
         resized();
     }
 
-    void setViewStart (const te::TimePosition t)
+    void setViewStart (const t::TimePosition t)
     {
         viewStart = t;
         resized();
@@ -61,20 +61,20 @@ private:
     // Visual scaling
     float pixelsPerBeat = 100.0f;
     double pixelsPerSecond = 100.0; // currently unused for clip layout
-    te::TimePosition viewStart = 0s;
+    t::TimePosition viewStart = 0s;
 
-    static int timeToX (const te::TimePosition t, const te::TimePosition view0, const double pps)
+    static int timeToX (const t::TimePosition t, const t::TimePosition view0, const double pps)
     {
         return juce::roundToInt ((t - view0).inSeconds() * pps);
     }
 
-    static int xFromTime (const te::TimePosition t, const te::TimePosition view0, const double pps)
+    static int xFromTime (const t::TimePosition t, const t::TimePosition view0, const double pps)
     {
         const double secs = (t - view0).inSeconds();
         return static_cast<int> (std::floor (secs * pps));
     }
 
-    static int timeRangeToWidth (const te::TimeRange r, const double pps)
+    static int timeRangeToWidth (const t::TimeRange r, const double pps)
     {
         return juce::roundToInt (r.getLength().inSeconds() * pps);
     }

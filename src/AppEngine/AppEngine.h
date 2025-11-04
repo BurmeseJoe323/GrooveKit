@@ -1,16 +1,16 @@
-// JUNIE
 #pragma once
 
 #include "../AudioEngine/AudioEngine.h"
 #include "../MIDIEngine/MIDIEngine.h"
-#include "../UI/Plugins/FourOsc/FourOscGUI.h"
 #include "../UI/TrackView/TrackHeaderComponent.h"
+#include "../UI/TrackView/MidiListener.h"
 #include "TrackManager.h"
 #include <tracktion_engine/tracktion_engine.h>
 
+
 namespace IDs
 {
-#define DECLARE_ID(name) const juce::Identifier name (#name);
+#define DECLARE_ID(name)  const juce::Identifier name (#name);
     DECLARE_ID (EDITVIEWSTATE)
     DECLARE_ID (showMasterTrack)
     DECLARE_ID (showGlobalTrack)
@@ -28,9 +28,10 @@ namespace IDs
 #undef DECLARE_ID
 }
 
-namespace te = tracktion;
+namespace te = tracktion::engine;
+namespace t = tracktion;
 
-using namespace te::literals;
+using namespace t::literals;
 using namespace std::literals;
 
 class EditViewState
@@ -59,17 +60,17 @@ public:
         viewY.referTo (state, IDs::viewY, um, 0);
     }
 
-    int timeToX (te::TimePosition time, int width) const
+    int timeToX (t::TimePosition time, int width) const
     {
         return juce::roundToInt (((time - viewX1) * width) / (viewX2 - viewX1));
     }
 
-    te::TimePosition xToTime (int x, int width) const
+    t::TimePosition xToTime (int x, int width) const
     {
-        return te::toPosition ((viewX2 - viewX1) * (double (x) / width)) + te::toDuration (viewX1.get());
+        return t::toPosition ((viewX2 - viewX1) * (double (x) / width)) + t::toDuration (viewX1.get());
     }
 
-    te::TimePosition beatToTime (te::BeatPosition b) const
+    t::TimePosition beatToTime (t::BeatPosition b) const
     {
         auto& ts = edit.tempoSequence;
         return ts.toTime (b);
@@ -81,7 +82,7 @@ public:
     juce::CachedValue<bool> showMasterTrack, showGlobalTrack, showMarkerTrack, showChordTrack, showArrangerTrack,
         drawWaveforms, showHeaders, showFooters, showMidiDevices, showWaveDevices;
 
-    juce::CachedValue<te::TimePosition> viewX1, viewX2;
+    juce::CachedValue<t::TimePosition> viewX1, viewX2;
     juce::CachedValue<double> viewY;
 
     juce::ValueTree state;
@@ -168,7 +169,10 @@ public:
 
     void makeFourOscAuditionPatch (int trackIndex);
     void openInstrumentEditor (int trackIndex);
+
     void closeInstrumentWindow();
+
+    std::shared_ptr<MidiListener> getMidiListener() const { return midiListener; }
 
     // Clipboard helpers for MIDI clips (Junie)
     void copyMidiClip (te::MidiClip* clip);
@@ -197,9 +201,11 @@ private:
 
     juce::File currentEditFile;
 
-    std::unique_ptr<FourOscWindow> instrumentWindow_;
+    std::unique_ptr<juce::DocumentWindow> instrumentWindow_;
 
     int lastSavedTxn = 0;
+    std::shared_ptr<MidiListener> midiListener;
+
 
     bool writeEditToFile (const juce::File& file);
     void markSaved();

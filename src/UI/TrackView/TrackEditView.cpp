@@ -186,6 +186,16 @@ bool TrackEditView::keyStateChanged (bool isKeyDown)
     return midiListener->handleKeyStateChanged(isKeyDown);
 }
 
+void TrackEditView::parentHierarchyChanged()
+{
+    juce::MessageManager::callAsync ([this]{ if (isShowing()) grabKeyboardFocus(); });
+}
+
+void TrackEditView::mouseDown (const juce::MouseEvent&)
+{
+    grabKeyboardFocus();
+}
+
 void TrackEditView::setupButtons ()
 {
     // --- Left Controls ---
@@ -517,3 +527,4 @@ TrackEditView::PianoRollResizerBar::PianoRollResizerBar (juce::StretchableLayout
 
 TrackEditView::PianoRollResizerBar::~PianoRollResizerBar ()
 = default;
+

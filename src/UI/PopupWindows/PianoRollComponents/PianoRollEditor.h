@@ -14,7 +14,7 @@
 #include "NoteGridComponent.h"
 #include "TimelineComponent.h"
 
-namespace te = tracktion;
+namespace te = tracktion::engine;
 
 /**
  * Custom viewport that synchronizes the scrolling movement of several viewports at once:
