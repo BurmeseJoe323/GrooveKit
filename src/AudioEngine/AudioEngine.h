@@ -20,6 +20,12 @@ public:
     juce::AudioDeviceManager& getAudioDeviceManager();
     void initialiseDefaults (double sampleRate = 48000.0, int bufferSize = 512);
 
+    // MIDI Input device management
+    juce::StringArray listMidiInputDevices() const;
+    void logAvailableMidiDevices() const;
+    bool setMidiInputDeviceEnabled(int deviceIndex, bool enabled);
+    bool connectMidiInputToCallback(int deviceIndex, juce::MidiInputCallback* callback);
+
 private:
     tracktion::engine::Edit& edit;
     std::unique_ptr<MIDIEngine> midiEngine;

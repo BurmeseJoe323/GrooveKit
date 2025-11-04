@@ -23,6 +23,12 @@ AppEngine::AppEngine()
     editViewState = std::make_unique<EditViewState> (*edit, *selectionManager);
 
     audioEngine->initialiseDefaults (48000.0, 512);
+
+    // Auto-connect to first available MIDI input device (if any)
+    if (!listMidiInputDevices().isEmpty())
+    {
+        connectMidiInputDevice(0);
+    }
 }
 
 AppEngine::~AppEngine()

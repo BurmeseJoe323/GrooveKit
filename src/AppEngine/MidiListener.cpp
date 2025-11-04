@@ -34,6 +34,22 @@ void MidiListener::handleNoteOff(juce::MidiKeyboardState*, int midiChannel, int 
     injectNoteMessage(off);
 }
 
+void MidiListener::handleIncomingMidiMessage(juce::MidiInput* /*source*/, const juce::MidiMessage& message)
+{
+    // Forward hardware MIDI input to the MidiKeyboardState
+    // This allows external controllers to trigger the same path as QWERTY input
+    if (message.isNoteOn())
+    {
+        midiKeyboardState.noteOn(message.getChannel(), message.getNoteNumber(), message.getFloatVelocity());
+    }
+    else if (message.isNoteOff())
+    {
+        midiKeyboardState.noteOff(message.getChannel(), message.getNoteNumber(), message.getFloatVelocity());
+    }
+    // Note: handleNoteOn/handleNoteOff will be triggered by MidiKeyboardState,
+    // which will then call injectNoteMessage to route to the armed track
+}
+
 void MidiListener::injectNoteMessage(const juce::MidiMessage& msg)
 {
     // Send the live MIDI message to the currently selected track so its instrument plays immediately

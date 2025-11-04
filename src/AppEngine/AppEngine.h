@@ -144,6 +144,10 @@ public:
     juce::StringArray listOutputDevices()            const { return audioEngine->listOutputDevices(); }
     juce::String getCurrentOutputDeviceName()        const { return audioEngine->getCurrentOutputDeviceName(); }
 
+    // MIDI Input device management
+    juce::StringArray listMidiInputDevices()         const { return audioEngine->listMidiInputDevices(); }
+    bool connectMidiInputDevice(int deviceIndex)           { return audioEngine->connectMidiInputToCallback(deviceIndex, midiListener.get()); }
+
     bool saveEdit();
     void saveEditAsAsync (std::function<void (bool success)> onDone = {});
 
