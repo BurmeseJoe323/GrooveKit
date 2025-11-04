@@ -18,6 +18,7 @@ AppEngine::AppEngine()
     audioEngine = std::make_unique<AudioEngine> (*edit, *engine);
     trackManager = std::make_unique<TrackManager> (*edit);
     selectionManager = std::make_unique<te::SelectionManager> (*engine);
+    midiListener = std::make_unique<MidiListener> (this);
 
     editViewState = std::make_unique<EditViewState> (*edit, *selectionManager);
 

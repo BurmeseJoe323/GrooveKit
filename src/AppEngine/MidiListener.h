@@ -3,7 +3,6 @@
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_audio_devices/juce_audio_devices.h>
 #include <tracktion_engine/tracktion_engine.h>
-#include <memory>
 
 namespace te = tracktion;
 
@@ -12,11 +11,12 @@ class AppEngine;
 /**
  * MidiListener handles MIDI keyboard input and routes it to the armed track.
  * It manages the MidiKeyboardState and provides QWERTY-to-MIDI mapping functionality.
+ * Owned and managed by AppEngine.
  */
 class MidiListener final : public juce::MidiKeyboardStateListener
 {
 public:
-    explicit MidiListener(std::shared_ptr<AppEngine> engine);
+    explicit MidiListener(AppEngine* engine);
     ~MidiListener() override;
 
     // MidiKeyboardStateListener overrides
@@ -50,7 +50,7 @@ public:
 private:
     void injectNoteMessage(const juce::MidiMessage& msg);
 
-    std::shared_ptr<AppEngine> appEngine;
+    AppEngine* appEngine;
     juce::MidiKeyboardState midiKeyboardState;
 
     // QWERTY mapping keys (A-L for chromatic scale)

@@ -1,8 +1,8 @@
 #include "MidiListener.h"
-#include "../../AppEngine/AppEngine.h"
+#include "AppEngine.h"
 
-MidiListener::MidiListener(std::shared_ptr<AppEngine> engine)
-    : appEngine(std::move(engine))
+MidiListener::MidiListener(AppEngine* engine)
+    : appEngine(engine)
 {
     midiKeyboardState.addListener(this);
 }

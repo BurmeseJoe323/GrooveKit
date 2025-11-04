@@ -9,7 +9,6 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 
 class AppEngine;
-class MidiListener;
 
 /**
  * Represents the track editor view, with functionality for adding and deleting tracks.
@@ -45,11 +44,6 @@ public:
 
     void labelTextChanged(juce::Label* labelThatHasChanged) override;
 
-    /**
-     * Returns a reference to the MidiListener that manages MIDI keyboard input.
-     */
-    MidiListener& getMidiListener() const { return *midiListener; }
-
     class PianoRollResizerBar final : public juce::StretchableLayoutResizerBar
     {
     public:
@@ -64,9 +58,6 @@ private:
     std::shared_ptr<AppEngine> appEngine;
     std::unique_ptr<TrackListComponent> trackList;
     juce::Viewport viewport;
-
-    // MIDI listener handles keyboard input and routing to tracks
-    std::unique_ptr<MidiListener> midiListener;
 
     std::unique_ptr<PianoRollEditor> pianoRoll;
     juce::StretchableLayoutManager verticalLayout;

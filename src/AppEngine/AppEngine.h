@@ -6,6 +6,7 @@
 #include "../UI/Plugins/FourOsc/FourOscGUI.h"
 #include "../UI/TrackView/TrackHeaderComponent.h"
 #include "TrackManager.h"
+#include "MidiListener.h"
 #include <tracktion_engine/tracktion_engine.h>
 
 namespace IDs
@@ -132,6 +133,7 @@ public:
 
     AudioEngine& getAudioEngine();
     MIDIEngine& getMidiEngine();
+    MidiListener& getMidiListener()        { return *midiListener; }
     juce::AudioProcessorValueTreeState& getAPVTS();
 
     EditViewState& getEditViewState();
@@ -189,6 +191,7 @@ private:
     std::unique_ptr<MIDIEngine> midiEngine;
     std::unique_ptr<AudioEngine> audioEngine;
     std::unique_ptr<TrackManager> trackManager;
+    std::unique_ptr<MidiListener> midiListener;
 
     // Map from track index to its controller listener (TrackComponent) (Junie)
     juce::HashMap<int, TrackHeaderComponent::Listener*> trackListenerMap;
