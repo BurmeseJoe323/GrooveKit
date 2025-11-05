@@ -22,8 +22,11 @@ void KeyboardComponent::paint(juce::Graphics &g) {
 
         // Draw note number at end of note
         g.setColour(blackPitches.contains(pitch) ? juce::Colours::white.darker(0.1) : (juce::Colours::black));
-        g.drawText(juce::String(i), getWidth() - 30, juce::detail::floorAsInt(line) + juce::detail::floorAsInt(noteCompHeight) / 2,
-                   25, juce::detail::floorAsInt(noteCompHeight) / 4, juce::Justification::left, false);
+        if (i % 12 == 0)
+        {
+            g.drawFittedText("C" + juce::String((i - 24) / 12), getWidth() - 30, juce::detail::floorAsInt(line) + juce::detail::floorAsInt(noteCompHeight) / 2,
+                       25, juce::detail::floorAsInt(noteCompHeight) / 4, juce::Justification::left, false);
+        }
 
         line += noteCompHeight;
     }
