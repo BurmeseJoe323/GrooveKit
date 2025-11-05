@@ -34,6 +34,8 @@ public:
 
     void mouseUp (const juce::MouseEvent& e) override;
     void mouseDoubleClick (const juce::MouseEvent& e) override;
+    void mouseDown (const juce::MouseEvent& e) override;
+    void mouseDrag (const juce::MouseEvent& e) override;
 
 private:
     void updateSizeFromClip();
@@ -41,6 +43,11 @@ private:
     te::MidiClip* clip = nullptr; // not owned
     float pixelsPerBeat = 100.0f;
     juce::Colour clipColor { juce::Colours::blueviolet };
+
+    juce::ResizableEdgeComponent edgeResizer;
+    bool isResizing = false;
+    int resizeStartScreenX = 0;
+    int originalWidth = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackClip)
 };
