@@ -59,7 +59,8 @@ public:
             }
         }
 
-        slotNames[pad] = name;
+        slotNames.set (pad, name);
+        // slotNames[pad] = name;
     }
 
     void triggerSlot (int slot, float velocity) override
