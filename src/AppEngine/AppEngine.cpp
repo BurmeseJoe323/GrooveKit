@@ -147,7 +147,13 @@ void AppEngine::stop() { audioEngine->stop(); }
 
 bool AppEngine::isPlaying() const { return audioEngine->isPlaying(); }
 
-void AppEngine::deleteMidiTrack (int index) { trackManager->deleteTrack (index); }
+void AppEngine::deleteMidiTrack (int index)
+{
+    if (index == selectedTrackIndex)
+        selectedTrackIndex = -1;
+
+    trackManager->deleteTrack (index);
+}
 
 bool AppEngine::addMidiClipToTrack (int trackIndex) { midiEngine->addMidiClipToTrack (trackIndex); }
 
