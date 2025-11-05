@@ -16,9 +16,6 @@ public:
         : engine (eng), track (trk)
     {
         sampler = findOrCreateSampler();
-
-        for (int i = 0; i < 16; ++i)
-            slotNames[i] = "Pad " + juce::String (i + 1);
     }
 
     void loadSampleIntoSlot (int slot, const juce::File& file) override
@@ -94,11 +91,6 @@ public:
         });
     }
 
-
-
-
-
-
     void setVolume (float linear01) override
     {
         track.getVolumePlugin()->setVolumeDb (juce::Decibels::gainToDecibels (juce::jlimit (0.0f, 1.0f, linear01)));
@@ -108,12 +100,12 @@ public:
     {
         juce::ignoreUnused (a, d, s, r);
     }
-    juce::String getSlotName (int slot) const override
+    [[nodiscard]] juce::String getSlotName (int slot) const override
     {
         return slotNames[juce::jlimit (0, 15, slot)];
     }
 
-    te::SamplerPlugin* getSampler() const { return sampler; }
+    [[nodiscard]] te::SamplerPlugin* getSampler() const { return sampler; }
 
 private:
     te::SamplerPlugin* findOrCreateSampler()
@@ -147,12 +139,12 @@ private:
         juce::AudioFormatManager fm; fm.registerBasicFormats();
         std::unique_ptr<juce::AudioFormatReader> r (fm.createReaderFor (f));
         if (!r) return 0.0;
-        return r->lengthInSamples / r->sampleRate;
+        return static_cast<double> (r->lengthInSamples) / r->sampleRate;
     }
 
     te::Engine& engine;
     te::AudioTrack& track;
     te::SamplerPlugin* sampler = nullptr;
 
-    juce::String slotNames[16];
+    juce::Array<juce::String> slotNames = {"C1", "C#1", "D1", "D#1", "E1", "F1", "F#1", "G1", "G#1", "A1", "A#1", "B1", "C2", "C#2", "D2", "D#2" };
 };
