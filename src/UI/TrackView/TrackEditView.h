@@ -83,6 +83,7 @@ private:
 
     // Private helper methods for menu actions
     void showOutputDeviceSettings() const;
+    void showMidiInputDeviceSettings() const;
     void showNewEditMenu() const;
     void showOpenEditMenu() const;
 

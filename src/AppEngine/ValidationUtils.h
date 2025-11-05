@@ -3,6 +3,7 @@
 #include <string>
 #include <regex>
 #include <cmath>
+#include <juce_core/juce_core.h>
 
 namespace ValidationUtils
 {

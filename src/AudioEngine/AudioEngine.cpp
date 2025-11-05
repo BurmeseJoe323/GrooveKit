@@ -211,9 +211,80 @@ bool AudioEngine::connectMidiInputToCallback(int deviceIndex, juce::MidiInputCal
     // Add the callback to receive MIDI messages
     dm.addMidiInputDeviceCallback(device.identifier, callback);
 
+    // Track the currently connected device
+    currentMidiInputIdentifier = device.identifier;
+
     Logger::writeToLog("[MIDI] Connected to device: " + device.name);
 
     return true;
+}
+
+bool AudioEngine::setMidiInputDeviceByName(const juce::String& deviceName, juce::MidiInputCallback* callback)
+{
+    auto devices = juce::MidiInput::getAvailableDevices();
+
+    // Find device by name
+    for (const auto& device : devices)
+    {
+        if (device.name == deviceName)
+        {
+            auto& dm = adm();
+
+            // Disconnect previous device if any
+            if (currentMidiInputIdentifier.isNotEmpty())
+            {
+                dm.removeMidiInputDeviceCallback(currentMidiInputIdentifier, callback);
+                dm.setMidiInputDeviceEnabled(currentMidiInputIdentifier, false);
+            }
+
+            // Enable the new device
+            dm.setMidiInputDeviceEnabled(device.identifier, true);
+
+            // Add the callback to receive MIDI messages
+            dm.addMidiInputDeviceCallback(device.identifier, callback);
+
+            // Track the currently connected device
+            currentMidiInputIdentifier = device.identifier;
+
+            Logger::writeToLog("[MIDI] Connected to device: " + device.name);
+
+            return true;
+        }
+    }
+
+    Logger::writeToLog("[MIDI] Device not found: " + deviceName);
+    return false;
+}
+
+juce::String AudioEngine::getCurrentMidiInputDeviceName() const
+{
+    if (currentMidiInputIdentifier.isEmpty())
+        return {};
+
+    auto devices = juce::MidiInput::getAvailableDevices();
+
+    for (const auto& device : devices)
+    {
+        if (device.identifier == currentMidiInputIdentifier)
+            return device.name;
+    }
+
+    return {};
+}
+
+void AudioEngine::disconnectAllMidiInputs(juce::MidiInputCallback* callback)
+{
+    if (currentMidiInputIdentifier.isEmpty())
+        return;
+
+    auto& dm = adm();
+
+    dm.removeMidiInputDeviceCallback(currentMidiInputIdentifier, callback);
+    dm.setMidiInputDeviceEnabled(currentMidiInputIdentifier, false);
+
+    currentMidiInputIdentifier.clear();
+
+    Logger::writeToLog("[MIDI] Disconnected all MIDI input devices");
 }
 
 

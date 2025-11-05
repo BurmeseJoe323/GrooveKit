@@ -8,6 +8,8 @@ add_library(app_ui
         DrumSamplerView/SampleLibraryComponent.h
         PopupWindows/OutputDevice/OutputDeviceWindow.cpp
         PopupWindows/OutputDevice/OutputDeviceWindow.h
+        PopupWindows/MidiInputDevice/MidiInputDeviceWindow.cpp
+        PopupWindows/MidiInputDevice/MidiInputDeviceWindow.h
         MixView/MixView.cpp
         MixView/MixView.h
         MixView/MixerPanel.h
@@ -44,6 +46,7 @@ target_sources(app_ui
         MixView/MixerPanel.cpp
         MixView/ChannelComponents/ChannelStrip.cpp
         PopupWindows/OutputDevice/OutputDeviceWindow.cpp
+        PopupWindows/MidiInputDevice/MidiInputDeviceWindow.cpp
 )
 
 target_include_directories(app_ui

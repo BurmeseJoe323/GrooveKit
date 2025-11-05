@@ -25,6 +25,9 @@ public:
     void logAvailableMidiDevices() const;
     bool setMidiInputDeviceEnabled(int deviceIndex, bool enabled);
     bool connectMidiInputToCallback(int deviceIndex, juce::MidiInputCallback* callback);
+    bool setMidiInputDeviceByName(const juce::String& deviceName, juce::MidiInputCallback* callback);
+    juce::String getCurrentMidiInputDeviceName() const;
+    void disconnectAllMidiInputs(juce::MidiInputCallback* callback);
 
 private:
     tracktion::engine::Edit& edit;
@@ -32,5 +35,8 @@ private:
     te::Engine& engine;
     juce::AudioDeviceManager& adm() const;
     bool applySetup (const juce::AudioDeviceManager::AudioDeviceSetup& setup);
+
+    // Track currently connected MIDI input device
+    juce::String currentMidiInputIdentifier;
 
 };
