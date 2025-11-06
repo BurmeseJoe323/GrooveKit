@@ -32,12 +32,23 @@ public:
     // Request the parent TrackComponent to show a context menu for this clip at the given beat position
     std::function<void(te::MidiClip*)> onContextMenuRequested;
 
+    // Drag callbacks - Written by Claude Code
+    std::function<void(int targetTrack, te::TimePosition time, te::TimeDuration length, bool isValid)> onDragUpdate;
+    std::function<void(te::MidiClip*, int targetTrack, te::TimePosition newStart)> onDragComplete;
+
+    void mouseDown (const juce::MouseEvent& e) override;
+    void mouseDrag (const juce::MouseEvent& e) override;
     void mouseUp (const juce::MouseEvent& e) override;
     void mouseDoubleClick (const juce::MouseEvent& e) override;
 
 private:
     void updateSizeFromClip();
     void onResizeEnd();
+
+    // Drag helper methods - Written by Claude Code
+    te::TimePosition mouseToTime (const juce::MouseEvent& e);
+    int mouseToTrackIndex (const juce::MouseEvent& e);
+    te::TimePosition quantizeToGrid (te::TimePosition time, double gridSize = 0.25);
 
     // Custom constrainer that notifies us when resizing completes
     class ResizeConstrainer : public juce::ComponentBoundsConstrainer
@@ -60,6 +71,13 @@ private:
 
     ResizeConstrainer resizeConstrainer;
     juce::ResizableEdgeComponent edgeResizer;
+
+    // Drag state - Written by Claude Code
+    bool isDragging = false;
+    float dragAlpha = 1.0f; // Transparency during drag
+    juce::Point<int> dragStartMousePos;
+    te::TimePosition originalStartTime;
+    int originalTrackIndex = -1;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackClip)
 };

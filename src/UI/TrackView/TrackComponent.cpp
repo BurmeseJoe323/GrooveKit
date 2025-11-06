@@ -289,6 +289,81 @@ void TrackComponent::rebuildClipsFromEngine()
             });
         };
 
+        // Drag callbacks - Written by Claude Code
+        ui->onDragUpdate = [this, clip = mc] (int targetTrack, te::TimePosition time, te::TimeDuration length, bool isValid) {
+            auto* tl = findParentComponentOfClass<TrackListComponent>();
+            if (!tl)
+                return;
+
+            // Validate the drop location
+            const bool canMove = tl->canClipMoveToTrack (clip, trackIndex, targetTrack);
+            const auto targetRange = te::TimeRange (time, time + length);
+            const bool hasOverlap = tl->wouldClipOverlap (clip, targetTrack, targetRange);
+
+            const bool validDrop = canMove && !hasOverlap;
+
+            // Show ghost preview at quantized position
+            tl->showGhostClip (targetTrack, time, length, validDrop);
+        };
+
+        ui->onDragComplete = [this] (te::MidiClip* clip, int targetTrack, te::TimePosition newStart) {
+            auto* tl = findParentComponentOfClass<TrackListComponent>();
+            if (!tl || !clip || !appEngine)
+            {
+                if (tl) tl->hideGhostClip();
+                return;
+            }
+
+            // Hide ghost
+            tl->hideGhostClip();
+
+            // Validate final drop location
+            const bool canMove = tl->canClipMoveToTrack (clip, trackIndex, targetTrack);
+            const auto clipLength = clip->getPosition().getLength();
+            const auto targetRange = te::TimeRange (newStart, newStart + clipLength);
+            const bool hasOverlap = tl->wouldClipOverlap (clip, targetTrack, targetRange);
+
+            if (!canMove || hasOverlap)
+            {
+                // Invalid drop - do nothing
+                return;
+            }
+
+            // Apply changes to model
+            const bool changingTracks = (targetTrack != trackIndex);
+
+            // First, move clip to new time position
+            clip->setStart (newStart, false, true); // preserveSync=false, keepLength=true
+
+            // If changing tracks, move clip to target track
+            if (changingTracks)
+            {
+                auto audioTracks = te::getAudioTracks (appEngine->getEdit());
+                if (targetTrack >= 0 && targetTrack < audioTracks.size())
+                {
+                    auto* targetTrackPtr = audioTracks[targetTrack];
+                    if (targetTrackPtr)
+                    {
+                        clip->moveTo (*targetTrackPtr);
+                    }
+                }
+            }
+
+            // Rebuild UI for affected tracks
+            if (changingTracks)
+            {
+                // Rebuild both source and target tracks
+                tl->rebuildTrack (trackIndex);     // Source track
+                tl->rebuildTrack (targetTrack);     // Target track
+            }
+            else
+            {
+                // Just moving within same track
+                rebuildClipsFromEngine();
+                resized();
+            }
+        };
+
         addAndMakeVisible (ui.get());
         clipUIs.add (std::move (ui));
     }
