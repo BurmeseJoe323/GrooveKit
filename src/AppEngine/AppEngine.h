@@ -3,7 +3,6 @@
 #include "../AudioEngine/AudioEngine.h"
 #include "../MIDIEngine/MIDIEngine.h"
 #include "../UI/TrackView/TrackHeaderComponent.h"
-#include "../UI/TrackView/MidiListener.h"
 #include "TrackManager.h"
 #include "MidiListener.h"
 #include <tracktion_engine/tracktion_engine.h>
@@ -134,7 +133,7 @@ public:
 
     AudioEngine& getAudioEngine();
     MIDIEngine& getMidiEngine();
-    MidiListener& getMidiListener()        { return *midiListener; }
+    MidiListener& getMidiListener() const { return *midiListener; }
     juce::AudioProcessorValueTreeState& getAPVTS();
 
     EditViewState& getEditViewState();
@@ -181,8 +180,6 @@ public:
 
     void closeInstrumentWindow();
 
-    std::shared_ptr<MidiListener> getMidiListener() const { return midiListener; }
-
     // Clipboard helpers for MIDI clips (Junie)
     void copyMidiClip (te::MidiClip* clip);
     // Paste clipboard content to a specific track at a beat position
@@ -214,8 +211,6 @@ private:
     std::unique_ptr<juce::DocumentWindow> instrumentWindow_;
 
     int lastSavedTxn = 0;
-    std::shared_ptr<MidiListener> midiListener;
-
 
     bool writeEditToFile (const juce::File& file);
     void markSaved();

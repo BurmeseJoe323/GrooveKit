@@ -61,17 +61,21 @@ public:
 
     bool keyStateChanged (bool isKeyDown) override
     {
-        if (auto ml = appEngine->getMidiListener())
-            return ml->handleKeyStateChanged(isKeyDown);
+        if (appEngine)
+        {
+            auto& ml = appEngine->getMidiListener();
+            return ml.handleKeyStateChanged(isKeyDown);
+        }
         return false;
     }
 
     bool keyPressed (const juce::KeyPress& key) override
     {
         // If we have a MIDI listener, let it try first
-        if (auto ml = appEngine->getMidiListener())
+        if (appEngine)
         {
-            if (ml->handleKeyPress (key))
+            auto& ml = appEngine->getMidiListener();
+            if (ml.handleKeyPress (key))
                 return true; // consume the key so macOS won't beep
         }
 

@@ -56,6 +56,9 @@ public:
     juce::String getSelectableDescription() override        { return getName(); }
     bool isInstrument() { return true; }
 
+    bool takesMidiInput() override                          { return true; }
+    bool producesAudioWhenNoAudioInput() override           { return true; }
+
     void initialise   (const te::PluginInitialisationInfo&) override;
     void deinitialise () override;
     void reset        () override;
