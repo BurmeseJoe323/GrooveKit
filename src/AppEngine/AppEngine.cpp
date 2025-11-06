@@ -301,6 +301,32 @@ void AppEngine::setBpm (double newBpm)
         onBpmChanged(oldBpm, newBpm, oldLoopRange, oldPlayheadPos);
 }
 
+void AppEngine::initialise()
+{
+    // Choose a stable app-support folder for caches
+    #if JUCE_MAC
+    auto appSupport = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+                        .getChildFile("GrooveKit"); // your app name
+    #else
+    auto appSupport = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+                        .getChildFile("GrooveKit");
+    #endif
+    appSupport.createDirectory();
+
+    PluginManager::Settings pmSettings;
+    pmSettings.appDataDir    = appSupport;
+    pmSettings.scanAudioUnits = true;
+    pmSettings.scanVST3       = true;
+
+    pluginManager = std::make_unique<PluginManager>(*edit, pmSettings);
+
+    // Scan at startup (non-blocking). For dev builds, you might use blocking once.
+    pluginManager->scanForPluginsAsync();
+
+    // (Optional) start a timer somewhere in UI to poll pluginManager->isScanRunning()
+    // and refresh your plugin browser when it becomes false.
+}
+
 // Metronome/Click Track controls
 void AppEngine::setClickTrackEnabled (bool enabled)
 {

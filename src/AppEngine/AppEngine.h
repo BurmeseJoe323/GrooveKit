@@ -6,6 +6,7 @@
 #include "TrackManager.h"
 #include "MidiListener.h"
 #include <tracktion_engine/tracktion_engine.h>
+#include "../PluginManager/PluginManager.h"
 
 
 namespace IDs
@@ -132,6 +133,8 @@ public:
     double getBpm() const;
     void setBpm (double newBpm);
 
+    void initialise();
+
     // Metronome/Click Track controls
     void setClickTrackEnabled (bool enabled);
     bool isClickTrackEnabled() const;
@@ -217,6 +220,7 @@ private:
     std::unique_ptr<MIDIEngine> midiEngine;
     std::unique_ptr<AudioEngine> audioEngine;
     std::unique_ptr<TrackManager> trackManager;
+    std::unique_ptr<PluginManager> pluginManager;
     std::unique_ptr<MidiListener> midiListener;
 
     // Map from track index to its controller listener (TrackComponent) (Junie)

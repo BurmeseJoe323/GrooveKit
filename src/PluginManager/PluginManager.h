@@ -2,16 +2,54 @@
 #include <tracktion_engine/tracktion_engine.h>
 namespace te = tracktion::engine;
 
-class PluginManager {
+class PluginManager : private juce::Timer
+{
 public:
-    explicit PluginManager(te::Edit& e) : edit(e) {}
 
-    // Create a FourOSC instance (built-in) and return it
-    te::Plugin::Ptr createFourOSC();
+    struct Settings
+    {
+        juce::File appDataDir;
+        bool scanAudioUnits = true;
+        bool scanVST3 = true;
+    };
 
-    // Insert FourOSC at index 0 on a MIDI track; returns the plugin
-    te::Plugin::Ptr addFourOSCToTrack(te::AudioTrack& track);
+    explicit PluginManager(te::Edit& e, const Settings&);
+
+    void scanForPluginsAsync();
+    void scanForPluginsBlocking();
+
+    void rescanAsync(bool clearBlacklistFirst = false);
+
+    bool isScanRunning() const noexcept { return scanner != nullptr; }
+    const juce::KnownPluginList& getKnownList() const noexcept { return knownPlugins; }
+
+    void loadKnownListFromDisk();
+    void saveKnownListToDisk() const;
+
+    juce::StringArray getAllPluginNames() const;
+    juce::OwnedArray<juce::PluginDescription> getAllPluginDescriptions() const;
 
 private:
+    void initFormats();
+    juce::FileSearchPath buildSearchPaths() const;
+    void startScanner(bool reset);
+    void startNextFormatScan(bool reset);
+    void timerCallback() override;
+    void pumpScannerUntilDone(juce::String progressPrefix);
+
     te::Edit& edit;
+    Settings settings;
+
+    juce::AudioPluginFormatManager formatManager;
+    juce::KnownPluginList knownPlugins;
+
+    std::unique_ptr<juce::TimeSliceThread> scannerThread;
+    std::unique_ptr<juce::PluginDirectoryScanner> scanner;
+
+    juce::File knownListFile;
+    juce::File blacklistFile;
+    juce::File deadMansFile;
+
+    int currentFormatIndex = -1;
+
 };
