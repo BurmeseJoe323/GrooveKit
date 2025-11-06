@@ -32,6 +32,7 @@ target_sources(app_ui
         TrackView/TrackComponent.cpp TrackView/TrackComponent.h
         TrackView/TrackHeaderComponent.cpp TrackView/TrackHeaderComponent.h
         TrackView/TrackClip.cpp TrackView/TrackClip.h
+        TrackView/GhostClipComponent.cpp TrackView/GhostClipComponent.h
         TrackView/TrackListComponent.cpp TrackView/TrackListComponent.h
         TrackView/PlayheadComponent.cpp TrackView/PlayheadComponent.h
         TrackView/LoopRangeComponent.cpp TrackView/LoopRangeComponent.h
