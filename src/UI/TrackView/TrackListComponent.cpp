@@ -403,6 +403,116 @@ void TrackListComponent::rebuildFromEngine()
     resized();
 }
 
+// Written by Claude Code
+void TrackListComponent::rebuildTrack (int trackIndex)
+{
+    if (trackIndex >= 0 && trackIndex < tracks.size())
+    {
+        if (auto* track = tracks[trackIndex])
+        {
+            track->rebuildClipsFromEngine();
+            track->resized();
+        }
+    }
+}
+
+// Drag validation helpers - Written by Claude Code
+bool TrackListComponent::canClipMoveToTrack (te::MidiClip* clip, int sourceTrack, int targetTrack) const
+{
+    if (!appEngine || !clip)
+        return false;
+
+    // Check if target track index is valid
+    if (targetTrack < 0 || targetTrack >= appEngine->getNumTracks())
+        return false;
+
+    // Allow movement within same track
+    if (sourceTrack == targetTrack)
+        return true;
+
+    // Check track type matching (drum to drum, instrument to instrument)
+    const bool sourceIsDrum = appEngine->isDrumTrack (sourceTrack);
+    const bool targetIsDrum = appEngine->isDrumTrack (targetTrack);
+
+    return sourceIsDrum == targetIsDrum;
+}
+
+bool TrackListComponent::wouldClipOverlap (te::MidiClip* clipToMove, int targetTrack, te::TimeRange range) const
+{
+    if (!appEngine || !clipToMove)
+        return false;
+
+    // Get all MIDI clips from target track
+    auto clips = appEngine->getMidiClipsFromTrack (targetTrack);
+
+    for (auto* existingClip : clips)
+    {
+        // Skip the clip being moved
+        if (existingClip == clipToMove)
+            continue;
+
+        // Check if time ranges overlap
+        auto existingRange = existingClip->getPosition().time;
+        if (range.overlaps (existingRange))
+            return true;
+    }
+
+    return false;
+}
+
+int TrackListComponent::getTrackIndexAtY (int y) const
+{
+    constexpr int trackHeight = 125;
+
+    // Account for timeline at top
+    const int yRelative = y - timelineHeight;
+    if (yRelative < 0)
+        return -1;
+
+    const int index = yRelative / trackHeight;
+
+    // Validate index
+    if (index < 0 || index >= appEngine->getNumTracks())
+        return -1;
+
+    return index;
+}
+
+// Ghost clip management - Written by Claude Code
+void TrackListComponent::showGhostClip (int trackIndex, te::TimePosition time,
+                                        te::TimeDuration length, bool isValid)
+{
+    // Create ghost if it doesn't exist
+    if (!ghostClip)
+    {
+        ghostClip = std::make_unique<GhostClipComponent>();
+        addAndMakeVisible (ghostClip.get());
+    }
+
+    // Calculate ghost bounds using same logic as TrackComponent::resized()
+    constexpr int trackHeight = 125;
+    const double pixelsPerSecond = getPixelsPerSecond();
+    const double viewStartSec = getViewStart().inSeconds();
+
+    const double clipStartSec = time.inSeconds();
+    const double clipLenSec = length.inSeconds();
+
+    const int x = static_cast<int> (juce::roundToIntAccurate ((clipStartSec - viewStartSec) * pixelsPerSecond));
+    const int w = static_cast<int> (juce::roundToIntAccurate (clipLenSec * pixelsPerSecond));
+    const int y = timelineHeight + (trackIndex * trackHeight) + 5; // +5 for inner margin
+    const int h = trackHeight - 10; // Account for margins
+
+    ghostClip->setBounds (x, y, juce::jmax (w, 20), h);
+    ghostClip->setDropLocation (trackIndex, time, length, isValid);
+    ghostClip->show();
+}
+
+void TrackListComponent::hideGhostClip()
+{
+    if (ghostClip)
+        ghostClip->hide();
+}
+
 // bool EditComponent::keyPressed(const KeyPress& key) {
 //     if (key == KeyPress::deleteKey) {
 //         removeSelectedTracks();

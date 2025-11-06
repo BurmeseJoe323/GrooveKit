@@ -5,6 +5,7 @@
 #include "LoopRangeComponent.h"
 #include "TrackComponent.h"
 #include "TrackHeaderComponent.h"
+#include "GhostClipComponent.h"
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "TimelineComponent.h"
 
@@ -26,6 +27,7 @@ public:
     void addNewTrack (int index);
 
     void rebuildFromEngine();
+    void rebuildTrack (int trackIndex); // Written by Claude Code
 
     void armTrack(int trackIndex, bool shouldBeArmed);
 
@@ -45,6 +47,15 @@ public:
     bool keyStateChanged (bool isKeyDown) override;
     void mouseDown (const juce::MouseEvent&) override;
     void parentHierarchyChanged() override;
+
+    // Drag validation helpers - Written by Claude Code
+    bool canClipMoveToTrack (te::MidiClip* clip, int sourceTrack, int targetTrack) const;
+    bool wouldClipOverlap (te::MidiClip* clipToMove, int targetTrack, t::TimeRange range) const;
+    int getTrackIndexAtY (int y) const;
+
+    // Ghost clip management - Written by Claude Code
+    void showGhostClip (int trackIndex, t::TimePosition time, t::TimeDuration length, bool isValid);
+    void hideGhostClip();
 
 private:
     const std::shared_ptr<AppEngine> appEngine;
@@ -72,6 +83,8 @@ private:
     };
     juce::TextButton loopButton { "loop" };
 
+    // Ghost clip for drag preview - Written by Claude Code
+    std::unique_ptr<GhostClipComponent> ghostClip;
 
     void updateTrackIndexes() const;
 
