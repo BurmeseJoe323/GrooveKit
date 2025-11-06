@@ -7,7 +7,7 @@ PlayheadComponent::PlayheadComponent (te::Edit& e, EditViewState& evs) : edit (e
 
 void PlayheadComponent::paint (juce::Graphics& g)
 {
-    g.setColour (juce::Colours::yellow);
+    g.setColour (juce::Colours::aqua);
     g.drawRect (xPosition, 0, 2, getHeight());
 }
 
@@ -31,7 +31,9 @@ void PlayheadComponent::mouseUp (const juce::MouseEvent&)
 
 void PlayheadComponent::mouseDrag (const juce::MouseEvent& e)
 {
-    auto t = editViewState.xToTime (e.x, getParentComponent()->getWidth());
+    // Convert mouse x to time using the playhead's own coordinate system
+    const double tSec = e.x / pixelsPerSecond + viewStart.inSeconds();
+    auto t = te::TimePosition::fromSeconds(juce::jmax(0.0, tSec));
     edit.getTransport().setPosition (t);
     timerCallback();
 }
@@ -47,4 +49,7 @@ void PlayheadComponent::timerCallback()
                  std::abs(newX - xPosition) + 4, getHeight());
         xPosition = newX;
     }
+
+    if (onPlayheadMoved)
+        onPlayheadMoved();
 }
