@@ -5,6 +5,7 @@
 #include "../UI/TrackView/TrackHeaderComponent.h"
 #include "../UI/TrackView/MidiListener.h"
 #include "TrackManager.h"
+#include "MidiListener.h"
 #include <tracktion_engine/tracktion_engine.h>
 
 
@@ -133,6 +134,7 @@ public:
 
     AudioEngine& getAudioEngine();
     MIDIEngine& getMidiEngine();
+    MidiListener& getMidiListener()        { return *midiListener; }
     juce::AudioProcessorValueTreeState& getAPVTS();
 
     EditViewState& getEditViewState();
@@ -142,6 +144,13 @@ public:
     bool setDefaultOutputDevice()                          { return audioEngine->setDefaultOutputDevice(); }
     juce::StringArray listOutputDevices()            const { return audioEngine->listOutputDevices(); }
     juce::String getCurrentOutputDeviceName()        const { return audioEngine->getCurrentOutputDeviceName(); }
+
+    // MIDI Input device management
+    juce::StringArray listMidiInputDevices()         const { return audioEngine->listMidiInputDevices(); }
+    bool connectMidiInputDevice(int deviceIndex)           { return audioEngine->connectMidiInputToCallback(deviceIndex, midiListener.get()); }
+    bool setMidiInputDevice(const juce::String& deviceName) { return audioEngine->setMidiInputDeviceByName(deviceName, midiListener.get()); }
+    juce::String getCurrentMidiInputDeviceName()     const { return audioEngine->getCurrentMidiInputDeviceName(); }
+    void disconnectAllMidiInputs()                         { audioEngine->disconnectAllMidiInputs(midiListener.get()); }
 
     bool saveEdit();
     void saveEditAsAsync (std::function<void (bool success)> onDone = {});
@@ -193,6 +202,7 @@ private:
     std::unique_ptr<MIDIEngine> midiEngine;
     std::unique_ptr<AudioEngine> audioEngine;
     std::unique_ptr<TrackManager> trackManager;
+    std::unique_ptr<MidiListener> midiListener;
 
     // Map from track index to its controller listener (TrackComponent) (Junie)
     juce::HashMap<int, TrackHeaderComponent::Listener*> trackListenerMap;

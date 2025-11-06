@@ -4,6 +4,7 @@
 #include "../../AppEngine/AppEngine.h"
 #include "../../AppEngine/ValidationUtils.h"
 #include "PopupWindows/OutputDevice/OutputDeviceWindow.h"
+#include "PopupWindows/MidiInputDevice/MidiInputDeviceWindow.h"
 #include <regex>
 
 // Helper for styling the menu buttons
@@ -71,9 +72,6 @@ TrackEditView::TrackEditView (AppEngine& engine)
     addAndMakeVisible (resizerBar.get());
 
     addAndMakeVisible (viewport);
-
-    // MIDI listener setup
-    midiListener = std::make_unique<MidiListener>(appEngine);
 
     setWantsKeyboardFocus (true);
 }
@@ -155,7 +153,7 @@ void TrackEditView::resized ()
 bool TrackEditView::keyPressed (const juce::KeyPress& key_press)
 {
     // The note keys are being handled by keyStateChanged, so we'll just say that the event is consumed
-    if (midiListener->getNoteKeys().contains (key_press.getKeyCode()))
+    if (appEngine->getMidiListener().getNoteKeys().contains (key_press.getKeyCode()))
         return true;
 
     if (key_press == juce::KeyPress::spaceKey)
@@ -173,7 +171,7 @@ bool TrackEditView::keyPressed (const juce::KeyPress& key_press)
     }
 
     // Let MidiListener handle octave changes (Z/X keys)
-    if (midiListener->handleKeyPress(key_press))
+    if (appEngine->getMidiListener().handleKeyPress(key_press))
         return true;
 
     // This is the top level of our application, so if the key press has not been consumed,
@@ -183,7 +181,7 @@ bool TrackEditView::keyPressed (const juce::KeyPress& key_press)
 
 bool TrackEditView::keyStateChanged (bool isKeyDown)
 {
-    return midiListener->handleKeyStateChanged(isKeyDown);
+    return appEngine->getMidiListener().handleKeyStateChanged(isKeyDown);
 }
 
 void TrackEditView::parentHierarchyChanged()
@@ -264,6 +262,7 @@ juce::PopupMenu TrackEditView::getMenuForIndex (const int topLevelMenuIndex, con
     {
         OpenMixer = 1002,
         ShowOutputSettings = 1003,
+        ShowMidiInputSettings = 1004,
         NewEdit = 2001,
         OpenEdit = 2002,
         SaveEdit = 2003,
@@ -281,6 +280,7 @@ juce::PopupMenu TrackEditView::getMenuForIndex (const int topLevelMenuIndex, con
         menu.addItem (SaveEditAs, "Save Edit As...");
         menu.addSeparator();
         menu.addItem (ShowOutputSettings, "Output Device Settings...");
+        menu.addItem (ShowMidiInputSettings, "MIDI Input Device Settings...");
     }
     else if (topLevelMenuIndex == 1) // View
     {
@@ -300,6 +300,7 @@ void TrackEditView::menuItemSelected (const int menuItemID, int)
     {
         OpenMixer = 1002,
         ShowOutputSettings = 1003,
+        ShowMidiInputSettings = 1004,
         NewEdit = 2001,
         OpenEdit = 2002,
         SaveEdit = 2003,
@@ -328,6 +329,9 @@ void TrackEditView::menuItemSelected (const int menuItemID, int)
         case ShowOutputSettings:
             showOutputDeviceSettings(); // TODO : fix positioning
             break;
+        case ShowMidiInputSettings:
+            showMidiInputDeviceSettings();
+            break;
         case NewEdit:
             showNewEditMenu();
             break;
@@ -348,6 +352,23 @@ void TrackEditView::menuItemSelected (const int menuItemID, int)
 void TrackEditView::showOutputDeviceSettings () const
 {
     auto* content = new OutputDeviceWindow (*appEngine);
+
+    content->setSize (360, 140);
+
+    juce::Rectangle<int> screenBounds;
+    #if JUCE_MAC
+    screenBounds = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea;
+    screenBounds = screenBounds.withHeight (25); // Approx height of mac menu bar
+    #else
+    if (menuBar)
+        screenBounds = menuBar->getScreenBounds();
+    #endif
+    juce::CallOutBox::launchAsynchronously (std::unique_ptr<Component> (content), screenBounds, nullptr);
+}
+
+void TrackEditView::showMidiInputDeviceSettings () const
+{
+    auto* content = new MidiInputDeviceWindow (*appEngine);
 
     content->setSize (360, 140);
 

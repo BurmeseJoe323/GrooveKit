@@ -22,11 +22,23 @@ public:
     juce::AudioDeviceManager& getAudioDeviceManager();
     void initialiseDefaults (double sampleRate = 48000.0, int bufferSize = 512);
 
+    // MIDI Input device management
+    juce::StringArray listMidiInputDevices() const;
+    void logAvailableMidiDevices() const;
+    bool setMidiInputDeviceEnabled(int deviceIndex, bool enabled);
+    bool connectMidiInputToCallback(int deviceIndex, juce::MidiInputCallback* callback);
+    bool setMidiInputDeviceByName(const juce::String& deviceName, juce::MidiInputCallback* callback);
+    juce::String getCurrentMidiInputDeviceName() const;
+    void disconnectAllMidiInputs(juce::MidiInputCallback* callback);
+
 private:
     te::Edit& edit;
     std::unique_ptr<MIDIEngine> midiEngine;
     te::Engine& engine;
     juce::AudioDeviceManager& adm() const;
     bool applySetup (const juce::AudioDeviceManager::AudioDeviceSetup& setup);
+
+    // Track currently connected MIDI input device
+    juce::String currentMidiInputIdentifier;
 
 };

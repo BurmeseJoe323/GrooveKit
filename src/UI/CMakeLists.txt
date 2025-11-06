@@ -8,6 +8,8 @@ add_library(app_ui
         DrumSamplerView/SampleLibraryComponent.h
         PopupWindows/OutputDevice/OutputDeviceWindow.cpp
         PopupWindows/OutputDevice/OutputDeviceWindow.h
+        PopupWindows/MidiInputDevice/MidiInputDeviceWindow.cpp
+        PopupWindows/MidiInputDevice/MidiInputDeviceWindow.h
         MixView/MixView.cpp
         MixView/MixView.h
         MixView/MixerPanel.h
@@ -29,7 +31,6 @@ target_sources(app_ui
         PRIVATE
         MainComponent.cpp MainComponent.h
         TrackView/TrackEditView.cpp TrackView/TrackEditView.h
-        TrackView/MidiListener.cpp TrackView/MidiListener.h
         TrackView/TrackComponent.cpp TrackView/TrackComponent.h
         TrackView/TrackHeaderComponent.cpp TrackView/TrackHeaderComponent.h
         TrackView/TrackClip.cpp TrackView/TrackClip.h
@@ -50,6 +51,7 @@ target_sources(app_ui
         MixView/MixerPanel.cpp
         MixView/ChannelComponents/ChannelStrip.cpp
         PopupWindows/OutputDevice/OutputDeviceWindow.cpp
+        PopupWindows/MidiInputDevice/MidiInputDeviceWindow.cpp
 )
 
 target_include_directories(app_ui

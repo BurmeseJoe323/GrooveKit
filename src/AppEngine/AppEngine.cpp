@@ -22,13 +22,17 @@ AppEngine::AppEngine()
     audioEngine = std::make_unique<AudioEngine> (*edit, *engine);
     trackManager = std::make_unique<TrackManager> (*edit);
     selectionManager = std::make_unique<te::SelectionManager> (*engine);
+    midiListener = std::make_unique<MidiListener> (this);
 
     editViewState = std::make_unique<EditViewState> (*edit, *selectionManager);
 
     audioEngine->initialiseDefaults (48000.0, 512);
 
-    auto self = std::shared_ptr<AppEngine>(this, [] (AppEngine*) {});
-    midiListener = std::make_shared<MidiListener>(self);
+    // Auto-connect to first available MIDI input device (if any)
+    if (!listMidiInputDevices().isEmpty())
+    {
+        connectMidiInputDevice(0);
+    }
 }
 
 AppEngine::~AppEngine()

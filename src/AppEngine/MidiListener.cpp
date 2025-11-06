@@ -1,8 +1,8 @@
 #include "MidiListener.h"
-#include "../../AppEngine/AppEngine.h"
+#include "AppEngine.h"
 
-MidiListener::MidiListener(std::shared_ptr<AppEngine> engine)
-    : appEngine(std::move(engine))
+MidiListener::MidiListener(AppEngine* engine)
+    : appEngine(engine)
 {
     midiKeyboardState.addListener(this);
 }
@@ -32,6 +32,43 @@ void MidiListener::handleNoteOff(juce::MidiKeyboardState*, int midiChannel, int 
     const int ch = (midiChannel <= 0 ? 1 : midiChannel);
     juce::MidiMessage off = juce::MidiMessage::noteOff(ch, midiNoteNumber);
     injectNoteMessage(off);
+}
+
+void MidiListener::handleIncomingMidiMessage(juce::MidiInput* /*source*/, const juce::MidiMessage& message)
+{
+    // IMPORTANT: This callback runs on the MIDI input thread (NOT the message thread).
+    // We must marshal MIDI messages to the message thread before calling Tracktion Engine,
+    // since injectLiveMidiMessage() requires the message thread (TRACKTION_ASSERT_MESSAGE_THREAD).
+
+    // Capture message data for async processing
+    const int channel = message.getChannel();
+    const int noteNumber = message.getNoteNumber();
+    const float velocity = message.getFloatVelocity();
+    const bool isNoteOn = message.isNoteOn();
+    const bool isNoteOff = message.isNoteOff();
+
+    // Marshal to message thread using MessageManager::callAsync
+    juce::MessageManager::callAsync([this, channel, noteNumber, velocity, isNoteOn, isNoteOff]()
+    {
+        // Now we're safely on the message thread
+        if (isNoteOn)
+        {
+            DBG("[MIDI IN] Note ON  - Note: " << noteNumber
+                << ", Velocity: " << (int)(velocity * 127.0f)
+                << ", Channel: " << channel);
+            midiKeyboardState.noteOn(channel, noteNumber, velocity);
+        }
+        else if (isNoteOff)
+        {
+            DBG("[MIDI IN] Note OFF - Note: " << noteNumber
+                << ", Velocity: " << (int)(velocity * 127.0f)
+                << ", Channel: " << channel);
+            midiKeyboardState.noteOff(channel, noteNumber, velocity);
+        }
+    });
+
+    // Note: handleNoteOn/handleNoteOff will be triggered by MidiKeyboardState,
+    // which will then call injectNoteMessage to route to the armed track
 }
 
 void MidiListener::injectNoteMessage(const juce::MidiMessage& msg)

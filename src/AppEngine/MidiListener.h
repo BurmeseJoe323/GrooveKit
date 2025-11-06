@@ -3,7 +3,6 @@
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_audio_devices/juce_audio_devices.h>
 #include <tracktion_engine/tracktion_engine.h>
-#include <memory>
 
 namespace te = tracktion::engine;
 
@@ -12,16 +11,22 @@ class AppEngine;
 /**
  * MidiListener handles MIDI keyboard input and routes it to the armed track.
  * It manages the MidiKeyboardState and provides QWERTY-to-MIDI mapping functionality.
+ * Receives input from both QWERTY keyboard and external MIDI controllers.
+ * Owned and managed by AppEngine.
  */
-class MidiListener final : public juce::MidiKeyboardStateListener
+class MidiListener final : public juce::MidiKeyboardStateListener,
+                           public juce::MidiInputCallback
 {
 public:
-    explicit MidiListener(std::shared_ptr<AppEngine> engine);
+    explicit MidiListener(AppEngine* engine);
     ~MidiListener() override;
 
     // MidiKeyboardStateListener overrides
     void handleNoteOn(juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override;
     void handleNoteOff(juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override;
+
+    // MidiInputCallback overrides - receives MIDI from hardware devices
+    void handleIncomingMidiMessage(juce::MidiInput* source, const juce::MidiMessage& message) override;
 
     /**
      * Returns a reference to the MidiKeyboardState managed by this listener.
@@ -50,7 +55,7 @@ public:
 private:
     void injectNoteMessage(const juce::MidiMessage& msg);
 
-    std::shared_ptr<AppEngine> appEngine;
+    AppEngine* appEngine;
     juce::MidiKeyboardState midiKeyboardState;
 
     // QWERTY mapping keys (A-L for chromatic scale)
