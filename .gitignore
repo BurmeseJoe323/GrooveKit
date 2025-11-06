@@ -38,3 +38,4 @@ groovekit.db
 tracktion_engine/
 # Claude config
 /CLAUDE.md
+.claude/
