@@ -7,7 +7,8 @@
 TrackClip::TrackClip (te::MidiClip* c, float pixelsPerBeat)
     : clip (c),
       pixelsPerBeat (pixelsPerBeat),
-      edgeResizer (this, nullptr, juce::ResizableEdgeComponent::Edge::rightEdge)
+      resizeConstrainer (*this),
+      edgeResizer (this, &resizeConstrainer, juce::ResizableEdgeComponent::Edge::rightEdge)
 {
     jassert (clip != nullptr);
 
@@ -18,6 +19,9 @@ TrackClip::TrackClip (te::MidiClip* c, float pixelsPerBeat)
         if (clipState.isValid())
             clipState.addListener (this);
     }
+
+    // Set minimum width constraint for resizing
+    resizeConstrainer.setMinimumWidth (20);
 
     addAndMakeVisible (edgeResizer);
     updateSizeFromClip();
@@ -34,14 +38,28 @@ void TrackClip::updateSizeFromClip()
     if (!clip)
         return;
 
-    // MidiClip time accessors
-    const double lengthBeats = clip->getLengthInBeats().inBeats();
-    const int w = juce::roundToInt (lengthBeats * pixelsPerBeat);
+    // Use the same calculation as TrackComponent::resized() for consistency
+    auto* tl = findParentComponentOfClass<TrackListComponent>();
+    if (tl)
+    {
+        const double pixelsPerSecond = tl->getPixelsPerSecond();
+        const double lengthSecs = clip->getPosition().getLength().inSeconds();
+        const int w = static_cast<int> (juce::roundToIntAccurate (lengthSecs * pixelsPerSecond));
 
-    // Keep Y/Height unchanged; only update width.
-    auto b = getBounds();
-    setBounds (b.withWidth (juce::jmax (1, w)));
-    repaint();
+        // Keep X/Y/Height unchanged; only update width
+        auto b = getBounds();
+        setBounds (b.withWidth (juce::jmax (20, w)));
+        repaint();
+    }
+    else
+    {
+        // Fallback to old method if parent not found
+        const double lengthBeats = clip->getLengthInBeats().inBeats();
+        const int w = juce::roundToInt (lengthBeats * pixelsPerBeat);
+        auto b = getBounds();
+        setBounds (b.withWidth (juce::jmax (1, w)));
+        repaint();
+    }
 }
 
 void TrackClip::setPixelsPerBeat (float ppb)
@@ -74,66 +92,48 @@ void TrackClip::resized()
     edgeResizer.setBounds (getWidth() - handleWidth, 0, handleWidth, getHeight());
 }
 
+void TrackClip::onResizeEnd()
+{
+    if (!clip)
+        return;
+
+    auto* tl = findParentComponentOfClass<TrackListComponent>();
+    if (!tl)
+        return;
+
+    const double pixelsPerSecond = tl->getPixelsPerSecond();
+    if (pixelsPerSecond <= 0.0)
+        return;
+
+    // Calculate the new length based on the current width
+    const double newLengthSecs = static_cast<double> (getWidth()) / pixelsPerSecond;
+
+    // Update the model - preserveSync=false since we're manually resizing
+    clip->setLength (te::TimeDuration::fromSeconds (newLengthSecs), false);
+
+    // Update only the width from the model, using the same calculation as TrackComponent::resized()
+    // This preserves the X position and avoids visual "jump"
+    const double actualLength = clip->getPosition().getLength().inSeconds();
+    const int correctWidth = static_cast<int> (juce::roundToIntAccurate (actualLength * pixelsPerSecond));
+
+    auto b = getBounds();
+    setBounds (b.withWidth (juce::jmax (correctWidth, 20)));
+}
+
 void TrackClip::mouseUp (const juce::MouseEvent& e)
 {
-    if (isResizing)
-    {
-        isResizing = false;
-
-        auto* tl = findParentComponentOfClass<TrackListComponent>();
-        if (tl != nullptr && clip != nullptr)
-        {
-            const double pixelsPerSecond = tl->getPixelsPerSecond();
-            if (pixelsPerSecond > 0.0)
-            {
-                const double newLengthSecs = (double) getWidth() / pixelsPerSecond;
-                clip->setLength (te::TimeDuration::fromSeconds (newLengthSecs), clip->getUndoManager());
-            }
-        }
-    }
     // Right click: delegate context menu handling to the parent TrackComponent
-    else if (e.mods.isPopupMenu())
+    if (e.mods.isPopupMenu())
     {
         if (onContextMenuRequested)
             onContextMenuRequested (clip);
     }
-
-    if (auto* parent = findParentComponentOfClass<TrackComponent>())
-        parent->setInterceptsMouseClicks (true, true);
 }
 
 void TrackClip::mouseDoubleClick (const juce::MouseEvent& e)
 {
-    if (e.mods.isLeftButtonDown())
-        if (e.mods.isLeftButtonDown() && onClicked)
-            onClicked (clip);
-}
-
-void TrackClip::mouseDown (const juce::MouseEvent& e)
-{
-    if (e.originalComponent == &edgeResizer)
-    {
-        isResizing = true;
-        resizeStartScreenX = e.getScreenX();
-        originalWidth = getWidth();
-
-        // Tell parent TrackComponent not to intercept mouse clicks
-        // so this component can receive the drag events.
-        if (auto* parent = findParentComponentOfClass<TrackComponent>())
-            parent->setInterceptsMouseClicks (false, false);
-    }
-}
-
-void TrackClip::mouseDrag (const juce::MouseEvent& e)
-{
-    if (isResizing)
-    {
-        const int dx = e.getScreenX() - resizeStartScreenX;
-        const int newWidth = juce::jmax (10, originalWidth + dx);
-
-        // Resize during a drag
-        setBounds (getX(), getY(), newWidth, getHeight());
-    }
+    if (e.mods.isLeftButtonDown() && onClicked)
+        onClicked (clip);
 }
 
 void TrackClip::setColor (juce::Colour newColor)
