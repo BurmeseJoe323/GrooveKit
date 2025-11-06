@@ -41,9 +41,8 @@ void PlayheadComponent::mouseDrag (const juce::MouseEvent& e)
 void PlayheadComponent::timerCallback()
 {
     const double tSec = edit.getTransport().getPosition().inSeconds();
-    const int newX = (int) juce::roundToIntAccurate((tSec - viewStart.inSeconds()) * pixelsPerSecond);
 
-    if (newX != xPosition)
+    if (const int newX = (tSec - viewStart.inSeconds()) * pixelsPerSecond; newX != xPosition)
     {
         repaint (juce::jmin(newX, xPosition) - 2, 0,
                  std::abs(newX - xPosition) + 4, getHeight());
