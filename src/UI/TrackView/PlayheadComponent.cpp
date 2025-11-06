@@ -7,7 +7,7 @@ PlayheadComponent::PlayheadComponent (te::Edit& e, EditViewState& evs) : edit (e
 
 void PlayheadComponent::paint (juce::Graphics& g)
 {
-    g.setColour (juce::Colours::yellow);
+    g.setColour (juce::Colours::aqua);
     g.drawRect (xPosition, 0, 2, getHeight());
 }
 
@@ -49,4 +49,7 @@ void PlayheadComponent::timerCallback()
                  std::abs(newX - xPosition) + 4, getHeight());
         xPosition = newX;
     }
+
+    if (onPlayheadMoved)
+        onPlayheadMoved();
 }

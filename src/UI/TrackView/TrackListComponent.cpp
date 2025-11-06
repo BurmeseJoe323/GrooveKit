@@ -12,15 +12,20 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
     addAndMakeVisible (playhead);
     playhead.setAlwaysOnTop (true);
 
+    // Set up playhead
     playhead.setPixelsPerSecond(100.0);
     playhead.setViewStart(te::TimePosition::fromSeconds(0.0));
 
+    // Set up timeline
     timeline = std::make_unique<ui::TimelineComponent>(appEngine->getEdit());
     addAndMakeVisible (timeline.get());
     timeline->setPixelsPerSecond (100.0);
     timeline->setViewStart (te::TimePosition::fromSeconds (0.0));
     timeline->setEditForSnap(&appEngine->getEdit());
     timeline->setSnapToBeats(true);
+
+    // Add callback for timeline component that's listening to playhead
+    playhead.onPlayheadMoved = [this] () { timeline->repaint(); };
 
     addAndMakeVisible(loopButton);
     loopButton.setClickingTogglesState(true);
@@ -143,7 +148,8 @@ void TrackListComponent::resized()
     // playhead over everything
     playhead.setBounds(getLocalBounds()
                            .withTrimmedBottom(addButtonSpace)
-                           .withTrimmedLeft(headerWidth));
+                           .withTrimmedLeft(headerWidth)
+                           .withTrimmedTop (timelineHeight));
     playhead.toFront(false);
 
     // 2) Second pass: now that clip UIs have bounds, compute true rightmost
@@ -193,11 +199,6 @@ void TrackListComponent::addNewTrack (int engineIdx)
     header->setTrackName (isDrum ? "Drums" : ("Track " + juce::String (tracks.size() + 1)));
 
     headers.add (header);
-
-    // header->setTrackType (
-    //     appEngine->isDrumTrack (newTrack->getEngineIndex())
-    //         ? TrackHeaderComponent::TrackType::Drum
-    //         : TrackHeaderComponent::TrackType::Instrument);
 
     header->setTrackType (isDrum ? TrackHeaderComponent::TrackType::Drum
                                  : TrackHeaderComponent::TrackType::Instrument);
