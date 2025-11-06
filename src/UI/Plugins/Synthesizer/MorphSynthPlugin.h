@@ -77,6 +77,9 @@ public:
     juce::ValueTree saveToValueTree();
     void restoreFromValueTree (const juce::ValueTree&);
 
+    /** Panic/kill all active notes immediately. */
+    void stopAllNotes();
+
     //==============================================================================
     // Parameters (UI binds to these directly)
     //------------------------------------------------------------------------------
@@ -108,8 +111,6 @@ private:
     //==============================================================================
     // Helpers
     //------------------------------------------------------------------------------
-    /** Panic/kill all active notes immediately. */
-    void stopAllNotes();
 
     // juce::Timer
     void timerCallback() override;

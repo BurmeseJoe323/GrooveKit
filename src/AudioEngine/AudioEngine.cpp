@@ -1,4 +1,5 @@
 #include "AudioEngine.h"
+#include "../UI/Plugins/Synthesizer/MorphSynthPlugin.h"
 using namespace juce;
 
 namespace te = tracktion::engine;
@@ -29,6 +30,9 @@ void AudioEngine::stop() {
     if (&edit)
     {
         edit.getTransport().stop(false, false);
+        for (auto* plugin : te::getAllPlugins (edit, false))
+            if (auto* morph = dynamic_cast<MorphSynthPlugin*>(plugin))
+                morph->stopAllNotes();
     }
 }
 
