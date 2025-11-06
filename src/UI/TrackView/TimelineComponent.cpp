@@ -57,18 +57,18 @@ void ui::TimelineComponent::paint (Graphics& g)
         {
             g.setColour (Colours::white.withAlpha (0.7f));
             g.setFont (Font (FontOptions (11.0f)));
-            String label (t, 2);
+            String label (t + 1);
             g.drawFittedText (label, Rectangle<int> (x + 3, 2, 60, 14), Justification::left, 1);
         }
     }
 
     const double playPos = edit.getTransport().getPosition().inSeconds();
-    const int playX = int ((playPos - viewStart.inSeconds()) * pixelsPerSecond + 0.5);
+    const double playX = ((playPos - viewStart.inSeconds()) * pixelsPerSecond);
 
     if (playX >= 0 && playX < getWidth())
     {
-        g.setColour (juce::Colours::aqua.withAlpha (0.8f));
-        g.drawLine ((float) playX + 0.5f, 0.0f, (float) playX + 0.5f, (float) r.getBottom());
+        g.setColour (juce::Colours::aqua);
+        g.drawRect (playX + 0.5, 0.0, 2.0, getHeight());
     }
 
     if (hasLoop)
