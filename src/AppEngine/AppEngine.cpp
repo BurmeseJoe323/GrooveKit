@@ -9,7 +9,7 @@
 namespace te = tracktion::engine;
 namespace t = tracktion;
 using namespace std::literals;
-using namespace te::literals;
+using namespace t::literals;
 
 AppEngine::AppEngine()
 {
@@ -498,7 +498,7 @@ void AppEngine::closeInstrumentWindow()
     }
 }
 
-bool AppEngine::addMidiClipToTrackAt(int trackIndex, te::TimePosition start, te::BeatDuration length)
+bool AppEngine::addMidiClipToTrackAt(int trackIndex, t::TimePosition start, t::BeatDuration length)
 {
     if (!midiEngine)
         return false;
@@ -548,7 +548,7 @@ bool AppEngine::pasteClipboardAt (const int trackIndex, const double startBeats)
 
     // Resolve target track and time from beats
     const auto targetTrack = te::Track::Ptr (audioTracks[static_cast<size_t> (trackIndex)]);
-    const auto time = edit->tempoSequence.toTime (te::BeatPosition::fromBeats (startBeats));
+    const auto time = edit->tempoSequence.toTime (t::BeatPosition::fromBeats (startBeats));
 
     ip.setNextInsertPoint (time, targetTrack);
 

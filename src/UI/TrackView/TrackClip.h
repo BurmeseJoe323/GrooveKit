@@ -6,7 +6,7 @@ namespace te = tracktion::engine;
 #include "tracktion_graph/tracktion_graph.h"
 #include <functional>
 
-namespace te = tracktion;
+namespace t = tracktion;
 
 class TrackClip final : public juce::Component, private juce::ValueTree::Listener
 {

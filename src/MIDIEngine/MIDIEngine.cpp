@@ -10,7 +10,7 @@ MIDIEngine::MIDIEngine (te::Edit& editRef)
 {
 }
 
-void MIDIEngine::addMidiClipToTrackAt(int trackIndex,
+bool MIDIEngine::addMidiClipToTrackAt(int trackIndex,
                                       t::TimePosition start,
                                       t::BeatDuration length)
 {

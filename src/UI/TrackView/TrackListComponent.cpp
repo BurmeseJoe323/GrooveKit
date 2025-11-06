@@ -2,8 +2,6 @@
 #include "DrumSamplerView/DrumSamplerView.h"
 #include "TrackEditView.h"
 #include <tracktion_engine/tracktion_engine.h>
-
-#include "PopupWindows/PianoRollComponents/PianoRollMainComponent.h"
 namespace t = tracktion;
 namespace te = tracktion::engine;
 #include "TrackListComponent.h"

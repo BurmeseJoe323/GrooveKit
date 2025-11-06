@@ -327,7 +327,7 @@ void TrackComponent::mouseUp (const juce::MouseEvent& e)
     const double viewStartSec    = tl ? tl->getViewStart().inSeconds() : 0.0;
 
     const double startSec = viewStartSec + (localX / juce::jmax (1.0, pixelsPerSecond));
-    const t::TimePosition startPos = te::TimePosition::fromSeconds (startSec);
+    const t::TimePosition startPos = t::TimePosition::fromSeconds (startSec);
 
     juce::PopupMenu m;
     m.addItem (1, "Paste Here");
@@ -354,7 +354,7 @@ void TrackComponent::mouseUp (const juce::MouseEvent& e)
             }
             case 2: // Add MIDI Clip Here
             {
-                const auto length = te::BeatDuration::fromBeats (8.0);
+                const auto length = t::BeatDuration::fromBeats (8.0);
                 if (safeThis->appEngine->addMidiClipToTrackAt (safeThis->trackIndex, startPos, length))
                 {
                     safeThis->rebuildClipsFromEngine();
