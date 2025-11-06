@@ -18,7 +18,7 @@ public:
     void resized() override;
 
     void setColor (juce::Colour newColor);
-    void valueTreePropertyChanged (juce::ValueTree& tree, const juce::Identifier& property); // currently unused
+    void valueTreePropertyChanged (juce::ValueTree& tree, const juce::Identifier& property) override;
     void setPixelsPerBeat (float ppb);
 
     te::MidiClip* getMidiClip() const noexcept { return clip; }
@@ -34,20 +34,32 @@ public:
 
     void mouseUp (const juce::MouseEvent& e) override;
     void mouseDoubleClick (const juce::MouseEvent& e) override;
-    void mouseDown (const juce::MouseEvent& e) override;
-    void mouseDrag (const juce::MouseEvent& e) override;
 
 private:
     void updateSizeFromClip();
+    void onResizeEnd();
+
+    // Custom constrainer that notifies us when resizing completes
+    class ResizeConstrainer : public juce::ComponentBoundsConstrainer
+    {
+    public:
+        explicit ResizeConstrainer (TrackClip& owner) : trackClip (owner) {}
+
+        void resizeEnd() override
+        {
+            trackClip.onResizeEnd();
+        }
+
+    private:
+        TrackClip& trackClip;
+    };
 
     te::MidiClip* clip = nullptr; // not owned
     float pixelsPerBeat = 100.0f;
     juce::Colour clipColor { juce::Colours::blueviolet };
 
+    ResizeConstrainer resizeConstrainer;
     juce::ResizableEdgeComponent edgeResizer;
-    bool isResizing = false;
-    int resizeStartScreenX = 0;
-    int originalWidth = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackClip)
 };
