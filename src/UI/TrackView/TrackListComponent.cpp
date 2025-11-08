@@ -515,10 +515,13 @@ void TrackListComponent::showGhostClip (int trackIndex, te::TimePosition time,
     const double clipStartSec = time.inSeconds();
     const double clipLenSec = length.inSeconds();
 
-    const int x = static_cast<int> (juce::roundToIntAccurate ((clipStartSec - viewStartSec) * pixelsPerSecond));
+    const int timelineX = static_cast<int> (juce::roundToIntAccurate ((clipStartSec - viewStartSec) * pixelsPerSecond));
     const int w = static_cast<int> (juce::roundToIntAccurate (clipLenSec * pixelsPerSecond));
     const int y = timelineHeight + (trackIndex * trackHeight) + 5; // +5 for inner margin
     const int h = trackHeight - 10; // Account for margins
+
+    // Ghost is positioned in TrackListComponent coordinates, so add headerWidth offset (Written by Claude Code)
+    const int x = headerWidth + timelineX;
 
     ghostClip->setBounds (x, y, juce::jmax (w, 20), h);
     ghostClip->setDropLocation (trackIndex, time, length, isValid);
