@@ -11,6 +11,10 @@ namespace t = tracktion;
 using namespace std::literals;
 using namespace t::literals;
 
+namespace GKIDs {
+    static const juce::Identifier isDrumClip ("gk_isDrumClip");
+}
+
 AppEngine::AppEngine()
 {
     engine = std::make_unique<te::Engine> ("GrooveKitEngine");
@@ -537,6 +541,26 @@ void AppEngine::copyMidiClip (te::MidiClip* clip)
         state.setProperty (te::IDs::start, 0.0, nullptr);
         state.setProperty (te::IDs::offset, clip->getPosition().getOffset().inSeconds(), nullptr);
 
+        // Store whether this clip came from a drum track (Junie)
+        bool isFromDrumTrack = false;
+        if (auto* clipTrack = dynamic_cast<te::AudioTrack*> (clip->getTrack()))
+        {
+            const auto audioTracks = te::getAudioTracks (*edit);
+            for (int i = 0; i < audioTracks.size(); ++i)
+            {
+                if (audioTracks[static_cast<size_t> (i)] == clipTrack)
+                {
+                    isFromDrumTrack = isDrumTrack (i);
+                    break;
+                }
+            }
+        }
+        state.setProperty (GKIDs::isDrumClip, isFromDrumTrack, nullptr);
+
+        // Store clip type info for paste validation
+        lastCopiedClipWasDrum = isFromDrumTrack;
+        hasClipboardTypeInfo = true;
+
         auto clips = std::make_unique<te::Clipboard::Clips>();
         // trackOffset = 0 keeps it on the same track relative to the insert point
         clips->addClip (0, state);
@@ -558,6 +582,19 @@ bool AppEngine::pasteClipboardAt (const int trackIndex, const double startBeats)
     if (trackIndex < 0 || trackIndex >= audioTracks.size())
         return false;
 
+    // Validate clip type matches target track type (Junie)
+    if (hasClipboardTypeInfo)
+    {
+        const bool targetIsDrum = isDrumTrack (trackIndex);
+        if (lastCopiedClipWasDrum != targetIsDrum)
+        {
+            // Clip type doesn't match track type - cannot paste
+            DBG ("Cannot paste " << (lastCopiedClipWasDrum ? "drum" : "instrument")
+                 << " clip to " << (targetIsDrum ? "drum" : "instrument") << " track");
+            return false;
+        }
+    }
+
     te::EditInsertPoint ip (*edit);
 
     // Resolve target track and time from beats
@@ -568,7 +605,7 @@ bool AppEngine::pasteClipboardAt (const int trackIndex, const double startBeats)
 
     if (const auto* content = cb->getContent())
     {
-        // SelectionManager is optional; pass nullptr if you don’t want selection behavior
+        // SelectionManager is optional; pass nullptr if you don't want selection behavior
         return content->pasteIntoEdit (*edit, ip, selectionManager.get());
     }
 
@@ -624,4 +661,19 @@ bool AppEngine::hasClipboardContent() const
 {
     const auto* cb = te::Clipboard::getInstance();
     return cb != nullptr && !cb->isEmpty();
+}
+
+bool AppEngine::canPasteToTrack (int trackIndex) const
+{
+    // First check if clipboard has any content
+    if (!hasClipboardContent())
+        return false;
+
+    // If we don't have type info, allow paste (backwards compatibility)
+    if (!hasClipboardTypeInfo)
+        return true;
+
+    // Check if clip type matches track type
+    const bool targetIsDrum = isDrumTrack (trackIndex);
+    return lastCopiedClipWasDrum == targetIsDrum;
 }
