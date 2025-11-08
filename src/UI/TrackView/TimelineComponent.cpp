@@ -65,12 +65,6 @@ void ui::TimelineComponent::paint (Graphics& g)
     const double playPos = edit.getTransport().getPosition().inSeconds();
     const double playX = ((playPos - viewStart.inSeconds()) * pixelsPerSecond);
 
-    if (playX >= 0 && playX < getWidth())
-    {
-        g.setColour (juce::Colours::aqua);
-        g.drawRect (playX + 0.5, 0.0, 2.0, getHeight());
-    }
-
     if (hasLoop)
     {
         const int x1 = timeSecToX(loopRange.getStart().inSeconds());

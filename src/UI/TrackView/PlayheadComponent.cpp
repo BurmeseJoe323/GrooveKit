@@ -1,6 +1,8 @@
 #include "PlayheadComponent.h"
 
-PlayheadComponent::PlayheadComponent (te::Edit& e, EditViewState& evs) : edit (e), editViewState (evs)
+PlayheadComponent::PlayheadComponent (te::Edit& e, EditViewState& evs)
+    : edit (e),
+      editViewState (evs)
 {
     startTimerHz (30);
 }
@@ -33,22 +35,21 @@ void PlayheadComponent::mouseDrag (const juce::MouseEvent& e)
 {
     // Convert mouse x to time using the playhead's own coordinate system
     const double tSec = e.x / pixelsPerSecond + viewStart.inSeconds();
-    auto t = t::TimePosition::fromSeconds(juce::jmax(0.0, tSec));
+    auto t = t::TimePosition::fromSeconds (juce::jmax (0.0, tSec));
     edit.getTransport().setPosition (t);
     timerCallback();
 }
 
-void PlayheadComponent::timerCallback()
+void PlayheadComponent::timerCallback ()
 {
     const double tSec = edit.getTransport().getPosition().inSeconds();
 
     if (const int newX = (tSec - viewStart.inSeconds()) * pixelsPerSecond; newX != xPosition)
     {
-        repaint (juce::jmin(newX, xPosition) - 2, 0,
-                 std::abs(newX - xPosition) + 4, getHeight());
+        repaint (juce::jmin (newX, xPosition) - 2,
+            0,
+            std::abs (newX - xPosition) + 4,
+            getHeight());
         xPosition = newX;
     }
-
-    if (onPlayheadMoved)
-        onPlayheadMoved();
 }

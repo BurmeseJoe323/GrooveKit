@@ -2,6 +2,7 @@
 
 #include "../../AppEngine/AppEngine.h"
 #include "PlayheadComponent.h"
+#include "LoopRangeComponent.h"
 #include "TrackComponent.h"
 #include "TrackHeaderComponent.h"
 #include <juce_gui_basics/juce_gui_basics.h>
@@ -47,12 +48,13 @@ public:
 
 private:
     const std::shared_ptr<AppEngine> appEngine;
-    PlayheadComponent playhead;
 
     std::unique_ptr<ui::TimelineComponent> timeline;
     static constexpr int timelineHeight = 24;
     static constexpr int headerWidth    = 140;
 
+    PlayheadComponent playhead;
+    LoopRangeComponent loopRangeComponent;
 
     juce::OwnedArray<TrackComponent> tracks;
     juce::OwnedArray<TrackHeaderComponent> headers;

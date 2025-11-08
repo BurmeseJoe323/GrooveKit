@@ -20,8 +20,6 @@ public:
     void mouseDown (const juce::MouseEvent&) override;
     void mouseUp (const juce::MouseEvent&) override;
 
-    std::function<void  ()> onPlayheadMoved;
-
 private:
     void timerCallback() override;
 

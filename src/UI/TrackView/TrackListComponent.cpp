@@ -6,9 +6,11 @@ namespace t = tracktion;
 namespace te = tracktion::engine;
 #include "TrackListComponent.h"
 
-TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine) : appEngine (engine),
-                                                                                    playhead (engine->getEdit(),
-                                                                                        engine->getEditViewState())
+TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine)
+    : appEngine (engine),
+      playhead (engine->getEdit(),
+          engine->getEditViewState()),
+      loopRangeComponent (engine->getEdit())
 {
     //Add initial track pair
     //addNewTrack();
@@ -16,9 +18,16 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
     addAndMakeVisible (playhead);
     playhead.setAlwaysOnTop (true);
 
+    addAndMakeVisible (loopRangeComponent);
+    loopRangeComponent.setAlwaysOnTop (true);
+
     // Set up playhead
     playhead.setPixelsPerSecond(100.0);
     playhead.setViewStart(t::TimePosition::fromSeconds(0.0));
+
+    // Set up loop range component
+    loopRangeComponent.setPixelsPerSecond(100.0);
+    loopRangeComponent.setViewStart(t::TimePosition::fromSeconds(0.0));
 
     // Set up timeline
     timeline = std::make_unique<ui::TimelineComponent>(appEngine->getEdit());
@@ -27,9 +36,6 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
     timeline->setViewStart (t::TimePosition::fromSeconds (0.0));
     timeline->setEditForSnap(&appEngine->getEdit());
     timeline->setSnapToBeats(true);
-
-    // Add callback for timeline component that's listening to playhead
-    playhead.onPlayheadMoved = [this] () { timeline->repaint(); };
 
     addAndMakeVisible(loopButton);
     loopButton.setClickingTogglesState(true);
@@ -42,6 +48,8 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
         auto& tr = appEngine->getEdit().getTransport();
         loopButton.setToggleState(tr.looping, juce::dontSendNotification);
         loopButton.setColour(juce::TextButton::buttonColourId, tr.looping ? loopColour : juce::Colours::darkgrey);
+        loopRangeComponent.setLooping(tr.looping);
+        loopRangeComponent.setLoopRange(tr.getLoopRange());
     }
     // toggle handler
     loopButton.onClick = [this, loopColour]
@@ -65,11 +73,14 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
             tr.looping = true;
             // (optional) tr.ensureContextAllocated();
             loopButton.setColour(juce::TextButton::buttonColourId, loopColour);
+            loopRangeComponent.setLooping(true);
+            loopRangeComponent.setLoopRange(r);
         }
         else
         {
             tr.looping = false;
             loopButton.setColour(juce::TextButton::buttonColourId, juce::Colours::darkgrey);
+            loopRangeComponent.setLooping(false);
         }
     };
 
@@ -92,10 +103,13 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
             tr.looping = false;
         }
 
-        // reflect in the button
+        // reflect in the button and loop range component
         const auto loopColour = juce::Colours::darkorange;
         loopButton.setToggleState(tr.looping, juce::dontSendNotification);
         loopButton.setColour(juce::TextButton::buttonColourId, tr.looping ? loopColour : juce::Colours::darkgrey);
+        loopRangeComponent.setLooping(tr.looping);
+        loopRangeComponent.setLoopRange(r);
+        repaint();
     };
 
     appEngine->onArmedTrackChanged = [this] {
@@ -108,6 +122,7 @@ TrackListComponent::~TrackListComponent() = default;
 void TrackListComponent::paint (juce::Graphics& g)
 {
     g.fillAll (juce::Colour (0xFF343A40)); // Dark background for track area
+    // Loop range lines are now drawn by LoopRangeComponent
 }
 
 void TrackListComponent::resized()
@@ -149,12 +164,17 @@ void TrackListComponent::resized()
             tracks[i]->setBounds(row.reduced(margin));  // <-- this triggers TrackComponent::resized()
     }
 
-    // playhead over everything
-    playhead.setBounds(getLocalBounds()
-                           .withTrimmedBottom(addButtonSpace)
-                           .withTrimmedLeft(headerWidth)
-                           .withTrimmedTop (timelineHeight));
+    // playhead and loop range over everything
+    const auto overlayBounds = getLocalBounds()
+                                   // .withTrimmedBottom(addButtonSpace)
+                                   .withTrimmedLeft(headerWidth)
+                                   .withTrimmedTop (timelineHeight);
+
+    playhead.setBounds(overlayBounds);
     playhead.toFront(false);
+
+    loopRangeComponent.setBounds(overlayBounds);
+    loopRangeComponent.toFront(false);
 
     // 2) Second pass: now that clip UIs have bounds, compute true rightmost
     int rightmostClipPx = 0;
@@ -307,7 +327,8 @@ void TrackListComponent::setPixelsPerSecond (double pps)
 {
     for (auto* t : tracks) if (t) t->setPixelsPerSecond (pps);
     if (timeline) timeline->setPixelsPerSecond (pps);
-    playhead.setPixelsPerSecond(pps);            // ← add this
+    playhead.setPixelsPerSecond(pps);
+    loopRangeComponent.setPixelsPerSecond(pps);
     repaint();
 }
 
@@ -315,7 +336,8 @@ void TrackListComponent::setViewStart (t::TimePosition t)
 {
     for (auto* tc : tracks) if (tc) tc->setViewStart (t);
     if (timeline) timeline->setViewStart (t);
-    playhead.setViewStart(t);                    // ← add this
+    playhead.setViewStart(t);
+    loopRangeComponent.setViewStart(t);
     repaint();
 }
 

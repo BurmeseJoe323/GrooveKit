@@ -62,7 +62,7 @@ namespace ui
         double originalStartSec = 0.0;
         double originalEndSec   = 0.0;
 
-        int handleWidthPx = 6;
+        int handleWidthPx = 4;
         int hitSlopPx     = 8;
 
         juce::Point<int> panStartView{};
