@@ -134,7 +134,11 @@ te::TimePosition TrackClip::mouseToTime (const juce::MouseEvent& e)
     auto eventInTrackList = e.getEventRelativeTo (tl);
     const int globalX = eventInTrackList.x;
 
-    const double timeSec = viewStartSec + (static_cast<double> (globalX) / pixelsPerSecond);
+    // Account for header width - timeline starts after the header (Written by Claude Code)
+    constexpr int headerWidth = 140;
+    const int timelineX = globalX - headerWidth;
+
+    const double timeSec = viewStartSec + (static_cast<double> (timelineX) / pixelsPerSecond);
     return te::TimePosition::fromSeconds (timeSec);
 }
 
