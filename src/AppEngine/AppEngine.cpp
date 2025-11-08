@@ -685,3 +685,9 @@ bool AppEngine::deleteMidiClip (te::MidiClip* clip)
     clip->removeFromParent();
     return true;
 }
+
+bool AppEngine::hasClipboardContent() const
+{
+    const auto* cb = te::Clipboard::getInstance();
+    return cb != nullptr && !cb->isEmpty();
+}
