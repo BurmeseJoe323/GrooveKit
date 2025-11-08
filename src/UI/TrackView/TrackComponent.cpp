@@ -108,8 +108,8 @@ void TrackComponent::onSettingsClicked()
     juce::PopupMenu m;
     m.addItem (1, "Add MIDI Clip");
 
-    // Only show paste option if clipboard has content (Junie)
-    if (appEngine && appEngine->hasClipboardContent())
+    // Only show paste option if clipboard has compatible content (Junie)
+    if (appEngine && appEngine->canPasteToTrack (trackIndex))
         m.addItem (2, "Paste at End");
 
     m.addSeparator();
@@ -414,8 +414,8 @@ void TrackComponent::mouseUp (const juce::MouseEvent& e)
 
     juce::PopupMenu m;
 
-    // Only show paste option if clipboard has content (Junie)
-    if (appEngine && appEngine->hasClipboardContent())
+    // Only show paste option if clipboard has compatible content (Junie)
+    if (appEngine && appEngine->canPasteToTrack (trackIndex))
         m.addItem (1, "Paste Here");
 
     m.addItem (2, "Add MIDI Clip Here");

@@ -198,6 +198,8 @@ public:
     bool deleteMidiClip (te::MidiClip* clip);
     // Check if clipboard has content (Junie)
     bool hasClipboardContent() const;
+    // Check if clipboard content can be pasted to a specific track (Junie)
+    bool canPasteToTrack (int trackIndex) const;
 
 private:
     std::unique_ptr<tracktion::engine::Engine> engine;
@@ -230,6 +232,10 @@ private:
     void timerCallback() override;
 
     int selectedTrackIndex = -1;
+
+    // Track the type of the last copied clip for paste validation (Junie)
+    bool lastCopiedClipWasDrum = false;
+    bool hasClipboardTypeInfo = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AppEngine)
 };
