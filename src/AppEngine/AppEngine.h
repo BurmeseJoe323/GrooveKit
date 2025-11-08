@@ -189,6 +189,8 @@ public:
     bool duplicateMidiClip (te::MidiClip* clip);
     // Delete a specific MIDI clip
     bool deleteMidiClip (te::MidiClip* clip);
+    // Check if clipboard has content (Junie)
+    bool hasClipboardContent() const;
 
 private:
     std::unique_ptr<tracktion::engine::Engine> engine;

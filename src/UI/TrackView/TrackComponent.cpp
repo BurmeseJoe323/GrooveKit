@@ -107,7 +107,11 @@ void TrackComponent::onSettingsClicked()
 {
     juce::PopupMenu m;
     m.addItem (1, "Add MIDI Clip");
-    m.addItem (2, "Paste at End");
+
+    // Only show paste option if clipboard has content (Junie)
+    if (appEngine && appEngine->hasClipboardContent())
+        m.addItem (2, "Paste at End");
+
     m.addSeparator();
 
     m.addSeparator();
@@ -409,7 +413,11 @@ void TrackComponent::mouseUp (const juce::MouseEvent& e)
     const t::TimePosition startPos = appEngine->getEdit().tempoSequence.toTime(t::BeatPosition::fromBeats(clickBeats));
 
     juce::PopupMenu m;
-    m.addItem (1, "Paste Here");
+
+    // Only show paste option if clipboard has content (Junie)
+    if (appEngine && appEngine->hasClipboardContent())
+        m.addItem (1, "Paste Here");
+
     m.addItem (2, "Add MIDI Clip Here");
 
     m.showMenuAsync ({}, [safeThis = juce::Component::SafePointer<TrackComponent> (this), startPos] (int result)
