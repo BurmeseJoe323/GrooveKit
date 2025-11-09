@@ -79,6 +79,7 @@ private:
     juce::Point<int> dragStartMousePos;
     te::TimePosition originalStartTime;
     int originalTrackIndex = -1;
+    te::TimeDuration clickOffsetFromStart; // Offset from clip start to where user clicked (Written by Claude Code)
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackClip)
 };

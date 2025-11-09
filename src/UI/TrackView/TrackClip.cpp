@@ -188,6 +188,17 @@ void TrackClip::mouseDown (const juce::MouseEvent& e)
     dragStartMousePos = e.getScreenPosition();
     originalStartTime = clip->getPosition().getStart();
 
+    // Calculate where in the clip the user clicked (Written by Claude Code)
+    // This offset lets us preserve natural drag behavior where the clip follows the cursor
+    auto* tl = findParentComponentOfClass<TrackListComponent>();
+    if (tl && clip)
+    {
+        const double pixelsPerSecond = tl->getPixelsPerSecond();
+        const int clickXInClip = e.getPosition().x; // X position relative to clip
+        const double clickOffsetSec = static_cast<double> (clickXInClip) / pixelsPerSecond;
+        clickOffsetFromStart = te::TimeDuration::fromSeconds (clickOffsetSec);
+    }
+
     // Find our track index
     if (auto* trackComp = findParentComponentOfClass<TrackComponent>())
         originalTrackIndex = trackComp->getTrackIndex();
@@ -220,9 +231,20 @@ void TrackClip::mouseDrag (const juce::MouseEvent& e)
     if (!isDragging)
         return;
 
-    // Calculate target position with quantization
-    te::TimePosition targetTime = mouseToTime (e);
-    te::TimePosition quantizedTime = quantizeToGrid (targetTime);
+    // Calculate target position with quantization (Written by Claude Code)
+    // Get time at mouse cursor
+    te::TimePosition mouseTime = mouseToTime (e);
+
+    // Subtract click offset to get actual clip start position
+    // This preserves natural drag behavior where the clip stays under cursor at grab point
+    te::TimePosition targetStartTime = mouseTime - clickOffsetFromStart;
+
+    // Clamp to prevent negative time
+    if (targetStartTime.inSeconds() < 0.0)
+        targetStartTime = te::TimePosition::fromSeconds (0.0);
+
+    // Quantize the adjusted position
+    te::TimePosition quantizedTime = quantizeToGrid (targetStartTime);
 
     // Calculate target track
     int targetTrackIndex = mouseToTrackIndex (e);
@@ -255,9 +277,17 @@ void TrackClip::mouseUp (const juce::MouseEvent& e)
         dragAlpha = 1.0f;
         setMouseCursor (juce::MouseCursor::NormalCursor);
 
-        // Calculate final drop position
-        te::TimePosition targetTime = mouseToTime (e);
-        te::TimePosition quantizedTime = quantizeToGrid (targetTime);
+        // Calculate final drop position (Written by Claude Code)
+        te::TimePosition mouseTime = mouseToTime (e);
+
+        // Subtract click offset to maintain natural drag behavior
+        te::TimePosition targetStartTime = mouseTime - clickOffsetFromStart;
+
+        // Clamp to prevent negative time
+        if (targetStartTime.inSeconds() < 0.0)
+            targetStartTime = te::TimePosition::fromSeconds (0.0);
+
+        te::TimePosition quantizedTime = quantizeToGrid (targetStartTime);
         int targetTrackIndex = mouseToTrackIndex (e);
 
         // Notify parent to apply changes
