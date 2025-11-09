@@ -183,22 +183,41 @@ void TrackClip::mouseDown (const juce::MouseEvent& e)
     if (e.mods.isPopupMenu())
         return;
 
-    // Initiate drag
-    isDragging = true;
+    // Store initial state for potential drag (Written by Claude Code)
+    // Note: Don't set isDragging yet - wait for mouseDrag threshold
     dragStartMousePos = e.getScreenPosition();
     originalStartTime = clip->getPosition().getStart();
 
     // Find our track index
     if (auto* trackComp = findParentComponentOfClass<TrackComponent>())
         originalTrackIndex = trackComp->getTrackIndex();
-
-    setMouseCursor (juce::MouseCursor::DraggingHandCursor);
 }
 
 void TrackClip::mouseDrag (const juce::MouseEvent& e)
 {
     // Written by Claude Code
-    if (!isDragging || !clip)
+    if (!clip)
+        return;
+
+    // Check if we should activate drag based on threshold (Written by Claude Code)
+    if (!dragThresholdExceeded)
+    {
+        // Use JUCE's built-in drag detection (~5px threshold)
+        if (e.mouseWasDraggedSinceMouseDown())
+        {
+            // Threshold exceeded - activate drag mode
+            isDragging = true;
+            dragThresholdExceeded = true;
+            setMouseCursor (juce::MouseCursor::DraggingHandCursor);
+        }
+        else
+        {
+            // Not dragging yet - allow double-click to work
+            return;
+        }
+    }
+
+    if (!isDragging)
         return;
 
     // Calculate target position with quantization
@@ -227,6 +246,9 @@ void TrackClip::mouseDrag (const juce::MouseEvent& e)
 void TrackClip::mouseUp (const juce::MouseEvent& e)
 {
     // Written by Claude Code
+    // Reset drag threshold for next potential drag operation (Written by Claude Code)
+    dragThresholdExceeded = false;
+
     if (isDragging)
     {
         isDragging = false;
