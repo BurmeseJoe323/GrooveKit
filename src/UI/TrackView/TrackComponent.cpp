@@ -394,6 +394,16 @@ void TrackComponent::rebuildClipsFromEngine()
     resized(); // redraw
 }
 
+void TrackComponent::updateClipEditedState (te::MidiClip* editedClip)
+{
+    // Update visual state for all clips to show which one is being edited (Written by Claude Code)
+    for (auto* ui : clipUIs)
+    {
+        if (ui)
+            ui->setBeingEdited (ui->getMidiClip() == editedClip);
+    }
+}
+
 void TrackComponent::mouseUp (const juce::MouseEvent& e)
 {
     // Only handle background right-clicks on the TrackComponent itself

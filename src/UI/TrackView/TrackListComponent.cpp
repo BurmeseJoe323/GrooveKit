@@ -416,6 +416,16 @@ void TrackListComponent::rebuildTrack (int trackIndex)
     }
 }
 
+// Written by Claude Code
+void TrackListComponent::updateClipEditState (int trackIndex, te::MidiClip* editedClip)
+{
+    if (trackIndex >= 0 && trackIndex < tracks.size())
+    {
+        if (auto* track = tracks[trackIndex])
+            track->updateClipEditedState (editedClip);
+    }
+}
+
 // Drag validation helpers - Written by Claude Code
 bool TrackListComponent::canClipMoveToTrack (te::MidiClip* clip, int sourceTrack, int targetTrack) const
 {

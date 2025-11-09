@@ -20,6 +20,7 @@ public:
     void setColor (juce::Colour newColor);
     void valueTreePropertyChanged (juce::ValueTree& tree, const juce::Identifier& property) override;
     void setPixelsPerBeat (float ppb);
+    void setBeingEdited (bool edited); // Highlight clip when being edited in piano roll (Written by Claude Code)
 
     te::MidiClip* getMidiClip() const noexcept { return clip; }
     juce::ValueTree clipState;
@@ -80,6 +81,9 @@ private:
     te::TimePosition originalStartTime;
     int originalTrackIndex = -1;
     te::TimeDuration clickOffsetFromStart; // Offset from clip start to where user clicked (Written by Claude Code)
+
+    // Piano roll editing state - Written by Claude Code
+    bool isBeingEdited = false; // True when this clip is open in piano roll
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackClip)
 };

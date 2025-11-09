@@ -29,6 +29,11 @@ public:
      */
     void rebuildClipsFromEngine();
 
+    /**
+     * Updates visual state for clips to indicate which is being edited in piano roll (Written by Claude Code)
+     */
+    void updateClipEditedState (te::MidiClip* editedClip);
+
     void paint (juce::Graphics& g) override;
     void resized() override;
     void mouseUp (const juce::MouseEvent& e) override; // handles right clicks

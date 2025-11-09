@@ -28,6 +28,7 @@ public:
 
     void rebuildFromEngine();
     void rebuildTrack (int trackIndex); // Written by Claude Code
+    void updateClipEditState (int trackIndex, te::MidiClip* editedClip); // Written by Claude Code
 
     void armTrack(int trackIndex, bool shouldBeArmed);
 
