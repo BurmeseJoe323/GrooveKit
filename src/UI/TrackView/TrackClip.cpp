@@ -77,9 +77,23 @@ void TrackClip::paint (juce::Graphics& g)
     g.setColour (clipColor.withAlpha (dragAlpha));
     g.fillRoundedRectangle (r, radius);
 
-    // Border
-    g.setColour (juce::Colours::white.withAlpha (0.35f * dragAlpha));
-    g.drawRoundedRectangle (r.reduced (0.5f), radius, 1.0f);
+    // Border - highlight if being edited in piano roll (Written by Claude Code)
+    if (isBeingEdited)
+    {
+        // Bright cyan border for edited clip
+        g.setColour (juce::Colours::cyan.brighter (0.3f));
+        g.drawRoundedRectangle (r.reduced (0.5f), radius, 2.5f);
+
+        // Subtle outer glow
+        g.setColour (juce::Colours::cyan.withAlpha (0.35f));
+        g.drawRoundedRectangle (r.expanded (1.0f), radius + 1.0f, 1.5f);
+    }
+    else
+    {
+        // Normal white border
+        g.setColour (juce::Colours::white.withAlpha (0.35f * dragAlpha));
+        g.drawRoundedRectangle (r.reduced (0.5f), radius, 1.0f);
+    }
 
     // Label
     g.setColour (juce::Colours::white.withAlpha (dragAlpha));
@@ -321,6 +335,15 @@ void TrackClip::setColor (juce::Colour newColor)
 {
     clipColor = newColor;
     repaint();
+}
+
+void TrackClip::setBeingEdited (bool edited)
+{
+    if (isBeingEdited != edited)
+    {
+        isBeingEdited = edited;
+        repaint(); // Redraw with highlighted border
+    }
 }
 
 void TrackClip::valueTreePropertyChanged (juce::ValueTree& tree, const juce::Identifier& property)

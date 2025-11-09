@@ -481,10 +481,48 @@ void TrackEditView::showPianoRoll (te::MidiClip* clip)
     pianoRollClip = clip;
     pianoRoll->setVisible (true);
     resized();
+
+    // Notify clip UI that it's being edited - Written by Claude Code
+    if (clip && trackList)
+    {
+        // Find track index for this clip
+        const int n = appEngine->getNumTracks();
+        for (int i = 0; i < n; ++i)
+        {
+            auto clips = appEngine->getMidiClipsFromTrack (i);
+            for (auto* mc : clips)
+            {
+                if (mc == clip)
+                {
+                    trackList->updateClipEditState (i, clip);
+                    return;
+                }
+            }
+        }
+    }
 }
 
 void TrackEditView::hidePianoRoll ()
 {
+    // Clear clip editing state before hiding - Written by Claude Code
+    if (pianoRollClip && trackList)
+    {
+        // Find track index for this clip
+        const int n = appEngine->getNumTracks();
+        for (int i = 0; i < n; ++i)
+        {
+            auto clips = appEngine->getMidiClipsFromTrack (i);
+            for (auto* mc : clips)
+            {
+                if (mc == pianoRollClip)
+                {
+                    trackList->updateClipEditState (i, nullptr);
+                    break;
+                }
+            }
+        }
+    }
+
     pianoRollVisible = false;
     if (pianoRoll) pianoRoll->setVisible(false);
     pianoRollClip = nullptr;
