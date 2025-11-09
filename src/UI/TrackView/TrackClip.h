@@ -74,6 +74,7 @@ private:
 
     // Drag state - Written by Claude Code
     bool isDragging = false;
+    bool dragThresholdExceeded = false; // Track if drag threshold passed (Written by Claude Code)
     float dragAlpha = 1.0f; // Transparency during drag
     juce::Point<int> dragStartMousePos;
     te::TimePosition originalStartTime;
