@@ -108,8 +108,13 @@ void TrackClip::onResizeEnd()
     // Calculate the new length based on the current width
     const double newLengthSecs = static_cast<double> (getWidth()) / pixelsPerSecond;
 
+    // Quantize length to 0.25 second grid (Written by Claude Code)
+    constexpr double gridSize = 0.25;
+    const double quantizedLengthSecs = std::round (newLengthSecs / gridSize) * gridSize;
+    const double finalLengthSecs = juce::jmax (gridSize, quantizedLengthSecs); // Minimum one grid unit
+
     // Update the model - preserveSync=false since we're manually resizing
-    clip->setLength (te::TimeDuration::fromSeconds (newLengthSecs), false);
+    clip->setLength (te::TimeDuration::fromSeconds (finalLengthSecs), false);
 
     // Update only the width from the model, using the same calculation as TrackComponent::resized()
     // This preserves the X position and avoids visual "jump"
