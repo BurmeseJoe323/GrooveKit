@@ -557,8 +557,9 @@ void AppEngine::copyMidiClip (te::MidiClip* clip)
         }
         state.setProperty (GKIDs::isDrumClip, isFromDrumTrack, nullptr);
 
-        // Store clip type info for paste validation
+        // Store clip type info and length for paste validation (Written by Claude Code)
         lastCopiedClipWasDrum = isFromDrumTrack;
+        lastCopiedClipLengthBeats = clip->getLengthInBeats().inBeats();
         hasClipboardTypeInfo = true;
 
         auto clips = std::make_unique<te::Clipboard::Clips>();
@@ -638,6 +639,28 @@ bool AppEngine::duplicateMidiClip (te::MidiClip* clip)
 
         if (audioTrackIndex >= 0)
         {
+            // Check for overlap before duplicating (Written by Claude Code)
+            const auto destStartTime = edit->tempoSequence.toTime (te::BeatPosition::fromBeats (destBeats));
+            const auto destEndTime = edit->tempoSequence.toTime (te::BeatPosition::fromBeats (destBeats + lenBeats));
+            const te::TimeRange destRange (destStartTime, destEndTime);
+
+            // Check if any clip on the track would overlap with the duplicate
+            auto clipsOnTrack = getMidiClipsFromTrack (audioTrackIndex);
+            for (auto* existingClip : clipsOnTrack)
+            {
+                if (existingClip == clip) continue; // Skip source clip
+
+                auto existingRange = existingClip->getPosition().time;
+                if (destRange.overlaps (existingRange))
+                {
+                    // Would overlap - don't duplicate
+                    DBG ("Cannot duplicate clip - would overlap with existing clip at "
+                         << existingRange.getStart().inSeconds() << "s");
+                    return false;
+                }
+            }
+
+            // No overlap - proceed with duplicate
             copyMidiClip (clip);
             return pasteClipboardAt (audioTrackIndex, destBeats);
         }
