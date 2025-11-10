@@ -33,18 +33,22 @@ void PlayheadComponent::mouseUp (const juce::MouseEvent&)
 
 void PlayheadComponent::mouseDrag (const juce::MouseEvent& e)
 {
-    // Convert mouse x to time using the playhead's own coordinate system
-    const double tSec = e.x / pixelsPerSecond + viewStart.inSeconds();
-    auto t = t::TimePosition::fromSeconds (juce::jmax (0.0, tSec));
-    edit.getTransport().setPosition (t);
+    // Convert mouse x to beat position, then to time using tempo sequence
+    const double beats = e.x / pixelsPerBeat + viewStartBeat.inBeats();
+    const auto beatPos = t::BeatPosition::fromBeats(juce::jmax(0.0, beats));
+    const auto timePos = edit.tempoSequence.toTime(beatPos);
+    edit.getTransport().setPosition(timePos);
     timerCallback();
 }
 
 void PlayheadComponent::timerCallback ()
 {
-    const double tSec = edit.getTransport().getPosition().inSeconds();
+    // Convert transport position (time) to beat position, then to x coordinate
+    const auto timePos = edit.getTransport().getPosition();
+    const auto beatPos = edit.tempoSequence.toBeats(timePos);
+    const double beats = beatPos.inBeats();
 
-    if (const int newX = (tSec - viewStart.inSeconds()) * pixelsPerSecond; newX != xPosition)
+    if (const int newX = (beats - viewStartBeat.inBeats()) * pixelsPerBeat; newX != xPosition)
     {
         repaint (juce::jmin (newX, xPosition) - 2,
             0,

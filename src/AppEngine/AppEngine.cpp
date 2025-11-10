@@ -213,8 +213,15 @@ double AppEngine::getBpm () const { return edit->tempoSequence.getTempo (0)->get
 
 void AppEngine::setBpm (double newBpm)
 {
+    // Capture old BPM before changing
+    const double oldBpm = getBpm();
+
     // GrooveKit does not have tempo changes, so just get the first one
     edit->tempoSequence.getTempo (0)->setBpm (newBpm);
+
+    // Notify listeners of BPM change
+    if (onBpmChanged)
+        onBpmChanged(oldBpm, newBpm);
 }
 
 AudioEngine& AppEngine::getAudioEngine() { return *audioEngine; }

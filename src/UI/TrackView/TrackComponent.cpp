@@ -54,10 +54,12 @@ void TrackComponent::resized()
     if (!appEngine)
         return;
 
-    // Access the timeline scaling info through the parent TrackListComponent
+    // Access the beat-based scaling info through the parent TrackListComponent
     auto* tl = findParentComponentOfClass<TrackListComponent>();
-    const double pixelsPerSecond = tl ? tl->getPixelsPerSecond() : 100.0;
-    const double viewStartSec = tl ? tl->getViewStart().inSeconds() : 0.0;
+    const double pixelsPerBeat = tl ? tl->getPixelsPerBeat() : 100.0;
+    const double viewStartBeats = tl ? tl->getViewStartBeat().inBeats() : 0.0;
+
+    auto& tempoSeq = appEngine->getEdit().tempoSequence;
 
     for (auto* ui : clipUIs)
     {
@@ -74,11 +76,13 @@ void TrackComponent::resized()
             drawRange = t::TimeRange(posRange.getStart(), posRange.getStart() + loopRange.getLength());
         }
 
-        const double clipStart = drawRange.getStart().inSeconds();
-        const double clipLen = drawRange.getLength().inSeconds();
+        // Convert time positions to beat positions for layout
+        const double clipStartBeats = tempoSeq.toBeats(drawRange.getStart()).inBeats();
+        const double clipEndBeats = tempoSeq.toBeats(drawRange.getEnd()).inBeats();
+        const double clipLenBeats = clipEndBeats - clipStartBeats;
 
-        const int x = (int) juce::roundToIntAccurate ((clipStart - viewStartSec) * pixelsPerSecond);
-        const int w = (int) juce::roundToIntAccurate (clipLen * pixelsPerSecond);
+        const int x = (int) juce::roundToIntAccurate ((clipStartBeats - viewStartBeats) * pixelsPerBeat);
+        const int w = (int) juce::roundToIntAccurate (clipLenBeats * pixelsPerBeat);
 
         ui->setBounds (x, bounds.getY(), juce::jmax (w, 20), bounds.getHeight());
     }
@@ -318,16 +322,16 @@ void TrackComponent::mouseUp (const juce::MouseEvent& e)
     if (!e.mods.isPopupMenu() || e.originalComponent != this)
         return;
 
-    // Compute start time from X using the same mapping as UI layout
+    // Compute start position from X using beat-based coordinates
     const auto inner = getLocalBounds().reduced (5);
     const int localX = juce::jmax (0, e.getPosition().x - inner.getX());
 
     auto* tl = findParentComponentOfClass<TrackListComponent>();
-    const double pixelsPerSecond = tl ? tl->getPixelsPerSecond() : 100.0;
-    const double viewStartSec    = tl ? tl->getViewStart().inSeconds() : 0.0;
+    const double pixelsPerBeat = tl ? tl->getPixelsPerBeat() : 100.0;
+    const double viewStartBeats = tl ? tl->getViewStartBeat().inBeats() : 0.0;
 
-    const double startSec = viewStartSec + (localX / juce::jmax (1.0, pixelsPerSecond));
-    const t::TimePosition startPos = t::TimePosition::fromSeconds (startSec);
+    const double clickBeats = viewStartBeats + (localX / juce::jmax (1.0, pixelsPerBeat));
+    const t::TimePosition startPos = appEngine->getEdit().tempoSequence.toTime(t::BeatPosition::fromBeats(clickBeats));
 
     juce::PopupMenu m;
     m.addItem (1, "Paste Here");

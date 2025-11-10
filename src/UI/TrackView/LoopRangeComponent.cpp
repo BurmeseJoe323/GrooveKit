@@ -12,9 +12,13 @@ void LoopRangeComponent::paint(juce::Graphics& g)
     if (!looping || loopRange.getLength().inSeconds() <= 0.0)
         return;
 
-    // Calculate positions of the start and end lines
-    const double startX = (loopRange.getStart().inSeconds() - viewStart.inSeconds()) * pixelsPerSecond;
-    const double endX = (loopRange.getEnd().inSeconds() - viewStart.inSeconds()) * pixelsPerSecond;
+    // Convert loop range time positions to beat positions
+    const auto startBeatPos = edit.tempoSequence.toBeats(loopRange.getStart());
+    const auto endBeatPos = edit.tempoSequence.toBeats(loopRange.getEnd());
+
+    // Calculate x positions in beat space
+    const double startX = (startBeatPos.inBeats() - viewStartBeat.inBeats()) * pixelsPerBeat;
+    const double endX = (endBeatPos.inBeats() - viewStartBeat.inBeats()) * pixelsPerBeat;
 
     // Draw the loop range lines in dark orange
     g.setColour(juce::Colours::darkorange);
@@ -22,20 +26,20 @@ void LoopRangeComponent::paint(juce::Graphics& g)
     g.drawLine(static_cast<float>(endX), 0.0f, static_cast<float>(endX), static_cast<float>(getHeight()), 2.0f);
 }
 
-void LoopRangeComponent::setPixelsPerSecond(double pps)
+void LoopRangeComponent::setPixelsPerBeat(double ppb)
 {
-    if (pixelsPerSecond != pps)
+    if (pixelsPerBeat != ppb)
     {
-        pixelsPerSecond = pps;
+        pixelsPerBeat = ppb;
         repaint();
     }
 }
 
-void LoopRangeComponent::setViewStart(t::TimePosition t)
+void LoopRangeComponent::setViewStartBeat(t::BeatPosition b)
 {
-    if (viewStart != t)
+    if (viewStartBeat != b)
     {
-        viewStart = t;
+        viewStartBeat = b;
         repaint();
     }
 }

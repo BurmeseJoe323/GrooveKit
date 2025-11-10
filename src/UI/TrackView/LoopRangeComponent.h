@@ -17,15 +17,15 @@ public:
 
     void paint(juce::Graphics& g) override;
 
-    void setPixelsPerSecond(double pps);
-    void setViewStart(t::TimePosition t);
+    void setPixelsPerBeat(double ppb);
+    void setViewStartBeat(t::BeatPosition b);
     void setLoopRange(t::TimeRange range);
     void setLooping(bool shouldLoop);
 
 private:
     te::Edit& edit;
-    double pixelsPerSecond = 100.0;
-    t::TimePosition viewStart = t::TimePosition::fromSeconds(0.0);
+    double pixelsPerBeat = 100.0;
+    t::BeatPosition viewStartBeat = t::BeatPosition::fromBeats(0.0);
     t::TimeRange loopRange;
     bool looping = false;
 

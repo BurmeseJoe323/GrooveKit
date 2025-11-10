@@ -21,19 +21,19 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
     addAndMakeVisible (loopRangeComponent);
     loopRangeComponent.setAlwaysOnTop (true);
 
-    // Set up playhead
-    playhead.setPixelsPerSecond(100.0);
-    playhead.setViewStart(t::TimePosition::fromSeconds(0.0));
+    // Set up playhead with beat-based coordinates
+    playhead.setPixelsPerBeat(100.0);
+    playhead.setViewStartBeat(t::BeatPosition::fromBeats(0.0));
 
-    // Set up loop range component
-    loopRangeComponent.setPixelsPerSecond(100.0);
-    loopRangeComponent.setViewStart(t::TimePosition::fromSeconds(0.0));
+    // Set up loop range component with beat-based coordinates
+    loopRangeComponent.setPixelsPerBeat(100.0);
+    loopRangeComponent.setViewStartBeat(t::BeatPosition::fromBeats(0.0));
 
-    // Set up timeline
+    // Set up timeline with beat-based coordinates
     timeline = std::make_unique<ui::TimelineComponent>(appEngine->getEdit());
     addAndMakeVisible (timeline.get());
-    timeline->setPixelsPerSecond (100.0);
-    timeline->setViewStart (t::TimePosition::fromSeconds (0.0));
+    timeline->setPixelsPerBeat (100.0);
+    timeline->setViewStartBeat (t::BeatPosition::fromBeats (0.0));
     timeline->setEditForSnap(&appEngine->getEdit());
     timeline->setSnapToBeats(true);
 
@@ -62,8 +62,9 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
             auto r = timeline->getLoopRange();
             if (r.getLength().inSeconds() <= 0.0)
             {
-                // seed ONCE (4s example)
-                const double start = timeline->getViewStart().inSeconds();
+                // seed ONCE (4 beats = 1 bar)
+                const double startBeats = timeline->getViewStartBeat().inBeats();
+                const double start = appEngine->getEdit().tempoSequence.toTime(t::BeatPosition::fromBeats(startBeats)).inSeconds();
                 r = t::TimeRange(t::TimePosition::fromSeconds(start),
                                          t::TimePosition::fromSeconds(start + 4.0));
                 timeline->setLoopRange(r);
@@ -114,6 +115,47 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
 
     appEngine->onArmedTrackChanged = [this] {
         refreshTrackStates();
+    };
+
+    // Handle BPM changes: maintain beat positions for loop range and playhead
+    appEngine->onBpmChanged = [this](double oldBpm, double newBpm)
+    {
+        auto& tr = appEngine->getEdit().getTransport();
+        auto& tempoSeq = appEngine->getEdit().tempoSequence;
+
+        // Update loop range to maintain beat positions
+        auto loopRange = tr.getLoopRange();
+        if (loopRange.getLength().inSeconds() > 0.0)
+        {
+            // Convert time to beats using old BPM (manual calculation)
+            // At a given BPM: beats = seconds * (BPM / 60)
+            const double startBeats = loopRange.getStart().inSeconds() * (oldBpm / 60.0);
+            const double endBeats = loopRange.getEnd().inSeconds() * (oldBpm / 60.0);
+
+            // Convert beats back to time using new tempo sequence
+            const auto startTime = tempoSeq.toTime(t::BeatPosition::fromBeats(startBeats));
+            const auto endTime = tempoSeq.toTime(t::BeatPosition::fromBeats(endBeats));
+            const auto newLoopRange = t::TimeRange(startTime, endTime);
+
+            // Update both transport and timeline
+            tr.setLoopRange(newLoopRange);
+            if (timeline)
+                timeline->setLoopRange(newLoopRange);
+            loopRangeComponent.setLoopRange(newLoopRange);
+        }
+
+        // Update playhead position to maintain beat position (only if not playing)
+        if (!tr.isPlaying())
+        {
+            const auto currentPos = tr.getPosition();
+            // Convert to beats using old BPM
+            const double posBeats = currentPos.inSeconds() * (oldBpm / 60.0);
+            // Convert back to time using new tempo
+            const auto newPos = tempoSeq.toTime(t::BeatPosition::fromBeats(posBeats));
+            tr.setPosition(newPos);
+        }
+
+        repaint();
     };
 }
 
@@ -189,9 +231,12 @@ void TrackListComponent::resized()
         }
     }
 
-    const double seconds    = appEngine->getEdit().getLength().inSeconds();
-    const double pps        = timeline ? timeline->getPixelsPerSecond() : 100.0;
-    const int    widthByEdit = (int) juce::roundToInt(seconds * pps);
+    // Calculate width based on beat length instead of time length
+    const auto editLengthTime = appEngine->getEdit().getLength();
+    const auto editEndPos = t::TimePosition::fromSeconds(editLengthTime.inSeconds());
+    const double beats = appEngine->getEdit().tempoSequence.toBeats(editEndPos).inBeats();
+    const double ppb = timeline ? timeline->getPixelsPerBeat() : 100.0;
+    const int widthByEdit = (int) juce::roundToInt(beats * ppb);
     const int    parentW     = getParentComponent() ? getParentComponent()->getWidth() : getWidth();
 
     const int bodyMinW = std::max({ widthByEdit, rightmostClipPx, parentW - headerWidth });
@@ -213,8 +258,8 @@ void TrackListComponent::addNewTrack (int engineIdx)
     auto* newTrack = new TrackComponent (appEngine, engineIdx, newColor);
     // newTrack->setEngineIndex (engineIdx);
 
-    newTrack->setPixelsPerSecond (100.0);
-    newTrack->setViewStart (0s);
+    newTrack->setPixelsPerBeat (100.0);
+    newTrack->setViewStartBeat (t::BeatPosition::fromBeats(0.0));
 
     header->addListener (newTrack);
 
@@ -323,21 +368,23 @@ void TrackListComponent::armTrack (int trackIndex, bool shouldBeArmed)
         appEngine->setArmedTrack (newIndex);
 }
 
-void TrackListComponent::setPixelsPerSecond (double pps)
+void TrackListComponent::setPixelsPerBeat (double ppb)
 {
-    for (auto* t : tracks) if (t) t->setPixelsPerSecond (pps);
-    if (timeline) timeline->setPixelsPerSecond (pps);
-    playhead.setPixelsPerSecond(pps);
-    loopRangeComponent.setPixelsPerSecond(pps);
+    // Update all components to use beat-based coordinates
+    for (auto* t : tracks) if (t) t->setPixelsPerBeat (ppb);
+    if (timeline) timeline->setPixelsPerBeat (ppb);
+    playhead.setPixelsPerBeat(ppb);
+    loopRangeComponent.setPixelsPerBeat(ppb);
     repaint();
 }
 
-void TrackListComponent::setViewStart (t::TimePosition t)
+void TrackListComponent::setViewStartBeat (t::BeatPosition b)
 {
-    for (auto* tc : tracks) if (tc) tc->setViewStart (t);
-    if (timeline) timeline->setViewStart (t);
-    playhead.setViewStart(t);
-    loopRangeComponent.setViewStart(t);
+    // Update all components to use beat-based coordinates
+    for (auto* tc : tracks) if (tc) tc->setViewStartBeat (b);
+    if (timeline) timeline->setViewStartBeat (b);
+    playhead.setViewStartBeat(b);
+    loopRangeComponent.setViewStartBeat(b);
     repaint();
 }
 

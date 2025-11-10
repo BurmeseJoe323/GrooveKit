@@ -69,8 +69,8 @@ private:
     int pianoRollTrackIndex = -1;
     bool pianoRollVisible = false;
 
-    double pixelsPerSecond = 100.0;
-    t::TimePosition viewStart = 0s;
+    double pixelsPerBeat = 100.0;
+    t::BeatPosition viewStartBeat = t::BeatPosition::fromBeats(0.0);
 
     // --- Top Bar Components ---
     std::unique_ptr<juce::MenuBarComponent> menuBar;

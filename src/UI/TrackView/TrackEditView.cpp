@@ -31,8 +31,8 @@ TrackEditView::TrackEditView (AppEngine& engine)
 
     trackList = std::make_unique<TrackListComponent> (appEngine);
 
-    trackList->setPixelsPerSecond (pixelsPerSecond);
-    trackList->setViewStart (viewStart);
+    trackList->setPixelsPerBeat (pixelsPerBeat);
+    trackList->setViewStartBeat (viewStartBeat);
 
     viewport.setScrollBarsShown (true, true);
     viewport.setViewedComponent (trackList.get(), false);
@@ -41,8 +41,8 @@ TrackEditView::TrackEditView (AppEngine& engine)
 
     appEngine->onEditLoaded = [this] {
         trackList = std::make_unique<TrackListComponent> (appEngine);
-        trackList->setPixelsPerSecond (pixelsPerSecond);
-        trackList->setViewStart (viewStart);
+        trackList->setPixelsPerBeat (pixelsPerBeat);
+        trackList->setViewStartBeat (viewStartBeat);
 
         viewport.setViewedComponent (trackList.get(), false);
         trackList->rebuildFromEngine();
@@ -318,8 +318,8 @@ void TrackEditView::menuItemSelected (const int menuItemID, int)
                 return;
             const int index = (menuItemID == NewInstrumentTrack) ? appEngine->addInstrumentTrack() : appEngine->addDrumTrack();
             trackList->addNewTrack (index);
-            trackList->setPixelsPerSecond (pixelsPerSecond);
-            trackList->setViewStart (viewStart);
+            trackList->setPixelsPerBeat (pixelsPerBeat);
+            trackList->setViewStartBeat (viewStartBeat);
             break;
         }
         case OpenMixer:

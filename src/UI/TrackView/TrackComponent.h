@@ -33,15 +33,15 @@ public:
     void resized() override;
     void mouseUp (const juce::MouseEvent& e) override; // handles right clicks
 
-    void setPixelsPerSecond (const double pps)
+    void setPixelsPerBeat (const double ppb)
     {
-        pixelsPerSecond = pps;
+        pixelsPerBeat = ppb;
         resized();
     }
 
-    void setViewStart (const t::TimePosition t)
+    void setViewStartBeat (const t::BeatPosition b)
     {
-        viewStart = t;
+        viewStartBeat = b;
         resized();
     }
 
@@ -58,10 +58,9 @@ private:
 
     juce::OwnedArray<TrackClip> clipUIs;
 
-    // Visual scaling
-    float pixelsPerBeat = 100.0f;
-    double pixelsPerSecond = 100.0; // currently unused for clip layout
-    t::TimePosition viewStart = 0s;
+    // Visual scaling (beat-based coordinate system)
+    double pixelsPerBeat = 100.0;
+    t::BeatPosition viewStartBeat = t::BeatPosition::fromBeats(0.0);
 
     static int timeToX (const t::TimePosition t, const t::TimePosition view0, const double pps)
     {

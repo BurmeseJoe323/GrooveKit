@@ -29,16 +29,16 @@ public:
 
     void armTrack(int trackIndex, bool shouldBeArmed);
 
-    void setPixelsPerSecond (double pps);
-    void setViewStart (t::TimePosition t);
-    double getPixelsPerSecond() const
+    void setPixelsPerBeat (double ppb);
+    void setViewStartBeat (t::BeatPosition b);
+    double getPixelsPerBeat() const
     {
-        return timeline ? timeline->getPixelsPerSecond() : 100.0;
+        return timeline ? timeline->getPixelsPerBeat() : 100.0;
     }
 
-    t::TimePosition getViewStart() const
+    t::BeatPosition getViewStartBeat() const
     {
-        return timeline ? timeline->getViewStart() : t::TimePosition::fromSeconds(0.0);
+        return timeline ? timeline->getViewStartBeat() : t::BeatPosition::fromBeats(0.0);
     }
 
     bool keyPressed (const juce::KeyPress&) override;

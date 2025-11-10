@@ -9,19 +9,19 @@ static constexpr int kMinorTickLen  = 5;
 namespace te = tracktion::engine;
 namespace t = tracktion;
 
-void ui::TimelineComponent::setPixelsPerSecond(double pps)
+void ui::TimelineComponent::setPixelsPerBeat(double ppb)
 {
     // Ensure the zoom level never gets ridiculously small or negative
-    pixelsPerSecond = juce::jmax(10.0, pps);
+    pixelsPerBeat = juce::jmax(10.0, ppb);
 
     // Trigger a repaint so the timeline ticks update visually
     repaint();
 }
 
-void ui::TimelineComponent::setViewStart(t::TimePosition t)
+void ui::TimelineComponent::setViewStartBeat(t::BeatPosition b)
 {
-    // Update where the visible region of the timeline starts (in seconds)
-    viewStart = t;
+    // Update where the visible region of the timeline starts (in beats)
+    viewStartBeat = b;
 
     // Trigger a repaint to reflect the new offset
     repaint();
@@ -37,38 +37,42 @@ void ui::TimelineComponent::paint (Graphics& g)
     g.setColour (Colours::black.withAlpha (0.4f));
     g.drawLine (0.0f, (float) r.getBottom() - 0.5f, (float) r.getRight(), (float) r.getBottom() - 0.5f);
 
-    const double targetPx = 100.0;
-    const double secondsPerMajor = std::max (0.5, std::pow (2.0, std::floor (std::log2 (targetPx / pixelsPerSecond))));
-    const double secondsPerMinor = secondsPerMajor / 4.0;
+    // Beat-based timeline: major ticks every 4 beats (1 bar), minor ticks every beat
+    const double beatsPerBar = 4.0;  // Assume 4/4 time signature
+    const double beatsPerMinor = 1.0; // One beat per minor tick
 
-    const double startSec = std::floor (viewStart.inSeconds() / secondsPerMinor) * secondsPerMinor;
-    const double endSec   = viewStart.inSeconds() + (double) getWidth() / pixelsPerSecond;
+    const double startBeat = std::floor (viewStartBeat.inBeats() / beatsPerMinor) * beatsPerMinor;
+    const double endBeat   = viewStartBeat.inBeats() + (double) getWidth() / pixelsPerBeat;
 
-    for (double t = startSec; t <= endSec + 1e-6; t += secondsPerMinor)
+    for (double beat = startBeat; beat <= endBeat + 1e-6; beat += beatsPerMinor)
     {
-        const int x = int ((t - viewStart.inSeconds()) * pixelsPerSecond + 0.5);
-        const bool isMajor = std::fmod (t, secondsPerMajor) < 1e-9;
+        const int x = int ((beat - viewStartBeat.inBeats()) * pixelsPerBeat + 0.5);
+        const bool isMajor = std::fmod (beat, beatsPerBar) < 1e-9;
 
         g.setColour (Colours::white.withAlpha (isMajor ? 0.55f : 0.25f));
         const int tickLen = isMajor ? kMajorTickLen : kMinorTickLen;
         g.drawLine ((float) x + 0.5f, (float) r.getBottom() - (float) tickLen, (float) x + 0.5f, (float) r.getBottom());
 
+        // Label major ticks with bar numbers (beat / 4 + 1)
         if (isMajor && x >= 0 && x <= r.getRight())
         {
             g.setColour (Colours::white.withAlpha (0.7f));
             g.setFont (Font (FontOptions (11.0f)));
-            String label (t + 1);
+            const int barNumber = static_cast<int>(beat / beatsPerBar) + 1;
+            String label = String(barNumber);
             g.drawFittedText (label, Rectangle<int> (x + 3, 2, 60, 14), Justification::left, 1);
         }
     }
 
-    const double playPos = edit.getTransport().getPosition().inSeconds();
-    const double playX = ((playPos - viewStart.inSeconds()) * pixelsPerSecond);
-
+    // Loop range visualization (if present)
     if (hasLoop)
     {
-        const int x1 = timeSecToX(loopRange.getStart().inSeconds());
-        const int x2 = timeSecToX(loopRange.getEnd().inSeconds());
+        // Convert loop range time positions to beat positions
+        const auto startBeatPos = edit.tempoSequence.toBeats(loopRange.getStart());
+        const auto endBeatPos = edit.tempoSequence.toBeats(loopRange.getEnd());
+
+        const int x1 = beatsToX(startBeatPos.inBeats());
+        const int x2 = beatsToX(endBeatPos.inBeats());
         const int y  = 0, h = getHeight();
 
         juce::Rectangle<int> rr (juce::jmin(x1, x2), y, std::abs(x2 - x1), h);
@@ -118,23 +122,29 @@ void ui::TimelineComponent::mouseDown (const juce::MouseEvent& e)
 
     if (!hasLoop)
     {
-        const double start = xToTimeSec(mx);
-        const double defLenSec = 2.0; // seed length; change to a bar if you like
+        const double startBeats = xToBeats(mx);
+        const double defLenBeats = 4.0; // seed length: 1 bar (4 beats in 4/4)
 
-        loopRange = t::TimeRange (t::TimePosition::fromSeconds(start),
-                                   t::TimePosition::fromSeconds(start + defLenSec));
+        // Convert beat positions to time positions for loopRange
+        const auto startTime = edit.tempoSequence.toTime(t::BeatPosition::fromBeats(startBeats));
+        const auto endTime = edit.tempoSequence.toTime(t::BeatPosition::fromBeats(startBeats + defLenBeats));
+
+        loopRange = t::TimeRange (startTime, endTime);
         hasLoop   = true;
         dragMode  = DragMode::dragEnd;
-        originalStartSec = start;
-        originalEndSec   = start + defLenSec;
+        originalStartSec = startTime.inSeconds();
+        originalEndSec   = endTime.inSeconds();
 
         if (onLoopRangeChanged) onLoopRangeChanged(loopRange);
         repaint();
         return;
     }
 
-    const int x1 = timeSecToX(loopRange.getStart().inSeconds());
-    const int x2 = timeSecToX(loopRange.getEnd().inSeconds());
+    // Convert loop range to beat positions for hit testing
+    const auto startBeatPos = edit.tempoSequence.toBeats(loopRange.getStart());
+    const auto endBeatPos = edit.tempoSequence.toBeats(loopRange.getEnd());
+    const int x1 = beatsToX(startBeatPos.inBeats());
+    const int x2 = beatsToX(endBeatPos.inBeats());
     const juce::Rectangle<int> rr (juce::jmin(x1, x2), 0, std::abs(x2 - x1), getHeight());
 
     if (near(mx, rr.getX(), hitSlopPx))          dragMode = DragMode::dragStart;
@@ -142,22 +152,24 @@ void ui::TimelineComponent::mouseDown (const juce::MouseEvent& e)
     else if (rr.contains (mx, e.y))
     {
         dragMode = DragMode::dragBody;
-        dragAnchorSec   = xToTimeSec(mx);
+        dragAnchorSec   = loopRange.getStart().inSeconds();
         originalStartSec = loopRange.getStart().inSeconds();
         originalEndSec   = loopRange.getEnd().inSeconds();
     }
     else
     {
         // click outside: start a new region at cursor
-        const double start = xToTimeSec(mx);
-        const double defLenSec = 2.0;
+        const double startBeats = xToBeats(mx);
+        const double defLenBeats = 4.0;
 
-        loopRange = t::TimeRange (t::TimePosition::fromSeconds(start),
-                                   t::TimePosition::fromSeconds(start + defLenSec));
+        const auto startTime = edit.tempoSequence.toTime(t::BeatPosition::fromBeats(startBeats));
+        const auto endTime = edit.tempoSequence.toTime(t::BeatPosition::fromBeats(startBeats + defLenBeats));
+
+        loopRange = t::TimeRange (startTime, endTime);
         hasLoop   = true;
         dragMode  = DragMode::dragEnd;
-        originalStartSec = start;
-        originalEndSec   = start + defLenSec;
+        originalStartSec = startTime.inSeconds();
+        originalEndSec   = endTime.inSeconds();
 
         if (onLoopRangeChanged) onLoopRangeChanged(loopRange);
     }
@@ -179,29 +191,43 @@ void ui::TimelineComponent::mouseDrag (const juce::MouseEvent& e)
 
     if (dragMode == DragMode::none || !hasLoop) return;
 
-    const double t = xToTimeSec(e.x);
-    double s = loopRange.getStart().inSeconds();
-    double d = loopRange.getEnd().inSeconds();
+    // Work in beat space for dragging
+    const double mouseBeats = xToBeats(e.x);
+    double startBeats = edit.tempoSequence.toBeats(loopRange.getStart()).inBeats();
+    double endBeats = edit.tempoSequence.toBeats(loopRange.getEnd()).inBeats();
 
     switch (dragMode)
     {
-        case DragMode::dragStart: s = juce::jlimit(-1e9, d, t); break;
-        case DragMode::dragEnd:   d = juce::jmax(s, t);         break;
+        case DragMode::dragStart:
+            startBeats = juce::jlimit(0.0, endBeats, mouseBeats);
+            break;
+        case DragMode::dragEnd:
+            endBeats = juce::jmax(startBeats, mouseBeats);
+            break;
         case DragMode::dragBody:
         {
-            const double delta = t - dragAnchorSec;
-            s = originalStartSec + delta;
-            d = originalEndSec   + delta;
+            const double anchorBeats = edit.tempoSequence.toBeats(t::TimePosition::fromSeconds(dragAnchorSec)).inBeats();
+            const double delta = mouseBeats - anchorBeats;
+            const double originalStartBeats = edit.tempoSequence.toBeats(t::TimePosition::fromSeconds(originalStartSec)).inBeats();
+            const double originalEndBeats = edit.tempoSequence.toBeats(t::TimePosition::fromSeconds(originalEndSec)).inBeats();
+            startBeats = juce::jmax(0.0, originalStartBeats + delta);
+            endBeats   = originalEndBeats + delta;
             break;
         }
         default: break;
     }
 
-    snapSecondsToBeats(s);
-    snapSecondsToBeats(d);
+    // Snap to beats (already in beat space)
+    if (snapToBeats)
+    {
+        startBeats = std::round(startBeats);
+        endBeats = std::round(endBeats);
+    }
 
-    loopRange = t::TimeRange (t::TimePosition::fromSeconds(s),
-                               t::TimePosition::fromSeconds(d));
+    // Convert back to time positions
+    const auto startTime = edit.tempoSequence.toTime(t::BeatPosition::fromBeats(startBeats));
+    const auto endTime = edit.tempoSequence.toTime(t::BeatPosition::fromBeats(endBeats));
+    loopRange = t::TimeRange (startTime, endTime);
 
     if (onLoopRangeChanged) onLoopRangeChanged(loopRange);
     repaint();

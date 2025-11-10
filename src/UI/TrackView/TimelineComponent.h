@@ -14,11 +14,11 @@ namespace ui
         explicit TimelineComponent (te::Edit& e)
             : edit (e) {}
 
-        // Zoom/scroll API
-        void setPixelsPerSecond(double pps);
-        void setViewStart(t::TimePosition t);
-        double getPixelsPerSecond() const { return pixelsPerSecond; }
-        t::TimePosition getViewStart() const { return viewStart; }
+        // Zoom/scroll API (beat-based)
+        void setPixelsPerBeat(double ppb);
+        void setViewStartBeat(t::BeatPosition b);
+        double getPixelsPerBeat() const { return pixelsPerBeat; }
+        t::BeatPosition getViewStartBeat() const { return viewStartBeat; }
 
         // Optional: callback while scrubbing
         std::function<void (t::TimePosition)> onScrub;
@@ -39,13 +39,15 @@ namespace ui
     private:
         te::Edit& edit;
 
-        double pixelsPerSecond = 100.0;
-        t::TimePosition viewStart { t::TimePosition::fromSeconds (0.0) };
+        double pixelsPerBeat = 100.0;
+        t::BeatPosition viewStartBeat { t::BeatPosition::fromBeats (0.0) };
 
         t::TimePosition xToTime (int x) const
         {
-            const auto secs = viewStart.inSeconds() + (double) x / pixelsPerSecond;
-            return t::TimePosition::fromSeconds (juce::jmax (0.0, secs));
+            // Convert x to beat position, then to time
+            const auto beats = viewStartBeat.inBeats() + (double) x / pixelsPerBeat;
+            const auto beatPos = t::BeatPosition::fromBeats (juce::jmax (0.0, beats));
+            return edit.tempoSequence.toTime (beatPos);
         }
 
         void setTransportPositionFromX (int x, bool dragging);
@@ -69,11 +71,11 @@ namespace ui
         int panStartX = 0;
         bool panning = false;
 
-        // helpers for time<->x in *this* timeline’s coord system
-        double xToTimeSec (int x) const
-        { return viewStart.inSeconds() + (double) x / pixelsPerSecond; }
-        int timeSecToX (double t) const
-        { return (int) juce::roundToIntAccurate((t - viewStart.inSeconds()) * pixelsPerSecond); }
+        // helpers for beat<->x in *this* timeline's coord system
+        double xToBeats (int x) const
+        { return viewStartBeat.inBeats() + (double) x / pixelsPerBeat; }
+        int beatsToX (double beats) const
+        { return (int) juce::roundToIntAccurate((beats - viewStartBeat.inBeats()) * pixelsPerBeat); }
 
         te::Edit* editForSnap = nullptr;
         bool snapToBeats = false;

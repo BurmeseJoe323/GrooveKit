@@ -14,8 +14,8 @@ public:
 
     void paint (juce::Graphics& g) override;
     bool hitTest (int x, int y) override;
-    void setPixelsPerSecond(double p) { pixelsPerSecond = juce::jmax(10.0, p); }
-    void setViewStart(t::TimePosition t) { viewStart = t; }
+    void setPixelsPerBeat(double p) { pixelsPerBeat = juce::jmax(10.0, p); }
+    void setViewStartBeat(t::BeatPosition b) { viewStartBeat = b; }
     void mouseDrag (const juce::MouseEvent&) override;
     void mouseDown (const juce::MouseEvent&) override;
     void mouseUp (const juce::MouseEvent&) override;
@@ -27,8 +27,8 @@ private:
     EditViewState& editViewState;
 
     int xPosition = 0;
-    double pixelsPerSecond = 100.0;
-    t::TimePosition viewStart { t::TimePosition::fromSeconds(0.0) };
+    double pixelsPerBeat = 100.0;
+    t::BeatPosition viewStartBeat { t::BeatPosition::fromBeats(0.0) };
 
     bool firstTimer = true;
 };
