@@ -1,9 +1,8 @@
-// JUNIE
 #include "TrackClip.h"
 #include "TrackEditView.h"
 #include "TrackComponent.h"
 #include "TrackListComponent.h"
-#include <limits> // For std::numeric_limits (Written by Claude Code)
+#include <limits> // For std::numeric_limits
 
 TrackClip::TrackClip (te::MidiClip* c, float pixelsPerBeat)
     : clip (c),
@@ -71,14 +70,15 @@ void TrackClip::setPixelsPerBeat (float ppb)
 
 void TrackClip::paint (juce::Graphics& g)
 {
+    // Written by Claude Code
     const auto r = getLocalBounds().toFloat();
     constexpr float radius = 8.0f;
 
-    // Fill - Apply drag alpha for transparency during drag (Written by Claude Code)
+    // Fill - Apply drag alpha for transparency during drag
     g.setColour (clipColor.withAlpha (dragAlpha));
     g.fillRoundedRectangle (r, radius);
 
-    // Border - highlight if being edited in piano roll (Written by Claude Code)
+    // Border - highlight if being edited in piano roll
     if (isBeingEdited)
     {
         // Bright cyan border for edited clip
@@ -95,10 +95,6 @@ void TrackClip::paint (juce::Graphics& g)
         g.setColour (juce::Colours::white.withAlpha (0.35f * dragAlpha));
         g.drawRoundedRectangle (r.reduced (0.5f), radius, 1.0f);
     }
-
-    // Label
-    g.setColour (juce::Colours::white.withAlpha (dragAlpha));
-    g.drawText ("MIDI Clip", getLocalBounds(), juce::Justification::centred);
 }
 
 void TrackClip::resized()
@@ -109,6 +105,7 @@ void TrackClip::resized()
 
 void TrackClip::onResizeEnd()
 {
+    // Written by Claude Code
     if (!clip)
         return;
 
@@ -123,12 +120,12 @@ void TrackClip::onResizeEnd()
     // Calculate the new length based on the current width
     const double newLengthSecs = static_cast<double> (getWidth()) / pixelsPerSecond;
 
-    // Quantize length to 0.25 second grid (Written by Claude Code)
+    // Quantize length to 0.25 second grid
     constexpr double gridSize = 0.25;
     double quantizedLengthSecs = std::round (newLengthSecs / gridSize) * gridSize;
     double finalLengthSecs = juce::jmax (gridSize, quantizedLengthSecs); // Minimum one grid unit
 
-    // Check for overlap with other clips and constrain resize if needed (Written by Claude Code)
+    // Check for overlap with other clips and constrain resize if needed
     auto* trackComp = findParentComponentOfClass<TrackComponent>();
     if (trackComp)
     {
@@ -183,9 +180,9 @@ void TrackClip::onResizeEnd()
     setBounds (b.withWidth (juce::jmax (correctWidth, 20)));
 }
 
-// Drag helper methods - Written by Claude Code
 te::TimePosition TrackClip::mouseToTime (const juce::MouseEvent& e)
 {
+    // Written by Claude Code
     auto* tl = findParentComponentOfClass<TrackListComponent>();
     if (!tl)
         return te::TimePosition::fromSeconds (0.0);
@@ -197,7 +194,7 @@ te::TimePosition TrackClip::mouseToTime (const juce::MouseEvent& e)
     auto eventInTrackList = e.getEventRelativeTo (tl);
     const int globalX = eventInTrackList.x;
 
-    // Account for header width - timeline starts after the header (Written by Claude Code)
+    // Account for header width - timeline starts after the header
     constexpr int headerWidth = 140;
     const int timelineX = globalX - headerWidth;
 
@@ -246,12 +243,12 @@ void TrackClip::mouseDown (const juce::MouseEvent& e)
     if (e.mods.isPopupMenu())
         return;
 
-    // Store initial state for potential drag (Written by Claude Code)
+    // Store initial state for potential drag
     // Note: Don't set isDragging yet - wait for mouseDrag threshold
     dragStartMousePos = e.getScreenPosition();
     originalStartTime = clip->getPosition().getStart();
 
-    // Calculate where in the clip the user clicked (Written by Claude Code)
+    // Calculate where in the clip the user clicked
     // This offset lets us preserve natural drag behavior where the clip follows the cursor
     auto* tl = findParentComponentOfClass<TrackListComponent>();
     if (tl && clip)
@@ -273,7 +270,7 @@ void TrackClip::mouseDrag (const juce::MouseEvent& e)
     if (!clip)
         return;
 
-    // Check if we should activate drag based on threshold (Written by Claude Code)
+    // Check if we should activate drag based on threshold
     if (!dragThresholdExceeded)
     {
         // Use JUCE's built-in drag detection (~5px threshold)
@@ -294,7 +291,7 @@ void TrackClip::mouseDrag (const juce::MouseEvent& e)
     if (!isDragging)
         return;
 
-    // Calculate target position with quantization (Written by Claude Code)
+    // Calculate target position with quantization
     // Get time at mouse cursor
     te::TimePosition mouseTime = mouseToTime (e);
 
@@ -331,7 +328,7 @@ void TrackClip::mouseDrag (const juce::MouseEvent& e)
 void TrackClip::mouseUp (const juce::MouseEvent& e)
 {
     // Written by Claude Code
-    // Reset drag threshold for next potential drag operation (Written by Claude Code)
+    // Reset drag threshold for next potential drag operation
     dragThresholdExceeded = false;
 
     if (isDragging)
@@ -340,7 +337,7 @@ void TrackClip::mouseUp (const juce::MouseEvent& e)
         dragAlpha = 1.0f;
         setMouseCursor (juce::MouseCursor::NormalCursor);
 
-        // Calculate final drop position (Written by Claude Code)
+        // Calculate final drop position
         te::TimePosition mouseTime = mouseToTime (e);
 
         // Subtract click offset to maintain natural drag behavior
