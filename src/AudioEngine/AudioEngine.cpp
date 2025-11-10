@@ -176,120 +176,64 @@ void AudioEngine::logAvailableMidiDevices() const
     }
 }
 
-bool AudioEngine::setMidiInputDeviceEnabled(int deviceIndex, bool enabled)
+void AudioEngine::setupMidiInputDevices(te::Edit& editToSetup)
 {
-    auto devices = juce::MidiInput::getAvailableDevices();
-
-    if (deviceIndex < 0 || deviceIndex >= devices.size())
+    // Enable all MIDI input devices in Tracktion's device manager
+    for (const auto& midiIn : engine.getDeviceManager().getMidiInDevices())
     {
-        Logger::writeToLog("[MIDI] Invalid device index: " + String(deviceIndex));
-        return false;
+        midiIn->setEnabled(true);
+        midiIn->setMonitorMode(te::InputDevice::MonitorMode::on);
     }
 
-    const auto& device = devices[deviceIndex];
-    auto& dm = adm();
+    // Ensure transport context is allocated for recording
+    editToSetup.getTransport().ensureContextAllocated();
 
-    dm.setMidiInputDeviceEnabled(device.identifier, enabled);
-
-    Logger::writeToLog("[MIDI] Device " + String(enabled ? "enabled" : "disabled") +
-                      ": " + device.name);
-
-    return true;
+    Logger::writeToLog("[MIDI] Enabled all MIDI input devices via Tracktion InputDevice system");
 }
 
-bool AudioEngine::connectMidiInputToCallback(int deviceIndex, juce::MidiInputCallback* callback)
+void AudioEngine::routeMidiToTrack(te::Edit& editToRoute, int trackIndex)
 {
-    auto devices = juce::MidiInput::getAvailableDevices();
-
-    if (deviceIndex < 0 || deviceIndex >= devices.size())
+    auto tracks = te::getAudioTracks(editToRoute);
+    if (trackIndex < 0 || trackIndex >= tracks.size())
     {
-        Logger::writeToLog("[MIDI] Invalid device index: " + String(deviceIndex));
-        return false;
+        Logger::writeToLog("[MIDI] Invalid track index for routing: " + String(trackIndex));
+        return;
     }
 
-    const auto& device = devices[deviceIndex];
-    auto& dm = adm();
+    auto* track = tracks[trackIndex];
 
-    // Enable the device first
-    dm.setMidiInputDeviceEnabled(device.identifier, true);
-
-    // Add the callback to receive MIDI messages
-    dm.addMidiInputDeviceCallback(device.identifier, callback);
-
-    // Track the currently connected device
-    currentMidiInputIdentifier = device.identifier;
-
-    Logger::writeToLog("[MIDI] Connected to device: " + device.name);
-
-    return true;
-}
-
-bool AudioEngine::setMidiInputDeviceByName(const juce::String& deviceName, juce::MidiInputCallback* callback)
-{
-    auto devices = juce::MidiInput::getAvailableDevices();
-
-    // Find device by name
-    for (const auto& device : devices)
+    // Route all MIDI input devices to this track
+    for (auto* instance : editToRoute.getAllInputDevices())
     {
-        if (device.name == deviceName)
+        if (instance->getInputDevice().getDeviceType() == te::InputDevice::physicalMidiDevice)
         {
-            auto& dm = adm();
+            // Disable recording on all tracks first
+            for (auto* t : tracks)
+                instance->setRecordingEnabled(t->itemID, false);
 
-            // Disconnect previous device if any
-            if (currentMidiInputIdentifier.isNotEmpty())
-            {
-                dm.removeMidiInputDeviceCallback(currentMidiInputIdentifier, callback);
-                dm.setMidiInputDeviceEnabled(currentMidiInputIdentifier, false);
-            }
-
-            // Enable the new device
-            dm.setMidiInputDeviceEnabled(device.identifier, true);
-
-            // Add the callback to receive MIDI messages
-            dm.addMidiInputDeviceCallback(device.identifier, callback);
-
-            // Track the currently connected device
-            currentMidiInputIdentifier = device.identifier;
-
-            Logger::writeToLog("[MIDI] Connected to device: " + device.name);
-
-            return true;
+            // Enable on target track
+            instance->setTarget(track->itemID, true, nullptr, 0);
+            instance->setRecordingEnabled(track->itemID, true);
         }
     }
 
-    Logger::writeToLog("[MIDI] Device not found: " + deviceName);
-    return false;
+    Logger::writeToLog("[MIDI] Routed all MIDI inputs to track " + String(trackIndex));
 }
 
-juce::String AudioEngine::getCurrentMidiInputDeviceName() const
+void AudioEngine::clearMidiRouting(te::Edit& editToClear)
 {
-    if (currentMidiInputIdentifier.isEmpty())
-        return {};
+    auto tracks = te::getAudioTracks(editToClear);
 
-    auto devices = juce::MidiInput::getAvailableDevices();
-
-    for (const auto& device : devices)
+    for (auto* instance : editToClear.getAllInputDevices())
     {
-        if (device.identifier == currentMidiInputIdentifier)
-            return device.name;
+        if (instance->getInputDevice().getDeviceType() == te::InputDevice::physicalMidiDevice)
+        {
+            for (auto* t : tracks)
+                instance->setRecordingEnabled(t->itemID, false);
+        }
     }
 
-    return {};
-}
-
-void AudioEngine::disconnectAllMidiInputs(juce::MidiInputCallback* callback)
-{
-    if (currentMidiInputIdentifier.isEmpty())
-        return;
-
-    auto& dm = adm();
-
-    dm.removeMidiInputDeviceCallback(currentMidiInputIdentifier, callback);
-    dm.setMidiInputDeviceEnabled(currentMidiInputIdentifier, false);
-
-    currentMidiInputIdentifier.clear();
-
-    Logger::writeToLog("[MIDI] Disconnected all MIDI input devices");
+    Logger::writeToLog("[MIDI] Cleared all MIDI routing");
 }
 
 

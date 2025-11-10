@@ -28,11 +28,8 @@ AppEngine::AppEngine()
 
     audioEngine->initialiseDefaults (48000.0, 512);
 
-    // Auto-connect to first available MIDI input device (if any)
-    if (!listMidiInputDevices().isEmpty())
-    {
-        connectMidiInputDevice(0);
-    }
+    // Setup MIDI input devices using Tracktion's InputDevice system
+    audioEngine->setupMidiInputDevices(*edit);
 }
 
 AppEngine::~AppEngine()
@@ -124,6 +121,7 @@ void AppEngine::newUntitledEdit()
     markSaved();
 
     audioEngine->initialiseDefaults (48000.0, 512);
+    audioEngine->setupMidiInputDevices(*edit);
 
     if (onEditLoaded)
         onEditLoaded();
@@ -136,7 +134,15 @@ void AppEngine::setArmedTrack (int index)
     if (selectedTrackIndex == index)
         return;
 
+    // Clear old MIDI routing
+    if (selectedTrackIndex >= 0)
+        audioEngine->clearMidiRouting(*edit);
+
     selectedTrackIndex = index;
+
+    // Route MIDI to new armed track
+    if (index >= 0)
+        audioEngine->routeMidiToTrack(*edit, index);
 
     if (onArmedTrackChanged)
         onArmedTrackChanged();
@@ -410,6 +416,7 @@ bool AppEngine::loadEditFromFile (const juce::File& file)
 
     audioEngine = std::make_unique<AudioEngine> (*edit, *engine);
     audioEngine->initialiseDefaults (48000.0, 512);
+    audioEngine->setupMidiInputDevices(*edit);
 
     for (auto* track : te::getAudioTracks (*edit))
     {
