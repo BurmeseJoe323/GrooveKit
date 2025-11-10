@@ -2,6 +2,7 @@
 #include "TrackEditView.h"
 #include "TrackListComponent.h"
 namespace t = tracktion;
+
 TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const int trackIndex, const juce::Colour color)
     : appEngine (engine), trackColor (color), trackIndex (trackIndex)
 {
@@ -294,14 +295,14 @@ void TrackComponent::rebuildClipsFromEngine()
         };
 
         // Drag callbacks - Written by Claude Code
-        ui->onDragUpdate = [this, clip = mc] (int targetTrack, te::TimePosition time, te::TimeDuration length, bool isValid) {
+        ui->onDragUpdate = [this, clip = mc] (int targetTrack, t::TimePosition time, t::TimeDuration length, bool isValid) {
             auto* tl = findParentComponentOfClass<TrackListComponent>();
             if (!tl)
                 return;
 
             // Validate the drop location
             const bool canMove = tl->canClipMoveToTrack (clip, trackIndex, targetTrack);
-            const auto targetRange = te::TimeRange (time, time + length);
+            const auto targetRange = t::TimeRange (time, time + length);
             const bool hasOverlap = tl->wouldClipOverlap (clip, targetTrack, targetRange);
 
             const bool validDrop = canMove && !hasOverlap;
@@ -310,7 +311,7 @@ void TrackComponent::rebuildClipsFromEngine()
             tl->showGhostClip (targetTrack, time, length, validDrop);
         };
 
-        ui->onDragComplete = [this] (te::MidiClip* clip, int targetTrack, te::TimePosition newStart) {
+        ui->onDragComplete = [this] (te::MidiClip* clip, int targetTrack, t::TimePosition newStart) {
             auto* tl = findParentComponentOfClass<TrackListComponent>();
             if (!tl || !clip || !appEngine)
             {
@@ -324,7 +325,7 @@ void TrackComponent::rebuildClipsFromEngine()
             // Validate final drop location
             const bool canMove = tl->canClipMoveToTrack (clip, trackIndex, targetTrack);
             const auto clipLength = clip->getPosition().getLength();
-            const auto targetRange = te::TimeRange (newStart, newStart + clipLength);
+            const auto targetRange = t::TimeRange (newStart, newStart + clipLength);
             const bool hasOverlap = tl->wouldClipOverlap (clip, targetTrack, targetRange);
 
             if (!canMove || hasOverlap)
@@ -420,7 +421,12 @@ void TrackComponent::mouseUp (const juce::MouseEvent& e)
     const double viewStartBeats = tl ? tl->getViewStartBeat().inBeats() : 0.0;
 
     const double clickBeats = viewStartBeats + (localX / juce::jmax (1.0, pixelsPerBeat));
-    const t::TimePosition startPos = appEngine->getEdit().tempoSequence.toTime(t::BeatPosition::fromBeats(clickBeats));
+    //const t::TimePosition startPos = appEngine->getEdit().tempoSequence.toTime(t::BeatPosition::fromBeats(clickBeats));
+
+    // Quantize to 0.25 second grid (Written by Claude Code)
+    constexpr double gridSize = 0.25;
+    const double quantizedSec = std::round (clickBeats / gridSize) * gridSize;
+    const t::TimePosition startPos = t::TimePosition::fromSeconds (quantizedSec);
 
     juce::PopupMenu m;
 
