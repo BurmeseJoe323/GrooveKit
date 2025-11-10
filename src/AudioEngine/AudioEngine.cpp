@@ -202,38 +202,19 @@ void AudioEngine::routeMidiToTrack(te::Edit& editToRoute, int trackIndex)
 
     auto* track = tracks[trackIndex];
 
-    // Route all MIDI input devices to this track
+    // Route all MIDI input devices to this track for live monitoring
+    // Note: We don't enable recording here - that will be done separately when recording
     for (auto* instance : editToRoute.getAllInputDevices())
     {
         if (instance->getInputDevice().getDeviceType() == te::InputDevice::physicalMidiDevice)
         {
-            // Disable recording on all tracks first
-            for (auto* t : tracks)
-                instance->setRecordingEnabled(t->itemID, false);
-
-            // Enable on target track
+            // Set target track for live MIDI monitoring
+            // Monitor mode (set in setupMidiInputDevices) allows pass-through even when not recording
             instance->setTarget(track->itemID, true, nullptr, 0);
-            instance->setRecordingEnabled(track->itemID, true);
         }
     }
 
     Logger::writeToLog("[MIDI] Routed all MIDI inputs to track " + String(trackIndex));
-}
-
-void AudioEngine::clearMidiRouting(te::Edit& editToClear)
-{
-    auto tracks = te::getAudioTracks(editToClear);
-
-    for (auto* instance : editToClear.getAllInputDevices())
-    {
-        if (instance->getInputDevice().getDeviceType() == te::InputDevice::physicalMidiDevice)
-        {
-            for (auto* t : tracks)
-                instance->setRecordingEnabled(t->itemID, false);
-        }
-    }
-
-    Logger::writeToLog("[MIDI] Cleared all MIDI routing");
 }
 
 

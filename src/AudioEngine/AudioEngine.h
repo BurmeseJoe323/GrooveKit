@@ -25,7 +25,6 @@ public:
     // MIDI Input device management (Tracktion InputDevice system)
     void setupMidiInputDevices(te::Edit& edit);
     void routeMidiToTrack(te::Edit& edit, int trackIndex);
-    void clearMidiRouting(te::Edit& edit);
     juce::StringArray listMidiInputDevices() const;
     void logAvailableMidiDevices() const;
 

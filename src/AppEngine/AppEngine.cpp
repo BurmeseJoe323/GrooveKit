@@ -134,13 +134,9 @@ void AppEngine::setArmedTrack (int index)
     if (selectedTrackIndex == index)
         return;
 
-    // Clear old MIDI routing
-    if (selectedTrackIndex >= 0)
-        audioEngine->clearMidiRouting(*edit);
-
     selectedTrackIndex = index;
 
-    // Route MIDI to new armed track
+    // Route MIDI to armed track (setTarget will update the routing automatically)
     if (index >= 0)
         audioEngine->routeMidiToTrack(*edit, index);
 
