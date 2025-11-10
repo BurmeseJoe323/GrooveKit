@@ -1,6 +1,8 @@
 #include "TrackComponent.h"
 #include "TrackEditView.h"
 #include "TrackListComponent.h"
+#include <limits> // For std::numeric_limits (Written by Claude Code)
+
 namespace t = tracktion;
 
 TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const int trackIndex, const juce::Colour color)
@@ -69,8 +71,8 @@ void TrackComponent::resized()
             continue;
 
         const auto posRange = midiClip->getPosition().time;
-
         t::TimeRange drawRange = posRange;
+
         if (midiClip->isLooping())
         {
             const auto loopRange = midiClip->getLoopRange();
@@ -456,11 +458,35 @@ void TrackComponent::mouseUp (const juce::MouseEvent& e)
         {
             case 1: // Paste Here
             {
-                // Convert click time (seconds) to beats before pasting
-                const double pasteBeats =
-                    safeThis->appEngine->getEdit().tempoSequence.toBeats (startPos).inBeats();
-                if (safeThis->appEngine->pasteClipboardAt (safeThis->trackIndex, pasteBeats))
-                    safeThis->rebuildAndRefreshHighlight();
+                // Get clipboard clip length and check for overlap (Written by Claude Code)
+                const double clipLengthBeats = safeThis->appEngine->getClipboardClipLengthBeats();
+                const double pasteBeats = safeThis->appEngine->getEdit().tempoSequence.toBeats (startPos).inBeats();
+                const double endBeats = pasteBeats + clipLengthBeats;
+
+                // Check if paste would overlap with existing clips
+                const auto pasteStartTime = safeThis->appEngine->getEdit().tempoSequence.toTime (t::BeatPosition::fromBeats (pasteBeats));
+                const auto pasteEndTime = safeThis->appEngine->getEdit().tempoSequence.toTime (t::BeatPosition::fromBeats (endBeats));
+                const t::TimeRange pasteRange (pasteStartTime, pasteEndTime);
+
+                // Check all clips on track for overlap
+                bool wouldOverlap = false;
+                auto clipsOnTrack = safeThis->appEngine->getMidiClipsFromTrack (safeThis->trackIndex);
+                for (auto* existingClip : clipsOnTrack)
+                {
+                    auto existingRange = existingClip->getPosition().time;
+                    if (pasteRange.overlaps (existingRange))
+                    {
+                        wouldOverlap = true;
+                        break;
+                    }
+                }
+
+                // Only paste if no overlap
+                if (!wouldOverlap)
+                {
+                    if (safeThis->appEngine->pasteClipboardAt (safeThis->trackIndex, pasteBeats))
+                        safeThis->rebuildAndRefreshHighlight();
+                }
                 break;
             }
             case 2: // Add MIDI Clip Here
@@ -468,6 +494,35 @@ void TrackComponent::mouseUp (const juce::MouseEvent& e)
                 const auto length = t::BeatDuration::fromBeats (8.0);
                 if (safeThis->appEngine->addMidiClipToTrackAt (safeThis->trackIndex, startPos, length))
                     safeThis->rebuildAndRefreshHighlight();
+                // Check for overlap before creating clip (Written by Claude Code)
+                const double clipLengthBeats = 8.0;
+                const auto startBeats = safeThis->appEngine->getEdit().tempoSequence.toBeats (startPos).inBeats();
+                const auto endBeats = startBeats + clipLengthBeats;
+
+                const auto clipStartTime = safeThis->appEngine->getEdit().tempoSequence.toTime (t::BeatPosition::fromBeats (startBeats));
+                const auto clipEndTime = safeThis->appEngine->getEdit().tempoSequence.toTime (t::BeatPosition::fromBeats (endBeats));
+                const t::TimeRange clipRange (clipStartTime, clipEndTime);
+
+                // Check all clips on track for overlap
+                bool wouldOverlap = false;
+                auto clipsOnTrack = safeThis->appEngine->getMidiClipsFromTrack (safeThis->trackIndex);
+                for (auto* existingClip : clipsOnTrack)
+                {
+                    auto existingRange = existingClip->getPosition().time;
+                    if (clipRange.overlaps (existingRange))
+                    {
+                        wouldOverlap = true;
+                        break;
+                    }
+                }
+
+                // Only create if no overlap
+                if (!wouldOverlap)
+                {
+                    const auto length = t::BeatDuration::fromBeats (clipLengthBeats);
+                    if (safeThis->appEngine->addMidiClipToTrackAt (safeThis->trackIndex, startPos, length))
+                        safeThis->rebuildAndRefreshHighlight();
+                }
                 break;
             }
             default:

@@ -200,6 +200,8 @@ public:
     bool hasClipboardContent() const;
     // Check if clipboard content can be pasted to a specific track (Junie)
     bool canPasteToTrack (int trackIndex) const;
+    // Get clipboard clip length in beats (Written by Claude Code)
+    double getClipboardClipLengthBeats() const { return lastCopiedClipLengthBeats; }
 
 private:
     std::unique_ptr<tracktion::engine::Engine> engine;
@@ -236,6 +238,7 @@ private:
     // Track the type of the last copied clip for paste validation (Junie)
     bool lastCopiedClipWasDrum = false;
     bool hasClipboardTypeInfo = false;
+    double lastCopiedClipLengthBeats = 0.0; // Length in beats (Written by Claude Code)
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AppEngine)
 };
