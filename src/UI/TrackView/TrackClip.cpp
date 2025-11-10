@@ -3,6 +3,7 @@
 #include "TrackEditView.h"
 #include "TrackComponent.h"
 #include "TrackListComponent.h"
+#include <limits> // For std::numeric_limits (Written by Claude Code)
 
 TrackClip::TrackClip (te::MidiClip* c, float pixelsPerBeat)
     : clip (c),
@@ -124,8 +125,51 @@ void TrackClip::onResizeEnd()
 
     // Quantize length to 0.25 second grid (Written by Claude Code)
     constexpr double gridSize = 0.25;
-    const double quantizedLengthSecs = std::round (newLengthSecs / gridSize) * gridSize;
-    const double finalLengthSecs = juce::jmax (gridSize, quantizedLengthSecs); // Minimum one grid unit
+    double quantizedLengthSecs = std::round (newLengthSecs / gridSize) * gridSize;
+    double finalLengthSecs = juce::jmax (gridSize, quantizedLengthSecs); // Minimum one grid unit
+
+    // Check for overlap with other clips and constrain resize if needed (Written by Claude Code)
+    auto* trackComp = findParentComponentOfClass<TrackComponent>();
+    if (trackComp)
+    {
+        const auto clipStart = clip->getPosition().getStart();
+
+        // Find the nearest clip that starts after this one
+        double nearestClipStart = std::numeric_limits<double>::max();
+
+        // Get AppEngine through TrackListComponent to access clips
+        for (int i = 0; i < trackComp->getNumChildComponents(); ++i)
+        {
+            if (auto* otherClipUI = dynamic_cast<TrackClip*> (trackComp->getChildComponent (i)))
+            {
+                if (otherClipUI == this)
+                    continue; // Skip self
+
+                auto* otherClip = otherClipUI->getMidiClip();
+                if (!otherClip)
+                    continue;
+
+                const double otherStart = otherClip->getPosition().getStart().inSeconds();
+                const double thisStart = clipStart.inSeconds();
+
+                // Check if this clip starts after our clip
+                if (otherStart > thisStart)
+                    nearestClipStart = std::min (nearestClipStart, otherStart);
+            }
+        }
+
+        // If we found a clip that would be overlapped, constrain the resize
+        if (nearestClipStart < std::numeric_limits<double>::max())
+        {
+            const double maxAllowedLength = nearestClipStart - clipStart.inSeconds();
+            if (finalLengthSecs > maxAllowedLength)
+            {
+                // Constrain to just before the next clip, quantized
+                const double constrainedLength = std::floor (maxAllowedLength / gridSize) * gridSize;
+                finalLengthSecs = juce::jmax (gridSize, constrainedLength);
+            }
+        }
+    }
 
     // Update the model - preserveSync=false since we're manually resizing
     clip->setLength (te::TimeDuration::fromSeconds (finalLengthSecs), false);
