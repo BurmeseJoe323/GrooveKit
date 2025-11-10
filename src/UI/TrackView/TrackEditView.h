@@ -42,6 +42,7 @@ public:
 
     void showPianoRoll (te::MidiClip* clip);
     void hidePianoRoll();
+    void refreshClipEditState(); // Restore clip highlight after rebuild (Written by Claude Code)
 
     int getPianoRollIndex() const;
 
