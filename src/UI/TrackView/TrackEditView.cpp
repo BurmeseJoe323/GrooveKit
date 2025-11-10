@@ -487,8 +487,13 @@ void TrackEditView::showPianoRoll (te::MidiClip* clip)
     // Notify clip UI that it's being edited - Written by Claude Code
     if (clip && trackList)
     {
-        // Find track index for this clip
         const int n = appEngine->getNumTracks();
+
+        // First, clear all clip highlights across all tracks (Written by Claude Code)
+        for (int i = 0; i < n; ++i)
+            trackList->updateClipEditState (i, nullptr);
+
+        // Then, find and highlight the new clip
         for (int i = 0; i < n; ++i)
         {
             auto clips = appEngine->getMidiClipsFromTrack (i);
