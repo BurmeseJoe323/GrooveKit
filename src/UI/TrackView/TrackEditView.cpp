@@ -552,6 +552,28 @@ int TrackEditView::getPianoRollIndex () const
     return -1;
 }
 
+// Written by Claude Code
+void TrackEditView::refreshClipEditState()
+{
+    if (pianoRollClip && trackList && appEngine)
+    {
+        // Find track index for the currently edited clip
+        const int n = appEngine->getNumTracks();
+        for (int i = 0; i < n; ++i)
+        {
+            auto clips = appEngine->getMidiClipsFromTrack (i);
+            for (auto* mc : clips)
+            {
+                if (mc == pianoRollClip)
+                {
+                    trackList->updateClipEditState (i, pianoRollClip);
+                    return;
+                }
+            }
+        }
+    }
+}
+
 void TrackEditView::labelTextChanged (juce::Label* labelThatHasChanged)
 {
     if (labelThatHasChanged == &bpmEditField)

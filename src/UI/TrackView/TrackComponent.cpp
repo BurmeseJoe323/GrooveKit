@@ -124,7 +124,7 @@ void TrackComponent::onSettingsClicked()
             case 1: // Add Clip (Junie)
             {
                 appEngine->addMidiClipToTrack (trackIndex);
-                rebuildClipsFromEngine();
+                rebuildAndRefreshHighlight();
                 break;
             }
             case 2:
@@ -137,7 +137,7 @@ void TrackComponent::onSettingsClicked()
                         startBeats = std::max (startBeats, mc->getStartBeat().inBeats() + mc->getLengthInBeats().inBeats());
 
                     if (appEngine->pasteClipboardAt (trackIndex, startBeats))
-                        rebuildClipsFromEngine();
+                        rebuildAndRefreshHighlight();
                 }
                 break;
             }
@@ -219,18 +219,16 @@ void TrackComponent::rebuildClipsFromEngine()
             if (appEngine)
             {
                 appEngine->duplicateMidiClip (c);
-                rebuildClipsFromEngine();
-                resized();
+                rebuildAndRefreshHighlight();
             }
         };
 
         ui->onPasteRequested = [this] (te::MidiClip* c, double pasteBeats) {
-            juce::ignoreUnused (c); // track determination is based on this component’s trackIndex
+            juce::ignoreUnused (c); // track determination is based on this component's trackIndex
             if (appEngine)
             {
                 appEngine->pasteClipboardAt (trackIndex, pasteBeats);
-                rebuildClipsFromEngine();
-                resized();
+                rebuildAndRefreshHighlight();
             }
         };
 
@@ -273,8 +271,7 @@ void TrackComponent::rebuildClipsFromEngine()
                         break;
                     case 2: // Duplicate
                         safeThis->appEngine->duplicateMidiClip (clip);
-                        safeThis->rebuildClipsFromEngine();
-                        safeThis->resized();
+                        safeThis->rebuildAndRefreshHighlight();
                         break;
                     case 3: // Delete
                     {
@@ -360,12 +357,15 @@ void TrackComponent::rebuildClipsFromEngine()
                 // Rebuild both source and target tracks
                 tl->rebuildTrack (trackIndex);     // Source track
                 tl->rebuildTrack (targetTrack);     // Target track
+
+                // Restore clip editing state if piano roll is open (Written by Claude Code)
+                if (auto* parent = findParentComponentOfClass<TrackEditView>())
+                    parent->refreshClipEditState();
             }
             else
             {
                 // Just moving within same track
-                rebuildClipsFromEngine();
-                resized();
+                rebuildAndRefreshHighlight();
             }
         };
 
@@ -403,6 +403,17 @@ void TrackComponent::updateClipEditedState (te::MidiClip* editedClip)
         if (ui)
             ui->setBeingEdited (ui->getMidiClip() == editedClip);
     }
+}
+
+// Written by Claude Code
+void TrackComponent::rebuildAndRefreshHighlight()
+{
+    rebuildClipsFromEngine();
+    resized();
+
+    // Restore clip highlight if piano roll is open
+    if (auto* parent = findParentComponentOfClass<TrackEditView>())
+        parent->refreshClipEditState();
 }
 
 void TrackComponent::mouseUp (const juce::MouseEvent& e)
@@ -449,20 +460,14 @@ void TrackComponent::mouseUp (const juce::MouseEvent& e)
                 const double pasteBeats =
                     safeThis->appEngine->getEdit().tempoSequence.toBeats (startPos).inBeats();
                 if (safeThis->appEngine->pasteClipboardAt (safeThis->trackIndex, pasteBeats))
-                {
-                    safeThis->rebuildClipsFromEngine();
-                    safeThis->resized();
-                }
+                    safeThis->rebuildAndRefreshHighlight();
                 break;
             }
             case 2: // Add MIDI Clip Here
             {
                 const auto length = t::BeatDuration::fromBeats (8.0);
                 if (safeThis->appEngine->addMidiClipToTrackAt (safeThis->trackIndex, startPos, length))
-                {
-                    safeThis->rebuildClipsFromEngine();
-                    safeThis->resized();
-                }
+                    safeThis->rebuildAndRefreshHighlight();
                 break;
             }
             default:

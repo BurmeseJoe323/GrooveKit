@@ -83,5 +83,8 @@ private:
         return juce::roundToInt (r.getLength().inSeconds() * pps);
     }
 
+    // Helper to rebuild clips and restore piano roll highlight (Written by Claude Code)
+    void rebuildAndRefreshHighlight();
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrackComponent)
 };
