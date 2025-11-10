@@ -118,19 +118,19 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
     };
 
     // Handle BPM changes: maintain beat positions for loop range and playhead
-    appEngine->onBpmChanged = [this](double oldBpm, double newBpm)
+    appEngine->onBpmChanged = [this](double oldBpm, double newBpm, t::TimeRange oldLoopRange, t::TimePosition oldPlayheadPos)
     {
         auto& tr = appEngine->getEdit().getTransport();
         auto& tempoSeq = appEngine->getEdit().tempoSequence;
 
         // Update loop range to maintain beat positions
-        auto loopRange = tr.getLoopRange();
-        if (loopRange.getLength().inSeconds() > 0.0)
+        // Use the ORIGINAL loop range values (before Tracktion adjusted them)
+        if (oldLoopRange.getLength().inSeconds() > 0.0)
         {
-            // Convert time to beats using old BPM (manual calculation)
+            // Convert original time to beats using old BPM (manual calculation)
             // At a given BPM: beats = seconds * (BPM / 60)
-            const double startBeats = loopRange.getStart().inSeconds() * (oldBpm / 60.0);
-            const double endBeats = loopRange.getEnd().inSeconds() * (oldBpm / 60.0);
+            const double startBeats = oldLoopRange.getStart().inSeconds() * (oldBpm / 60.0);
+            const double endBeats = oldLoopRange.getEnd().inSeconds() * (oldBpm / 60.0);
 
             // Convert beats back to time using new tempo sequence
             const auto startTime = tempoSeq.toTime(t::BeatPosition::fromBeats(startBeats));
@@ -145,13 +145,15 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
         }
 
         // Update playhead position to maintain beat position (only if not playing)
+        // Use the ORIGINAL playhead position (before Tracktion adjusted it)
         if (!tr.isPlaying())
         {
-            const auto currentPos = tr.getPosition();
-            // Convert to beats using old BPM
-            const double posBeats = currentPos.inSeconds() * (oldBpm / 60.0);
+            // Convert original position to beats using old BPM
+            const double posBeats = oldPlayheadPos.inSeconds() * (oldBpm / 60.0);
+
             // Convert back to time using new tempo
             const auto newPos = tempoSeq.toTime(t::BeatPosition::fromBeats(posBeats));
+
             tr.setPosition(newPos);
         }
 

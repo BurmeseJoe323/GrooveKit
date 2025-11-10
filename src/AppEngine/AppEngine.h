@@ -162,7 +162,7 @@ public:
     void openEditAsync (std::function<void (bool success)> onDone = {});
     bool loadEditFromFile (const juce::File& file);
     std::function<void()> onEditLoaded;
-    std::function<void(double oldBpm, double newBpm)> onBpmChanged;
+    std::function<void(double oldBpm, double newBpm, t::TimeRange oldLoopRange, t::TimePosition oldPlayheadPos)> onBpmChanged;
 
     void newUntitledEdit();
 

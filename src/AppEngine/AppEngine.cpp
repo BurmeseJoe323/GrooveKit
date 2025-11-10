@@ -213,15 +213,18 @@ double AppEngine::getBpm () const { return edit->tempoSequence.getTempo (0)->get
 
 void AppEngine::setBpm (double newBpm)
 {
-    // Capture old BPM before changing
+    // Capture old state before changing BPM
     const double oldBpm = getBpm();
+    const auto oldLoopRange = edit->getTransport().getLoopRange();
+    const auto oldPlayheadPos = edit->getTransport().getPosition();
 
     // GrooveKit does not have tempo changes, so just get the first one
     edit->tempoSequence.getTempo (0)->setBpm (newBpm);
 
-    // Notify listeners of BPM change
+    // Notify listeners of BPM change with original values
+    // (Tracktion may have already adjusted loop range/playhead by this point)
     if (onBpmChanged)
-        onBpmChanged(oldBpm, newBpm);
+        onBpmChanged(oldBpm, newBpm, oldLoopRange, oldPlayheadPos);
 }
 
 AudioEngine& AppEngine::getAudioEngine() { return *audioEngine; }
