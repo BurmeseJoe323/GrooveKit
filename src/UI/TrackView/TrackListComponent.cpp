@@ -465,7 +465,7 @@ bool TrackListComponent::canClipMoveToTrack (te::MidiClip* clip, int sourceTrack
     return sourceIsDrum == targetIsDrum;
 }
 
-bool TrackListComponent::wouldClipOverlap (te::MidiClip* clipToMove, int targetTrack, te::TimeRange range) const
+bool TrackListComponent::wouldClipOverlap (te::MidiClip* clipToMove, int targetTrack, t::TimeRange range) const
 {
     if (!appEngine || !clipToMove)
         return false;
@@ -506,9 +506,9 @@ int TrackListComponent::getTrackIndexAtY (int y) const
     return index;
 }
 
-// Ghost clip management - Written by Claude Code
-void TrackListComponent::showGhostClip (int trackIndex, te::TimePosition time,
-                                        te::TimeDuration length, bool isValid)
+// Ghost clip management - Written by Claude Code (fixed seconds/beats conversion)
+void TrackListComponent::showGhostClip (int trackIndex, t::TimePosition time,
+                                        t::TimeDuration length, bool isValid)
 {
     // Create ghost if it doesn't exist
     if (!ghostClip)
@@ -519,14 +519,18 @@ void TrackListComponent::showGhostClip (int trackIndex, te::TimePosition time,
 
     // Calculate ghost bounds using same logic as TrackComponent::resized()
     constexpr int trackHeight = 125;
-    const double pixelsPerSecond = getPixelsPerSecond();
-    const double viewStartSec = getViewStart().inSeconds();
+    const double pixelsPerBeat = getPixelsPerBeat();
+    const double viewStartBeats = getViewStartBeat().inBeats();
 
-    const double clipStartSec = time.inSeconds();
-    const double clipLenSec = length.inSeconds();
+    // Convert time positions to beat positions for layout
+    auto& tempoSeq = appEngine->getEdit().tempoSequence;
+    const double clipStartBeats = tempoSeq.toBeats (time).inBeats();
+    const auto clipEndTime = time + length;
+    const double clipEndBeats = tempoSeq.toBeats (clipEndTime).inBeats();
+    const double clipLenBeats = clipEndBeats - clipStartBeats;
 
-    const int timelineX = static_cast<int> (juce::roundToIntAccurate ((clipStartSec - viewStartSec) * pixelsPerSecond));
-    const int w = static_cast<int> (juce::roundToIntAccurate (clipLenSec * pixelsPerSecond));
+    const int timelineX = static_cast<int> (juce::roundToIntAccurate ((clipStartBeats - viewStartBeats) * pixelsPerBeat));
+    const int w = static_cast<int> (juce::roundToIntAccurate (clipLenBeats * pixelsPerBeat));
     const int y = timelineHeight + (trackIndex * trackHeight) + 5; // +5 for inner margin
     const int h = trackHeight - 10; // Account for margins
 

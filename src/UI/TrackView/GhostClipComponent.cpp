@@ -30,8 +30,8 @@ void GhostClipComponent::paint (juce::Graphics& g)
     g.drawRoundedRectangle (r.reduced (0.5f), radius, 2.0f);
 }
 
-void GhostClipComponent::setDropLocation (int trackIndex, te::TimePosition time,
-                                          te::TimeDuration length, bool isValid)
+void GhostClipComponent::setDropLocation (int trackIndex, t::TimePosition time,
+                                          t::TimeDuration length, bool isValid)
 {
     isValidDrop = isValid;
     repaint();

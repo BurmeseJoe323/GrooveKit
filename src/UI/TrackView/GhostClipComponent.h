@@ -4,7 +4,8 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <tracktion_engine/tracktion_engine.h>
 
-namespace te = tracktion;
+namespace te = tracktion::engine;
+namespace t = tracktion;
 
 /**
  * Ghost preview component showing where a dragged clip will land.
@@ -19,7 +20,7 @@ public:
     void paint (juce::Graphics& g) override;
 
     // Update ghost position and validity
-    void setDropLocation (int trackIndex, te::TimePosition time, te::TimeDuration length, bool isValid);
+    void setDropLocation (int trackIndex, t::TimePosition time, t::TimeDuration length, bool isValid);
 
     // Show/hide the ghost
     void show();
