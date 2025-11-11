@@ -229,6 +229,27 @@ void AppEngine::setBpm (double newBpm)
         onBpmChanged(oldBpm, newBpm, oldLoopRange, oldPlayheadPos);
 }
 
+// Metronome/Click Track controls
+void AppEngine::setClickTrackEnabled (bool enabled)
+{
+    edit->clickTrackEnabled = enabled;
+}
+
+bool AppEngine::isClickTrackEnabled() const
+{
+    return edit->clickTrackEnabled;
+}
+
+void AppEngine::setClickTrackRecordingOnly (bool recordingOnly)
+{
+    edit->clickTrackRecordingOnly = recordingOnly;
+}
+
+bool AppEngine::isClickTrackRecordingOnly() const
+{
+    return edit->clickTrackRecordingOnly;
+}
+
 AudioEngine& AppEngine::getAudioEngine() { return *audioEngine; }
 MIDIEngine& AppEngine::getMidiEngine() { return *midiEngine; }
 

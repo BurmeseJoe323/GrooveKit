@@ -80,6 +80,7 @@ private:
     juce::ShapeButton playButton { "play", {}, {}, {} };
     juce::ShapeButton stopButton { "stop", {}, {}, {} };
     juce::ShapeButton recordButton { "record", {}, {}, {} };
+    juce::ToggleButton metronomeButton { "Click" };
 
     // Right side (placeholder)
     juce::TextButton switchButton { "|||" };

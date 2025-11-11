@@ -128,6 +128,12 @@ public:
     double getBpm() const;
     void setBpm (double newBpm);
 
+    // Metronome/Click Track controls
+    void setClickTrackEnabled (bool enabled);
+    bool isClickTrackEnabled() const;
+    void setClickTrackRecordingOnly (bool recordingOnly);
+    bool isClickTrackRecordingOnly() const;
+
     TrackManager& getTrackManager()       { return *trackManager; }
     TrackManager* getTrackManagerPtr()    { return trackManager.get(); }
 

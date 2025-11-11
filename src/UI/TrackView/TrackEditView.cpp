@@ -127,6 +127,11 @@ void TrackEditView::resized ()
     transportBounds.removeFromLeft (buttonGap);
     recordButton.setBounds (transportBounds.removeFromLeft (buttonSize));
 
+    // Metronome button to the right of transport controls
+    constexpr int metronomeWidth = 60;
+    auto metronomeArea = centerArea.removeFromRight (metronomeWidth).reduced (5, 8);
+    metronomeButton.setBounds (metronomeArea);
+
     // Content area below top bar
     // If the piano roll is hidden, just fill with the viewport and hide the resizer
     if (!pianoRoll || !pianoRoll->isVisible())
@@ -239,6 +244,15 @@ void TrackEditView::setupButtons ()
         recordButton.setColours (juce::Colours::red, juce::Colours::lightcoral, juce::Colours::maroon);
         addAndMakeVisible (recordButton);
     }
+
+    // --- Metronome Toggle ---
+    addAndMakeVisible (metronomeButton);
+    metronomeButton.setColour (juce::ToggleButton::textColourId, juce::Colours::lightgrey);
+    metronomeButton.setColour (juce::ToggleButton::tickColourId, juce::Colours::lightgreen);
+    metronomeButton.setToggleState (appEngine->isClickTrackEnabled(), juce::dontSendNotification);
+    metronomeButton.onClick = [this] {
+        appEngine->setClickTrackEnabled (metronomeButton.getToggleState());
+    };
 
     // --- Right Switch ---
     addAndMakeVisible (switchButton);
