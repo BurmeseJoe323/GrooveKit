@@ -413,6 +413,10 @@ void TrackComponent::rebuildAndRefreshHighlight()
     rebuildClipsFromEngine();
     resized();
 
+    // Trigger parent to recalculate size based on new clip positions (Written by Claude Code)
+    if (auto* list = findParentComponentOfClass<TrackListComponent>())
+        list->resized();
+
     // Restore clip highlight if piano roll is open
     if (auto* parent = findParentComponentOfClass<TrackEditView>())
         parent->refreshClipEditState();
