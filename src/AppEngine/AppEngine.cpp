@@ -85,6 +85,7 @@ void AppEngine::createOrLoadEdit()
 
     edit->editFileRetriever = [] { return juce::File {}; };
     edit->playInStopEnabled = true;
+    edit->clickTrackEmphasiseBars = true;  // Emphasize downbeats with different click sample
 
     markSaved();
     edit->restartPlayback();
@@ -108,6 +109,7 @@ void AppEngine::newUntitledEdit()
 
     edit->editFileRetriever = [placeholder] { return placeholder; };
     edit->playInStopEnabled = true;
+    edit->clickTrackEmphasiseBars = true;  // Emphasize downbeats with different click sample
 
     for (auto* t : te::getAudioTracks (*edit))
         edit->deleteTrack (t);
@@ -423,6 +425,7 @@ bool AppEngine::loadEditFromFile (const juce::File& file)
     edit->editFileRetriever = [f = currentEditFile] { return f; };
 
     edit->getTransport().ensureContextAllocated();
+    edit->clickTrackEmphasiseBars = true;  // Emphasize downbeats with different click sample
 
     markSaved();
 
