@@ -38,13 +38,20 @@ void TrackClip::updateSizeFromClip()
     if (!clip)
         return;
 
-    // Use the same calculation as TrackComponent::resized() for consistency
+    // Use the same calculation as TrackComponent::resized() for consistency (Written by Claude Code)
     auto* tl = findParentComponentOfClass<TrackListComponent>();
     if (tl)
     {
-        const double pixelsPerSecond = tl->getPixelsPerSecond();
-        const double lengthSecs = clip->getPosition().getLength().inSeconds();
-        const int w = static_cast<int> (juce::roundToIntAccurate (lengthSecs * pixelsPerSecond));
+        const double ppb = tl->getPixelsPerBeat();
+        auto& tempoSeq = clip->edit.tempoSequence;
+
+        // Convert time positions to beat positions for width calculation
+        const auto posRange = clip->getPosition().time;
+        const double clipStartBeats = tempoSeq.toBeats (posRange.getStart()).inBeats();
+        const double clipEndBeats = tempoSeq.toBeats (posRange.getEnd()).inBeats();
+        const double clipLenBeats = clipEndBeats - clipStartBeats;
+
+        const int w = static_cast<int> (juce::roundToIntAccurate (clipLenBeats * ppb));
 
         // Keep X/Y/Height unchanged; only update width
         auto b = getBounds();
@@ -105,7 +112,7 @@ void TrackClip::resized()
 
 void TrackClip::onResizeEnd()
 {
-    // Written by Claude Code
+    // Written by Claude Code (fixed seconds/beats conversion)
     if (!clip)
         return;
 
@@ -113,26 +120,29 @@ void TrackClip::onResizeEnd()
     if (!tl)
         return;
 
-    const double pixelsPerSecond = tl->getPixelsPerSecond();
-    if (pixelsPerSecond <= 0.0)
+    const double ppb = tl->getPixelsPerBeat();
+    if (ppb <= 0.0)
         return;
 
-    // Calculate the new length based on the current width
-    const double newLengthSecs = static_cast<double> (getWidth()) / pixelsPerSecond;
+    auto& tempoSeq = clip->edit.tempoSequence;
 
-    // Quantize length to 0.25 second grid
+    // Calculate the new length based on the current width (pixels → beats)
+    const double newLengthBeats = static_cast<double> (getWidth()) / ppb;
+
+    // Quantize length to 0.25 beat grid
     constexpr double gridSize = 0.25;
-    double quantizedLengthSecs = std::round (newLengthSecs / gridSize) * gridSize;
-    double finalLengthSecs = juce::jmax (gridSize, quantizedLengthSecs); // Minimum one grid unit
+    double quantizedLengthBeats = std::round (newLengthBeats / gridSize) * gridSize;
+    double finalLengthBeats = juce::jmax (gridSize, quantizedLengthBeats); // Minimum one grid unit
 
     // Check for overlap with other clips and constrain resize if needed
     auto* trackComp = findParentComponentOfClass<TrackComponent>();
     if (trackComp)
     {
         const auto clipStart = clip->getPosition().getStart();
+        const double clipStartBeats = tempoSeq.toBeats (clipStart).inBeats();
 
         // Find the nearest clip that starts after this one
-        double nearestClipStart = std::numeric_limits<double>::max();
+        double nearestClipStartBeats = std::numeric_limits<double>::max();
 
         // Get AppEngine through TrackListComponent to access clips
         for (int i = 0; i < trackComp->getNumChildComponents(); ++i)
@@ -146,49 +156,61 @@ void TrackClip::onResizeEnd()
                 if (!otherClip)
                     continue;
 
-                const double otherStart = otherClip->getPosition().getStart().inSeconds();
-                const double thisStart = clipStart.inSeconds();
+                const auto otherStart = otherClip->getPosition().getStart();
+                const double otherStartBeats = tempoSeq.toBeats (otherStart).inBeats();
 
                 // Check if this clip starts after our clip
-                if (otherStart > thisStart)
-                    nearestClipStart = std::min (nearestClipStart, otherStart);
+                if (otherStartBeats > clipStartBeats)
+                    nearestClipStartBeats = std::min (nearestClipStartBeats, otherStartBeats);
             }
         }
 
         // If we found a clip that would be overlapped, constrain the resize
-        if (nearestClipStart < std::numeric_limits<double>::max())
+        if (nearestClipStartBeats < std::numeric_limits<double>::max())
         {
-            const double maxAllowedLength = nearestClipStart - clipStart.inSeconds();
-            if (finalLengthSecs > maxAllowedLength)
+            const double maxAllowedLengthBeats = nearestClipStartBeats - clipStartBeats;
+            if (finalLengthBeats > maxAllowedLengthBeats)
             {
                 // Constrain to just before the next clip, quantized
-                const double constrainedLength = std::floor (maxAllowedLength / gridSize) * gridSize;
-                finalLengthSecs = juce::jmax (gridSize, constrainedLength);
+                const double constrainedLengthBeats = std::floor (maxAllowedLengthBeats / gridSize) * gridSize;
+                finalLengthBeats = juce::jmax (gridSize, constrainedLengthBeats);
             }
         }
     }
 
+    // Convert beats to TimeDuration using tempo sequence
+    const auto clipStart = clip->getPosition().getStart();
+    const double clipStartBeats = tempoSeq.toBeats (clipStart).inBeats();
+    const double clipEndBeats = clipStartBeats + finalLengthBeats;
+
+    const auto startTime = tempoSeq.toTime (t::BeatPosition::fromBeats (clipStartBeats));
+    const auto endTime = tempoSeq.toTime (t::BeatPosition::fromBeats (clipEndBeats));
+    const auto finalDuration = endTime - startTime;
+
     // Update the model - preserveSync=false since we're manually resizing
-    clip->setLength (te::TimeDuration::fromSeconds (finalLengthSecs), false);
+    clip->setLength (finalDuration, false);
 
     // Update only the width from the model, using the same calculation as TrackComponent::resized()
     // This preserves the X position and avoids visual "jump"
-    const double actualLength = clip->getPosition().getLength().inSeconds();
-    const int correctWidth = static_cast<int> (juce::roundToIntAccurate (actualLength * pixelsPerSecond));
+    const auto posRange = clip->getPosition().time;
+    const double actualStartBeats = tempoSeq.toBeats (posRange.getStart()).inBeats();
+    const double actualEndBeats = tempoSeq.toBeats (posRange.getEnd()).inBeats();
+    const double actualLengthBeats = actualEndBeats - actualStartBeats;
+    const int correctWidth = static_cast<int> (juce::roundToIntAccurate (actualLengthBeats * ppb));
 
     auto b = getBounds();
     setBounds (b.withWidth (juce::jmax (correctWidth, 20)));
 }
 
-te::TimePosition TrackClip::mouseToTime (const juce::MouseEvent& e)
+t::TimePosition TrackClip::mouseToTime (const juce::MouseEvent& e)
 {
-    // Written by Claude Code
+    // Written by Claude Code (fixed seconds/beats conversion)
     auto* tl = findParentComponentOfClass<TrackListComponent>();
     if (!tl)
-        return te::TimePosition::fromSeconds (0.0);
+        return t::TimePosition::fromSeconds (0.0);
 
-    const double pixelsPerSecond = tl->getPixelsPerSecond();
-    const double viewStartSec = tl->getViewStart().inSeconds();
+    const double ppb = tl->getPixelsPerBeat();
+    const double viewStartBeats = tl->getViewStartBeat().inBeats();
 
     // Convert event to TrackListComponent coordinates
     auto eventInTrackList = e.getEventRelativeTo (tl);
@@ -198,8 +220,17 @@ te::TimePosition TrackClip::mouseToTime (const juce::MouseEvent& e)
     constexpr int headerWidth = 140;
     const int timelineX = globalX - headerWidth;
 
-    const double timeSec = viewStartSec + (static_cast<double> (timelineX) / pixelsPerSecond);
-    return te::TimePosition::fromSeconds (timeSec);
+    // Calculate click position in beats
+    const double clickBeats = viewStartBeats + (static_cast<double> (timelineX) / ppb);
+
+    // Convert beats to TimePosition using tempo sequence
+    if (clip)
+    {
+        auto& tempoSeq = clip->edit.tempoSequence;
+        return tempoSeq.toTime (t::BeatPosition::fromBeats (clickBeats));
+    }
+
+    return t::TimePosition::fromSeconds (0.0);
 }
 
 int TrackClip::mouseToTrackIndex (const juce::MouseEvent& e)
@@ -222,11 +253,11 @@ int TrackClip::mouseToTrackIndex (const juce::MouseEvent& e)
     return y / trackHeight;
 }
 
-te::TimePosition TrackClip::quantizeToGrid (te::TimePosition time, double gridSize)
+t::TimePosition TrackClip::quantizeToGrid (t::TimePosition time, double gridSize)
 {
     const double seconds = time.inSeconds();
     const double quantized = std::round (seconds / gridSize) * gridSize;
-    return te::TimePosition::fromSeconds (juce::jmax (0.0, quantized));
+    return t::TimePosition::fromSeconds (juce::jmax (0.0, quantized));
 }
 
 void TrackClip::mouseDown (const juce::MouseEvent& e)
@@ -248,15 +279,23 @@ void TrackClip::mouseDown (const juce::MouseEvent& e)
     dragStartMousePos = e.getScreenPosition();
     originalStartTime = clip->getPosition().getStart();
 
-    // Calculate where in the clip the user clicked
+    // Calculate where in the clip the user clicked (Written by Claude Code)
     // This offset lets us preserve natural drag behavior where the clip follows the cursor
     auto* tl = findParentComponentOfClass<TrackListComponent>();
     if (tl && clip)
     {
-        const double pixelsPerSecond = tl->getPixelsPerSecond();
+        const double ppb = tl->getPixelsPerBeat();
         const int clickXInClip = e.getPosition().x; // X position relative to clip
-        const double clickOffsetSec = static_cast<double> (clickXInClip) / pixelsPerSecond;
-        clickOffsetFromStart = te::TimeDuration::fromSeconds (clickOffsetSec);
+        const double clickOffsetBeats = static_cast<double> (clickXInClip) / ppb;
+
+        // Convert beats to TimeDuration using tempo sequence
+        auto& tempoSeq = clip->edit.tempoSequence;
+        const auto clipStartTime = clip->getPosition().getStart();
+        const double clipStartBeats = tempoSeq.toBeats (clipStartTime).inBeats();
+        const double clickBeats = clipStartBeats + clickOffsetBeats;
+
+        const auto clickTime = tempoSeq.toTime (t::BeatPosition::fromBeats (clickBeats));
+        clickOffsetFromStart = clickTime - clipStartTime;
     }
 
     // Find our track index
@@ -293,18 +332,18 @@ void TrackClip::mouseDrag (const juce::MouseEvent& e)
 
     // Calculate target position with quantization
     // Get time at mouse cursor
-    te::TimePosition mouseTime = mouseToTime (e);
+    t::TimePosition mouseTime = mouseToTime (e);
 
     // Subtract click offset to get actual clip start position
     // This preserves natural drag behavior where the clip stays under cursor at grab point
-    te::TimePosition targetStartTime = mouseTime - clickOffsetFromStart;
+    t::TimePosition targetStartTime = mouseTime - clickOffsetFromStart;
 
     // Clamp to prevent negative time
     if (targetStartTime.inSeconds() < 0.0)
-        targetStartTime = te::TimePosition::fromSeconds (0.0);
+        targetStartTime = t::TimePosition::fromSeconds (0.0);
 
     // Quantize the adjusted position
-    te::TimePosition quantizedTime = quantizeToGrid (targetStartTime);
+    t::TimePosition quantizedTime = quantizeToGrid (targetStartTime);
 
     // Calculate target track
     int targetTrackIndex = mouseToTrackIndex (e);
@@ -338,16 +377,16 @@ void TrackClip::mouseUp (const juce::MouseEvent& e)
         setMouseCursor (juce::MouseCursor::NormalCursor);
 
         // Calculate final drop position
-        te::TimePosition mouseTime = mouseToTime (e);
+        t::TimePosition mouseTime = mouseToTime (e);
 
         // Subtract click offset to maintain natural drag behavior
-        te::TimePosition targetStartTime = mouseTime - clickOffsetFromStart;
+        t::TimePosition targetStartTime = mouseTime - clickOffsetFromStart;
 
         // Clamp to prevent negative time
         if (targetStartTime.inSeconds() < 0.0)
-            targetStartTime = te::TimePosition::fromSeconds (0.0);
+            targetStartTime = t::TimePosition::fromSeconds (0.0);
 
-        te::TimePosition quantizedTime = quantizeToGrid (targetStartTime);
+        t::TimePosition quantizedTime = quantizeToGrid (targetStartTime);
         int targetTrackIndex = mouseToTrackIndex (e);
 
         // Notify parent to apply changes

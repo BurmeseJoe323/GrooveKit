@@ -2,10 +2,10 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <tracktion_engine/tracktion_engine.h>
-namespace te = tracktion::engine;
 #include "tracktion_graph/tracktion_graph.h"
 #include <functional>
 
+namespace te = tracktion::engine;
 namespace t = tracktion;
 
 class TrackClip final : public juce::Component, private juce::ValueTree::Listener
@@ -34,8 +34,8 @@ public:
     std::function<void(te::MidiClip*)> onContextMenuRequested;
 
     // Drag callbacks - Written by Claude Code
-    std::function<void(int targetTrack, te::TimePosition time, te::TimeDuration length, bool isValid)> onDragUpdate;
-    std::function<void(te::MidiClip*, int targetTrack, te::TimePosition newStart)> onDragComplete;
+    std::function<void(int targetTrack, t::TimePosition time, t::TimeDuration length, bool isValid)> onDragUpdate;
+    std::function<void(te::MidiClip*, int targetTrack, t::TimePosition newStart)> onDragComplete;
 
     void mouseDown (const juce::MouseEvent& e) override;
     void mouseDrag (const juce::MouseEvent& e) override;
@@ -47,9 +47,9 @@ private:
     void onResizeEnd();
 
     // Drag helper methods - Written by Claude Code
-    te::TimePosition mouseToTime (const juce::MouseEvent& e);
+    t::TimePosition mouseToTime (const juce::MouseEvent& e);
     int mouseToTrackIndex (const juce::MouseEvent& e);
-    te::TimePosition quantizeToGrid (te::TimePosition time, double gridSize = 0.25);
+    t::TimePosition quantizeToGrid (t::TimePosition time, double gridSize = 0.25);
 
     // Custom constrainer that notifies us when resizing completes
     class ResizeConstrainer : public juce::ComponentBoundsConstrainer
@@ -78,9 +78,9 @@ private:
     bool dragThresholdExceeded = false; // Track if drag threshold passed (Written by Claude Code)
     float dragAlpha = 1.0f; // Transparency during drag
     juce::Point<int> dragStartMousePos;
-    te::TimePosition originalStartTime;
+    t::TimePosition originalStartTime;
     int originalTrackIndex = -1;
-    te::TimeDuration clickOffsetFromStart; // Offset from clip start to where user clicked (Written by Claude Code)
+    t::TimeDuration clickOffsetFromStart; // Offset from clip start to where user clicked (Written by Claude Code)
 
     // Piano roll editing state - Written by Claude Code
     bool isBeingEdited = false; // True when this clip is open in piano roll

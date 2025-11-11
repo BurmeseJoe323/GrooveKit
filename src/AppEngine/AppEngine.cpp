@@ -640,9 +640,9 @@ bool AppEngine::duplicateMidiClip (te::MidiClip* clip)
         if (audioTrackIndex >= 0)
         {
             // Check for overlap before duplicating (Written by Claude Code)
-            const auto destStartTime = edit->tempoSequence.toTime (te::BeatPosition::fromBeats (destBeats));
-            const auto destEndTime = edit->tempoSequence.toTime (te::BeatPosition::fromBeats (destBeats + lenBeats));
-            const te::TimeRange destRange (destStartTime, destEndTime);
+            const auto destStartTime = edit->tempoSequence.toTime (t::BeatPosition::fromBeats (destBeats));
+            const auto destEndTime = edit->tempoSequence.toTime (t::BeatPosition::fromBeats (destBeats + lenBeats));
+            const t::TimeRange destRange (destStartTime, destEndTime);
 
             // Check if any clip on the track would overlap with the duplicate
             auto clipsOnTrack = getMidiClipsFromTrack (audioTrackIndex);
