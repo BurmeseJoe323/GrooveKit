@@ -170,7 +170,12 @@ void AppEngine::deleteMidiTrack (int index)
     trackManager->deleteTrack (index);
 }
 
-bool AppEngine::addMidiClipToTrack (int trackIndex) { midiEngine->addMidiClipToTrack (trackIndex); }
+bool AppEngine::addMidiClipToTrack (int trackIndex)
+{
+    if (! midiEngine)
+        return false;
+    return midiEngine->addMidiClipToTrack (trackIndex);
+}
 
 te::MidiClip* AppEngine::getMidiClipFromTrack (int trackIndex)
 {
