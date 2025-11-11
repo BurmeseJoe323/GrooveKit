@@ -106,7 +106,7 @@ public:
     bool addMidiClipToTrack (int trackIndex);
     // Add an empty MIDI clip at a specific beat on the given track (Junie)
     bool addMidiClipToTrackAt (int trackIndex, t::TimePosition start, t::BeatDuration length);
-
+    void wireAllMidiInputsToTrack (tracktion::engine::AudioTrack& track);
 
     bool isDrumTrack (int index) const;
 

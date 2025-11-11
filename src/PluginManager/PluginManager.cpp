@@ -253,3 +253,107 @@ juce::OwnedArray<juce::PluginDescription> PluginManager::getAllPluginDescription
         out.add(new juce::PluginDescription(types.getReference(i)));
     return out;
 }
+
+te::Plugin::Ptr PluginManager::addTALSynthToTrack (te::AudioTrack& track, int insertIndex)
+{
+    DBG("[PluginManager] addTALSynthToTrack() called for track: " + track.getName());
+
+    const juce::PluginDescription* dVST3 = nullptr;
+    const juce::PluginDescription* dAU   = nullptr;
+
+    // Find TAL-NoiseMaker descriptors we can try
+    const auto& types = knownPlugins.getTypes();
+    for (int i = 0; i < types.size(); ++i)
+    {
+        const auto& d = types.getReference(i);
+        if (!d.isInstrument) continue;
+        if (!d.name.containsIgnoreCase("TAL-NoiseMaker")) continue;
+
+        if (d.pluginFormatName == "VST3") dVST3 = &d;
+        else if (d.pluginFormatName.startsWith("AudioUnit")) dAU = &d;
+    }
+
+    if (!dVST3 && !dAU)
+    {
+        DBG("[PluginManager] TAL-NoiseMaker not found among scanned instruments.");
+        return {};
+    }
+
+    auto tryCreateFromDesc = [&] (const juce::PluginDescription& desc) -> te::Plugin::Ptr
+    {
+        DBG("[PluginManager] Trying: " + desc.name + " [" + desc.pluginFormatName + "] path=" + desc.fileOrIdentifier);
+        auto* descPtr = const_cast<juce::PluginDescription*>(&desc);
+        return track.edit.getPluginCache()
+                         .createNewPlugin(te::ExternalPlugin::xmlTypeName, *descPtr);
+    };
+
+    auto insertAndVerify = [&] (const juce::PluginDescription* desc) -> te::Plugin::Ptr
+    {
+        if (!desc) return {};
+
+        // Create ExternalPlugin from description
+        auto plugin = tryCreateFromDesc(*desc);
+        if (!plugin)
+        {
+            DBG("[PluginManager] createNewPlugin returned nullptr for " << desc->name);
+            return {};
+        }
+
+        // Insert into track
+        track.pluginList.insertPlugin(plugin, insertIndex, nullptr);  // modifies ValueTree, instantiates list object
+        auto* inserted = track.pluginList[insertIndex];               // fetch the just-inserted plugin
+        if (!inserted) return {};
+
+        DBG("[PluginManager] Inserted '" + inserted->getName()
+            + "' at index " + juce::String(insertIndex));
+
+        // Sanity-check the ExternalPlugin instance & load error
+        if (auto* ext = dynamic_cast<te::ExternalPlugin*>(inserted))
+        {
+            auto* pi = ext->getAudioPluginInstance();                // non-null when instance loaded :contentReference[oaicite:2]{index=2}
+            DBG("[Ext] has instance: " << (pi ? "true" : "false"));
+
+            if (pi)
+            {
+                DBG("[Ext] name=" << pi->getName()
+                    << " acceptsMidi=" << (pi->acceptsMidi() ? "true":"false")
+                    << " isInstrument=" << (pi->getPluginDescription().isInstrument ? "true":"false")
+                    << " ins=" << pi->getTotalNumInputChannels()
+                    << " outs=" << pi->getTotalNumOutputChannels());
+                return inserted;                                     // success
+            }
+
+            // Failed: log explicit load error and remove the plugin cleanly
+            DBG("[Ext] FAIL '" << desc->name
+                << "' [" << desc->pluginFormatName
+                << "] error='" << ext->getLoadError() << "'");       // returns message if not loaded :contentReference[oaicite:3]{index=3}
+
+            inserted->deleteFromParent();                             // correct removal on this TE branch :contentReference[oaicite:4]{index=4}
+            return {};
+        }
+
+        // Not an ExternalPlugin? Remove and abort.
+        inserted->deleteFromParent();
+        return {};
+    };
+
+    // Try VST3 first, then AU fallback
+    te::Plugin::Ptr ok;
+    if (!ok && dVST3) ok = insertAndVerify(dVST3);
+    if (!ok && dAU)   ok = insertAndVerify(dAU);
+
+    if (!ok)
+    {
+        DBG("[PluginManager] TAL-NoiseMaker failed to instantiate in both VST3 and AU.");
+        return {};
+    }
+
+    // Log final chain
+    for (auto* p : track.pluginList.getPlugins())
+        if (p) DBG("[PluginManager] Track now has plugin: " + p->getName());  // enumerate chain :contentReference[oaicite:5]{index=5}
+
+    DBG("[PluginManager] Successfully inserted TAL-NoiseMaker on '" + track.getName() + "'");
+    return ok;
+}
+
+

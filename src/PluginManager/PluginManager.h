@@ -29,6 +29,8 @@ public:
     juce::StringArray getAllPluginNames() const;
     juce::OwnedArray<juce::PluginDescription> getAllPluginDescriptions() const;
 
+    te::Plugin::Ptr addTALSynthToTrack(te::AudioTrack& track, int insertIndex = 0);
+
 private:
     void initFormats();
     juce::FileSearchPath buildSearchPaths() const;
@@ -38,6 +40,7 @@ private:
     void pumpScannerUntilDone(juce::String progressPrefix);
 
     te::Edit& edit;
+
     Settings settings;
 
     juce::AudioPluginFormatManager formatManager;

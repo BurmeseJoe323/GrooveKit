@@ -2,6 +2,7 @@
 #include <tracktion_engine/tracktion_engine.h>
 #include "../DrumSamplerEngine/DrumSamplerEngineAdapter.h"
 #include "../UI/Plugins/Synthesizer/MorphSynthPlugin.h"
+#include "../PluginManager/PluginManager.h"
 
 namespace {
     static int asIndexChecked (int idx, int size) { return (idx >= 0 && idx < size) ? idx : -1; }
@@ -87,21 +88,34 @@ int TrackManager::addInstrumentTrack()
 
     // if (auto plugin = edit.getPluginCache().createNewPlugin(te::FourOscPlugin::xmlTypeName, {}))
     //     track->pluginList.insertPlugin(std::move(plugin), 0, nullptr);
-    if (auto plugin = edit.getPluginCache().createNewPlugin (MorphSynthPlugin::pluginType, {}))
-    {
-        // Insert MorphSynth into the track
-        track->pluginList.insertPlugin (std::move (plugin), 0, nullptr);
+    // if (auto plugin = edit.getPluginCache().createNewPlugin (MorphSynthPlugin::pluginType, {}))
+    // {
+    //     // Insert MorphSynth into the track
+    //     track->pluginList.insertPlugin (std::move (plugin), 0, nullptr);
+    //
+    //     // Safely loop through all plugins on this track and find the MorphSynth instance
+    //     for (auto* p : track->pluginList)
+    //     {
+    //         if (auto* morph = dynamic_cast<MorphSynthPlugin*> (p))
+    //         {
+    //             if (morph->state.isValid())
+    //                 morph->restoreFromValueTree (morph->state);
+    //         }
+    //     }
+    // }
 
-        // Safely loop through all plugins on this track and find the MorphSynth instance
-        for (auto* p : track->pluginList)
-        {
-            if (auto* morph = dynamic_cast<MorphSynthPlugin*> (p))
-            {
-                if (morph->state.isValid())
-                    morph->restoreFromValueTree (morph->state);
-            }
-        }
+    if (pluginManager != nullptr)     // however you store/access it; or via appEngine.getPluginManager()
+        pluginManager->addTALSynthToTrack(*track, /*insertIndex*/ 0);
+
+    juce::String pluginNames;
+
+    for (auto* p : track->pluginList)
+    {
+        if (p != nullptr)
+            pluginNames += p->getName() + ", ";
     }
+
+    DBG("List of plugins for track '" + track->getName() + "': " + pluginNames);
 
     edit.getTransport().ensureContextAllocated();
     return newIndex;
@@ -197,18 +211,30 @@ te::Plugin* TrackManager::getInstrumentPluginOnTrack (int trackIndex)
 
     if (auto* track = getTrack (trackIndex))
     {
-        // getPlugins() → juce::Array<Plugin*>
         for (auto* plug : track->pluginList.getPlugins())
         {
             if (!plug) continue;
-            DBG("Track " << trackIndex << " plugin: " << plug->getName());
 
-            // We’re targeting the built-in instrument right now
+            // Built-in example:
             if (auto* four = dynamic_cast<te::FourOscPlugin*> (plug))
                 return four;
 
-            // If later you want “any instrument”, keep a generic path here:
-            // if (plug->getType().isInstrument()) return plug;  // only if your build exposes it
+            // External plugins: treat as instrument if JUCE reports instrument or accepts MIDI
+            if (auto* ext = dynamic_cast<te::ExternalPlugin*> (plug))
+            {
+                if (auto* pi = ext->getAudioPluginInstance())
+                {
+                    const bool isInstr = pi->getPluginDescription().isInstrument || pi->acceptsMidi();
+                    if (isInstr)
+                        return plug;
+                }
+                else
+                {
+                    // Instance not ready yet; first plugin at index 0 is the instrument we inserted
+                    if (track->pluginList[0] == plug)
+                        return plug;
+                }
+            }
         }
     }
     return nullptr;

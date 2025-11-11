@@ -2,7 +2,10 @@
 #include <tracktion_engine/tracktion_engine.h>
 #include "../DrumSamplerEngine/DrumSamplerEngineAdapter.h"
 #include "../MIDIEngine/MIDIEngine.h"
+#include "../PluginManager/PluginManager.h"
 namespace te = tracktion::engine;
+
+class PluginManager;
 class TrackManager
 {
 public:
@@ -37,8 +40,11 @@ public:
     double getClipStartSeconds (int trackIndex, int clipIndex) const;
     double getClipLengthSeconds (int trackIndex, int clipIndex) const;
 
+    void setPluginManager(PluginManager* pm) { pluginManager = pm; }
+
 private:
     te::Edit& edit;
+    PluginManager* pluginManager = nullptr;
 
     std::vector<TrackType> types;
     std::vector<std::unique_ptr<DrumSamplerEngineAdapter>> drumEngines;

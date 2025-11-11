@@ -220,6 +220,66 @@ bool AppEngine::addMidiClipToTrack (int trackIndex)
     return midiEngine->addMidiClipToTrack (trackIndex);
 }
 
+static te::InputDeviceInstance* findInstanceForDevice (te::Edit& edit, const te::InputDevice& dev)
+{
+    // getAllInputDevices() -> juce::Array<InputDeviceInstance*>
+    auto instances = edit.getAllInputDevices();
+
+    for (auto* inst : instances)
+    {
+        if (inst == nullptr)
+            continue;
+
+        if (&inst->getInputDevice() == &dev)
+            return inst;
+    }
+
+    return nullptr;
+}
+
+void AppEngine::wireAllMidiInputsToTrack (te::AudioTrack& track)
+{
+    if (!engine || !edit)
+        return;
+
+    auto& dm  = engine->getDeviceManager();     // confirmed on your version
+    auto& um  = edit->getUndoManager();
+    auto targetID = track.itemID;               // each track has an EditItemID
+
+    // 1) Enable all MIDI input devices globally
+    for (const auto& midiPtr : dm.getMidiInDevices())     // std::vector<std::shared_ptr<MidiInputDevice>>
+    {
+        if (midiPtr)
+            midiPtr->setEnabled (true);
+    }
+
+    // 2) Route each device’s InputDeviceInstance to this track
+    for (const auto& midiPtr : dm.getMidiInDevices())
+    {
+        if (!midiPtr)
+            continue;
+
+        auto& dev = *midiPtr;
+
+        if (auto* inst = findInstanceForDevice (*edit, dev))
+        {
+            auto result = inst->setTarget (targetID, /*moveToTrack*/ true, &um, /*index*/ 0);
+            if (!result)
+            {
+                DBG ("[MIDI Wire] Failed to setTarget for " << dev.getName() << ": " << result.error());
+                continue;
+            }
+
+            inst->setRecordingEnabled (targetID, true);
+            DBG ("[MIDI Wire] Connected " << dev.getName() << " -> " << track.getName());
+        }
+    }
+
+    // Make sure monitoring graph exists even when transport is stopped
+    edit->getTransport().ensureContextAllocated();
+}
+
+
 te::MidiClip* AppEngine::getMidiClipFromTrack (int trackIndex)
 {
     if (! midiEngine)
@@ -303,28 +363,84 @@ void AppEngine::setBpm (double newBpm)
 
 void AppEngine::initialise()
 {
-    // Choose a stable app-support folder for caches
-    #if JUCE_MAC
-    auto appSupport = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-                        .getChildFile("GrooveKit"); // your app name
-    #else
+    // --- App support dir (for caches, dead-mans file, etc.) ---
+   #if JUCE_MAC
     auto appSupport = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
                         .getChildFile("GrooveKit");
-    #endif
+   #else
+    auto appSupport = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+                        .getChildFile("GrooveKit");
+   #endif
     appSupport.createDirectory();
 
+    // --- Your app-level plugin manager (keep as-is) ---
     PluginManager::Settings pmSettings;
-    pmSettings.appDataDir    = appSupport;
-    pmSettings.scanAudioUnits = true;
-    pmSettings.scanVST3       = true;
+    pmSettings.appDataDir      = appSupport;
+    pmSettings.scanAudioUnits  = true;
+    pmSettings.scanVST3        = true;
 
     pluginManager = std::make_unique<PluginManager>(*edit, pmSettings);
+    trackManager->setPluginManager(pluginManager.get());
 
-    // Scan at startup (non-blocking). For dev builds, you might use blocking once.
+    // --- NEW: Initialise Tracktion Engine's PluginManager too ---
+    auto& tePM = engine->getPluginManager();
+
+    // Add formats we intend to host (guarded by JUCE host flags)
+   #if JUCE_PLUGINHOST_AU
+    tePM.pluginFormatManager.addFormat(new juce::AudioUnitPluginFormat());
+   #endif
+   #if JUCE_PLUGINHOST_VST3
+    tePM.pluginFormatManager.addFormat(new juce::VST3PluginFormat());
+   #endif
+
+    // Do a quick blocking scan once so TE's knownPluginList is populated.
+    // ExternalPlugin resolves/instantiates using *this* list+formats.
+    {
+        juce::FileSearchPath searchPaths;
+       #if JUCE_MAC
+        // AU locations (Components) — TE will use these only for AU formats
+        searchPaths.add(juce::File("/Library/Audio/Plug-Ins/Components"));
+        searchPaths.add(juce::File("~/Library/Audio/Plug-Ins/Components"));
+
+        // VST3 locations
+        searchPaths.add(juce::File("/Library/Audio/Plug-Ins/VST3"));
+        searchPaths.add(juce::File("~/Library/Audio/Plug-Ins/VST3"));
+       #endif
+
+        static juce::File teDeadMans = appSupport.getChildFile("TE_ScanDeadMans.txt");
+
+        for (int i = 0; i < tePM.pluginFormatManager.getNumFormats(); ++i)
+        {
+            auto* fmt = tePM.pluginFormatManager.getFormat(i);
+            if (!fmt) continue;
+
+            DBG("[TE-PM] Scan started for format: " + fmt->getName()
+                + " paths: " + searchPaths.toString());
+
+            juce::PluginDirectoryScanner scanner(tePM.knownPluginList,
+                                                 *fmt,
+                                                 searchPaths,
+                                                 /*recursive*/ true,
+                                                 teDeadMans,
+                                                 /*allowAsync*/ false);
+
+            juce::String err;
+            while (scanner.scanNextFile(true, err))
+                ; // pump scan
+
+            if (err.isNotEmpty())
+                DBG("[TE-PM] Scanner reported: " + err);
+        }
+
+        DBG("[TE-PM] Scan finished. TE known types: "
+            + juce::String(tePM.knownPluginList.getNumTypes()));
+    }
+
+    // You can still keep your async scan/UI for your own list
     pluginManager->scanForPluginsAsync();
 
-    // (Optional) start a timer somewhere in UI to poll pluginManager->isScanRunning()
-    // and refresh your plugin browser when it becomes false.
+    // --- Ensure playback graph exists (useful for live monitoring) ---
+    edit->getTransport().ensureContextAllocated();
 }
 
 // Metronome/Click Track controls
