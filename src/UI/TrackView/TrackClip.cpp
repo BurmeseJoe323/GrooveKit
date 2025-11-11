@@ -255,9 +255,17 @@ int TrackClip::mouseToTrackIndex (const juce::MouseEvent& e)
 
 t::TimePosition TrackClip::quantizeToGrid (t::TimePosition time, double gridSize)
 {
-    const double seconds = time.inSeconds();
-    const double quantized = std::round (seconds / gridSize) * gridSize;
-    return t::TimePosition::fromSeconds (juce::jmax (0.0, quantized));
+    // Quantize in beats for musical grid alignment (Written by Claude Code)
+    if (clip)
+    {
+        auto& tempoSeq = clip->edit.tempoSequence;
+        const double beats = tempoSeq.toBeats (time).inBeats();
+        const double quantizedBeats = std::round (beats / gridSize) * gridSize;
+        return tempoSeq.toTime (t::BeatPosition::fromBeats (juce::jmax (0.0, quantizedBeats)));
+    }
+
+    // Fallback if no clip available
+    return time;
 }
 
 void TrackClip::mouseDown (const juce::MouseEvent& e)
