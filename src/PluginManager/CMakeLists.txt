@@ -1,5 +1,7 @@
 add_library(plugin_manager STATIC
         ${CMAKE_CURRENT_SOURCE_DIR}/PluginManager.cpp
+        PluginEditorWindow.h
+        PluginEditorWindow.cpp
 )
 
 target_include_directories(plugin_manager

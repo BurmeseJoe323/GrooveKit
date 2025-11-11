@@ -5,6 +5,8 @@
 #include "../UI/Plugins/Synthesizer/MorphSynthRegistration.h"
 #include "../UI/Plugins/Synthesizer/MorphSynthView.h"
 #include "../UI/Plugins/Synthesizer/MorphSynthWindow.h"
+#include "../PluginManager/PluginEditorWindow.h"
+
 
 namespace te = tracktion::engine;
 namespace t = tracktion;
@@ -696,45 +698,46 @@ void AppEngine::openInstrumentEditor (int trackIndex)
     auto open = [this, trackIndex]
     {
         if (!trackManager) { DBG("AppEngine: no trackManager"); return; }
-
         if (auto* track = trackManager->getTrack (trackIndex))
         {
             te::Plugin* plug = nullptr;
 
-            // Prefer the first MorphSynth on the track
+            // your existing preference order…
             for (auto* p : track->pluginList)
                 if (p && p->getPluginType() == MorphSynthPlugin::pluginType)
                 { plug = p; break; }
 
-            // Fallback: whatever your old helper returns
             if (!plug)
                 plug = trackManager->getInstrumentPluginOnTrack (trackIndex);
 
-            if (plug)
+            if (!plug) { DBG("No instrument plugin on track " << trackIndex); return; }
+
+            // Keep your MorphSynth path
+            if (auto* morph = dynamic_cast<MorphSynthPlugin*>(plug))
             {
-                if (auto* morph = dynamic_cast<MorphSynthPlugin*>(plug))
+                if (instrumentWindow_) { instrumentWindow_->toFront (true); return; }
+                instrumentWindow_ = std::make_unique<MorphSynthWindow>(
+                    *morph, [this]{ this->closeInstrumentWindow(); });
+                instrumentWindow_->toFront (true);
+                return;
+            }
+
+            // NEW: External plugin path (works for any plugin with a JUCE editor)
+            if (auto* ext = dynamic_cast<te::ExternalPlugin*>(plug))
+            {
+                if (instrumentWindow_) { instrumentWindow_->toFront (true); return; }
+
+                if (auto w = PluginEditorWindow::createFor (*ext, [this]{ this->closeInstrumentWindow(); }))
                 {
-                    // If already open, just bring it to front
-                    if (instrumentWindow_ != nullptr)
-                    {
-                        instrumentWindow_->toFront (true);
-                        return;
-                    }
-
-                    instrumentWindow_ = std::make_unique<MorphSynthWindow>(
-                        *morph,
-                        [this] { this->closeInstrumentWindow(); }
-                    );
-
-                    auto self = std::shared_ptr<AppEngine>(this, [] (AppEngine*) {});
-                    static_cast<MorphSynthWindow*>(instrumentWindow_.get())->setAppEngine(self);
-
-                    instrumentWindow_->toFront (true);
+                    instrumentWindow_ = std::move (w);
                     return;
                 }
 
+                DBG("ExternalPlugin has no instance/editor yet.");
+                return;
             }
-            DBG("No instrument plugin found on track " << trackIndex);
+
+            DBG("Plugin type has no editor route.");
         }
     };
 
