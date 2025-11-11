@@ -491,9 +491,6 @@ void TrackComponent::mouseUp (const juce::MouseEvent& e)
             }
             case 2: // Add MIDI Clip Here
             {
-                const auto length = t::BeatDuration::fromBeats (8.0);
-                if (safeThis->appEngine->addMidiClipToTrackAt (safeThis->trackIndex, startPos, length))
-                    safeThis->rebuildAndRefreshHighlight();
                 // Check for overlap before creating clip (Written by Claude Code)
                 const double clipLengthBeats = 8.0;
                 const auto startBeats = safeThis->appEngine->getEdit().tempoSequence.toBeats (startPos).inBeats();
