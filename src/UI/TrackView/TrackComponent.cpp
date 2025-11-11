@@ -434,11 +434,13 @@ void TrackComponent::mouseUp (const juce::MouseEvent& e)
     const double viewStartBeats = tl ? tl->getViewStartBeat().inBeats() : 0.0;
 
     const double clickBeats = viewStartBeats + (localX / juce::jmax (1.0, pixelsPerBeat));
-    //const t::TimePosition startPos = appEngine->getEdit().tempoSequence.toTime(t::BeatPosition::fromBeats(clickBeats));
+
+    // Convert beats to TimePosition using tempo sequence (Written by Claude Code)
+    const t::TimePosition clickTime = appEngine->getEdit().tempoSequence.toTime(t::BeatPosition::fromBeats(clickBeats));
 
     // Quantize to 0.25 second grid (Written by Claude Code)
     constexpr double gridSize = 0.25;
-    const double quantizedSec = std::round (clickBeats / gridSize) * gridSize;
+    const double quantizedSec = std::round (clickTime.inSeconds() / gridSize) * gridSize;
     const t::TimePosition startPos = t::TimePosition::fromSeconds (quantizedSec);
 
     juce::PopupMenu m;
