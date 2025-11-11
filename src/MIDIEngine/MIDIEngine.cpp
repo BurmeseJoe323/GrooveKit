@@ -46,8 +46,8 @@ bool MIDIEngine::addMidiClipToTrack (int trackIndex)
     auto* track = tracks.getUnchecked (trackIndex);
     auto clips = track->getClips();
 
-    // default length = 8 beats
-    const auto defLenBeats = 8_bd;
+    // default length = 4 beats
+    const auto defLenBeats = 4_bd;
 
     // place at playhead OR just after the last existing clip end (whichever is later)
     const auto playhead = edit.getTransport().getPosition();

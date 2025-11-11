@@ -123,7 +123,7 @@ void TrackComponent::onSettingsClicked()
     m.showMenuAsync ({}, [this] (const int result) {
         switch (result)
         {
-            case 1: // Add Clip (Junie)
+            case 1: // Add Clip
             {
                 appEngine->addMidiClipToTrack (trackIndex);
                 rebuildAndRefreshHighlight();
@@ -493,7 +493,7 @@ void TrackComponent::mouseUp (const juce::MouseEvent& e)
             case 2: // Add MIDI Clip Here
             {
                 // Check for overlap before creating clip (Written by Claude Code)
-                const double clipLengthBeats = 8.0;
+                const double clipLengthBeats = 4.0;
                 const auto startBeats = safeThis->appEngine->getEdit().tempoSequence.toBeats (startPos).inBeats();
                 const auto endBeats = startBeats + clipLengthBeats;
 
