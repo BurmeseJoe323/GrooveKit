@@ -84,6 +84,28 @@ void MixerPanel::refreshTracks()
             appEngine.openInstrumentEditor(i);
         };
 
+        strip->onInsertSlotClicked = [this, i, strip] (int slotIndex)
+        {
+            appEngine.onFxInsertSlotClicked (
+                i,
+                slotIndex,
+                [strip, slotIndex] (const juce::String& pluginName)
+                {
+                    strip->setInsertSlotName (slotIndex, pluginName);
+                });
+        };
+
+        strip->onInsertSlotMenuRequested = [this, i, strip] (int slotIndex)
+        {
+            appEngine.showFxInsertMenu (
+                i,
+                slotIndex,
+                [strip, slotIndex] (const juce::String& pluginName)
+                {
+                    strip->setInsertSlotName (slotIndex, pluginName);
+                });
+        };
+
         // Initialize UI state from engine
         strip->setMuted (appEngine.isTrackMuted (i));
         strip->setSolo (appEngine.isTrackSoloed (i));

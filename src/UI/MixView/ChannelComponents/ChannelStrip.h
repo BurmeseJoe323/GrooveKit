@@ -60,13 +60,16 @@ public:
     // void setMeterLevel(float lin)      { meter.setLevel(lin); }
     // void setMeterPeak(float lin)       { meter.setPeak(lin); }
 
-public:
+    void setInsertSlotName (int slotIndex, const juce::String& text);
+
+
     // Fallback callbacks used when TrackComponents (listeners) are not present (e.g., in Mix view) (Junie)
     std::function<void (bool)> onRequestMuteChange;
     std::function<void (bool)> onRequestSoloChange;
     std::function<void (bool)> onRequestArmChange;
-    std::function<void (te::AudioTrack&)> onInstrumentClicked;
     std::function<void()> onOpenInstrumentEditor;
+    std::function<void (int slotIndex)> onInsertSlotClicked;
+    std::function<void (int)> onInsertSlotMenuRequested;
     // Track naming callback (Written by Claude Code)
     std::function<void (int trackIndex, const juce::String& newName)> onRequestNameChange;
 
@@ -77,6 +80,7 @@ private:
     juce::TextButton instrumentButton;
     juce::Label insertsLabel;
     juce::OwnedArray<juce::TextButton> insertSlots;
+    juce::OwnedArray<juce::TextButton> insertSlotMenus;
     juce::Label name;
     //ChannelMeter     meter;
     FaderComponent lnf;

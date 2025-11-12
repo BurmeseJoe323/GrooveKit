@@ -45,6 +45,10 @@ public:
     tracktion::engine::Plugin* insertExternalInstrument (int trackIndex,
                                                      const juce::PluginDescription& desc);
 
+    te::Plugin* insertExternalEffect (int trackIndex,
+                                  const juce::PluginDescription& desc,
+                                  int insertIndex);
+
     tracktion::engine::Plugin* insertMorphSynth (int trackIndex);
     void clearInstrumentSlot0 (int trackIndex);
 

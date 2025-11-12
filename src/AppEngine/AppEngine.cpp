@@ -43,6 +43,38 @@ private:
     MidiListener& ml;
 };
 
+namespace
+{
+    const juce::StringArray applePluginNameBlacklist
+    {
+        "AUGraphicEQ",
+        "AUNBandEQ",
+        "AUParametricEQ",
+        "Apple: AUMatrixReverb",
+        "Apple: AUDynamicsProcessor",
+        // add any problematic plugins
+    };
+
+    bool isAppleBuiltInPlugin (const juce::PluginDescription& d)
+    {
+        const auto fmt  = d.pluginFormatName.toLowerCase();
+        const auto manu = d.manufacturerName.toLowerCase();
+        const auto name = d.name.toLowerCase();
+
+        if (! fmt.contains ("audiounit"))
+            return false;
+
+        if (! manu.contains ("apple"))
+            return false;
+
+        for (auto& n : applePluginNameBlacklist)
+            if (name == n.toLowerCase())
+                return true;
+        
+        return true;
+    }
+}
+
 AppEngine::AppEngine()
 {
     engine = std::make_unique<te::Engine> ("GrooveKitEngine");
@@ -902,12 +934,213 @@ void AppEngine::showInstrumentChooser (int trackIndex)
 
 }
 
+void AppEngine::onFxInsertSlotClicked (int trackIndex,
+                                       int slotIndex,
+                                       std::function<void (const juce::String&)> onSlotLabelChange)
+{
+    if (!trackManager)
+        return;
+
+    auto* track = trackManager->getTrack (trackIndex);
+    if (!track)
+        return;
+
+    // convention: instrument at index 0, FX slots start at plugin index 1
+    const int pluginIndex = slotIndex + 1;
+
+    te::Plugin* existing = nullptr;
+    if (pluginIndex >= 0 && pluginIndex < track->pluginList.size())
+        existing = track->pluginList[pluginIndex];
+
+    if (auto* ext = dynamic_cast<te::ExternalPlugin*> (existing))
+    {
+        // 🔁 Same pattern as the ExternalPlugin branch in openInstrumentEditor
+        if (instrumentWindow_)
+        {
+            instrumentWindow_->toFront (true);
+            return;
+        }
+
+        if (auto w = PluginEditorWindow::createFor(
+                *ext,
+                [this] { this->closeInstrumentWindow(); },
+                qwertyForwarder_.get()))
+        {
+            instrumentWindow_ = std::move (w);
+
+            auto& tc = edit->getTransport();
+            tc.ensureContextAllocated();
+            if (!tc.isPlaying())
+            {
+                startedTransportForEditor_ = true;
+                tc.play (false);
+            }
+            else
+            {
+                startedTransportForEditor_ = false;
+            }
+        }
+        else
+        {
+            DBG ("[FX] ExternalPlugin has no instance/editor yet.");
+        }
+
+        return;
+    }
+
+    // No plugin in this slot yet -> show the FX menu and insert something
+    showFxInsertMenu (trackIndex, slotIndex, std::move (onSlotLabelChange));
+}
+
+void AppEngine::showFxInsertMenu (int trackIndex,
+                                  int slotIndex,
+                                  std::function<void (const juce::String&)> onSlotLabelChange)
+{
+    if (! trackManager || ! pluginManager)
+        return;
+
+    // Get all scanned plugins and keep only non-instruments
+    auto all = pluginManager->getAllPluginDescriptions();
+    juce::Array<juce::PluginDescription> fxDescs;
+
+    for (int i = 0; i < all.size(); ++i)
+    {
+        const auto& d = *all[i];
+
+        // Skip instruments
+        if (d.isInstrument)
+            continue;
+
+        if (isAppleBuiltInPlugin (d))
+            continue;
+
+        fxDescs.add (d);
+    }
+
+
+    if (fxDescs.isEmpty())
+        return;
+
+    // Root + category submenus (all external)
+    juce::PopupMenu root, eqMenu, compMenu, reverbMenu, delayMenu, otherMenu;
+
+    const int eqBase     = 2000;
+    const int compBase   = 3000;
+    const int reverbBase = 4000;
+    const int delayBase  = 5000;
+    const int otherBase  = 6000;
+
+    for (int i = 0; i < fxDescs.size(); ++i)
+    {
+        const auto& d = fxDescs.getReference (i);
+        auto displayName = d.name;
+
+        auto lower = d.name.toLowerCase();
+
+        if (lower.contains ("eq"))
+            eqMenu.addItem (eqBase + i, displayName);
+        else if (lower.contains ("comp"))
+            compMenu.addItem (compBase + i, displayName);
+        else if (lower.contains ("reverb") || lower.contains ("verb"))
+            reverbMenu.addItem (reverbBase + i, displayName);
+        else if (lower.contains ("delay") || lower.contains ("echo"))
+            delayMenu.addItem (delayBase + i, displayName);
+        else
+            otherMenu.addItem (otherBase + i, displayName);
+    }
+
+    if (eqMenu.getNumItems()     > 0) root.addSubMenu ("EQ",         eqMenu);
+    if (compMenu.getNumItems()   > 0) root.addSubMenu ("Compressor", compMenu);
+    if (reverbMenu.getNumItems() > 0) root.addSubMenu ("Reverb",     reverbMenu);
+    if (delayMenu.getNumItems()  > 0) root.addSubMenu ("Delay",      delayMenu);
+    if (otherMenu.getNumItems()  > 0) root.addSubMenu ("Other FX",   otherMenu);
+
+    if (root.getNumItems() == 0)
+        return;
+
+    root.showMenuAsync (juce::PopupMenu::Options(),
+                    [this, trackIndex, slotIndex, fxDescs,
+                     eqBase, compBase, reverbBase, delayBase, otherBase,
+                     onSlotLabelChange] (int result)
+    {
+        if (result == 0 || ! trackManager)
+            return;
+
+        int idx = -1;
+
+        auto decode = [&] (int base)
+        {
+            if (result >= base && result < base + fxDescs.size())
+                idx = result - base;
+        };
+
+        decode (eqBase);
+        decode (compBase);
+        decode (reverbBase);
+        decode (delayBase);
+        decode (otherBase);
+
+        if (idx < 0 || idx >= fxDescs.size())
+            return;
+
+        const int insertIndex = slotIndex + 1; // keep 0 for instrument
+
+        // Insert the FX plugin via TrackManager / PluginManager
+        te::Plugin* plugin = trackManager->insertExternalEffect (
+            trackIndex,
+            fxDescs.getReference (idx),
+            insertIndex);
+
+        if (! plugin)
+            return;
+
+        // 1) Update the button label in the channel strip
+        if (onSlotLabelChange)
+            onSlotLabelChange (fxDescs.getReference (idx).name);
+
+        // 2) Open the plugin editor right away (same pattern as instruments)
+        if (auto* ext = dynamic_cast<te::ExternalPlugin*> (plugin))
+        {
+            if (instrumentWindow_)
+            {
+                instrumentWindow_->toFront (true);
+                return;
+            }
+
+            if (auto w = PluginEditorWindow::createFor(
+                    *ext,
+                    [this] { this->closeInstrumentWindow(); },
+                    qwertyForwarder_.get()))
+            {
+                instrumentWindow_ = std::move (w);
+
+                auto& tc = edit->getTransport();
+                tc.ensureContextAllocated();
+                if (!tc.isPlaying())
+                {
+                    startedTransportForEditor_ = true;
+                    tc.play (false);
+                }
+                else
+                {
+                    startedTransportForEditor_ = false;
+                }
+            }
+            else
+            {
+                DBG ("[FX] ExternalPlugin has no instance/editor yet (after insert).");
+            }
+        }
+    });
+
+}
 
 bool AppEngine::addMidiClipToTrackAt(int trackIndex, t::TimePosition start, t::BeatDuration length)
 {
     if (!midiEngine)
         return false;
-    return midiEngine->addMidiClipToTrackAt (trackIndex, start, length);
+
+    return midiEngine->addMidiClipToTrack (trackIndex);
 }
 
 void AppEngine::copyMidiClip (te::MidiClip* clip)

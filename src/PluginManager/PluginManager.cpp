@@ -278,6 +278,13 @@ te::Plugin::Ptr PluginManager::addExternalInstrumentToTrack (te::AudioTrack& tra
     return {};
 }
 
+te::Plugin::Ptr PluginManager::addExternalEffectToTrack (te::AudioTrack& track,
+                                                         const juce::PluginDescription& desc,
+                                                         int insertIndex)
+{
+    return addExternalInstrumentToTrack (track, desc, insertIndex);
+}
+
 juce::OwnedArray<juce::PluginDescription> PluginManager::getInstrumentDescriptions() const
 {
     juce::OwnedArray<juce::PluginDescription> out;

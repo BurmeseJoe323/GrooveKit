@@ -34,6 +34,10 @@ public:
                                                              const juce::PluginDescription& desc,
                                                              int insertIndex);
 
+    te::Plugin::Ptr addExternalEffectToTrack (te::AudioTrack& track,
+                                          const juce::PluginDescription& desc,
+                                          int insertIndex);
+
     te::Plugin::Ptr addTALSynthToTrack(te::AudioTrack& track, int insertIndex = 0);
 
 private:

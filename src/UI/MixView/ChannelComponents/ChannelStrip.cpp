@@ -14,7 +14,7 @@ ChannelStrip::ChannelStrip(juce::Colour color)
     instrumentButton.setButtonText ("Instrument");
 
     addAndMakeVisible (insertsLabel);
-    insertsLabel.setText ("INSERTS", juce::dontSendNotification);
+    insertsLabel.setText ("Inserts", juce::dontSendNotification);
     insertsLabel.setJustificationType (juce::Justification::centred);
     insertsLabel.setColour (juce::Label::textColourId, juce::Colour (0xFF212529));
     insertsLabel.setFont (juce::Font (12.0f).boldened());
@@ -23,13 +23,36 @@ ChannelStrip::ChannelStrip(juce::Colour color)
     {
         for (int i = 0; i < 4; ++i)
         {
+            const int slotIndex = i;
+
+            // Main slot button
             auto* slot = new juce::TextButton();
-            slot->setButtonText (""); // empty slot look
+            slot->setButtonText ("");  // will be set to plugin name later
             slot->setColour (juce::TextButton::buttonColourId, juce::Colour (0xFFDDE0E3));
             slot->setColour (juce::TextButton::textColourOffId, juce::Colour (0xFF343A40));
+            slot->onClick = [this, slotIndex]
+            {
+                if (onInsertSlotClicked)
+                    onInsertSlotClicked (slotIndex);   // open editor or choose FX if empty
+            };
             addAndMakeVisible (slot);
             insertSlots.add (slot);
+
+            // Tiny ▼ menu button
+            auto* menuBtn = new juce::TextButton();
+            menuBtn->setButtonText (juce::String::fromUTF8 (u8"\u25BE"));
+            menuBtn->setTooltip ("Change effect");
+            menuBtn->setColour (juce::TextButton::buttonColourId, juce::Colour (0xFFC4C9CF));
+            menuBtn->setColour (juce::TextButton::textColourOffId, juce::Colour (0xFF343A40));
+            menuBtn->onClick = [this, slotIndex]
+            {
+                if (onInsertSlotMenuRequested)
+                    onInsertSlotMenuRequested (slotIndex);  // always show FX menu
+            };
+            addAndMakeVisible (menuBtn);
+            insertSlotMenus.add (menuBtn);
         }
+
     }
 
 
@@ -300,6 +323,12 @@ void ChannelStrip::bindToVolume (te::VolumeAndPanPlugin& vnp)
     };
 }
 
+void ChannelStrip::setInsertSlotName (int slotIndex, const juce::String& text)
+{
+    if (juce::isPositiveAndBelow (slotIndex, insertSlots.size()))
+        insertSlots[slotIndex]->setButtonText (text);
+}
+
 void ChannelStrip::paint (juce::Graphics& g)
 {
     // Match TrackComponent styling with custom color (Written by Claude Code)
@@ -331,6 +360,11 @@ void ChannelStrip::resized()
     const int gapS    = 4;
     const int gapM    = 6;
     const int labelH  = 16;
+
+    const int slotH    = 18;
+    const int slotGap  = 2;
+    const int menuW    = 18;   // width of ▼ button
+    const int menuGap  = 2;    // spacing between main slot and ▼
     const int slotH   = 18;
     const int slotGap = 2;
     // top controls stack
@@ -360,11 +394,11 @@ void ChannelStrip::resized()
         /* R */                   bigBtnH +
         gapM +
         /* INSERTS label */       labelH +
-        /* slots */               (numSlots > 0 ? (numSlots * slotH + (numSlots - 1) * slotGap) : 0);
+        /* slots */               (numSlots > 0 ? (numSlots * (slotH + slotGap)) - slotGap : 0);
 
     auto top = r.removeFromTop (topH);
 
-    // --- Layout top stack ---
+    // === Top controls ===
     instrumentButton.setBounds (top.removeFromTop (bigBtnH));
     top.removeFromTop (gapS);
 
@@ -375,19 +409,37 @@ void ChannelStrip::resized()
     recordButton.setBounds (top.removeFromTop (bigBtnH));
     top.removeFromTop (gapM);
 
+    // === INSERTS label ===
     insertsLabel.setBounds (top.removeFromTop (labelH));
 
+    // === INSERT SLOTS WITH ▼ MENUS ===
     for (int i = 0; i < numSlots; ++i)
     {
-        insertSlots[i]->setBounds (top.removeFromTop (slotH));
-        if (i < numSlots - 1) top.removeFromTop (slotGap);
+        auto row = top.removeFromTop (slotH);
+
+        // Reserve right-side space for ▼
+        auto menuArea = row.removeFromRight (menuW);
+        menuArea = menuArea.reduced (0, 1); // small vertical inset
+        row.removeFromRight (menuGap);
+
+        // Main button
+        insertSlots[i]->setBounds (row);
+
+        // ▼ button
+        if (i < insertSlotMenus.size() && insertSlotMenus[i] != nullptr)
+            insertSlotMenus[i]->setBounds (menuArea);
+
+        if (i < numSlots - 1)
+            top.removeFromTop (slotGap);
     }
 
-    // --- Pan + Fader fill the remaining area ---
+    // === Pan + Fader ===
     auto body = r;
     body.removeFromRight (6);
+
     auto panArea = body.removeFromTop (48);
     pan.setBounds (panArea.withSizeKeepingCentre (36, 36));
+
     fader.setBounds (body.reduced (2, 8));
     // pan knob
     auto panArea = bottom.removeFromTop (48);

@@ -212,6 +212,15 @@ public:
     double getClipboardClipLengthBeats() const { return lastCopiedClipLengthBeats; }
 
     void showInstrumentChooser (int trackIndex);
+
+    void onFxInsertSlotClicked (int trackIndex,
+                            int slotIndex,
+                            std::function<void (const juce::String&)> onSlotLabelChange);
+
+    void showFxInsertMenu (int trackIndex,
+                           int slotIndex,
+                           std::function<void (const juce::String&)> onSlotLabelChange);
+
     PluginManager& getPluginManager() { return *pluginManager; }
 
 

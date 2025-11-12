@@ -116,6 +116,21 @@ int TrackManager::addInstrumentTrack()
     return newIndex;
 }
 
+te::Plugin* TrackManager::insertExternalEffect (int trackIndex,
+                                                const juce::PluginDescription& desc,
+                                                int insertIndex)
+{
+    if (trackIndex < 0 || trackIndex >= getNumTracks() || pluginManager == nullptr)
+        return nullptr;
+
+    if (auto* t = getTrack (trackIndex))
+    {
+        if (auto p = pluginManager->addExternalEffectToTrack (*t, desc, insertIndex))
+            return p.get();
+    }
+    return nullptr;
+}
+
 int TrackManager::addTrack()
 {
     return addInstrumentTrack();
