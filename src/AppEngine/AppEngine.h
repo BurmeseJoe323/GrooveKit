@@ -179,8 +179,7 @@ public:
     std::function<void()> onArmedTrackChanged;
 
     // Recording control
-    void startRecording();
-    void stopRecording();
+    void toggleRecord();
     bool isRecording() const;
     std::function<void()> onRecordingStopped;
 

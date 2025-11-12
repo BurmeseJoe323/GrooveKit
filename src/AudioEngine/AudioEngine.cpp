@@ -29,7 +29,8 @@ void AudioEngine::play()
 void AudioEngine::stop() {
     if (&edit)
     {
-        edit.getTransport().stop(false, false);
+        // First param = true: Keep any recordings in progress (don't discard)
+        edit.getTransport().stop(true, false);
         for (auto* plugin : te::getAllPlugins (edit, false))
             if (auto* morph = dynamic_cast<MorphSynthPlugin*>(plugin))
                 morph->stopAllNotes();
@@ -182,7 +183,8 @@ void AudioEngine::setupMidiInputDevices(te::Edit& editToSetup)
     for (const auto& midiIn : engine.getDeviceManager().getMidiInDevices())
     {
         midiIn->setEnabled(true);
-        midiIn->setMonitorMode(te::InputDevice::MonitorMode::on);
+        // Use 'automatic' mode: monitor when stopped, don't monitor during playback/recording
+        midiIn->setMonitorMode(te::InputDevice::MonitorMode::automatic);
     }
 
     // Ensure transport context is allocated for recording
@@ -202,115 +204,65 @@ void AudioEngine::routeMidiToTrack(te::Edit& editToRoute, int trackIndex)
 
     auto* track = tracks[trackIndex];
 
-    // Route all MIDI input devices to this track for live monitoring
-    // Note: We don't enable recording here - that will be done separately when recording
+    // Route all MIDI input devices to this track and pre-arm for recording
+    // Following Tracktion's MidiRecordingDemo pattern: set target + enable recording at arm time
     for (auto* instance : editToRoute.getAllInputDevices())
     {
         if (instance->getInputDevice().getDeviceType() == te::InputDevice::physicalMidiDevice)
         {
-            // Set target track for live MIDI monitoring
-            // Monitor mode (set in setupMidiInputDevices) allows pass-through even when not recording
-            instance->setTarget(track->itemID, true, nullptr, 0);
+            // Set target track with undo manager for proper state tracking
+            [[maybe_unused]] auto res = instance->setTarget(track->itemID, true, &editToRoute.getUndoManager(), 0);
+
+            // Pre-arm track for recording (following Tracktion demo pattern)
+            // This prepares the track to capture MIDI when transport.record() is called
+            instance->setRecordingEnabled(track->itemID, true);
         }
     }
 
-    Logger::writeToLog("[MIDI] Routed all MIDI inputs to track " + String(trackIndex));
+    // Restart playback to rebuild audio graph with new routing configuration
+    editToRoute.restartPlayback();
+
+    Logger::writeToLog("[MIDI] Routed and pre-armed all MIDI inputs to track " + String(trackIndex));
 }
 
-void AudioEngine::startRecording(te::Edit& editToRecord, int trackIndex)
+void AudioEngine::toggleRecord(te::Edit& editToRecord)
 {
-    Logger::writeToLog("[MIDI Recording] Start recording requested for track " + String(trackIndex));
-
-    auto tracks = te::getAudioTracks(editToRecord);
-    if (trackIndex < 0 || trackIndex >= tracks.size())
-    {
-        Logger::writeToLog("[MIDI Recording] Invalid track index: " + String(trackIndex));
-        return;
-    }
-
-    auto* track = tracks[trackIndex];
-    Logger::writeToLog("[MIDI Recording] Target track: " + track->getName());
-
-    // Enable recording on all MIDI input devices for the target track
-    int deviceCount = 0;
-    for (auto* instance : editToRecord.getAllInputDevices())
-    {
-        if (instance->getInputDevice().getDeviceType() == te::InputDevice::physicalMidiDevice)
-        {
-            Logger::writeToLog("[MIDI Recording] Enabling recording on device: " + instance->getInputDevice().getName());
-            instance->setRecordingEnabled(track->itemID, true);
-            deviceCount++;
-        }
-    }
-    Logger::writeToLog("[MIDI Recording] Enabled recording on " + String(deviceCount) + " MIDI input devices");
-
-    // Position transport at loop start if looping
     auto& transport = editToRecord.getTransport();
-    if (transport.looping)
+    bool wasRecording = transport.isRecording();
+
+    Logger::writeToLog("[MIDI Recording] Toggle record - currently recording: " + String(wasRecording ? "yes" : "no"));
+
+    // Position at loop start if we're about to start recording and looping is enabled
+    if (!wasRecording && transport.looping)
     {
-        Logger::writeToLog("[MIDI Recording] Positioning at loop start");
+        Logger::writeToLog("[MIDI Recording] Positioning at loop start before recording");
         transport.setPosition(transport.getLoopRange().getStart());
     }
 
-    // Start recording via transport (this starts playback + recording)
-    if (!transport.isRecording())
+    // Use Tracktion's battle-tested helper function
+    EngineHelpers::toggleRecord(editToRecord);
+
+    // Log clip count after stopping recording
+    if (wasRecording)
     {
-        Logger::writeToLog("[MIDI Recording] Starting transport in record mode");
-        transport.record(false);  // false = don't do punch-in/out
+        Logger::writeToLog("[MIDI Recording] Recording stopped, checking for clips...");
+        auto tracks = te::getAudioTracks(editToRecord);
+        for (int i = 0; i < tracks.size(); ++i)
+        {
+            auto* track = tracks[i];
+            int clipCount = 0;
+            for (auto* clip : track->getClips())
+            {
+                if (auto* midiClip = dynamic_cast<te::MidiClip*>(clip))
+                    clipCount++;
+            }
+            Logger::writeToLog("[MIDI Recording] Track " + String(i) + " (" + track->getName() + ") has " + String(clipCount) + " MIDI clips");
+        }
     }
     else
     {
-        Logger::writeToLog("[MIDI Recording] Transport already recording");
+        Logger::writeToLog("[MIDI Recording] Recording started");
     }
-
-    Logger::writeToLog("[MIDI Recording] Started recording on track " + String(trackIndex) + " (" + track->getName() + ")");
-}
-
-void AudioEngine::stopRecording(te::Edit& editToStop)
-{
-    Logger::writeToLog("[MIDI Recording] Stopping recording...");
-
-    auto& transport = editToStop.getTransport();
-
-    // Stop transport recording (this will finalize any recorded clips)
-    if (transport.isRecording())
-    {
-        Logger::writeToLog("[MIDI Recording] Stopping transport recording");
-        transport.stop(false, false);  // Stop transport completely
-    }
-
-    // Disable recording on all MIDI input devices
-    for (auto* instance : editToStop.getAllInputDevices())
-    {
-        if (instance->getInputDevice().getDeviceType() == te::InputDevice::physicalMidiDevice)
-        {
-            // Clear recording state by disabling recording on all tracks
-            for (auto* track : te::getAudioTracks(editToStop))
-            {
-                if (instance->isRecordingEnabled(track->itemID))
-                {
-                    Logger::writeToLog("[MIDI Recording] Disabling recording on track: " + track->getName());
-                    instance->setRecordingEnabled(track->itemID, false);
-                }
-            }
-        }
-    }
-
-    // Log clip count for debugging
-    auto tracks = te::getAudioTracks(editToStop);
-    for (int i = 0; i < tracks.size(); ++i)
-    {
-        auto* track = tracks[i];
-        int clipCount = 0;
-        for (auto* clip : track->getClips())
-        {
-            if (auto* midiClip = dynamic_cast<te::MidiClip*>(clip))
-                clipCount++;
-        }
-        Logger::writeToLog("[MIDI Recording] Track " + String(i) + " (" + track->getName() + ") has " + String(clipCount) + " MIDI clips");
-    }
-
-    Logger::writeToLog("[MIDI Recording] Recording stopped");
 }
 
 bool AudioEngine::isRecording() const

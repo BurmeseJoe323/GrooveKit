@@ -246,14 +246,8 @@ void TrackEditView::setupButtons ()
         recordButton.setShape (recordShape, true, true, false);
         recordButton.setColours (juce::Colours::red, juce::Colours::lightcoral, juce::Colours::maroon);
         recordButton.onClick = [this] {
-            if (appEngine->isRecording())
-            {
-                appEngine->stopRecording();
-            }
-            else
-            {
-                appEngine->startRecording();
-            }
+            // Simply toggle record state - EngineHelpers handles the logic
+            appEngine->toggleRecord();
         };
         addAndMakeVisible (recordButton);
     }

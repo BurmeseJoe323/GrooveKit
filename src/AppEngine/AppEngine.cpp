@@ -156,28 +156,38 @@ int AppEngine::getArmedTrackIndex () const
     return selectedTrackIndex;
 }
 
-void AppEngine::startRecording()
+void AppEngine::toggleRecord()
 {
-    if (selectedTrackIndex < 0)
+    if (selectedTrackIndex < 0 && !isRecording())
     {
         juce::Logger::writeToLog("[Recording] Cannot start recording: no track armed");
         return;
     }
 
-    audioEngine->startRecording(*edit, selectedTrackIndex);
-}
+    bool wasRecording = isRecording();
 
-void AppEngine::stopRecording()
-{
-    juce::Logger::writeToLog("[AppEngine] Stopping recording...");
-    audioEngine->stopRecording(*edit);
+    // Toggle recording using EngineHelpers
+    audioEngine->toggleRecord(*edit);
 
-    // Give Tracktion a moment to finalize the clip creation
-    juce::MessageManager::callAsync([this]() {
-        juce::Logger::writeToLog("[AppEngine] Recording stopped, notifying listeners");
-        if (onRecordingStopped)
-            onRecordingStopped();
-    });
+    // If we just stopped recording, notify listeners
+    if (wasRecording)
+    {
+        juce::Logger::writeToLog("[AppEngine] Recording stopped");
+
+        // Give Tracktion a moment to finalize the clip creation
+        juce::MessageManager::callAsync([this]()
+        {
+            if (onRecordingStopped)
+            {
+                juce::Logger::writeToLog("[AppEngine] Notifying listeners that recording stopped");
+                onRecordingStopped();
+            }
+        });
+    }
+    else
+    {
+        juce::Logger::writeToLog("[AppEngine] Recording started");
+    }
 }
 
 bool AppEngine::isRecording() const

@@ -1,5 +1,6 @@
 #pragma once
 #include "../MIDIEngine/MIDIEngine.h"
+#include "EngineHelpers.h"
 #include <juce_audio_devices/juce_audio_devices.h>
 #include <tracktion_engine/tracktion_engine.h>
 
@@ -28,9 +29,8 @@ public:
     juce::StringArray listMidiInputDevices() const;
     void logAvailableMidiDevices() const;
 
-    // Recording control
-    void startRecording(te::Edit& edit, int trackIndex);
-    void stopRecording(te::Edit& edit);
+    // Recording control (simplified - uses EngineHelpers)
+    void toggleRecord(te::Edit& edit);
     bool isRecording() const;
 
 private:
