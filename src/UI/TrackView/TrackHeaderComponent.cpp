@@ -7,6 +7,7 @@
 TrackHeaderComponent::TrackHeaderComponent (AppEngine& engine) : appEngine (engine)
 {
     addAndMakeVisible (instrumentButton);
+    addAndMakeVisible (instrumentMenuButton);
     addAndMakeVisible (settingsButton);
     addAndMakeVisible (trackNameLabel);
     addAndMakeVisible (muteTrackButton);
@@ -14,6 +15,10 @@ TrackHeaderComponent::TrackHeaderComponent (AppEngine& engine) : appEngine (engi
     addAndMakeVisible (recordArmButton);
     instrumentButton.onClick = [this]() {
         listeners.call ([] (Listener& l) { l.onInstrumentClicked(); });
+    };
+
+    instrumentMenuButton.onClick = [this]() {
+        listeners.call ([] (Listener& l) { l.onInstrumentMenuRequested(); });
     };
 
     settingsButton.onClick = [this]() {
@@ -62,10 +67,38 @@ TrackHeaderComponent::TrackHeaderComponent (AppEngine& engine) : appEngine (engi
     // Use I-beam cursor when hovering over the track name to indicate text editing
     trackNameLabel.setMouseCursor (juce::MouseCursor::IBeamCursor);
 
+    instrumentMenuButton.setButtonText (juce::String::fromUTF8 (u8"\u25BE"));
+    instrumentMenuButton.setWantsKeyboardFocus (false);
+    instrumentMenuButton.setMouseCursor (juce::MouseCursor::PointingHandCursor);
+    instrumentMenuButton.setTooltip ("Choose instrument");
+    instrumentButton.setTooltip ("Open instrument editor");
+
+    instrumentButton.setConnectedEdges     (juce::Button::ConnectedOnRight);
+    instrumentMenuButton.setConnectedEdges (juce::Button::ConnectedOnLeft);
+
     // Register as listener to handle track name changes (Written by Claude Code)
     trackNameLabel.addListener (this);
 
     setTrackType (TrackType::Instrument);
+
+    auto bg      = juce::Colour (0xFF2D3943);
+    auto bgOver  = bg.brighter (0.08f);
+    auto bgDown  = bg.darker   (0.10f);
+    auto fg      = juce::Colours::white;
+    for (auto* b : { &instrumentButton, &instrumentMenuButton })
+    {
+        b->setColour (juce::TextButton::buttonColourId,     bg);
+        b->setColour (juce::TextButton::buttonOnColourId,   bgDown);
+        b->setColour (juce::TextButton::textColourOnId,     fg);
+        b->setColour (juce::TextButton::textColourOffId,    fg);
+
+        #if JUCE_MAJOR_VERSION >= 8
+        b->setColour (juce::TextButton::buttonOver, bgOver);
+        #else
+        b->setColour (juce::TextButton::buttonOverColourId, bgOver);
+        #endif
+    }
+
 }
 
 TrackHeaderComponent::~TrackHeaderComponent() = default;
@@ -138,21 +171,35 @@ void TrackHeaderComponent::paint (juce::Graphics& g)
 
 void TrackHeaderComponent::resized()
 {
+    auto area = getLocalBounds().reduced (6);
+    constexpr int titleH = 20;
+    constexpr int buttonH = 25;
+    constexpr int gap    = 4;
+    constexpr int menuW  = 28;  // square ▼
+
+    // Title
+    trackNameLabel.setBounds (area.removeFromTop (titleH));
+
+    // Split button row
+    auto row  = area.removeFromTop (buttonH);
+    auto left = row.removeFromLeft (row.getWidth() - menuW);
+    //row.removeFromLeft (gap);
+    auto right = row.removeFromLeft (menuW);
+
+    instrumentButton.setBounds (left);
+    instrumentMenuButton.setBounds (right);
+
+    // Remaining controls stacked in the leftover area
     juce::FlexBox fb;
-    fb.flexDirection = juce::FlexBox::Direction::column;
-    fb.justifyContent = juce::FlexBox::JustifyContent::flexStart;
-    fb.alignItems = juce::FlexBox::AlignItems::stretch;
+    fb.flexDirection   = juce::FlexBox::Direction::column;
+    fb.justifyContent  = juce::FlexBox::JustifyContent::flexStart;
+    fb.alignItems      = juce::FlexBox::AlignItems::stretch;
 
-    const auto bounds = getLocalBounds().reduced (5);
-    constexpr int buttonHeight = 25;
     const auto margin = juce::FlexItem::Margin (2, 0, 2, 0);
+    fb.items.add (juce::FlexItem (settingsButton).withHeight (buttonH).withMargin (margin));
+    fb.items.add (juce::FlexItem (muteTrackButton).withHeight (buttonH).withMargin (margin));
+    fb.items.add (juce::FlexItem (soloTrackButton).withHeight (buttonH).withMargin (margin));
+    fb.items.add (juce::FlexItem (recordArmButton).withHeight (buttonH).withMargin (margin));
 
-    fb.items.add (juce::FlexItem (trackNameLabel).withHeight (25.f));
-    fb.items.add (juce::FlexItem (instrumentButton).withHeight (buttonHeight).withMargin (margin)); // <-- add this line
-    fb.items.add (juce::FlexItem (settingsButton).withHeight (buttonHeight).withMargin (margin));
-    fb.items.add (juce::FlexItem (muteTrackButton).withHeight (buttonHeight).withMargin (margin));
-    fb.items.add (juce::FlexItem (soloTrackButton).withHeight (buttonHeight).withMargin (margin));
-    fb.items.add (juce::FlexItem (recordArmButton).withHeight (buttonHeight).withMargin (margin));
-
-    fb.performLayout (bounds);
+    fb.performLayout (area);  // <— layout into the leftover area
 }

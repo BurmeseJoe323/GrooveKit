@@ -42,6 +42,13 @@ public:
 
     void setPluginManager(PluginManager* pm) { pluginManager = pm; }
 
+    tracktion::engine::Plugin* insertExternalInstrument (int trackIndex,
+                                                     const juce::PluginDescription& desc);
+
+    tracktion::engine::Plugin* insertMorphSynth (int trackIndex);
+    void clearInstrumentSlot0 (int trackIndex);
+
+
 private:
     te::Edit& edit;
     PluginManager* pluginManager = nullptr;

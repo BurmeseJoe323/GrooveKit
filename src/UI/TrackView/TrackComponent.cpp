@@ -109,6 +109,13 @@ void TrackComponent::onInstrumentClicked()
     appEngine->openInstrumentEditor (trackIndex);
 }
 
+void TrackComponent::onInstrumentMenuRequested()
+{
+    if (appEngine)
+        appEngine->showInstrumentChooser (trackIndex);
+}
+
+
 void TrackComponent::onSettingsClicked()
 {
     juce::PopupMenu m;

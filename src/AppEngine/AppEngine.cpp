@@ -6,6 +6,7 @@
 #include "../UI/Plugins/Synthesizer/MorphSynthView.h"
 #include "../UI/Plugins/Synthesizer/MorphSynthWindow.h"
 #include "../PluginManager/PluginEditorWindow.h"
+#include "TrackManager.h"
 
 
 namespace te = tracktion::engine;
@@ -16,6 +17,31 @@ using namespace t::literals;
 namespace GKIDs {
     static const juce::Identifier isDrumClip ("gk_isDrumClip");
 }
+
+struct MidiListenerKeyAdapter : public juce::KeyListener
+{
+    explicit MidiListenerKeyAdapter (MidiListener& target) : ml (target) {}
+
+    bool keyPressed (const juce::KeyPress& key, juce::Component* /*origin*/) override
+    {
+        // Let MidiListener handle octave keys & note-key recognition
+        bool handled = ml.handleKeyPress (key);
+
+        // Drive its state machine for note-on based on currently-down keys
+        bool handledState = ml.handleKeyStateChanged (true);
+
+        return handled || handledState; // swallow if we did anything
+    }
+
+    bool keyStateChanged (bool isDown, juce::Component* /*origin*/) override
+    {
+        // Release notes (and handle any new downs if needed)
+        return ml.handleKeyStateChanged (isDown);
+    }
+
+private:
+    MidiListener& ml;
+};
 
 AppEngine::AppEngine()
 {
@@ -150,6 +176,9 @@ void AppEngine::setArmedTrack (int index)
 
     if (onArmedTrackChanged)
         onArmedTrackChanged();
+
+    if (auto* t = getArmedTrack())
+        wireAllMidiInputsToTrack (*t);
 }
 
 te::AudioTrack* AppEngine::getArmedTrack ()
@@ -315,8 +344,14 @@ int AppEngine::addDrumTrack()
 int AppEngine::addInstrumentTrack()
 {
     jassert (trackManager != nullptr);
-    return trackManager->addInstrumentTrack();
+    const int idx = trackManager->addInstrumentTrack();
+
+    // Arm/select the new track so MIDI gets routed
+    // setArmedTrack (idx);
+
+    return idx;
 }
+
 
 void AppEngine::soloTrack (int i) { trackManager->soloTrack (i); }
 void AppEngine::setTrackSoloed (int i, bool s) { trackManager->setTrackSoloed (i, s); }
@@ -712,12 +747,15 @@ void AppEngine::openInstrumentEditor (int trackIndex)
 
             if (!plug) { DBG("No instrument plugin on track " << trackIndex); return; }
 
-            // Keep your MorphSynth path
+            // MorphSynth path
             if (auto* morph = dynamic_cast<MorphSynthPlugin*>(plug))
             {
                 if (instrumentWindow_) { instrumentWindow_->toFront (true); return; }
                 instrumentWindow_ = std::make_unique<MorphSynthWindow>(
-                    *morph, [this]{ this->closeInstrumentWindow(); });
+                    *morph,
+                    [this]{ this->closeInstrumentWindow(); },
+                    qwertyForwarder_.get()      // <— add this
+                );
                 instrumentWindow_->toFront (true);
                 return;
             }
@@ -725,16 +763,40 @@ void AppEngine::openInstrumentEditor (int trackIndex)
             // NEW: External plugin path (works for any plugin with a JUCE editor)
             if (auto* ext = dynamic_cast<te::ExternalPlugin*>(plug))
             {
-                if (instrumentWindow_) { instrumentWindow_->toFront (true); return; }
+                if (instrumentWindow_) { instrumentWindow_->toFront(true); return; }
 
-                if (auto w = PluginEditorWindow::createFor (*ext, [this]{ this->closeInstrumentWindow(); }))
+                if (auto w = PluginEditorWindow::createFor(
+                    *ext,
+                    [this]{ this->closeInstrumentWindow(); },
+                    qwertyForwarder_.get()   // <-- forward QWERTY to your MidiListener
+                ))
                 {
-                    instrumentWindow_ = std::move (w);
+                    instrumentWindow_ = std::move(w);
+
+                    // keep graph running so you can hear it while editing
+                    auto& tc = edit->getTransport();
+                    tc.ensureContextAllocated();
+                    if (!tc.isPlaying()) { startedTransportForEditor_ = true; tc.play(false); }
+                    else                 { startedTransportForEditor_ = false; }
                     return;
                 }
 
+
                 DBG("ExternalPlugin has no instance/editor yet.");
                 return;
+            }
+
+
+            auto& tc = edit->getTransport();
+            tc.ensureContextAllocated();
+            if (!tc.isPlaying())
+            {
+                startedTransportForEditor_ = true;
+                tc.play(false);
+            }
+            else
+            {
+                startedTransportForEditor_ = false;
             }
 
             DBG("Plugin type has no editor route.");
@@ -749,10 +811,97 @@ void AppEngine::closeInstrumentWindow()
 {
     if (instrumentWindow_ != nullptr)
     {
-        instrumentWindow_->setVisible (false);
+        instrumentWindow_->setVisible(false);
         instrumentWindow_.reset();
     }
+
+    // If we started transport just to hear the editor, stop it now
+    if (startedTransportForEditor_)
+    {
+        startedTransportForEditor_ = false;
+        edit->getTransport().stop(/*discardRecordings=*/false, /*clearDevices=*/false);
+    }
 }
+
+void AppEngine::showInstrumentChooser (int trackIndex)
+{
+    if (!trackManager || !pluginManager)
+        return;
+
+    juce::PopupMenu root, builtIn, external;
+
+    // --- Built-in instruments
+    const int kBuiltMorph = 1001;
+    const int kBuiltFour  = 1002;
+
+    builtIn.addItem (kBuiltMorph, "Morph Synth");
+    builtIn.addItem (kBuiltFour,  "FourOSC");
+
+    // --- External instruments (scanned)
+    auto owned = pluginManager->getInstrumentDescriptions();   // OwnedArray<PluginDescription>
+    juce::Array<juce::PluginDescription> descs;
+    for (int i = 0; i < owned.size(); ++i)
+        descs.add (*owned[i]);
+
+    const int kExtBase = 2000;
+    for (int i = 0; i < descs.size(); ++i)
+    {
+        const int id = kExtBase + i;
+        external.addItem (id, descs[i].name + "  [" + descs[i].pluginFormatName + "]");
+    }
+
+    root.addSubMenu ("Built-in", std::move (builtIn));
+    root.addSubMenu ("External", std::move (external));
+
+    // Capture `descs` by value (copyable); no OwnedArray in the lambda
+    root.showMenuAsync ({}, [this, trackIndex, descs] (int result)
+    {
+        if (result == 0 || !trackManager)
+            return;
+
+        te::Plugin* inserted = nullptr;
+
+        if (result == 1001) // Morph
+        {
+            trackManager->clearInstrumentSlot0 (trackIndex);
+            inserted = trackManager->insertMorphSynth (trackIndex);
+        }
+        else if (result == 1002) // FourOSC
+        {
+            if (auto* t = trackManager->getTrack (trackIndex))
+            {
+                trackManager->clearInstrumentSlot0 (trackIndex);
+
+                if (auto plugin = edit->getPluginCache().createNewPlugin (te::FourOscPlugin::xmlTypeName, {}))
+                {
+                    t->pluginList.insertPlugin (std::move (plugin), 0, nullptr);
+                    for (auto* p : t->pluginList)
+                        if (dynamic_cast<te::FourOscPlugin*> (p))
+                            inserted = p;
+                }
+            }
+        }
+        else if (result >= 2000)
+        {
+            const int idx = result - 2000;
+            if (idx >= 0 && idx < descs.size())
+            {
+                trackManager->clearInstrumentSlot0 (trackIndex);
+                inserted = trackManager->insertExternalInstrument (trackIndex, descs.getReference (idx));
+            }
+        }
+
+        if (inserted)
+        {
+            if (auto* track = trackManager->getTrack (trackIndex))
+                wireAllMidiInputsToTrack (*track);
+
+            openInstrumentEditor (trackIndex);
+        }
+    });
+
+}
+
 
 bool AppEngine::addMidiClipToTrackAt(int trackIndex, t::TimePosition start, t::BeatDuration length)
 {

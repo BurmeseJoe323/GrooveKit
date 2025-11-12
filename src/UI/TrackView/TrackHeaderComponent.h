@@ -20,7 +20,8 @@ public:
         virtual void onMuteToggled (bool isMuted) = 0;
         virtual void onSoloToggled (bool isSolo) = 0;
         virtual void onInstrumentClicked() = 0;
-        virtual void onRecordArmToggled (bool isArmed) = 0;
+        virtual void onInstrumentMenuRequested() = 0;
+        virtual void onRecordArmToggled(bool isArmed) = 0;
     };
 
     void addListener (Listener* listener) { listeners.add (listener); }
@@ -53,6 +54,8 @@ public:
     void labelTextChanged (juce::Label* labelThatHasChanged) override;
 
 private:
+    juce::TextButton instrumentButton{"Instrument"};
+    juce::TextButton instrumentMenuButton;
     AppEngine& appEngine;
     int trackIndex = -1; // Track index for this header (Written by Claude Code)
 

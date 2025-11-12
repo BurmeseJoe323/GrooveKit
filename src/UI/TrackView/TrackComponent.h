@@ -16,6 +16,7 @@ public:
     ~TrackComponent() override;
 
     void onInstrumentClicked() override;
+    void onInstrumentMenuRequested() override;
     void onSettingsClicked() override;
     void onMuteToggled (bool isMuted) override;
     void onSoloToggled (bool isSolo) override;

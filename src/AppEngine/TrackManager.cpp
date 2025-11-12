@@ -70,6 +70,29 @@ int TrackManager::addDrumTrack()
     return newIndex;
 }
 
+void TrackManager::clearInstrumentSlot0 (int trackIndex)
+{
+    if (trackIndex < 0 || trackIndex >= getNumTracks())
+        return;
+
+    if (auto* track = getTrack (trackIndex))
+    {
+        if (track->pluginList.size() == 0)
+            return;
+
+        if (auto* p = track->pluginList[0])
+        {
+            // Only remove if it’s an instrument we consider “the instrument slot”
+            if (dynamic_cast<te::ExternalPlugin*> (p)
+             || dynamic_cast<MorphSynthPlugin*> (p)
+             || dynamic_cast<te::FourOscPlugin*> (p))
+            {
+                p->deleteFromParent();  // safe TE removal
+            }
+        }
+    }
+}
+
 int TrackManager::addInstrumentTrack()
 {
     const int newIndex = getNumTracks();
@@ -81,41 +104,13 @@ int TrackManager::addInstrumentTrack()
     // Set default instrument track name (Written by Claude Code)
     track->setName ("Track " + juce::String (newIndex + 1));
 
+
     syncBookkeepingToEngine();
     types[(size_t) newIndex] = TrackType::Instrument;
     if ((int) drumEngines.size() > newIndex)
         drumEngines[(size_t) newIndex].reset();
 
-    // if (auto plugin = edit.getPluginCache().createNewPlugin(te::FourOscPlugin::xmlTypeName, {}))
-    //     track->pluginList.insertPlugin(std::move(plugin), 0, nullptr);
-    // if (auto plugin = edit.getPluginCache().createNewPlugin (MorphSynthPlugin::pluginType, {}))
-    // {
-    //     // Insert MorphSynth into the track
-    //     track->pluginList.insertPlugin (std::move (plugin), 0, nullptr);
-    //
-    //     // Safely loop through all plugins on this track and find the MorphSynth instance
-    //     for (auto* p : track->pluginList)
-    //     {
-    //         if (auto* morph = dynamic_cast<MorphSynthPlugin*> (p))
-    //         {
-    //             if (morph->state.isValid())
-    //                 morph->restoreFromValueTree (morph->state);
-    //         }
-    //     }
-    // }
-
-    if (pluginManager != nullptr)     // however you store/access it; or via appEngine.getPluginManager()
-        pluginManager->addTALSynthToTrack(*track, /*insertIndex*/ 0);
-
-    juce::String pluginNames;
-
-    for (auto* p : track->pluginList)
-    {
-        if (p != nullptr)
-            pluginNames += p->getName() + ", ";
-    }
-
-    DBG("List of plugins for track '" + track->getName() + "': " + pluginNames);
+    // NO default plugin insertion here anymore.
 
     edit.getTransport().ensureContextAllocated();
     return newIndex;
@@ -239,6 +234,38 @@ te::Plugin* TrackManager::getInstrumentPluginOnTrack (int trackIndex)
     }
     return nullptr;
 }
+
+te::Plugin* TrackManager::insertExternalInstrument (int trackIndex, const juce::PluginDescription& desc)
+{
+    if (trackIndex < 0 || trackIndex >= getNumTracks() || pluginManager == nullptr)
+        return nullptr;
+
+    if (auto* t = getTrack (trackIndex))
+    {
+        if (auto p = pluginManager->addExternalInstrumentToTrack (*t, desc, 0))
+            return p.get();
+    }
+    return nullptr;
+}
+
+te::Plugin* TrackManager::insertMorphSynth (int trackIndex)
+{
+    if (trackIndex < 0 || trackIndex >= getNumTracks())
+        return nullptr;
+
+    if (auto* t = getTrack (trackIndex))
+    {
+        if (auto plugin = edit.getPluginCache().createNewPlugin (MorphSynthPlugin::pluginType, {}))
+        {
+            t->pluginList.insertPlugin (std::move (plugin), 0, nullptr);
+            for (auto* p : t->pluginList)
+                if (auto* morph = dynamic_cast<MorphSynthPlugin*> (p))
+                    return morph;
+        }
+    }
+    return nullptr;
+}
+
 
 double TrackManager::getClipStartSeconds (int trackIndex, int clipIndex) const
 {

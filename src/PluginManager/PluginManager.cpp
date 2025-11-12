@@ -254,6 +254,43 @@ juce::OwnedArray<juce::PluginDescription> PluginManager::getAllPluginDescription
     return out;
 }
 
+te::Plugin::Ptr PluginManager::addExternalInstrumentToTrack (te::AudioTrack& track,
+                                                             const juce::PluginDescription& desc,
+                                                             int insertIndex)
+{
+    auto* descPtr = const_cast<juce::PluginDescription*> (&desc);
+    auto plugin = track.edit.getPluginCache()
+                    .createNewPlugin (te::ExternalPlugin::xmlTypeName, *descPtr);
+    if (!plugin)
+        return {};
+
+    track.pluginList.insertPlugin (plugin, insertIndex, nullptr);
+    auto* inserted = track.pluginList[insertIndex];
+    if (auto* ext = dynamic_cast<te::ExternalPlugin*>(inserted))
+    {
+        if (auto* pi = ext->getAudioPluginInstance())
+            return inserted; // success
+        DBG ("[Ext] load error: " << ext->getLoadError());
+    }
+
+    if (inserted)
+        inserted->deleteFromParent();
+    return {};
+}
+
+juce::OwnedArray<juce::PluginDescription> PluginManager::getInstrumentDescriptions() const
+{
+    juce::OwnedArray<juce::PluginDescription> out;
+    const auto& types = knownPlugins.getTypes();
+    for (int i = 0; i < types.size(); ++i)
+    {
+        const auto& d = types.getReference(i);
+        if (d.isInstrument)
+            out.add (new juce::PluginDescription (d));
+    }
+    return out;
+}
+
 te::Plugin::Ptr PluginManager::addTALSynthToTrack (te::AudioTrack& track, int insertIndex)
 {
     DBG("[PluginManager] addTALSynthToTrack() called for track: " + track.getName());

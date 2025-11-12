@@ -2,13 +2,12 @@
 
 #include "../AudioEngine/AudioEngine.h"
 #include "../MIDIEngine/MIDIEngine.h"
+#include "../PluginManager/PluginManager.h"
 #include "../UI/TrackView/TrackHeaderComponent.h"
 #include "TrackManager.h"
 #include "MidiListener.h"
 #include <tracktion_engine/tracktion_engine.h>
-#include "../PluginManager/PluginManager.h"
-
-
+struct MidiListenerKeyAdapter;
 namespace IDs
 {
 #define DECLARE_ID(name)  const juce::Identifier name (#name);
@@ -195,6 +194,8 @@ public:
 
     void closeInstrumentWindow();
 
+    MidiListener* getMidiListener() const noexcept { return midiListener.get(); }
+
     // Clipboard helpers for MIDI clips (Junie)
     void copyMidiClip (te::MidiClip* clip);
     // Paste clipboard content to a specific track at a beat position
@@ -209,6 +210,10 @@ public:
     bool canPasteToTrack (int trackIndex) const;
     // Get clipboard clip length in beats (Written by Claude Code)
     double getClipboardClipLengthBeats() const { return lastCopiedClipLengthBeats; }
+
+    void showInstrumentChooser (int trackIndex);
+    PluginManager& getPluginManager() { return *pluginManager; }
+
 
 private:
     std::unique_ptr<tracktion::engine::Engine> engine;
@@ -231,8 +236,12 @@ private:
     juce::File currentEditFile;
 
     std::unique_ptr<juce::DocumentWindow> instrumentWindow_;
+    bool startedTransportForEditor_ = false;
 
     int lastSavedTxn = 0;
+    std::unique_ptr<MidiListenerKeyAdapter> qwertyForwarder_;
+
+
 
     bool writeEditToFile (const juce::File& file);
     void markSaved();
@@ -240,6 +249,7 @@ private:
 
     juce::File getAutosaveFile() const;
     void timerCallback() override;
+
 
     int selectedTrackIndex = -1;
 
