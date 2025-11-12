@@ -79,6 +79,11 @@ void MixerPanel::refreshTracks()
             appEngine.setTrackName (trackIndex, newName);
         };
 
+        strip->onOpenInstrumentEditor = [this, i]
+        {
+            appEngine.openInstrumentEditor(i);
+        };
+
         // Initialize UI state from engine
         strip->setMuted (appEngine.isTrackMuted (i));
         strip->setSolo (appEngine.isTrackSoloed (i));

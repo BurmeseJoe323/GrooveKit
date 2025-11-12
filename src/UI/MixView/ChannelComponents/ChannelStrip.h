@@ -65,6 +65,8 @@ public:
     std::function<void (bool)> onRequestMuteChange;
     std::function<void (bool)> onRequestSoloChange;
     std::function<void (bool)> onRequestArmChange;
+    std::function<void (te::AudioTrack&)> onInstrumentClicked;
+    std::function<void()> onOpenInstrumentEditor;
     // Track naming callback (Written by Claude Code)
     std::function<void (int trackIndex, const juce::String& newName)> onRequestNameChange;
 
@@ -72,11 +74,15 @@ private:
     int trackIndex = -1; // Track index for this channel strip (Written by Claude Code)
     juce::Colour stripColor; // Background color for this strip (Written by Claude Code)
     juce::TextButton muteButton, soloButton, recordButton;
+    juce::TextButton instrumentButton;
+    juce::Label insertsLabel;
+    juce::OwnedArray<juce::TextButton> insertSlots;
     juce::Label name;
     //ChannelMeter     meter;
     FaderComponent lnf;
     juce::Slider fader;
     juce::Slider pan;
+    te::AudioTrack* boundTrack { nullptr };
 
     te::VolumeAndPanPlugin* boundVnp { nullptr };
     bool ignoreSliderCallback { false };

@@ -7,6 +7,32 @@ ChannelStrip::ChannelStrip(juce::Colour color)
 {
     setOpaque (false);
 
+    addAndMakeVisible (&instrumentButton);
+    instrumentButton.setColour (juce::TextButton::buttonColourId, juce::Colour (0xFFADB5BD));
+    instrumentButton.setColour (juce::TextButton::textColourOffId, juce::Colour (0xFF343A40));
+
+    instrumentButton.setButtonText ("Instrument");
+
+    addAndMakeVisible (insertsLabel);
+    insertsLabel.setText ("INSERTS", juce::dontSendNotification);
+    insertsLabel.setJustificationType (juce::Justification::centred);
+    insertsLabel.setColour (juce::Label::textColourId, juce::Colour (0xFF212529));
+    insertsLabel.setFont (juce::Font (12.0f).boldened());
+
+    if (insertSlots.isEmpty())
+    {
+        for (int i = 0; i < 4; ++i)
+        {
+            auto* slot = new juce::TextButton();
+            slot->setButtonText (""); // empty slot look
+            slot->setColour (juce::TextButton::buttonColourId, juce::Colour (0xFFDDE0E3));
+            slot->setColour (juce::TextButton::textColourOffId, juce::Colour (0xFF343A40));
+            addAndMakeVisible (slot);
+            insertSlots.add (slot);
+        }
+    }
+
+
     for (auto* b : { &muteButton, &soloButton, &recordButton })
     {
         addAndMakeVisible (*b);
@@ -37,6 +63,13 @@ ChannelStrip::ChannelStrip(juce::Colour color)
     recordButton.setColour (juce::TextButton::buttonColourId, juce::Colours::darkgrey);
     recordButton.setColour (juce::TextButton::textColourOnId, juce::Colours::black);
     recordButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white);
+
+    instrumentButton.onClick = [this]
+    {
+        if (onOpenInstrumentEditor)
+            onOpenInstrumentEditor();
+    };
+
 
     // Notify TrackHeaderComponent listeners (safely via SafePointers) (Junie)
     muteButton.onClick = [this] {
@@ -164,6 +197,8 @@ void ChannelStrip::setArmed (const bool isArmed)
 
 void ChannelStrip::bindToTrack (te::AudioTrack& track)
 {
+    boundTrack = &track;
+
     boundVnp = track.getVolumePlugin();
     const double pos = boundVnp ? boundVnp->getSliderPos() : 0.0;
     const double gain = te::volumeFaderPositionToGain (pos);
@@ -179,6 +214,10 @@ void ChannelStrip::bindToTrack (te::AudioTrack& track)
         const double pos = te::gainToVolumeFaderPosition (gain);
         boundVnp->setSliderPos (pos);
     };
+
+    instrumentButton.setVisible (true);
+    insertsLabel.setVisible (true);
+    for (auto* s : insertSlots) s->setVisible (true);
 
     // Pan binding (Written by Claude Code)
     const float panValue = boundVnp ? boundVnp->getPan() : 0.0f;
@@ -196,6 +235,8 @@ void ChannelStrip::bindToTrack (te::AudioTrack& track)
 
 void ChannelStrip::bindToMaster (te::Edit& edit)
 {
+    boundTrack = nullptr;
+
     boundVnp = edit.getMasterVolumePlugin();
     const double pos = boundVnp->getSliderPos();
     const double gain = te::volumeFaderPositionToGain (pos);
@@ -211,6 +252,7 @@ void ChannelStrip::bindToMaster (te::Edit& edit)
         const double pos = te::gainToVolumeFaderPosition (gain);
         boundVnp->setSliderPos (pos);
     };
+    instrumentButton.setVisible (false);
 
     // Pan binding (Written by Claude Code)
     const float panValue = boundVnp ? boundVnp->getPan() : 0.0f;
@@ -280,6 +322,17 @@ void ChannelStrip::resized()
     // Match TrackHeaderComponent padding and dimensions (Written by Claude Code)
     auto r = getLocalBounds().reduced (5); // inner padding (matches TrackHeaderComponent)
 
+    // --- Track name at bottom ---
+    const int nameH = 24;
+    name.setBounds (r.removeFromBottom (nameH));
+
+    // --- Metrics ---
+    const int bigBtnH = 24;   // Instrument, M, S, R
+    const int gapS    = 4;
+    const int gapM    = 6;
+    const int labelH  = 16;
+    const int slotH   = 18;
+    const int slotGap = 2;
     // top controls stack
     auto top = r.removeFromTop (110);
     constexpr int btnRowH = 25; // matches TrackHeaderComponent button height
@@ -294,16 +347,48 @@ void ChannelStrip::resized()
     auto nameArea = r.removeFromBottom (nameH + nameGap);
     name.setBounds (nameArea.removeFromBottom (nameH));
 
-    // bottom area: fader + meter
-    auto bottom = r.removeFromBottom (r.getHeight()); // whatever remains
+    const int numSlots = insertSlots.size(); // typically 4
 
-    // meter
-    // const int meterW = juce::jmax(12, getWidth() / 9);
-    // auto meterArea = bottom.removeFromRight(meterW);
-    // meter.setBounds(meterArea.reduced(1, 6));
+    // compute exact needed height for the whole top stack:
+    const int topH =
+        /* Instrument */          bigBtnH +
+        gapS +
+        /* M */                   bigBtnH +
+        gapS +
+        /* S */                   bigBtnH +
+        gapS +
+        /* R */                   bigBtnH +
+        gapM +
+        /* INSERTS label */       labelH +
+        /* slots */               (numSlots > 0 ? (numSlots * slotH + (numSlots - 1) * slotGap) : 0);
 
-    bottom.removeFromRight (6);
+    auto top = r.removeFromTop (topH);
 
+    // --- Layout top stack ---
+    instrumentButton.setBounds (top.removeFromTop (bigBtnH));
+    top.removeFromTop (gapS);
+
+    muteButton.setBounds   (top.removeFromTop (bigBtnH));
+    top.removeFromTop (gapS);
+    soloButton.setBounds   (top.removeFromTop (bigBtnH));
+    top.removeFromTop (gapS);
+    recordButton.setBounds (top.removeFromTop (bigBtnH));
+    top.removeFromTop (gapM);
+
+    insertsLabel.setBounds (top.removeFromTop (labelH));
+
+    for (int i = 0; i < numSlots; ++i)
+    {
+        insertSlots[i]->setBounds (top.removeFromTop (slotH));
+        if (i < numSlots - 1) top.removeFromTop (slotGap);
+    }
+
+    // --- Pan + Fader fill the remaining area ---
+    auto body = r;
+    body.removeFromRight (6);
+    auto panArea = body.removeFromTop (48);
+    pan.setBounds (panArea.withSizeKeepingCentre (36, 36));
+    fader.setBounds (body.reduced (2, 8));
     // pan knob
     auto panArea = bottom.removeFromTop (48);
     pan.setBounds (panArea.withSizeKeepingCentre (50, 50));
