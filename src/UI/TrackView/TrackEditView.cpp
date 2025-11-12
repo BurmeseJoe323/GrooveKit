@@ -73,6 +73,9 @@ TrackEditView::TrackEditView (AppEngine& engine)
     addAndMakeVisible (viewport);
 
     setWantsKeyboardFocus (true);
+
+    // Start timer for UI updates (record button state, etc.)
+    startTimer (100);
 }
 
 TrackEditView::~TrackEditView ()
@@ -242,6 +245,16 @@ void TrackEditView::setupButtons ()
         recordShape.addEllipse (0.0f, 0.0f, 1.0f, 1.0f);
         recordButton.setShape (recordShape, true, true, false);
         recordButton.setColours (juce::Colours::red, juce::Colours::lightcoral, juce::Colours::maroon);
+        recordButton.onClick = [this] {
+            if (appEngine->isRecording())
+            {
+                appEngine->stopRecording();
+            }
+            else
+            {
+                appEngine->startRecording();
+            }
+        };
         addAndMakeVisible (recordButton);
     }
 
@@ -545,4 +558,25 @@ TrackEditView::PianoRollResizerBar::PianoRollResizerBar (juce::StretchableLayout
 
 TrackEditView::PianoRollResizerBar::~PianoRollResizerBar ()
 = default;
+
+void TrackEditView::timerCallback()
+{
+    // Update record button appearance based on recording state
+    const bool isRecording = appEngine->isRecording();
+
+    if (isRecording)
+    {
+        // Make record button brighter when recording
+        recordButton.setColours (juce::Colours::red.brighter (0.3f),
+                                 juce::Colours::lightcoral.brighter (0.3f),
+                                 juce::Colours::red.brighter (0.5f));
+    }
+    else
+    {
+        // Normal colors when not recording
+        recordButton.setColours (juce::Colours::red,
+                                 juce::Colours::lightcoral,
+                                 juce::Colours::maroon);
+    }
+}
 

@@ -117,6 +117,24 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
         refreshTrackStates();
     };
 
+    // Handle recording stopped: refresh clips on armed track
+    appEngine->onRecordingStopped = [this] {
+        const int armedIndex = appEngine->getArmedTrackIndex();
+        juce::Logger::writeToLog("[TrackListComponent] Recording stopped, armed track index: " + juce::String(armedIndex));
+
+        if (armedIndex >= 0 && armedIndex < tracks.size())
+        {
+            juce::Logger::writeToLog("[TrackListComponent] Rebuilding clips for track " + juce::String(armedIndex));
+            tracks[armedIndex]->rebuildClipsFromEngine();
+            tracks[armedIndex]->resized();
+            repaint();
+        }
+        else
+        {
+            juce::Logger::writeToLog("[TrackListComponent] Armed track index out of range: " + juce::String(armedIndex) + " (num tracks: " + juce::String(tracks.size()) + ")");
+        }
+    };
+
     // Handle BPM changes: maintain beat positions for loop range and playhead
     appEngine->onBpmChanged = [this](double oldBpm, double newBpm, t::TimeRange oldLoopRange, t::TimePosition oldPlayheadPos)
     {

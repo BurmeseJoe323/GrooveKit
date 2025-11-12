@@ -178,6 +178,12 @@ public:
     te::AudioTrack* getArmedTrack();
     std::function<void()> onArmedTrackChanged;
 
+    // Recording control
+    void startRecording();
+    void stopRecording();
+    bool isRecording() const;
+    std::function<void()> onRecordingStopped;
+
     void makeFourOscAuditionPatch (int trackIndex);
     void openInstrumentEditor (int trackIndex);
 

@@ -156,6 +156,35 @@ int AppEngine::getArmedTrackIndex () const
     return selectedTrackIndex;
 }
 
+void AppEngine::startRecording()
+{
+    if (selectedTrackIndex < 0)
+    {
+        juce::Logger::writeToLog("[Recording] Cannot start recording: no track armed");
+        return;
+    }
+
+    audioEngine->startRecording(*edit, selectedTrackIndex);
+}
+
+void AppEngine::stopRecording()
+{
+    juce::Logger::writeToLog("[AppEngine] Stopping recording...");
+    audioEngine->stopRecording(*edit);
+
+    // Give Tracktion a moment to finalize the clip creation
+    juce::MessageManager::callAsync([this]() {
+        juce::Logger::writeToLog("[AppEngine] Recording stopped, notifying listeners");
+        if (onRecordingStopped)
+            onRecordingStopped();
+    });
+}
+
+bool AppEngine::isRecording() const
+{
+    return audioEngine->isRecording();
+}
+
 void AppEngine::play() { audioEngine->play(); }
 
 void AppEngine::stop() { audioEngine->stop(); }

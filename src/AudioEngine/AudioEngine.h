@@ -28,6 +28,11 @@ public:
     juce::StringArray listMidiInputDevices() const;
     void logAvailableMidiDevices() const;
 
+    // Recording control
+    void startRecording(te::Edit& edit, int trackIndex);
+    void stopRecording(te::Edit& edit);
+    bool isRecording() const;
+
 private:
     te::Edit& edit;
     std::unique_ptr<MIDIEngine> midiEngine;

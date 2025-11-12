@@ -217,4 +217,106 @@ void AudioEngine::routeMidiToTrack(te::Edit& editToRoute, int trackIndex)
     Logger::writeToLog("[MIDI] Routed all MIDI inputs to track " + String(trackIndex));
 }
 
+void AudioEngine::startRecording(te::Edit& editToRecord, int trackIndex)
+{
+    Logger::writeToLog("[MIDI Recording] Start recording requested for track " + String(trackIndex));
+
+    auto tracks = te::getAudioTracks(editToRecord);
+    if (trackIndex < 0 || trackIndex >= tracks.size())
+    {
+        Logger::writeToLog("[MIDI Recording] Invalid track index: " + String(trackIndex));
+        return;
+    }
+
+    auto* track = tracks[trackIndex];
+    Logger::writeToLog("[MIDI Recording] Target track: " + track->getName());
+
+    // Enable recording on all MIDI input devices for the target track
+    int deviceCount = 0;
+    for (auto* instance : editToRecord.getAllInputDevices())
+    {
+        if (instance->getInputDevice().getDeviceType() == te::InputDevice::physicalMidiDevice)
+        {
+            Logger::writeToLog("[MIDI Recording] Enabling recording on device: " + instance->getInputDevice().getName());
+            instance->setRecordingEnabled(track->itemID, true);
+            deviceCount++;
+        }
+    }
+    Logger::writeToLog("[MIDI Recording] Enabled recording on " + String(deviceCount) + " MIDI input devices");
+
+    // Position transport at loop start if looping
+    auto& transport = editToRecord.getTransport();
+    if (transport.looping)
+    {
+        Logger::writeToLog("[MIDI Recording] Positioning at loop start");
+        transport.setPosition(transport.getLoopRange().getStart());
+    }
+
+    // Start recording via transport (this starts playback + recording)
+    if (!transport.isRecording())
+    {
+        Logger::writeToLog("[MIDI Recording] Starting transport in record mode");
+        transport.record(false);  // false = don't do punch-in/out
+    }
+    else
+    {
+        Logger::writeToLog("[MIDI Recording] Transport already recording");
+    }
+
+    Logger::writeToLog("[MIDI Recording] Started recording on track " + String(trackIndex) + " (" + track->getName() + ")");
+}
+
+void AudioEngine::stopRecording(te::Edit& editToStop)
+{
+    Logger::writeToLog("[MIDI Recording] Stopping recording...");
+
+    auto& transport = editToStop.getTransport();
+
+    // Stop transport recording (this will finalize any recorded clips)
+    if (transport.isRecording())
+    {
+        Logger::writeToLog("[MIDI Recording] Stopping transport recording");
+        transport.stop(false, false);  // Stop transport completely
+    }
+
+    // Disable recording on all MIDI input devices
+    for (auto* instance : editToStop.getAllInputDevices())
+    {
+        if (instance->getInputDevice().getDeviceType() == te::InputDevice::physicalMidiDevice)
+        {
+            // Clear recording state by disabling recording on all tracks
+            for (auto* track : te::getAudioTracks(editToStop))
+            {
+                if (instance->isRecordingEnabled(track->itemID))
+                {
+                    Logger::writeToLog("[MIDI Recording] Disabling recording on track: " + track->getName());
+                    instance->setRecordingEnabled(track->itemID, false);
+                }
+            }
+        }
+    }
+
+    // Log clip count for debugging
+    auto tracks = te::getAudioTracks(editToStop);
+    for (int i = 0; i < tracks.size(); ++i)
+    {
+        auto* track = tracks[i];
+        int clipCount = 0;
+        for (auto* clip : track->getClips())
+        {
+            if (auto* midiClip = dynamic_cast<te::MidiClip*>(clip))
+                clipCount++;
+        }
+        Logger::writeToLog("[MIDI Recording] Track " + String(i) + " (" + track->getName() + ") has " + String(clipCount) + " MIDI clips");
+    }
+
+    Logger::writeToLog("[MIDI Recording] Recording stopped");
+}
+
+bool AudioEngine::isRecording() const
+{
+    // Check if the transport is in recording mode
+    return edit.getTransport().isRecording();
+}
+
 
