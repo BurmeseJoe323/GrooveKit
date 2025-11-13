@@ -133,7 +133,7 @@ void TrackEditView::resized ()
 bool TrackEditView::keyPressed (const juce::KeyPress& key_press)
 {
     // The note keys are being handled by keyStateChanged, so we'll just say that the event is consumed
-    if (appEngine->getMidiListener().getNoteKeys().contains (key_press.getKeyCode()))
+    if (appEngine->getMidiListener()->getNoteKeys().contains (key_press.getKeyCode()))
         return true;
 
     if (key_press == juce::KeyPress::spaceKey)
@@ -151,7 +151,7 @@ bool TrackEditView::keyPressed (const juce::KeyPress& key_press)
     }
 
     // Let MidiListener handle octave changes (Z/X keys)
-    if (appEngine->getMidiListener().handleKeyPress(key_press))
+    if (appEngine->getMidiListener()->handleKeyPress(key_press))
         return true;
 
     // This is the top level of our application, so if the key press has not been consumed,
@@ -161,7 +161,7 @@ bool TrackEditView::keyPressed (const juce::KeyPress& key_press)
 
 bool TrackEditView::keyStateChanged (bool isKeyDown)
 {
-    return appEngine->getMidiListener().handleKeyStateChanged(isKeyDown);
+    return appEngine->getMidiListener()->handleKeyStateChanged(isKeyDown);
 }
 
 void TrackEditView::parentHierarchyChanged()

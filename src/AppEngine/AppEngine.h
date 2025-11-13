@@ -145,7 +145,6 @@ public:
 
     AudioEngine& getAudioEngine();
     MIDIEngine& getMidiEngine();
-    MidiListener& getMidiListener() const { return *midiListener; }
     juce::AudioProcessorValueTreeState& getAPVTS();
 
     EditViewState& getEditViewState();
@@ -240,6 +239,7 @@ private:
     std::unique_ptr<TrackManager> trackManager;
     std::unique_ptr<PluginManager> pluginManager;
     std::unique_ptr<MidiListener> midiListener;
+    std::unique_ptr<MidiListenerKeyAdapter> qwertyForwarder_;
 
     // Map from track index to its controller listener (TrackComponent) (Junie)
     juce::HashMap<int, TrackHeaderComponent::Listener*> trackListenerMap;
@@ -252,7 +252,6 @@ private:
     bool startedTransportForEditor_ = false;
 
     int lastSavedTxn = 0;
-    std::unique_ptr<MidiListenerKeyAdapter> qwertyForwarder_;
 
 
 
