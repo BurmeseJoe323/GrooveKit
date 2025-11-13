@@ -38,6 +38,9 @@ void MixerPanel::refreshTracks()
     auto& edit = appEngine.getEdit();
     auto audioTracks = te::getAudioTracks (edit);
 
+    DBG ("Mixer sees " << audioTracks.size() << " tracks");
+    for (auto* t : audioTracks)
+        DBG ("  " << t->getName());
     // Color palette matching TrackListComponent (Written by Claude Code)
     static const juce::Array<juce::Colour> trackColors {
         juce::Colour (0xffff6b6b),  // Red
@@ -55,13 +58,15 @@ void MixerPanel::refreshTracks()
     for (int i = 0; i < audioTracks.size(); ++i)
     {
         auto* t = audioTracks[i];
+
+        auto* strip = new ChannelStrip();
         const auto color = trackColors[i % trackColors.size()]; // Color based on index
         auto* strip = new ChannelStrip(color); // Pass color to constructor
         strip->setTrackIndex (i); // Track index for renaming (Written by Claude Code)
         strip->setTrackName (t->getName());
         strip->bindToTrack (*t);
 
-        // Reuse existing TrackComponent controller via AppEngine registry (Junie)
+        // Reuse existing TrackComponent controller via AppEngine registry
         if (auto* listener = appEngine.getTrackListener (i))
             strip->addListener (listener);
 
@@ -69,8 +74,16 @@ void MixerPanel::refreshTracks()
         strip->onRequestMuteChange = [this, idx = i] (bool mute) { appEngine.setTrackMuted (idx, mute); };
         strip->onRequestSoloChange = [this, idx = i] (bool solo) { appEngine.setTrackSoloed (idx, solo); };
         strip->onRequestArmChange = [this, idx = i] (bool armed) {
+        // Always update engine state if listeners aren't present (e.g. Track view not active)
+        strip->onRequestMuteChange = [this, idx = i] (bool mute) {
+            appEngine.setTrackMuted (idx, mute);
+        };
+        strip->onRequestSoloChange = [this, idx = i] (bool solo) {
+            appEngine.setTrackSoloed (idx, solo);
+        };
+        strip->onRequestArmChange = [this, idx = i] (bool armed) {
             const int currentSelected = appEngine.getArmedTrackIndex();
-            const int newSelected = armed ? idx : -1;
+            const int newSelected     = armed ? idx : -1;
             if (currentSelected != newSelected)
                 appEngine.setArmedTrack (newSelected);
         };
@@ -79,11 +92,11 @@ void MixerPanel::refreshTracks()
             appEngine.setTrackName (trackIndex, newName);
         };
 
-        strip->onOpenInstrumentEditor = [this, i]
-        {
-            appEngine.openInstrumentEditor(i);
+        strip->onOpenInstrumentEditor = [this, i] {
+            appEngine.openInstrumentEditor (i);
         };
 
+        // FX slots – click to open editor or choose FX if empty
         strip->onInsertSlotClicked = [this, i, strip] (int slotIndex)
         {
             appEngine.onFxInsertSlotClicked (
@@ -106,16 +119,27 @@ void MixerPanel::refreshTracks()
                 });
         };
 
-        // Initialize UI state from engine
+        // --- Initialise UI state from engine ---
         strip->setMuted (appEngine.isTrackMuted (i));
         strip->setSolo (appEngine.isTrackSoloed (i));
         strip->setArmed (appEngine.getArmedTrackIndex() == i);
 
+        strip->setInstrumentButtonText (
+            appEngine.getInstrumentLabelForTrack (i));
+
+        const int numSlots = strip->getNumInsertSlots();
+        for (int slot = 0; slot < numSlots; ++slot)
+        {
+            const auto label = appEngine.getInsertSlotLabel (i, slot);
+            strip->setInsertSlotName (slot, label);
+        }
+
+        addAndMakeVisible (strip);
         tracksContainer.addAndMakeVisible (strip); // Add to scrollable container
         trackStrips.add (strip);
     }
 
-    if (!audioTracks.isEmpty())
+    if (! audioTracks.isEmpty())
     {
         masterStrip = std::make_unique<ChannelStrip>(juce::Colours::dimgrey);
         masterStrip->setTrackName ("Master");
@@ -126,6 +150,7 @@ void MixerPanel::refreshTracks()
     resized();
     repaint();
 }
+
 
 void MixerPanel::refreshArmStates()
 {

@@ -61,6 +61,9 @@ public:
     // void setMeterPeak(float lin)       { meter.setPeak(lin); }
 
     void setInsertSlotName (int slotIndex, const juce::String& text);
+    void setInstrumentButtonText (const juce::String& text);
+    int getNumInsertSlots() const { return insertSlots.size(); }
+
 
 
     // Fallback callbacks used when TrackComponents (listeners) are not present (e.g., in Mix view) (Junie)

@@ -325,8 +325,23 @@ void ChannelStrip::bindToVolume (te::VolumeAndPanPlugin& vnp)
 
 void ChannelStrip::setInsertSlotName (int slotIndex, const juce::String& text)
 {
-    if (juce::isPositiveAndBelow (slotIndex, insertSlots.size()))
-        insertSlots[slotIndex]->setButtonText (text);
+    if (! juce::isPositiveAndBelow (slotIndex, insertSlots.size()))
+        return;
+
+    auto* button = insertSlots[slotIndex];
+    if (! button)
+        return;
+
+    button->setButtonText (text);
+}
+
+void ChannelStrip::setInstrumentButtonText (const juce::String& text)
+{
+    auto label = text;
+    if (label.isEmpty())
+        label = "Instrument";
+
+    instrumentButton.setButtonText (label);
 }
 
 void ChannelStrip::paint (juce::Graphics& g)

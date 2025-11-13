@@ -70,7 +70,7 @@ namespace
         for (auto& n : applePluginNameBlacklist)
             if (name == n.toLowerCase())
                 return true;
-        
+
         return true;
     }
 }
@@ -928,6 +928,10 @@ void AppEngine::showInstrumentChooser (int trackIndex)
             if (auto* track = trackManager->getTrack (trackIndex))
                 wireAllMidiInputsToTrack (*track);
 
+            // Notify UI that the instrument label should update
+            if (onInstrumentLabelChanged)
+                onInstrumentLabelChanged (trackIndex);
+
             openInstrumentEditor (trackIndex);
         }
     });
@@ -945,8 +949,8 @@ void AppEngine::onFxInsertSlotClicked (int trackIndex,
     if (!track)
         return;
 
-    // convention: instrument at index 0, FX slots start at plugin index 1
-    const int pluginIndex = slotIndex + 1;
+    constexpr int builtInOffset = 2;
+    const int pluginIndex = 1 + builtInOffset + slotIndex;
 
     te::Plugin* existing = nullptr;
     if (pluginIndex >= 0 && pluginIndex < track->pluginList.size())
@@ -1133,6 +1137,51 @@ void AppEngine::showFxInsertMenu (int trackIndex,
         }
     });
 
+}
+
+juce::String AppEngine::getInstrumentLabelForTrack (int trackIndex) const
+{
+    if (!trackManager)
+        return "Instrument";
+
+    if (auto* plug = trackManager->getInstrumentPluginOnTrack (trackIndex))
+    {
+        // Prefer external plugin name if it is one, else generic plugin name
+        if (auto* ext = dynamic_cast<te::ExternalPlugin*> (plug))
+            return ext->getName();
+
+        auto name = plug->getName();
+        if (name.isNotEmpty())
+            return name;
+    }
+
+    return "Instrument";
+}
+
+juce::String AppEngine::getInsertSlotLabel (int trackIndex, int slotIndex) const
+{
+    if (!trackManager)
+        return {};
+
+    auto* track = trackManager->getTrack (trackIndex);
+    if (!track)
+        return {};
+
+    constexpr int builtInOffset = 2;   // Volume&Pan + LevelMeter
+    const int pluginIndex = 1 + builtInOffset + slotIndex;
+
+    if (pluginIndex < 0 || pluginIndex >= track->pluginList.size())
+        return {};
+
+    if (auto* plug = track->pluginList[pluginIndex])
+    {
+        if (auto* ext = dynamic_cast<te::ExternalPlugin*> (plug))
+            return ext->getName();
+
+        return plug->getName();
+    }
+
+    return {};
 }
 
 bool AppEngine::addMidiClipToTrackAt(int trackIndex, t::TimePosition start, t::BeatDuration length)

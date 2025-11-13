@@ -2,7 +2,6 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
-// Forward declaration to avoid circular dependency (Written by Claude Code)
 class AppEngine;
 
 class TrackHeaderComponent final : public juce::Component,
@@ -46,20 +45,24 @@ public:
     void setTrackName (juce::String name);
     void setTrackType (TrackType type);
 
+    void setTrackIndex (int newIndex);
+    void setInstrumentLabel (const juce::String& text);
+
+    void refreshInstrumentButton();
+
     // Track index management (Written by Claude Code)
-    void setTrackIndex (int index) { trackIndex = index; }
     int getTrackIndex() const { return trackIndex; }
 
     // juce::Label::Listener implementation (Written by Claude Code)
     void labelTextChanged (juce::Label* labelThatHasChanged) override;
 
 private:
-    juce::TextButton instrumentButton{"Instrument"};
-    juce::TextButton instrumentMenuButton;
-    AppEngine& appEngine;
-    int trackIndex = -1; // Track index for this header (Written by Claude Code)
+    AppEngine* appEngine = nullptr;
 
-    juce::TextButton instrumentButton { "INST" };
+    int trackIndex { -1 };
+
+    juce::TextButton instrumentButton;
+    juce::TextButton instrumentMenuButton;
     juce::TextButton settingsButton { "..." };
     juce::TextButton muteTrackButton { "M" };
     juce::TextButton soloTrackButton { "S" };

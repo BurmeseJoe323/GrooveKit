@@ -183,6 +183,7 @@ public:
     int getArmedTrackIndex() const;
     te::AudioTrack* getArmedTrack();
     std::function<void()> onArmedTrackChanged;
+    std::function<void (int)> onInstrumentLabelChanged;
 
     // Recording control
     void toggleRecord();
@@ -220,6 +221,9 @@ public:
     void showFxInsertMenu (int trackIndex,
                            int slotIndex,
                            std::function<void (const juce::String&)> onSlotLabelChange);
+
+    juce::String getInstrumentLabelForTrack (int trackIndex) const;
+    juce::String getInsertSlotLabel       (int trackIndex, int slotIndex) const;
 
     PluginManager& getPluginManager() { return *pluginManager; }
 
