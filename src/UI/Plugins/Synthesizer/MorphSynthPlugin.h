@@ -80,7 +80,7 @@ public:
     juce::ValueTree saveToValueTree();
     void restoreFromValueTree (const juce::ValueTree&);
 
-    /** Panic/kill all active notes immediately. */
+    /** kill all active notes immediately. */
     void stopAllNotes();
 
     //==============================================================================
@@ -106,7 +106,7 @@ public:
 
 private:
     //==============================================================================
-    // MorphVoice::ParamsView implementation (voices read via string IDs)
+    // MorphVoice::ParamsView implementation
     //------------------------------------------------------------------------------
     float get   (const juce::String& id) const override;
     int   choice(const juce::String& id) const override;

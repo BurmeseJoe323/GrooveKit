@@ -1,6 +1,9 @@
 #include "PluginEditorWindow.h"
 using namespace juce;
 
+//==============================================================================
+// Factory methods
+
 std::unique_ptr<PluginEditorWindow>
 PluginEditorWindow::createFor(AudioPluginInstance& instance,
                               std::function<void()> onClose,
@@ -17,8 +20,12 @@ PluginEditorWindow::createFor(te::ExternalPlugin& ext,
 {
     if (auto* pi = ext.getAudioPluginInstance())
         return createFor(*pi, std::move(onClose), keyForward);
+
     return {};
 }
+
+//==============================================================================
+// Construction
 
 PluginEditorWindow::PluginEditorWindow(AudioPluginInstance& instance,
                                        std::function<void()> onClose,
@@ -33,6 +40,7 @@ PluginEditorWindow::PluginEditorWindow(AudioPluginInstance& instance,
 {
     setUsingNativeTitleBar(true);
 
+    // Create plugin editor UI (custom editor if available, otherwise generic)
     Component* editor = nullptr;
     if (inst.hasEditor())
         editor = inst.createEditorIfNeeded();
@@ -42,6 +50,7 @@ PluginEditorWindow::PluginEditorWindow(AudioPluginInstance& instance,
     jassert(editor != nullptr);
     setContentOwned(editor, true);
 
+    // Size & layout
     const int w = jmax(editor->getWidth(),  520);
     const int h = jmax(editor->getHeight(), 360);
     centreWithSize(w, h);
@@ -50,38 +59,44 @@ PluginEditorWindow::PluginEditorWindow(AudioPluginInstance& instance,
     setVisible(true);
     toFront(true);
 
-    // Make sure we actually receive key events
+    // Ensure the window receives keyboard focus
     setWantsKeyboardFocus(true);
     grabKeyboardFocus();
 
-    // Also let content bubble keys up to us
+    // Let the editor request keyboard focus
     if (auto* c = getContentComponent())
         c->setWantsKeyboardFocus(true);
 }
 
 PluginEditorWindow::~PluginEditorWindow() = default;
 
+//==============================================================================
+// Window behavior
+
 void PluginEditorWindow::closeButtonPressed()
 {
     setVisible(false);
-    if (onCloseCb) onCloseCb();
+    if (onCloseCb)
+        onCloseCb();
 }
 
-bool PluginEditorWindow::keyPressed (const KeyPress& kp)
+//==============================================================================
+// Keyboard event forwarding
+
+bool PluginEditorWindow::keyPressed(const KeyPress& kp)
 {
-    // Forward to client listener (e.g., MidiListener) first
+    // First allow external listener to consume the key if desired
     if (keyForwarder != nullptr && keyForwarder->keyPressed(kp, this))
         return true;
 
-    // Let plugin/editor handle it next
+    // Otherwise let JUCE/DocumentWindow handle it
     return DocumentWindow::keyPressed(kp);
 }
 
-bool PluginEditorWindow::keyStateChanged (bool isDown)
+bool PluginEditorWindow::keyStateChanged(bool isDown)
 {
     if (keyForwarder != nullptr && keyForwarder->keyStateChanged(isDown, this))
         return true;
 
     return DocumentWindow::keyStateChanged(isDown);
 }
-

@@ -1087,7 +1087,8 @@ void AppEngine::showFxInsertMenu (int trackIndex,
         if (idx < 0 || idx >= fxDescs.size())
             return;
 
-        const int insertIndex = slotIndex + 1; // keep 0 for instrument
+        constexpr int kBuiltInUtilityCount = 2;
+        const int insertIndex = 1 + kBuiltInUtilityCount + slotIndex;
 
         // Insert the FX plugin via TrackManager / PluginManager
         te::Plugin* plugin = trackManager->insertExternalEffect (
@@ -1167,7 +1168,7 @@ juce::String AppEngine::getInsertSlotLabel (int trackIndex, int slotIndex) const
     if (!track)
         return {};
 
-    constexpr int builtInOffset = 2;   // Volume&Pan + LevelMeter
+    constexpr int builtInOffset = 2;
     const int pluginIndex = 1 + builtInOffset + slotIndex;
 
     if (pluginIndex < 0 || pluginIndex >= track->pluginList.size())

@@ -221,34 +221,49 @@ te::Plugin* TrackManager::getInstrumentPluginOnTrack (int trackIndex)
 
     if (auto* track = getTrack (trackIndex))
     {
-        for (auto* plug : track->pluginList.getPlugins())
+        if (track->pluginList.size() == 0)
+            return nullptr;
+
+        // We only ever treat slot 0 as "the instrument"
+        te::Plugin* plug = track->pluginList[0];
+        if (plug == nullptr)
+            return nullptr;
+
+        // Built-in instruments
+        if (auto* morph = dynamic_cast<MorphSynthPlugin*> (plug))
+            return morph;
+
+        if (auto* four = dynamic_cast<te::FourOscPlugin*> (plug))
+            return four;
+
+        // External instrument (VST, AU, etc.)
+        if (auto* ext = dynamic_cast<te::ExternalPlugin*> (plug))
         {
-            if (!plug) continue;
-
-            // Built-in example:
-            if (auto* four = dynamic_cast<te::FourOscPlugin*> (plug))
-                return four;
-
-            // External plugins: treat as instrument if JUCE reports instrument or accepts MIDI
-            if (auto* ext = dynamic_cast<te::ExternalPlugin*> (plug))
+            if (auto* pi = ext->getAudioPluginInstance())
             {
-                if (auto* pi = ext->getAudioPluginInstance())
-                {
-                    const bool isInstr = pi->getPluginDescription().isInstrument || pi->acceptsMidi();
-                    if (isInstr)
-                        return plug;
-                }
-                else
-                {
-                    // Instance not ready yet; first plugin at index 0 is the instrument we inserted
-                    if (track->pluginList[0] == plug)
-                        return plug;
-                }
+                const auto& desc = pi->getPluginDescription();
+                const bool isInstr = desc.isInstrument || pi->acceptsMidi();
+
+                // Only treat it as an instrument if it *really* behaves like one
+                if (isInstr)
+                    return plug;
+
+                // Not an instrument → ignore, behave as "no instrument"
+                return nullptr;
             }
+
+            // Instance not created yet, but if we inserted an external instrument
+            // we always put it at index 0, so treat this as the instrument.
+            return plug;
         }
+
+        // Anything else at slot 0 isn't considered an instrument
+        return nullptr;
     }
+
     return nullptr;
 }
+
 
 te::Plugin* TrackManager::insertExternalInstrument (int trackIndex, const juce::PluginDescription& desc)
 {
