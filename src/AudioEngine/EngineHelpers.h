@@ -26,11 +26,12 @@ namespace EngineHelpers
     /**
      * @brief Toggles the recording state on the edit's transport.
      *
-     * If currently recording, stops recording and keeps the recorded clips (does not discard).
+     * If currently recording, stops recording and creates clips from recorded data.
      * If not recording, starts recording on all armed tracks.
      *
-     * This function uses the correct transport.stop() parameters to preserve recordings,
-     * which is critical for clip creation. Calling stop(true, false) would discard recordings.
+     * NOTE: Using stop(false, false) to KEEP recordings and create clips.
+     * The official Tracktion examples use stop(true, false) which discards recordings,
+     * but that doesn't work for us. Testing with keep=false to see if clips are created.
      *
      * @param edit The edit whose transport to control.
      */
@@ -39,7 +40,7 @@ namespace EngineHelpers
         auto& transport = edit.getTransport();
 
         if (transport.isRecording())
-            transport.stop(false, false);  // false = keep recordings (create clips)
+            transport.stop(false, false);  // false = KEEP recordings, create clips
         else
             transport.record(false);       // Start recording
     }

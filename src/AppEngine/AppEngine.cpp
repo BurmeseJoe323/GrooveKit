@@ -29,7 +29,11 @@ AppEngine::AppEngine()
     audioEngine->initialiseDefaults (48000.0, 512);
 
     // Setup MIDI input devices using Tracktion's InputDevice system
+    // CRITICAL: This must be called BEFORE restartPlayback() to ensure proper MIDI routing
     audioEngine->setupMidiInputDevices(*edit);
+
+    // Now restart playback with MIDI devices properly enabled
+    edit->restartPlayback();
 }
 
 AppEngine::~AppEngine()
@@ -91,7 +95,7 @@ void AppEngine::createOrLoadEdit()
     edit->clickTrackEmphasiseBars = true;  // Emphasize downbeats with different click sample
 
     markSaved();
-    edit->restartPlayback();
+    // NOTE: restartPlayback() moved to AppEngine constructor after MIDI setup
 }
 
 void AppEngine::newUntitledEdit()
@@ -164,6 +168,10 @@ int AppEngine::getArmedTrackIndex () const
 
 void AppEngine::toggleRecord()
 {
+    static int appEngineCallCount = 0;
+    appEngineCallCount++;
+    juce::Logger::writeToLog("[AppEngine] toggleRecord() called (call #" + juce::String(appEngineCallCount) + ")");
+
     if (selectedTrackIndex < 0 && !isRecording())
     {
         juce::Logger::writeToLog("[Recording] Cannot start recording: no track armed");
@@ -171,9 +179,13 @@ void AppEngine::toggleRecord()
     }
 
     bool wasRecording = isRecording();
+    juce::Logger::writeToLog("[AppEngine] Before toggle: isRecording=" + juce::String(wasRecording ? "TRUE" : "FALSE"));
 
     // Toggle recording using EngineHelpers
     audioEngine->toggleRecord(*edit);
+
+    bool nowRecording = isRecording();
+    juce::Logger::writeToLog("[AppEngine] After toggle: isRecording=" + juce::String(nowRecording ? "TRUE" : "FALSE"));
 
     // If we just stopped recording, notify listeners
     if (wasRecording)
@@ -485,6 +497,8 @@ bool AppEngine::loadEditFromFile (const juce::File& file)
     audioEngine = std::make_unique<AudioEngine> (*edit, *engine);
     audioEngine->initialiseDefaults (48000.0, 512);
     audioEngine->setupMidiInputDevices(*edit);
+
+    edit->restartPlayback();  // Rebuild playback graph with MIDI devices enabled
 
     for (auto* track : te::getAudioTracks (*edit))
     {
