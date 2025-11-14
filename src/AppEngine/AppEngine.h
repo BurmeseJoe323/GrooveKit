@@ -125,14 +125,115 @@ public:
     bool isTrackSoloed (int index) const;
     bool anyTrackSoloed() const;
 
+    //==============================================================================
+    // Transport and Tempo
+
     double getBpm() const;
     void setBpm (double newBpm);
 
-    // Metronome/Click Track controls
+    //==============================================================================
+    // Metronome Control
+
+    /**
+     * @brief Enables or disables the metronome/click track.
+     *
+     * @param enabled True to enable, false to disable.
+     */
     void setClickTrackEnabled (bool enabled);
+
+    /**
+     * @brief Returns whether the metronome/click track is enabled.
+     *
+     * @return True if enabled, false otherwise.
+     */
     bool isClickTrackEnabled() const;
+
+    /**
+     * @brief Sets whether the metronome plays only during recording.
+     *
+     * @param recordingOnly True to play only during recording, false to play always.
+     */
     void setClickTrackRecordingOnly (bool recordingOnly);
+
+    /**
+     * @brief Returns whether the metronome plays only during recording.
+     *
+     * @return True if recording-only mode is enabled, false otherwise.
+     */
     bool isClickTrackRecordingOnly() const;
+
+    //==============================================================================
+    // Track Arming and Recording Control
+
+    /**
+     * @brief Arms a track for recording by routing MIDI inputs to it.
+     *
+     * When a track is armed:
+     *  - All physical MIDI input devices are routed to the track
+     *  - The track is pre-armed for recording (setRecordingEnabled called)
+     *  - Live MIDI monitoring is enabled (automatic monitor mode)
+     *
+     * Calling this with the same index multiple times is a no-op. To disarm a track,
+     * arm a different track or pass -1.
+     *
+     * @param index The 0-based track index to arm, or -1 to disarm all tracks.
+     */
+    void setArmedTrack (int index);
+
+    /**
+     * @brief Returns the index of the currently armed track.
+     *
+     * @return The armed track index, or -1 if no track is armed.
+     */
+    int getArmedTrackIndex() const;
+
+    /**
+     * @brief Returns a pointer to the currently armed track.
+     *
+     * @return Pointer to the armed AudioTrack, or nullptr if no track is armed.
+     */
+    te::AudioTrack* getArmedTrack();
+
+    /**
+     * @brief Callback invoked when the armed track changes.
+     *
+     * UI components can register this callback to update visual state
+     * when track arming changes.
+     */
+    std::function<void()> onArmedTrackChanged;
+
+    /**
+     * @brief Toggles the recording state.
+     *
+     * If not recording:
+     *  - Starts recording on the currently armed track (if any)
+     *  - Automatically starts transport if not already playing
+     *  - Positions at loop start if looping is enabled
+     *
+     * If recording:
+     *  - Stops recording and keeps recorded clips (does not discard)
+     *  - Calls onRecordingStopped callback asynchronously after clip finalization
+     *
+     * This method validates that a track is armed before allowing recording to start.
+     */
+    void toggleRecord();
+
+    /**
+     * @brief Returns whether recording is currently active.
+     *
+     * @return True if recording, false otherwise.
+     */
+    bool isRecording() const;
+
+    /**
+     * @brief Callback invoked after recording stops and clips are finalized.
+     *
+     * This is called asynchronously (via MessageManager::callAsync) to allow
+     * Tracktion time to create and finalize clips before UI updates.
+     *
+     * UI components can register this callback to refresh clip displays after recording.
+     */
+    std::function<void()> onRecordingStopped;
 
     TrackManager& getTrackManager()       { return *trackManager; }
     TrackManager* getTrackManagerPtr()    { return trackManager.get(); }
@@ -172,16 +273,6 @@ public:
     void registerTrackListener (int index, TrackHeaderComponent::Listener* l);
     void unregisterTrackListener (int index, TrackHeaderComponent::Listener* l);
     [[nodiscard]] TrackHeaderComponent::Listener* getTrackListener (int index) const;
-
-    void setArmedTrack (int index);
-    int getArmedTrackIndex() const;
-    te::AudioTrack* getArmedTrack();
-    std::function<void()> onArmedTrackChanged;
-
-    // Recording control
-    void toggleRecord();
-    bool isRecording() const;
-    std::function<void()> onRecordingStopped;
 
     void makeFourOscAuditionPatch (int trackIndex);
     void openInstrumentEditor (int trackIndex);

@@ -6,6 +6,9 @@
 #include "PopupWindows/OutputDevice/OutputDeviceWindow.h"
 #include <regex>
 
+//==============================================================================
+// Helper Functions
+
 // Helper for styling the menu buttons
 void styleMenuButton (juce::TextButton& button)
 {
@@ -13,6 +16,9 @@ void styleMenuButton (juce::TextButton& button)
     button.setColour (juce::TextButton::textColourOffId, juce::Colours::lightgrey);
     button.setColour (juce::TextButton::textColourOnId, juce::Colours::white);
 }
+
+//==============================================================================
+// Construction / Destruction
 
 TrackEditView::TrackEditView (AppEngine& engine)
 {
@@ -85,6 +91,9 @@ TrackEditView::~TrackEditView ()
     juce::MenuBarModel::setMacMainMenu (nullptr);
     #endif
 }
+
+//==============================================================================
+// Component Overrides
 
 void TrackEditView::paint (juce::Graphics& g)
 {
@@ -207,6 +216,9 @@ void TrackEditView::mouseDown (const juce::MouseEvent& e)
     juce::Component::mouseDown(e);
 }
 
+//==============================================================================
+// UI Setup
+
 void TrackEditView::setupButtons ()
 {
     // --- Left Controls ---
@@ -269,6 +281,9 @@ void TrackEditView::setupButtons ()
             onOpenMix();
     };
 }
+
+//==============================================================================
+// Menu Bar Implementation
 
 juce::StringArray TrackEditView::getMenuBarNames ()
 {
@@ -553,6 +568,9 @@ TrackEditView::PianoRollResizerBar::PianoRollResizerBar (juce::StretchableLayout
 TrackEditView::PianoRollResizerBar::~PianoRollResizerBar ()
 = default;
 
+//==============================================================================
+// Timer Callback (Recording Visual Feedback)
+
 void TrackEditView::timerCallback()
 {
     // Update record button appearance based on recording state
@@ -560,7 +578,7 @@ void TrackEditView::timerCallback()
 
     if (isRecording)
     {
-        // Make record button brighter when recording
+        // Make record button brighter when recording for visual feedback
         recordButton.setColours (juce::Colours::red.brighter (0.3f),
                                  juce::Colours::lightcoral.brighter (0.3f),
                                  juce::Colours::red.brighter (0.5f));

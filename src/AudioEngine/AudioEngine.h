@@ -6,37 +6,202 @@
 
 namespace te = tracktion::engine;
 
+/**
+ * @brief Manages audio playback, device configuration, and MIDI input routing.
+ *
+ * AudioEngine wraps Tracktion's device manager and transport control, providing
+ * a simplified interface for:
+ *  - Audio output device enumeration and selection
+ *  - Transport control (play, stop, recording)
+ *  - MIDI input device management and routing
+ *  - Default audio configuration (48kHz sample rate, 512 buffer size)
+ *
+ * This class is owned by AppEngine and coordinates with MIDIEngine for clip management.
+ */
 class AudioEngine
 {
 public:
+    //==============================================================================
+    // Construction / Destruction
+
+    /**
+     * @brief Constructs the AudioEngine.
+     *
+     * @param editRef Reference to the Tracktion Edit to control.
+     * @param engine Reference to the Tracktion Engine instance.
+     */
     AudioEngine (te::Edit& editRef, te::Engine& engine);
+
+    /** Destructor. */
     ~AudioEngine();
 
+    //==============================================================================
+    // Transport Control
+
+    /**
+     * @brief Starts playback from the current position or loop start.
+     *
+     * If looping is enabled, playback starts from the loop range start position.
+     * Otherwise, playback continues from the current playhead position.
+     */
     void play();
+
+    /**
+     * @brief Stops playback and silences all active notes.
+     *
+     * This stops the transport and sends note-off messages to all MorphSynth
+     * plugins to prevent stuck notes.
+     */
     void stop();
+
+    /**
+     * @brief Returns whether the transport is currently playing.
+     *
+     * @return True if playing, false otherwise.
+     */
     bool isPlaying() const;
 
+    //==============================================================================
+    // Audio Device Management
+
+    /**
+     * @brief Lists all available audio output devices.
+     *
+     * @return Array of output device names.
+     */
     juce::StringArray listOutputDevices() const;
+
+    /**
+     * @brief Sets the audio output device by name.
+     *
+     * @param deviceName The name of the output device to use.
+     * @return True if the device was successfully set, false otherwise.
+     */
     bool setOutputDeviceByName (const juce::String& deviceName);
+
+    /**
+     * @brief Resets to the system's default audio output device.
+     *
+     * @return True if successful, false otherwise.
+     */
     bool setDefaultOutputDevice();
+
+    /**
+     * @brief Returns the name of the currently active output device.
+     *
+     * @return The current output device name, or empty string if none.
+     */
     juce::String getCurrentOutputDeviceName() const;
+
+    /**
+     * @brief Provides access to the underlying JUCE AudioDeviceManager.
+     *
+     * @return Reference to the AudioDeviceManager.
+     */
     juce::AudioDeviceManager& getAudioDeviceManager();
+
+    /**
+     * @brief Initializes the audio device manager with default settings.
+     *
+     * Sets up CoreAudio (macOS) with the specified sample rate and buffer size.
+     * Logs available MIDI input devices on startup.
+     *
+     * @param sampleRate Target sample rate (default: 48000 Hz).
+     * @param bufferSize Target buffer size (default: 512 samples).
+     */
     void initialiseDefaults (double sampleRate = 48000.0, int bufferSize = 512);
 
-    // MIDI Input device management (Tracktion InputDevice system)
+    //==============================================================================
+    // MIDI Input Device Management
+
+    /**
+     * @brief Enables all MIDI input devices for the specified edit.
+     *
+     * Sets all physical MIDI input devices to enabled and configures them with
+     * automatic monitor mode (monitors when stopped, silent during playback/recording).
+     * Also ensures the transport context is allocated for recording readiness.
+     *
+     * This should be called once during edit initialization.
+     *
+     * @param edit The edit to configure MIDI devices for.
+     */
     void setupMidiInputDevices(te::Edit& edit);
+
+    /**
+     * @brief Routes all MIDI input devices to a specific track and pre-arms it.
+     *
+     * This sets the target track for all physical MIDI inputs and enables recording
+     * on those inputs, preparing the track to capture MIDI when recording starts.
+     * Follows Tracktion's MidiRecordingDemo pattern of pre-arming at track selection time.
+     *
+     * Calls restartPlayback() to rebuild the audio graph with the new routing.
+     *
+     * @param edit The edit containing the track.
+     * @param trackIndex The 0-based index of the track to route MIDI to.
+     */
     void routeMidiToTrack(te::Edit& edit, int trackIndex);
+
+    /**
+     * @brief Lists all available MIDI input devices.
+     *
+     * @return Array of MIDI input device names.
+     */
     juce::StringArray listMidiInputDevices() const;
+
+    /**
+     * @brief Logs all available MIDI input devices to the console.
+     *
+     * Useful for debugging MIDI connectivity issues.
+     */
     void logAvailableMidiDevices() const;
 
-    // Recording control (simplified - uses EngineHelpers)
+    //==============================================================================
+    // Recording Control
+
+    /**
+     * @brief Toggles recording state on the specified edit.
+     *
+     * If currently recording, stops and keeps recorded clips (does not discard).
+     * If not recording, starts recording on all armed tracks. Automatically positions
+     * the playhead at the loop start if looping is enabled before starting recording.
+     *
+     * Uses EngineHelpers::toggleRecord() to ensure correct transport parameters.
+     * Logs clip counts after stopping recording for diagnostic purposes.
+     *
+     * @param edit The edit to toggle recording on.
+     */
     void toggleRecord(te::Edit& edit);
+
+    /**
+     * @brief Returns whether the transport is currently recording.
+     *
+     * @return True if recording, false otherwise.
+     */
     bool isRecording() const;
 
 private:
-    te::Edit& edit;
-    std::unique_ptr<MIDIEngine> midiEngine;
-    te::Engine& engine;
+    //==============================================================================
+    // Internal Methods
+
+    /**
+     * @brief Provides access to the JUCE AudioDeviceManager.
+     *
+     * @return Reference to the device manager from the Tracktion engine.
+     */
     juce::AudioDeviceManager& adm() const;
+
+    /**
+     * @brief Applies a new audio device setup configuration.
+     *
+     * @param setup The audio device setup to apply.
+     * @return True if successful, false if an error occurred.
+     */
     bool applySetup (const juce::AudioDeviceManager::AudioDeviceSetup& setup);
+
+    //==============================================================================
+    // Member Variables
+
+    te::Edit& edit;                            ///< Reference to the Tracktion Edit (not owned).
+    std::unique_ptr<MIDIEngine> midiEngine;    ///< MIDI clip management engine.
+    te::Engine& engine;                        ///< Reference to the Tracktion Engine (not owned).
 };

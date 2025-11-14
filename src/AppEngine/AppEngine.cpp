@@ -71,6 +71,9 @@ TrackHeaderComponent::Listener* AppEngine::getTrackListener (const int index) co
     return nullptr;
 }
 
+//==============================================================================
+// Edit Management
+
 void AppEngine::createOrLoadEdit()
 {
     auto baseDir = juce::File::getSpecialLocation (juce::File::userDocumentsDirectory)
@@ -130,6 +133,9 @@ void AppEngine::newUntitledEdit()
 
     edit->restartPlayback();
 }
+
+//==============================================================================
+// Track Arming and Recording Control
 
 void AppEngine::setArmedTrack (int index)
 {
@@ -194,6 +200,9 @@ bool AppEngine::isRecording() const
 {
     return audioEngine->isRecording();
 }
+
+//==============================================================================
+// Transport Control
 
 void AppEngine::play() { audioEngine->play(); }
 

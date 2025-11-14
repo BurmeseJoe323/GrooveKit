@@ -7,6 +7,9 @@ namespace t = tracktion;
 using namespace std::literals;
 using namespace t::literals;
 
+//==============================================================================
+// Construction / Destruction
+
 AudioEngine::AudioEngine(te::Edit& editRef, te::Engine& engine)
     : edit(editRef), engine(engine)
 {
@@ -14,6 +17,9 @@ AudioEngine::AudioEngine(te::Edit& editRef, te::Engine& engine)
 }
 
 AudioEngine::~AudioEngine() = default;
+
+//==============================================================================
+// Transport Control
 
 void AudioEngine::play()
 {
@@ -38,6 +44,9 @@ void AudioEngine::stop() {
 }
 
 bool AudioEngine::isPlaying() const { return edit.getTransport().isPlaying(); }
+
+//==============================================================================
+// Audio Device Management
 
 AudioDeviceManager& AudioEngine::adm() const
 {
@@ -145,6 +154,9 @@ bool AudioEngine::applySetup (const AudioDeviceManager::AudioDeviceSetup& newSet
     return true;
 }
 
+//==============================================================================
+// MIDI Input Device Management
+
 StringArray AudioEngine::listMidiInputDevices() const
 {
     StringArray deviceNames;
@@ -224,6 +236,9 @@ void AudioEngine::routeMidiToTrack(te::Edit& editToRoute, int trackIndex)
 
     Logger::writeToLog("[MIDI] Routed and pre-armed all MIDI inputs to track " + String(trackIndex));
 }
+
+//==============================================================================
+// Recording Control
 
 void AudioEngine::toggleRecord(te::Edit& editToRecord)
 {
