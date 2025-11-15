@@ -3,6 +3,7 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "TrackView/TrackEditView.h"
 #include "MixView/MixView.h"
+#include "TransportBar/TransportBar.h"
 #include "../AppEngine/AppEngine.h"
 
 class MainComponent final : public juce::Component
@@ -21,4 +22,5 @@ private:
 
     std::unique_ptr<juce::Component> view;
     AppEngine appEngine;
+    std::unique_ptr<TransportBar> transportBar; // Written by Claude Code
 };

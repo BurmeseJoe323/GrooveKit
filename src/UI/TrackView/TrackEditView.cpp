@@ -1,5 +1,6 @@
 // Note: Junie (JetBrains AI) contributed code to this file on 2025-09-24.
 #include "TrackEditView.h"
+#include "../TransportBar/TransportBar.h"
 #include "MidiListener.h"
 #include "../../AppEngine/AppEngine.h"
 #include "../../AppEngine/ValidationUtils.h"
@@ -14,11 +15,15 @@ void styleMenuButton (juce::TextButton& button)
     button.setColour (juce::TextButton::textColourOnId, juce::Colours::white);
 }
 
-TrackEditView::TrackEditView (AppEngine& engine)
+TrackEditView::TrackEditView (AppEngine& engine, TransportBar& transport)
+    : transportBar(&transport)
 {
     appEngine = std::shared_ptr<AppEngine> (&engine,
         [](AppEngine*) {
         });
+
+    // Add transport bar at top (Written by Claude Code)
+    addAndMakeVisible (transportBar);
 
     #if JUCE_MAC
     // Use native macOS global menu bar
@@ -48,12 +53,10 @@ TrackEditView::TrackEditView (AppEngine& engine)
 
         hidePianoRoll();
 
-        bpmEditField.setText (juce::String (appEngine->getBpm()), juce::NotificationType::dontSendNotification);
+        transportBar->updateBpmDisplay();
 
         repaint();
     };
-
-    setupButtons();
 
     // Initialize and hide the piano roll editor
     pianoRoll = std::make_unique<PianoRollEditor> (*appEngine, -1);
@@ -73,9 +76,6 @@ TrackEditView::TrackEditView (AppEngine& engine)
     addAndMakeVisible (viewport);
 
     setWantsKeyboardFocus (true);
-
-    // Start timer for UI updates (record button state, etc.)
-    startTimer (100);
 }
 
 TrackEditView::~TrackEditView ()
@@ -88,54 +88,27 @@ TrackEditView::~TrackEditView ()
 
 void TrackEditView::paint (juce::Graphics& g)
 {
-    const auto topBarBounds = getLocalBounds().removeFromTop (40);
-    g.setColour (juce::Colour (0xFF212529)); // Even darker for top bar
-    g.fillRect (topBarBounds);
-    g.setColour (juce::Colours::black.withAlpha (0.2f));
-    g.drawHorizontalLine (topBarBounds.getBottom(), 0.0f, static_cast<float> (getWidth()));
+    // TransportBar now handles its own painting (Written by Claude Code)
 }
 
 void TrackEditView::resized ()
 {
     auto r = getLocalBounds();
+
+    // Position transport bar at top (Written by Claude Code)
     const auto topBar = r.removeFromTop (40);
-    viewport.setBounds (r);
+    transportBar->setBounds (topBar);
 
-    auto topBarContent = topBar.reduced (10, 0);
-
-    // --- Menu ---
+    // Position menu bar below transport bar on non-Mac platforms
+    #if !JUCE_MAC
     if (menuBar)
-        menuBar->setBounds (topBarContent.removeFromLeft (200));
+    {
+        const auto menuHeight = 24;
+        menuBar->setBounds (r.removeFromTop (menuHeight));
+    }
+    #endif
 
-    // --- Right side: Switch ---
-    const auto switchArea = topBarContent.removeFromRight (50);
-    switchButton.setBounds (switchArea);
-
-    // --- Center: Transport ---
-    auto centerArea = topBarContent;
-    bpmLabel.setBounds (centerArea.removeFromLeft (50));
-    auto valueArea = centerArea.removeFromLeft (50);
-    int deltaHeight = valueArea.getHeight() / 8;
-    valueArea.removeFromBottom (deltaHeight);
-    valueArea.removeFromTop (deltaHeight);
-    bpmEditField.setBounds (valueArea);
-
-    constexpr int buttonSize = 20;
-    constexpr int buttonGap = 10;
-    constexpr int transportWidth = (buttonSize * 3) + (buttonGap * 2);
-    auto transportBounds = centerArea.withSizeKeepingCentre (transportWidth, buttonSize);
-    stopButton.setBounds (transportBounds.removeFromLeft (buttonSize));
-    transportBounds.removeFromLeft (buttonGap);
-    playButton.setBounds (transportBounds.removeFromLeft (buttonSize));
-    transportBounds.removeFromLeft (buttonGap);
-    recordButton.setBounds (transportBounds.removeFromLeft (buttonSize));
-
-    // Metronome button to the right of transport controls
-    constexpr int metronomeWidth = 60;
-    auto metronomeArea = centerArea.removeFromRight (metronomeWidth).reduced (5, 8);
-    metronomeButton.setBounds (metronomeArea);
-
-    // Content area below top bar
+    // Content area below transport (and menu on non-Mac)
     // If the piano roll is hidden, just fill with the viewport and hide the resizer
     if (!pianoRoll || !pianoRoll->isVisible())
     {
@@ -207,68 +180,6 @@ void TrackEditView::mouseDown (const juce::MouseEvent& e)
     juce::Component::mouseDown(e);
 }
 
-void TrackEditView::setupButtons ()
-{
-    // --- Left Controls ---
-    addAndMakeVisible (bpmLabel);
-    bpmLabel.setText ("BPM:", juce::dontSendNotification);
-    bpmLabel.setColour (juce::Label::textColourId, juce::Colours::lightgrey);
-    bpmLabel.setJustificationType (juce::Justification::right);
-
-    addAndMakeVisible (bpmEditField);
-    bpmEditField.setText ("120", juce::dontSendNotification);
-    bpmEditField.setColour (juce::Label::textColourId, juce::Colours::lightgrey);
-    bpmEditField.setColour (juce::Label::outlineColourId, juce::Colours::lightgrey.brighter (0.5f));
-    bpmEditField.setColour (juce::Label::backgroundColourId, juce::Colours::darkgrey.darker ());
-    bpmEditField.setJustificationType (juce::Justification::centred);
-    bpmEditField.setEditable (true);
-    bpmEditField.addListener (this);
-    bpmEditField.setMouseCursor (juce::MouseCursor::IBeamCursor);
-
-    // --- Transport Buttons ---
-    {
-        juce::Path stopShape;
-        stopShape.addRectangle (0.0f, 0.0f, 1.0f, 1.0f);
-        stopButton.setShape (stopShape, true, true, false);
-        stopButton.setColours (juce::Colours::lightgrey, juce::Colours::white, juce::Colours::darkgrey);
-        stopButton.onClick = [this] { appEngine->stop(); };
-        addAndMakeVisible (stopButton);
-
-        juce::Path playShape;
-        playShape.addTriangle (0.0f, 0.0f, 1.0f, 0.5f, 0.0f, 1.0f);
-        playButton.setShape (playShape, true, true, false);
-        playButton.setColours (juce::Colours::lightgrey, juce::Colours::white, juce::Colours::darkgrey);
-        playButton.onClick = [this] { appEngine->play(); };
-        addAndMakeVisible (playButton);
-
-        juce::Path recordShape;
-        recordShape.addEllipse (0.0f, 0.0f, 1.0f, 1.0f);
-        recordButton.setShape (recordShape, true, true, false);
-        recordButton.setColours (juce::Colours::red, juce::Colours::lightcoral, juce::Colours::maroon);
-        recordButton.onClick = [this] {
-            // Simply toggle record state - EngineHelpers handles the logic
-            appEngine->toggleRecord();
-        };
-        addAndMakeVisible (recordButton);
-    }
-
-    // --- Metronome Toggle ---
-    addAndMakeVisible (metronomeButton);
-    metronomeButton.setColour (juce::ToggleButton::textColourId, juce::Colours::lightgrey);
-    metronomeButton.setColour (juce::ToggleButton::tickColourId, juce::Colours::lightgreen);
-    metronomeButton.setToggleState (appEngine->isClickTrackEnabled(), juce::dontSendNotification);
-    metronomeButton.onClick = [this] {
-        appEngine->setClickTrackEnabled (metronomeButton.getToggleState());
-    };
-
-    // --- Right Switch ---
-    addAndMakeVisible (switchButton);
-    styleMenuButton (switchButton);
-    switchButton.onClick = [this] {
-        if (onOpenMix)
-            onOpenMix();
-    };
-}
 
 juce::StringArray TrackEditView::getMenuBarNames ()
 {
@@ -572,30 +483,6 @@ void TrackEditView::refreshClipEditState()
     }
 }
 
-void TrackEditView::labelTextChanged (juce::Label* labelThatHasChanged)
-{
-    if (labelThatHasChanged == &bpmEditField)
-    {
-        std::string text = labelThatHasChanged->getText().toStdString();
-
-        // Validate numeric input
-        if (!ValidationUtils::isValidNumeric(text))
-        {
-            labelThatHasChanged->setText (juce::String (appEngine->getBpm()), juce::NotificationType::dontSendNotification);
-            return;
-        }
-
-        // Convert to double and apply constraints/rounding
-        double bpmValue = std::stod(text);
-        bpmValue = ValidationUtils::constrainAndRoundBpm(bpmValue);
-
-        // Update label with constrained and rounded value
-        labelThatHasChanged->setText(juce::String(bpmValue, 2), juce::NotificationType::dontSendNotification);
-
-        // Update AppEngine with the constrained and rounded value
-        appEngine->setBpm(bpmValue);
-    }
-}
 
 void TrackEditView::PianoRollResizerBar::hasBeenMoved ()
 {
@@ -618,24 +505,4 @@ TrackEditView::PianoRollResizerBar::PianoRollResizerBar (juce::StretchableLayout
 TrackEditView::PianoRollResizerBar::~PianoRollResizerBar ()
 = default;
 
-void TrackEditView::timerCallback()
-{
-    // Update record button appearance based on recording state
-    const bool isRecording = appEngine->isRecording();
-
-    if (isRecording)
-    {
-        // Make record button brighter when recording
-        recordButton.setColours (juce::Colours::red.brighter (0.3f),
-                                 juce::Colours::lightcoral.brighter (0.3f),
-                                 juce::Colours::red.brighter (0.5f));
-    }
-    else
-    {
-        // Normal colors when not recording
-        recordButton.setColours (juce::Colours::red,
-                                 juce::Colours::lightcoral,
-                                 juce::Colours::maroon);
-    }
-}
 

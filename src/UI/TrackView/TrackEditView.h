@@ -12,18 +12,18 @@ namespace te = tracktion::engine;
 namespace t = tracktion;
 
 class AppEngine;
+class TransportBar;
 
 /**
  * Represents the track editor view, with functionality for adding and deleting tracks.
  * Each track contains a corresponding header, footer, and a series of MIDI clips.
  */
-class TrackEditView final : public juce::Component, public juce::MenuBarModel, public juce::Label::Listener, private juce::Timer
+class TrackEditView final : public juce::Component, public juce::MenuBarModel
 {
 public:
-    explicit TrackEditView (AppEngine& engine);
+    explicit TrackEditView (AppEngine& engine, TransportBar& transport);
     ~TrackEditView() override;
 
-    void setupButtons();
     void paint (juce::Graphics&) override;
     void resized() override;
     bool keyPressed (const juce::KeyPress&) override;
@@ -46,8 +46,6 @@ public:
 
     int getPianoRollIndex() const;
 
-    void labelTextChanged(juce::Label* labelThatHasChanged) override;
-
     class PianoRollResizerBar final : public juce::StretchableLayoutResizerBar
     {
     public:
@@ -60,6 +58,8 @@ public:
 
 private:
     std::shared_ptr<AppEngine> appEngine;
+    TransportBar* transportBar; // Non-owning pointer to shared transport bar (Written by Claude Code)
+
     std::unique_ptr<TrackListComponent> trackList;
     juce::Viewport viewport;
 
@@ -76,16 +76,6 @@ private:
     // --- Top Bar Components ---
     std::unique_ptr<juce::MenuBarComponent> menuBar;
 
-    // Center controls
-    juce::Label bpmLabel, bpmEditField;
-    juce::ShapeButton playButton { "play", {}, {}, {} };
-    juce::ShapeButton stopButton { "stop", {}, {}, {} };
-    juce::ShapeButton recordButton { "record", {}, {}, {} };
-    juce::ToggleButton metronomeButton { "Click" };
-
-    // Right side (placeholder)
-    juce::TextButton switchButton { "|||" };
-
     // Private helper methods for menu actions
     void showOutputDeviceSettings() const;
     void showNewEditMenu() const;
@@ -93,7 +83,6 @@ private:
 
     void parentHierarchyChanged() override;
     void mouseDown (const juce::MouseEvent&) override;
-    void timerCallback() override;
 
     juce::TextButton backButton { "Back" }, newEditButton { "New" },
         openEditButton { "Open Edit" }, newTrackButton { "New Track" }, outputButton { "Output Device" },

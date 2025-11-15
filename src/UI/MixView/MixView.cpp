@@ -1,15 +1,15 @@
 #pragma once
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "MixView.h"
+#include "../TransportBar/TransportBar.h"
 
-MixView::MixView(AppEngine& engine)
-    : appEngine(engine)
+MixView::MixView(AppEngine& engine, TransportBar& transport)
+    : appEngine(engine), transportBar(&transport)
 {
     setOpaque(true);
 
-    addAndMakeVisible(backButton);
-    backButton.setButtonText("Track View");
-    backButton.onClick = [this]{ if (onBack) onBack(); };
+    // Add transport bar at top (Written by Claude Code)
+    addAndMakeVisible(transportBar);
 
     mixerPanel = std::make_unique<MixerPanel>(appEngine);
     addAndMakeVisible(*mixerPanel);
@@ -29,14 +29,14 @@ void MixView::paint (juce::Graphics& g) {
 
 void MixView::resized()
 {
-    auto bounds = getLocalBounds().reduced(outerMargin);
+    auto bounds = getLocalBounds();
 
-    auto topRow = bounds.removeFromTop(topBarHeight);
+    // Position transport bar at top (Written by Claude Code)
+    constexpr int transportHeight = 40;
+    transportBar->setBounds(bounds.removeFromTop(transportHeight));
 
-    const int btnW = 140, btnH = 36;
-    backButton.setBounds(topRow.removeFromRight(btnW).withY(topRow.getY() + (topBarHeight - btnH) / 2)
-                                        .withHeight(btnH).withWidth(btnW));
-
+    // Mixer panel fills remaining space with margin
+    bounds.reduce(outerMargin, outerMargin);
     mixerPanel->setBounds(bounds);
 }
 

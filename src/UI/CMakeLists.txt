@@ -28,6 +28,7 @@ add_library(app_ui
 target_sources(app_ui
         PRIVATE
         MainComponent.cpp MainComponent.h
+        TransportBar/TransportBar.cpp TransportBar/TransportBar.h
         TrackView/TrackEditView.cpp TrackView/TrackEditView.h
         TrackView/TrackComponent.cpp TrackView/TrackComponent.h
         TrackView/TrackHeaderComponent.cpp TrackView/TrackHeaderComponent.h

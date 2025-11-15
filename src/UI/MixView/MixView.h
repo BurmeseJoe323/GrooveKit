@@ -3,12 +3,14 @@
 #include "MixerPanel.h"
 #include "../../AppEngine/AppEngine.h"
 
+class TransportBar;
+
 class MixView : public juce::Component
 {
 public:
     using ToggleTracksCallback = std::function<void()>;
 
-    MixView(AppEngine& engine);
+    MixView(AppEngine& engine, TransportBar& transport);
     ~MixView();
 
     void paint(juce::Graphics& g) override;
@@ -26,10 +28,9 @@ public:
 
 private:
     AppEngine& appEngine;
-    juce::TextButton backButton;
+    TransportBar* transportBar; // Non-owning pointer to shared transport bar (Written by Claude Code)
     std::unique_ptr<MixerPanel> mixerPanel;
 
     int outerMargin = 16;
-    int topBarHeight = 48;
 };
 
