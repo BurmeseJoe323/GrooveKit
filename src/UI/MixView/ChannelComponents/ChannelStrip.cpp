@@ -163,6 +163,19 @@ void ChannelStrip::bindToTrack (te::AudioTrack& track)
         const double pos = te::gainToVolumeFaderPosition (gain);
         boundVnp->setSliderPos (pos);
     };
+
+    // Pan binding (Written by Claude Code)
+    const float panValue = boundVnp ? boundVnp->getPan() : 0.0f;
+    ignoreSliderCallback = true;
+    pan.setValue (panValue, juce::dontSendNotification);
+    ignoreSliderCallback = false;
+
+    pan.onValueChange = [this] {
+        if (!boundVnp || ignoreSliderCallback)
+            return;
+        const float panValue = (float) pan.getValue();
+        boundVnp->setPan (panValue);
+    };
 }
 
 void ChannelStrip::bindToMaster (te::Edit& edit)
@@ -182,6 +195,19 @@ void ChannelStrip::bindToMaster (te::Edit& edit)
         const double pos = te::gainToVolumeFaderPosition (gain);
         boundVnp->setSliderPos (pos);
     };
+
+    // Pan binding (Written by Claude Code)
+    const float panValue = boundVnp ? boundVnp->getPan() : 0.0f;
+    ignoreSliderCallback = true;
+    pan.setValue (panValue, juce::dontSendNotification);
+    ignoreSliderCallback = false;
+
+    pan.onValueChange = [this] {
+        if (!boundVnp || ignoreSliderCallback)
+            return;
+        const float panValue = (float) pan.getValue();
+        boundVnp->setPan (panValue);
+    };
 }
 
 void ChannelStrip::bindToVolume (te::VolumeAndPanPlugin& vnp)
@@ -200,6 +226,19 @@ void ChannelStrip::bindToVolume (te::VolumeAndPanPlugin& vnp)
         const double gain = (double) fader.getValue();
         const double pos = te::gainToVolumeFaderPosition (gain);
         boundVnp->setSliderPos (pos);
+    };
+
+    // Pan binding (Written by Claude Code)
+    const float panValue = boundVnp ? boundVnp->getPan() : 0.0f;
+    ignoreSliderCallback = true;
+    pan.setValue (panValue, juce::dontSendNotification);
+    ignoreSliderCallback = false;
+
+    pan.onValueChange = [this] {
+        if (!boundVnp || ignoreSliderCallback)
+            return;
+        const float panValue = (float) pan.getValue();
+        boundVnp->setPan (panValue);
     };
 }
 
