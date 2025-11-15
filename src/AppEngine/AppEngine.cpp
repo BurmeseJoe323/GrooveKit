@@ -32,11 +32,8 @@ AppEngine::AppEngine()
 
     audioEngine->initialiseDefaults (48000.0, 512);
 
-    // Auto-connect to first available MIDI input device (if any)
-    if (!listMidiInputDevices().isEmpty())
-    {
-        connectMidiInputDevice(0);
-    }
+    // Setup MIDI input devices using Tracktion's InputDevice system
+    audioEngine->setupMidiInputDevices(*edit);
 }
 
 AppEngine::~AppEngine()
@@ -92,6 +89,7 @@ void AppEngine::createOrLoadEdit()
 
     edit->editFileRetriever = [] { return juce::File {}; };
     edit->playInStopEnabled = true;
+    edit->clickTrackEmphasiseBars = true;  // Emphasize downbeats with different click sample
 
     markSaved();
     edit->restartPlayback();
@@ -115,6 +113,7 @@ void AppEngine::newUntitledEdit()
 
     edit->editFileRetriever = [placeholder] { return placeholder; };
     edit->playInStopEnabled = true;
+    edit->clickTrackEmphasiseBars = true;  // Emphasize downbeats with different click sample
 
     for (auto* t : te::getAudioTracks (*edit))
         edit->deleteTrack (t);
@@ -128,6 +127,7 @@ void AppEngine::newUntitledEdit()
     markSaved();
 
     audioEngine->initialiseDefaults (48000.0, 512);
+    audioEngine->setupMidiInputDevices(*edit);
 
     if (onEditLoaded)
         onEditLoaded();
@@ -142,6 +142,10 @@ void AppEngine::setArmedTrack (int index)
 
     selectedTrackIndex = index;
 
+    // Route MIDI to armed track (setTarget will update the routing automatically)
+    if (index >= 0)
+        audioEngine->routeMidiToTrack(*edit, index);
+
     if (onArmedTrackChanged)
         onArmedTrackChanged();
 }
@@ -154,6 +158,45 @@ te::AudioTrack* AppEngine::getArmedTrack ()
 int AppEngine::getArmedTrackIndex () const
 {
     return selectedTrackIndex;
+}
+
+void AppEngine::toggleRecord()
+{
+    if (selectedTrackIndex < 0 && !isRecording())
+    {
+        juce::Logger::writeToLog("[Recording] Cannot start recording: no track armed");
+        return;
+    }
+
+    bool wasRecording = isRecording();
+
+    // Toggle recording using EngineHelpers
+    audioEngine->toggleRecord(*edit);
+
+    // If we just stopped recording, notify listeners
+    if (wasRecording)
+    {
+        juce::Logger::writeToLog("[AppEngine] Recording stopped");
+
+        // Give Tracktion a moment to finalize the clip creation
+        juce::MessageManager::callAsync([this]()
+        {
+            if (onRecordingStopped)
+            {
+                juce::Logger::writeToLog("[AppEngine] Notifying listeners that recording stopped");
+                onRecordingStopped();
+            }
+        });
+    }
+    else
+    {
+        juce::Logger::writeToLog("[AppEngine] Recording started");
+    }
+}
+
+bool AppEngine::isRecording() const
+{
+    return audioEngine->isRecording();
 }
 
 void AppEngine::play() { audioEngine->play(); }
@@ -234,6 +277,27 @@ void AppEngine::setBpm (double newBpm)
     // (Tracktion may have already adjusted loop range/playhead by this point)
     if (onBpmChanged)
         onBpmChanged(oldBpm, newBpm, oldLoopRange, oldPlayheadPos);
+}
+
+// Metronome/Click Track controls
+void AppEngine::setClickTrackEnabled (bool enabled)
+{
+    edit->clickTrackEnabled = enabled;
+}
+
+bool AppEngine::isClickTrackEnabled() const
+{
+    return edit->clickTrackEnabled;
+}
+
+void AppEngine::setClickTrackRecordingOnly (bool recordingOnly)
+{
+    edit->clickTrackRecordingOnly = recordingOnly;
+}
+
+bool AppEngine::isClickTrackRecordingOnly() const
+{
+    return edit->clickTrackRecordingOnly;
 }
 
 AudioEngine& AppEngine::getAudioEngine() { return *audioEngine; }
@@ -409,6 +473,7 @@ bool AppEngine::loadEditFromFile (const juce::File& file)
     edit->editFileRetriever = [f = currentEditFile] { return f; };
 
     edit->getTransport().ensureContextAllocated();
+    edit->clickTrackEmphasiseBars = true;  // Emphasize downbeats with different click sample
 
     markSaved();
 
@@ -419,6 +484,7 @@ bool AppEngine::loadEditFromFile (const juce::File& file)
 
     audioEngine = std::make_unique<AudioEngine> (*edit, *engine);
     audioEngine->initialiseDefaults (48000.0, 512);
+    audioEngine->setupMidiInputDevices(*edit);
 
     for (auto* track : te::getAudioTracks (*edit))
     {

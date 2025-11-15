@@ -4,7 +4,6 @@
 #include "../../AppEngine/AppEngine.h"
 #include "../../AppEngine/ValidationUtils.h"
 #include "PopupWindows/OutputDevice/OutputDeviceWindow.h"
-#include "PopupWindows/MidiInputDevice/MidiInputDeviceWindow.h"
 #include <regex>
 
 // Helper for styling the menu buttons
@@ -74,6 +73,9 @@ TrackEditView::TrackEditView (AppEngine& engine)
     addAndMakeVisible (viewport);
 
     setWantsKeyboardFocus (true);
+
+    // Start timer for UI updates (record button state, etc.)
+    startTimer (100);
 }
 
 TrackEditView::~TrackEditView ()
@@ -127,6 +129,11 @@ void TrackEditView::resized ()
     playButton.setBounds (transportBounds.removeFromLeft (buttonSize));
     transportBounds.removeFromLeft (buttonGap);
     recordButton.setBounds (transportBounds.removeFromLeft (buttonSize));
+
+    // Metronome button to the right of transport controls
+    constexpr int metronomeWidth = 60;
+    auto metronomeArea = centerArea.removeFromRight (metronomeWidth).reduced (5, 8);
+    metronomeButton.setBounds (metronomeArea);
 
     // Content area below top bar
     // If the piano roll is hidden, just fill with the viewport and hide the resizer
@@ -238,8 +245,21 @@ void TrackEditView::setupButtons ()
         recordShape.addEllipse (0.0f, 0.0f, 1.0f, 1.0f);
         recordButton.setShape (recordShape, true, true, false);
         recordButton.setColours (juce::Colours::red, juce::Colours::lightcoral, juce::Colours::maroon);
+        recordButton.onClick = [this] {
+            // Simply toggle record state - EngineHelpers handles the logic
+            appEngine->toggleRecord();
+        };
         addAndMakeVisible (recordButton);
     }
+
+    // --- Metronome Toggle ---
+    addAndMakeVisible (metronomeButton);
+    metronomeButton.setColour (juce::ToggleButton::textColourId, juce::Colours::lightgrey);
+    metronomeButton.setColour (juce::ToggleButton::tickColourId, juce::Colours::lightgreen);
+    metronomeButton.setToggleState (appEngine->isClickTrackEnabled(), juce::dontSendNotification);
+    metronomeButton.onClick = [this] {
+        appEngine->setClickTrackEnabled (metronomeButton.getToggleState());
+    };
 
     // --- Right Switch ---
     addAndMakeVisible (switchButton);
@@ -262,7 +282,6 @@ juce::PopupMenu TrackEditView::getMenuForIndex (const int topLevelMenuIndex, con
     {
         OpenMixer = 1002,
         ShowOutputSettings = 1003,
-        ShowMidiInputSettings = 1004,
         NewEdit = 2001,
         OpenEdit = 2002,
         SaveEdit = 2003,
@@ -280,7 +299,6 @@ juce::PopupMenu TrackEditView::getMenuForIndex (const int topLevelMenuIndex, con
         menu.addItem (SaveEditAs, "Save Edit As...");
         menu.addSeparator();
         menu.addItem (ShowOutputSettings, "Output Device Settings...");
-        menu.addItem (ShowMidiInputSettings, "MIDI Input Device Settings...");
     }
     else if (topLevelMenuIndex == 1) // View
     {
@@ -329,9 +347,6 @@ void TrackEditView::menuItemSelected (const int menuItemID, int)
         case ShowOutputSettings:
             showOutputDeviceSettings(); // TODO : fix positioning
             break;
-        case ShowMidiInputSettings:
-            showMidiInputDeviceSettings();
-            break;
         case NewEdit:
             showNewEditMenu();
             break;
@@ -352,23 +367,6 @@ void TrackEditView::menuItemSelected (const int menuItemID, int)
 void TrackEditView::showOutputDeviceSettings () const
 {
     auto* content = new OutputDeviceWindow (*appEngine);
-
-    content->setSize (360, 140);
-
-    juce::Rectangle<int> screenBounds;
-    #if JUCE_MAC
-    screenBounds = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea;
-    screenBounds = screenBounds.withHeight (25); // Approx height of mac menu bar
-    #else
-    if (menuBar)
-        screenBounds = menuBar->getScreenBounds();
-    #endif
-    juce::CallOutBox::launchAsynchronously (std::unique_ptr<Component> (content), screenBounds, nullptr);
-}
-
-void TrackEditView::showMidiInputDeviceSettings () const
-{
-    auto* content = new MidiInputDeviceWindow (*appEngine);
 
     content->setSize (360, 140);
 
@@ -619,4 +617,25 @@ TrackEditView::PianoRollResizerBar::PianoRollResizerBar (juce::StretchableLayout
 
 TrackEditView::PianoRollResizerBar::~PianoRollResizerBar ()
 = default;
+
+void TrackEditView::timerCallback()
+{
+    // Update record button appearance based on recording state
+    const bool isRecording = appEngine->isRecording();
+
+    if (isRecording)
+    {
+        // Make record button brighter when recording
+        recordButton.setColours (juce::Colours::red.brighter (0.3f),
+                                 juce::Colours::lightcoral.brighter (0.3f),
+                                 juce::Colours::red.brighter (0.5f));
+    }
+    else
+    {
+        // Normal colors when not recording
+        recordButton.setColours (juce::Colours::red,
+                                 juce::Colours::lightcoral,
+                                 juce::Colours::maroon);
+    }
+}
 

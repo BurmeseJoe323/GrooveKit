@@ -29,7 +29,8 @@ void AudioEngine::play()
 void AudioEngine::stop() {
     if (&edit)
     {
-        edit.getTransport().stop(false, false);
+        // First param = true: Keep any recordings in progress (don't discard)
+        edit.getTransport().stop(true, false);
         for (auto* plugin : te::getAllPlugins (edit, false))
             if (auto* morph = dynamic_cast<MorphSynthPlugin*>(plugin))
                 morph->stopAllNotes();
@@ -176,120 +177,98 @@ void AudioEngine::logAvailableMidiDevices() const
     }
 }
 
-bool AudioEngine::setMidiInputDeviceEnabled(int deviceIndex, bool enabled)
+void AudioEngine::setupMidiInputDevices(te::Edit& editToSetup)
 {
-    auto devices = juce::MidiInput::getAvailableDevices();
-
-    if (deviceIndex < 0 || deviceIndex >= devices.size())
+    // Enable all MIDI input devices in Tracktion's device manager
+    for (const auto& midiIn : engine.getDeviceManager().getMidiInDevices())
     {
-        Logger::writeToLog("[MIDI] Invalid device index: " + String(deviceIndex));
-        return false;
+        midiIn->setEnabled(true);
+        // Use 'automatic' mode: monitor when stopped, don't monitor during playback/recording
+        midiIn->setMonitorMode(te::InputDevice::MonitorMode::automatic);
     }
 
-    const auto& device = devices[deviceIndex];
-    auto& dm = adm();
+    // Ensure transport context is allocated for recording
+    editToSetup.getTransport().ensureContextAllocated();
 
-    dm.setMidiInputDeviceEnabled(device.identifier, enabled);
-
-    Logger::writeToLog("[MIDI] Device " + String(enabled ? "enabled" : "disabled") +
-                      ": " + device.name);
-
-    return true;
+    Logger::writeToLog("[MIDI] Enabled all MIDI input devices via Tracktion InputDevice system");
 }
 
-bool AudioEngine::connectMidiInputToCallback(int deviceIndex, juce::MidiInputCallback* callback)
+void AudioEngine::routeMidiToTrack(te::Edit& editToRoute, int trackIndex)
 {
-    auto devices = juce::MidiInput::getAvailableDevices();
-
-    if (deviceIndex < 0 || deviceIndex >= devices.size())
+    auto tracks = te::getAudioTracks(editToRoute);
+    if (trackIndex < 0 || trackIndex >= tracks.size())
     {
-        Logger::writeToLog("[MIDI] Invalid device index: " + String(deviceIndex));
-        return false;
+        Logger::writeToLog("[MIDI] Invalid track index for routing: " + String(trackIndex));
+        return;
     }
 
-    const auto& device = devices[deviceIndex];
-    auto& dm = adm();
+    auto* track = tracks[trackIndex];
 
-    // Enable the device first
-    dm.setMidiInputDeviceEnabled(device.identifier, true);
-
-    // Add the callback to receive MIDI messages
-    dm.addMidiInputDeviceCallback(device.identifier, callback);
-
-    // Track the currently connected device
-    currentMidiInputIdentifier = device.identifier;
-
-    Logger::writeToLog("[MIDI] Connected to device: " + device.name);
-
-    return true;
-}
-
-bool AudioEngine::setMidiInputDeviceByName(const juce::String& deviceName, juce::MidiInputCallback* callback)
-{
-    auto devices = juce::MidiInput::getAvailableDevices();
-
-    // Find device by name
-    for (const auto& device : devices)
+    // Route all MIDI input devices to this track and pre-arm for recording
+    // Following Tracktion's MidiRecordingDemo pattern: set target + enable recording at arm time
+    for (auto* instance : editToRoute.getAllInputDevices())
     {
-        if (device.name == deviceName)
+        if (instance->getInputDevice().getDeviceType() == te::InputDevice::physicalMidiDevice)
         {
-            auto& dm = adm();
+            // Set target track with undo manager for proper state tracking
+            [[maybe_unused]] auto res = instance->setTarget(track->itemID, true, &editToRoute.getUndoManager(), 0);
 
-            // Disconnect previous device if any
-            if (currentMidiInputIdentifier.isNotEmpty())
-            {
-                dm.removeMidiInputDeviceCallback(currentMidiInputIdentifier, callback);
-                dm.setMidiInputDeviceEnabled(currentMidiInputIdentifier, false);
-            }
-
-            // Enable the new device
-            dm.setMidiInputDeviceEnabled(device.identifier, true);
-
-            // Add the callback to receive MIDI messages
-            dm.addMidiInputDeviceCallback(device.identifier, callback);
-
-            // Track the currently connected device
-            currentMidiInputIdentifier = device.identifier;
-
-            Logger::writeToLog("[MIDI] Connected to device: " + device.name);
-
-            return true;
+            // Pre-arm track for recording (following Tracktion demo pattern)
+            // This prepares the track to capture MIDI when transport.record() is called
+            instance->setRecordingEnabled(track->itemID, true);
         }
     }
 
-    Logger::writeToLog("[MIDI] Device not found: " + deviceName);
-    return false;
+    // Restart playback to rebuild audio graph with new routing configuration
+    editToRoute.restartPlayback();
+
+    Logger::writeToLog("[MIDI] Routed and pre-armed all MIDI inputs to track " + String(trackIndex));
 }
 
-juce::String AudioEngine::getCurrentMidiInputDeviceName() const
+void AudioEngine::toggleRecord(te::Edit& editToRecord)
 {
-    if (currentMidiInputIdentifier.isEmpty())
-        return {};
+    auto& transport = editToRecord.getTransport();
+    bool wasRecording = transport.isRecording();
 
-    auto devices = juce::MidiInput::getAvailableDevices();
+    Logger::writeToLog("[MIDI Recording] Toggle record - currently recording: " + String(wasRecording ? "yes" : "no"));
 
-    for (const auto& device : devices)
+    // Position at loop start if we're about to start recording and looping is enabled
+    if (!wasRecording && transport.looping)
     {
-        if (device.identifier == currentMidiInputIdentifier)
-            return device.name;
+        Logger::writeToLog("[MIDI Recording] Positioning at loop start before recording");
+        transport.setPosition(transport.getLoopRange().getStart());
     }
 
-    return {};
+    // Use Tracktion's battle-tested helper function
+    EngineHelpers::toggleRecord(editToRecord);
+
+    // Log clip count after stopping recording
+    if (wasRecording)
+    {
+        Logger::writeToLog("[MIDI Recording] Recording stopped, checking for clips...");
+        auto tracks = te::getAudioTracks(editToRecord);
+        for (int i = 0; i < tracks.size(); ++i)
+        {
+            auto* track = tracks[i];
+            int clipCount = 0;
+            for (auto* clip : track->getClips())
+            {
+                if (auto* midiClip = dynamic_cast<te::MidiClip*>(clip))
+                    clipCount++;
+            }
+            Logger::writeToLog("[MIDI Recording] Track " + String(i) + " (" + track->getName() + ") has " + String(clipCount) + " MIDI clips");
+        }
+    }
+    else
+    {
+        Logger::writeToLog("[MIDI Recording] Recording started");
+    }
 }
 
-void AudioEngine::disconnectAllMidiInputs(juce::MidiInputCallback* callback)
+bool AudioEngine::isRecording() const
 {
-    if (currentMidiInputIdentifier.isEmpty())
-        return;
-
-    auto& dm = adm();
-
-    dm.removeMidiInputDeviceCallback(currentMidiInputIdentifier, callback);
-    dm.setMidiInputDeviceEnabled(currentMidiInputIdentifier, false);
-
-    currentMidiInputIdentifier.clear();
-
-    Logger::writeToLog("[MIDI] Disconnected all MIDI input devices");
+    // Check if the transport is in recording mode
+    return edit.getTransport().isRecording();
 }
 
 

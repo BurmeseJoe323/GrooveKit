@@ -9,13 +9,12 @@ namespace te = tracktion::engine;
 class AppEngine;
 
 /**
- * MidiListener handles MIDI keyboard input and routes it to the armed track.
+ * MidiListener handles QWERTY keyboard input and routes it to the armed track.
  * It manages the MidiKeyboardState and provides QWERTY-to-MIDI mapping functionality.
- * Receives input from both QWERTY keyboard and external MIDI controllers.
+ * Hardware MIDI input is handled by Tracktion Engine's InputDevice system.
  * Owned and managed by AppEngine.
  */
-class MidiListener final : public juce::MidiKeyboardStateListener,
-                           public juce::MidiInputCallback
+class MidiListener final : public juce::MidiKeyboardStateListener
 {
 public:
     explicit MidiListener(AppEngine* engine);
@@ -24,9 +23,6 @@ public:
     // MidiKeyboardStateListener overrides
     void handleNoteOn(juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override;
     void handleNoteOff(juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override;
-
-    // MidiInputCallback overrides - receives MIDI from hardware devices
-    void handleIncomingMidiMessage(juce::MidiInput* source, const juce::MidiMessage& message) override;
 
     /**
      * Returns a reference to the MidiKeyboardState managed by this listener.

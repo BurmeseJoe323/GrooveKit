@@ -128,6 +128,12 @@ public:
     double getBpm() const;
     void setBpm (double newBpm);
 
+    // Metronome/Click Track controls
+    void setClickTrackEnabled (bool enabled);
+    bool isClickTrackEnabled() const;
+    void setClickTrackRecordingOnly (bool recordingOnly);
+    bool isClickTrackRecordingOnly() const;
+
     TrackManager& getTrackManager()       { return *trackManager; }
     TrackManager* getTrackManagerPtr()    { return trackManager.get(); }
 
@@ -144,12 +150,8 @@ public:
     juce::StringArray listOutputDevices()            const { return audioEngine->listOutputDevices(); }
     juce::String getCurrentOutputDeviceName()        const { return audioEngine->getCurrentOutputDeviceName(); }
 
-    // MIDI Input device management
+    // MIDI Input device management (for diagnostic purposes only - devices are auto-managed)
     juce::StringArray listMidiInputDevices()         const { return audioEngine->listMidiInputDevices(); }
-    bool connectMidiInputDevice(int deviceIndex)           { return audioEngine->connectMidiInputToCallback(deviceIndex, midiListener.get()); }
-    bool setMidiInputDevice(const juce::String& deviceName) { return audioEngine->setMidiInputDeviceByName(deviceName, midiListener.get()); }
-    juce::String getCurrentMidiInputDeviceName()     const { return audioEngine->getCurrentMidiInputDeviceName(); }
-    void disconnectAllMidiInputs()                         { audioEngine->disconnectAllMidiInputs(midiListener.get()); }
 
     bool saveEdit();
     void saveEditAsAsync (std::function<void (bool success)> onDone = {});
@@ -175,6 +177,11 @@ public:
     int getArmedTrackIndex() const;
     te::AudioTrack* getArmedTrack();
     std::function<void()> onArmedTrackChanged;
+
+    // Recording control
+    void toggleRecord();
+    bool isRecording() const;
+    std::function<void()> onRecordingStopped;
 
     void makeFourOscAuditionPatch (int trackIndex);
     void openInstrumentEditor (int trackIndex);
