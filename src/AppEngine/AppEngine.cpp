@@ -1244,7 +1244,7 @@ bool AppEngine::addMidiClipToTrackAt(int trackIndex, t::TimePosition start, t::B
     if (!midiEngine)
         return false;
 
-    return midiEngine->addMidiClipToTrack (trackIndex);
+    return midiEngine->addMidiClipToTrackAt (trackIndex, start, length);
 }
 
 void AppEngine::copyMidiClip (te::MidiClip* clip)
