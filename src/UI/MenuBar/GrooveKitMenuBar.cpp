@@ -1,0 +1,242 @@
+// Created by Claude Code on 2025-11-15.
+// GrooveKitMenuBar - Shared menu bar component implementation
+
+#include "GrooveKitMenuBar.h"
+#include "../PopupWindows/OutputDevice/OutputDeviceWindow.h"
+
+GrooveKitMenuBar::GrooveKitMenuBar(AppEngine& engine)
+{
+    appEngine = std::shared_ptr<AppEngine>(&engine, [](AppEngine*) {});
+
+    #if JUCE_MAC
+    // Use native macOS global menu bar
+    juce::MenuBarModel::setMacMainMenu(this);
+    #else
+    // Create inline menu bar for Windows/Linux
+    menuBarComponent = std::make_unique<juce::MenuBarComponent>(this);
+    addAndMakeVisible(menuBarComponent.get());
+    #endif
+}
+
+GrooveKitMenuBar::~GrooveKitMenuBar()
+{
+    #if JUCE_MAC
+    // Clear the native macOS menu bar to avoid assertions during shutdown
+    juce::MenuBarModel::setMacMainMenu(nullptr);
+    #endif
+}
+
+void GrooveKitMenuBar::resized()
+{
+    #if !JUCE_MAC
+    if (menuBarComponent)
+        menuBarComponent->setBounds(getLocalBounds());
+    #endif
+}
+
+juce::StringArray GrooveKitMenuBar::getMenuBarNames()
+{
+    if (currentViewMode == ViewMode::TrackEdit)
+        return { "File", "View", "Track", "Help" };
+    else
+        return { "File", "View", "Help" };  // Hide Track menu in Mix view
+}
+
+juce::PopupMenu GrooveKitMenuBar::getMenuForIndex(const int topLevelMenuIndex, const juce::String&)
+{
+    juce::PopupMenu menu;
+    enum MenuIDs
+    {
+        OpenMixer = 1002,
+        ShowOutputSettings = 1003,
+        NewEdit = 2001,
+        OpenEdit = 2002,
+        SaveEdit = 2003,
+        SaveEditAs = 2004,
+        NewInstrumentTrack = 3001,
+        NewDrumTrack = 3002
+    };
+
+    if (topLevelMenuIndex == 0) // File
+    {
+        menu.addItem(NewEdit, "New Edit");
+        menu.addItem(OpenEdit, "Open Edit...");
+        menu.addSeparator();
+        menu.addItem(SaveEdit, "Save Edit");
+        menu.addItem(SaveEditAs, "Save Edit As...");
+        menu.addSeparator();
+        menu.addItem(ShowOutputSettings, "Output Device Settings...");
+    }
+    else if (topLevelMenuIndex == 1) // View
+    {
+        // Only show "Mix View" when in TrackEdit mode
+        if (currentViewMode == ViewMode::TrackEdit)
+            menu.addItem(OpenMixer, "Mix View");
+    }
+    else if (topLevelMenuIndex == 2) // Track (only appears in TrackEdit mode)
+    {
+        if (currentViewMode == ViewMode::TrackEdit)
+        {
+            menu.addItem(NewInstrumentTrack, "New Instrument Track");
+            menu.addItem(NewDrumTrack, "New Drum Track");
+        }
+    }
+    // topLevelMenuIndex == 3 or 2 (depending on view mode) is Help - empty for now
+
+    return menu;
+}
+
+void GrooveKitMenuBar::menuItemSelected(const int menuItemID, int)
+{
+    enum MenuIDs
+    {
+        OpenMixer = 1002,
+        ShowOutputSettings = 1003,
+        NewEdit = 2001,
+        OpenEdit = 2002,
+        SaveEdit = 2003,
+        SaveEditAs = 2004,
+        NewInstrumentTrack = 3001,
+        NewDrumTrack = 3002
+    };
+
+    switch (menuItemID)
+    {
+        case NewInstrumentTrack:
+            if (onNewInstrumentTrack)
+                onNewInstrumentTrack();
+            break;
+        case NewDrumTrack:
+            if (onNewDrumTrack)
+                onNewDrumTrack();
+            break;
+        case OpenMixer:
+            if (onSwitchToMix)
+                onSwitchToMix();
+            break;
+        case ShowOutputSettings:
+            showOutputDeviceSettings();
+            break;
+        case NewEdit:
+            showNewEditMenu();
+            break;
+        case OpenEdit:
+            showOpenEditMenu();
+            break;
+        case SaveEdit:
+            appEngine->saveEdit();
+            break;
+        case SaveEditAs:
+            appEngine->saveEditAsAsync();
+            break;
+        default:
+            break;
+    }
+}
+
+void GrooveKitMenuBar::setViewMode(ViewMode mode)
+{
+    currentViewMode = mode;
+    menuItemsChanged();  // Notify JUCE to rebuild menus
+}
+
+void GrooveKitMenuBar::showOutputDeviceSettings() const
+{
+    auto* content = new OutputDeviceWindow(*appEngine);
+    content->setSize(360, 140);
+
+    juce::Rectangle<int> screenBounds;
+    #if JUCE_MAC
+    screenBounds = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea;
+    screenBounds = screenBounds.withHeight(25); // Approx height of mac menu bar
+    #else
+    if (menuBarComponent)
+        screenBounds = menuBarComponent->getScreenBounds();
+    #endif
+    juce::CallOutBox::launchAsynchronously(std::unique_ptr<juce::Component>(content), screenBounds, nullptr);
+}
+
+void GrooveKitMenuBar::showNewEditMenu() const
+{
+    if (appEngine->isDirty())
+    {
+        const auto opts = juce::MessageBoxOptions()
+            .withIconType(juce::MessageBoxIconType::WarningIcon)
+            .withTitle("Save changes?")
+            .withMessage("You have unsaved changes.")
+            .withButton("Save")
+            .withButton("Discard")
+            .withButton("Cancel");
+
+        juce::AlertWindow::showAsync(opts,
+            [this](const int r) {
+                if (r == 1)
+                {
+                    // Save
+                    const bool hasPath =
+                        appEngine->getCurrentEditFile().getFullPathName().isNotEmpty();
+                    if (hasPath)
+                    {
+                        if (appEngine->saveEdit())
+                            appEngine->newUntitledEdit();
+                    }
+                    else
+                    {
+                        appEngine->saveEditAsAsync([this](const bool ok) {
+                            if (ok)
+                                appEngine->newUntitledEdit();
+                        });
+                    }
+                }
+                else if (r == 2)
+                {
+                    // Discard
+                    appEngine->newUntitledEdit();
+                }
+            });
+    }
+    else
+    {
+        appEngine->newUntitledEdit();
+    }
+}
+
+void GrooveKitMenuBar::showOpenEditMenu() const
+{
+    if (!appEngine->isDirty())
+    {
+        appEngine->openEditAsync();
+        return;
+    }
+
+    const auto opts = juce::MessageBoxOptions()
+        .withIconType(juce::MessageBoxIconType::WarningIcon)
+        .withTitle("Save changes?")
+        .withMessage("You have unsaved changes.")
+        .withButton("Save")
+        .withButton("Discard")
+        .withButton("Cancel");
+
+    juce::AlertWindow::showAsync(opts,
+        [this](const int result) {
+            if (result == 1) // Save
+            {
+                if (appEngine->getCurrentEditFile().getFullPathName().isNotEmpty())
+                {
+                    if (appEngine->saveEdit())
+                        appEngine->openEditAsync();
+                }
+                else
+                {
+                    appEngine->saveEditAsAsync([this](const bool ok) {
+                        if (ok)
+                            appEngine->openEditAsync();
+                    });
+                }
+            }
+            else if (result == 2) // Discard
+            {
+                appEngine->openEditAsync();
+            }
+        });
+}

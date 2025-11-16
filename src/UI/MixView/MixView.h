@@ -4,13 +4,14 @@
 #include "../../AppEngine/AppEngine.h"
 
 class TransportBar;
+class GrooveKitMenuBar;
 
 class MixView : public juce::Component
 {
 public:
     using ToggleTracksCallback = std::function<void()>;
 
-    MixView(AppEngine& engine, TransportBar& transport);
+    MixView(AppEngine& engine, TransportBar& transport, GrooveKitMenuBar& menuBar);
     ~MixView();
 
     void paint(juce::Graphics& g) override;
@@ -29,6 +30,7 @@ public:
 private:
     AppEngine& appEngine;
     TransportBar* transportBar; // Non-owning pointer to shared transport bar (Written by Claude Code)
+    GrooveKitMenuBar* menuBar; // Non-owning pointer to shared menu bar (Written by Claude Code)
     std::unique_ptr<MixerPanel> mixerPanel;
 
     int outerMargin = 16;

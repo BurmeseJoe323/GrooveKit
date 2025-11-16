@@ -2,13 +2,15 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "MixView.h"
 #include "../TransportBar/TransportBar.h"
+#include "../MenuBar/GrooveKitMenuBar.h"
 
-MixView::MixView(AppEngine& engine, TransportBar& transport)
-    : appEngine(engine), transportBar(&transport)
+MixView::MixView(AppEngine& engine, TransportBar& transport, GrooveKitMenuBar& menu)
+    : appEngine(engine), transportBar(&transport), menuBar(&menu)
 {
     setOpaque(true);
 
-    // Add transport bar at top (Written by Claude Code)
+    // Add menu bar and transport bar (Written by Claude Code)
+    addAndMakeVisible(menuBar);
     addAndMakeVisible(transportBar);
 
     mixerPanel = std::make_unique<MixerPanel>(appEngine);
@@ -31,7 +33,13 @@ void MixView::resized()
 {
     auto bounds = getLocalBounds();
 
-    // Position transport bar at top (Written by Claude Code)
+    // Position menu bar at top on non-Mac platforms (Written by Claude Code)
+    #if !JUCE_MAC
+    constexpr int menuHeight = 24;
+    menuBar->setBounds(bounds.removeFromTop(menuHeight));
+    #endif
+
+    // Position transport bar below menu (or at top on Mac)
     constexpr int transportHeight = 40;
     transportBar->setBounds(bounds.removeFromTop(transportHeight));
 

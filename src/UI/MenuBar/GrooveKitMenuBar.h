@@ -1,0 +1,62 @@
+// Created by Claude Code on 2025-11-15.
+// GrooveKitMenuBar - Shared menu bar component for TrackEditView and MixView
+
+#pragma once
+
+#include "../../AppEngine/AppEngine.h"
+#include <juce_gui_basics/juce_gui_basics.h>
+
+namespace te = tracktion::engine;
+namespace t = tracktion;
+
+class AppEngine;
+
+/**
+ * Menu bar component that appears in both TrackEditView and MixView.
+ * Handles File, View, Track, and Help menus with view-specific item visibility.
+ */
+class GrooveKitMenuBar final : public juce::Component, public juce::MenuBarModel
+{
+public:
+    enum class ViewMode
+    {
+        TrackEdit,  // Shows all menus including Track menu
+        Mix         // Hides Track menu and View > Mix View item
+    };
+
+    explicit GrooveKitMenuBar(AppEngine& engine);
+    ~GrooveKitMenuBar() override;
+
+    void resized() override;
+
+    // MenuBarModel overrides
+    juce::StringArray getMenuBarNames() override;
+    juce::PopupMenu getMenuForIndex(int topLevelMenuIndex, const juce::String& menuName) override;
+    void menuItemSelected(int menuItemID, int topLevelMenuIndex) override;
+
+    /**
+     * Set the current view mode to control which menu items are visible.
+     */
+    void setViewMode(ViewMode mode);
+
+    /**
+     * Callbacks for view-specific actions.
+     */
+    std::function<void()> onSwitchToMix;
+    std::function<void()> onNewInstrumentTrack;
+    std::function<void()> onNewDrumTrack;
+
+private:
+    void showOutputDeviceSettings() const;
+    void showNewEditMenu() const;
+    void showOpenEditMenu() const;
+
+    std::shared_ptr<AppEngine> appEngine;
+    ViewMode currentViewMode = ViewMode::TrackEdit;
+
+    #if !JUCE_MAC
+    std::unique_ptr<juce::MenuBarComponent> menuBarComponent;
+    #endif
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GrooveKitMenuBar)
+};

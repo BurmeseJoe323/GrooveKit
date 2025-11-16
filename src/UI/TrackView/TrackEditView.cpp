@@ -1,10 +1,10 @@
 // Note: Junie (JetBrains AI) contributed code to this file on 2025-09-24.
 #include "TrackEditView.h"
 #include "../TransportBar/TransportBar.h"
+#include "../MenuBar/GrooveKitMenuBar.h"
 #include "MidiListener.h"
 #include "../../AppEngine/AppEngine.h"
 #include "../../AppEngine/ValidationUtils.h"
-#include "PopupWindows/OutputDevice/OutputDeviceWindow.h"
 #include <regex>
 
 // Helper for styling the menu buttons
@@ -15,23 +15,16 @@ void styleMenuButton (juce::TextButton& button)
     button.setColour (juce::TextButton::textColourOnId, juce::Colours::white);
 }
 
-TrackEditView::TrackEditView (AppEngine& engine, TransportBar& transport)
-    : transportBar(&transport)
+TrackEditView::TrackEditView (AppEngine& engine, TransportBar& transport, GrooveKitMenuBar& menu)
+    : transportBar(&transport), menuBar(&menu)
 {
     appEngine = std::shared_ptr<AppEngine> (&engine,
         [](AppEngine*) {
         });
 
-    // Add transport bar at top (Written by Claude Code)
+    // Add menu bar and transport bar (menu above transport on non-Mac)
+    addAndMakeVisible (menuBar);
     addAndMakeVisible (transportBar);
-
-    #if JUCE_MAC
-    // Use native macOS global menu bar
-    juce::MenuBarModel::setMacMainMenu (this);
-    #else
-    menuBar = std::make_unique<juce::MenuBarComponent> (this);
-    addAndMakeVisible (menuBar.get());
-    #endif
 
     trackList = std::make_unique<TrackListComponent> (appEngine);
 
@@ -78,13 +71,7 @@ TrackEditView::TrackEditView (AppEngine& engine, TransportBar& transport)
     setWantsKeyboardFocus (true);
 }
 
-TrackEditView::~TrackEditView ()
-{
-    #if JUCE_MAC
-    // Clear the native macOS menu bar to avoid assertions during shutdown
-    juce::MenuBarModel::setMacMainMenu (nullptr);
-    #endif
-}
+TrackEditView::~TrackEditView() = default;
 
 void TrackEditView::paint (juce::Graphics& g)
 {
@@ -95,20 +82,17 @@ void TrackEditView::resized ()
 {
     auto r = getLocalBounds();
 
-    // Position transport bar at top (Written by Claude Code)
-    const auto topBar = r.removeFromTop (40);
-    transportBar->setBounds (topBar);
-
-    // Position menu bar below transport bar on non-Mac platforms
+    // Position menu bar at top on non-Mac platforms
     #if !JUCE_MAC
-    if (menuBar)
-    {
-        const auto menuHeight = 24;
-        menuBar->setBounds (r.removeFromTop (menuHeight));
-    }
+    constexpr int menuHeight = 24;
+    menuBar->setBounds (r.removeFromTop (menuHeight));
     #endif
 
-    // Content area below transport (and menu on non-Mac)
+    // Position transport bar below menu (or at top on Mac)
+    constexpr int transportHeight = 40;
+    transportBar->setBounds (r.removeFromTop (transportHeight));
+
+    // Content area below menu and transport
     // If the piano roll is hidden, just fill with the viewport and hide the resizer
     if (!pianoRoll || !pianoRoll->isVisible())
     {
@@ -178,203 +162,6 @@ void TrackEditView::mouseDown (const juce::MouseEvent& e)
 {
     grabKeyboardFocus();
     juce::Component::mouseDown(e);
-}
-
-
-juce::StringArray TrackEditView::getMenuBarNames ()
-{
-    return { "File", "View", "Track", "Help" };
-}
-
-juce::PopupMenu TrackEditView::getMenuForIndex (const int topLevelMenuIndex, const juce::String&)
-{
-    juce::PopupMenu menu;
-    enum MenuIDs
-    {
-        OpenMixer = 1002,
-        ShowOutputSettings = 1003,
-        NewEdit = 2001,
-        OpenEdit = 2002,
-        SaveEdit = 2003,
-        SaveEditAs = 2004,
-        NewInstrumentTrack = 3001,
-        NewDrumTrack = 3002
-    };
-
-    if (topLevelMenuIndex == 0) // File
-    {
-        menu.addItem (NewEdit, "New Edit");
-        menu.addItem (OpenEdit, "Open Edit...");
-        menu.addSeparator();
-        menu.addItem (SaveEdit, "Save Edit");
-        menu.addItem (SaveEditAs, "Save Edit As...");
-        menu.addSeparator();
-        menu.addItem (ShowOutputSettings, "Output Device Settings...");
-    }
-    else if (topLevelMenuIndex == 1) // View
-    {
-        menu.addItem (OpenMixer, "Mix View");
-    }
-    else if (topLevelMenuIndex == 2) // Track
-    {
-        menu.addItem (NewInstrumentTrack, "New Instrument Track");
-        menu.addItem (NewDrumTrack, "New Drum Track");
-    }
-    return menu;
-}
-
-void TrackEditView::menuItemSelected (const int menuItemID, int)
-{
-    enum MenuIDs
-    {
-        OpenMixer = 1002,
-        ShowOutputSettings = 1003,
-        ShowMidiInputSettings = 1004,
-        NewEdit = 2001,
-        OpenEdit = 2002,
-        SaveEdit = 2003,
-        SaveEditAs = 2004,
-        NewInstrumentTrack = 3001,
-        NewDrumTrack = 3002
-    };
-
-    switch (menuItemID)
-    {
-        case NewInstrumentTrack:
-        case NewDrumTrack:
-        {
-            if (!trackList)
-                return;
-            const int index = (menuItemID == NewInstrumentTrack) ? appEngine->addInstrumentTrack() : appEngine->addDrumTrack();
-            trackList->addNewTrack (index);
-            trackList->setPixelsPerBeat (pixelsPerBeat);
-            trackList->setViewStartBeat (viewStartBeat);
-            break;
-        }
-        case OpenMixer:
-            if (onOpenMix)
-                onOpenMix();
-            break;
-        case ShowOutputSettings:
-            showOutputDeviceSettings(); // TODO : fix positioning
-            break;
-        case NewEdit:
-            showNewEditMenu();
-            break;
-        case OpenEdit:
-            showOpenEditMenu();
-            break;
-        case SaveEdit:
-            appEngine->saveEdit();
-            break;
-        case SaveEditAs:
-            appEngine->saveEditAsAsync();
-            break;
-        default:
-            break;
-    }
-}
-
-void TrackEditView::showOutputDeviceSettings () const
-{
-    auto* content = new OutputDeviceWindow (*appEngine);
-
-    content->setSize (360, 140);
-
-    juce::Rectangle<int> screenBounds;
-    #if JUCE_MAC
-    screenBounds = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea;
-    screenBounds = screenBounds.withHeight (25); // Approx height of mac menu bar
-    #else
-    if (menuBar)
-        screenBounds = menuBar->getScreenBounds();
-    #endif
-    juce::CallOutBox::launchAsynchronously (std::unique_ptr<Component> (content), screenBounds, nullptr);
-}
-
-void TrackEditView::showNewEditMenu () const
-{
-    if (appEngine->isDirty())
-    {
-        const auto opts = juce::MessageBoxOptions()
-            .withIconType (juce::MessageBoxIconType::WarningIcon)
-            .withTitle ("Save changes?")
-            .withMessage ("You have unsaved changes.")
-            .withButton ("Save")
-            .withButton ("Discard")
-            .withButton ("Cancel");
-
-        juce::AlertWindow::showAsync (opts,
-            [this](const int r) {
-                if (r == 1)
-                {
-                    // Save
-                    const bool hasPath =
-                        appEngine->getCurrentEditFile().getFullPathName().isNotEmpty();
-                    if (hasPath)
-                    {
-                        if (appEngine->saveEdit())
-                            appEngine->newUntitledEdit();
-                    }
-                    else
-                    {
-                        appEngine->saveEditAsAsync ([this](const bool ok) {
-                            if (ok)
-                                appEngine->newUntitledEdit();
-                        });
-                    }
-                }
-                else if (r == 2)
-                {
-                    // Discard
-                    appEngine->newUntitledEdit();
-                }
-            });
-    }
-    else
-    {
-        appEngine->newUntitledEdit();
-    }
-}
-
-void TrackEditView::showOpenEditMenu () const
-{
-    if (!appEngine->isDirty())
-    {
-        appEngine->openEditAsync();
-        return;
-    }
-
-    const auto opts = juce::MessageBoxOptions()
-        .withIconType (juce::MessageBoxIconType::WarningIcon)
-        .withTitle ("Save changes?")
-        .withMessage ("You have unsaved changes.")
-        .withButton ("Save")
-        .withButton ("Discard")
-        .withButton ("Cancel");
-
-    juce::AlertWindow::showAsync (opts,
-        [this](const int result) {
-            if (result == 1) // Save
-            {
-                if (appEngine->getCurrentEditFile().getFullPathName().isNotEmpty())
-                {
-                    if (appEngine->saveEdit())
-                        appEngine->openEditAsync();
-                }
-                else
-                {
-                    appEngine->saveEditAsAsync ([this](const bool ok) {
-                        if (ok)
-                            appEngine->openEditAsync();
-                    });
-                }
-            }
-            else if (result == 2) // Discard
-            {
-                appEngine->openEditAsync();
-            }
-        });
 }
 
 void TrackEditView::showPianoRoll (te::MidiClip* clip)

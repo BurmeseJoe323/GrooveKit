@@ -4,6 +4,7 @@
 #include "TrackView/TrackEditView.h"
 #include "MixView/MixView.h"
 #include "TransportBar/TransportBar.h"
+#include "MenuBar/GrooveKitMenuBar.h"
 #include "../AppEngine/AppEngine.h"
 
 class MainComponent final : public juce::Component
@@ -22,5 +23,6 @@ private:
 
     std::unique_ptr<juce::Component> view;
     AppEngine appEngine;
-    std::unique_ptr<TransportBar> transportBar; // Written by Claude Code
+    std::unique_ptr<TransportBar> transportBar;
+    std::unique_ptr<GrooveKitMenuBar> menuBar;
 };

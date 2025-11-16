@@ -13,26 +13,22 @@ namespace t = tracktion;
 
 class AppEngine;
 class TransportBar;
+class GrooveKitMenuBar;
 
 /**
  * Represents the track editor view, with functionality for adding and deleting tracks.
  * Each track contains a corresponding header, footer, and a series of MIDI clips.
  */
-class TrackEditView final : public juce::Component, public juce::MenuBarModel
+class TrackEditView final : public juce::Component
 {
 public:
-    explicit TrackEditView (AppEngine& engine, TransportBar& transport);
+    explicit TrackEditView (AppEngine& engine, TransportBar& transport, GrooveKitMenuBar& menuBar);
     ~TrackEditView() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
     bool keyPressed (const juce::KeyPress&) override;
     bool keyStateChanged(bool isKeyDown) override;
-
-    // --- MenuBarModel overrides ---
-    juce::StringArray getMenuBarNames() override;
-    juce::PopupMenu getMenuForIndex (int topLevelMenuIndex, const juce::String& menuName) override;
-    void menuItemSelected (int menuItemID, int topLevelMenuIndex) override;
 
     /**
      * Called when Back is pressed. Should return to home screen.
@@ -58,7 +54,8 @@ public:
 
 private:
     std::shared_ptr<AppEngine> appEngine;
-    TransportBar* transportBar; // Non-owning pointer to shared transport bar (Written by Claude Code)
+    TransportBar* transportBar;
+    GrooveKitMenuBar* menuBar;
 
     std::unique_ptr<TrackListComponent> trackList;
     juce::Viewport viewport;
@@ -72,14 +69,6 @@ private:
 
     double pixelsPerBeat = 100.0;
     t::BeatPosition viewStartBeat = t::BeatPosition::fromBeats(0.0);
-
-    // --- Top Bar Components ---
-    std::unique_ptr<juce::MenuBarComponent> menuBar;
-
-    // Private helper methods for menu actions
-    void showOutputDeviceSettings() const;
-    void showNewEditMenu() const;
-    void showOpenEditMenu() const;
 
     void parentHierarchyChanged() override;
     void mouseDown (const juce::MouseEvent&) override;
