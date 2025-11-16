@@ -115,7 +115,6 @@ void TrackComponent::onInstrumentMenuRequested()
         appEngine->showInstrumentChooser (trackIndex);
 }
 
-
 void TrackComponent::onSettingsClicked()
 {
     juce::PopupMenu m;
@@ -166,6 +165,7 @@ void TrackComponent::onSettingsClicked()
         }
     });
 }
+
 
 void TrackComponent::setTrackIndex (const int index)
 {

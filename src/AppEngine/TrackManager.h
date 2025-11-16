@@ -51,6 +51,8 @@ public:
 
     tracktion::engine::Plugin* insertMorphSynth (int trackIndex);
     void clearInstrumentSlot0 (int trackIndex);
+    void clearFxInsertSlot (int trackIndex, int slotIndex);
+    int getFxInsertBaseIndex (int trackIndex) const;
 
 
 private:

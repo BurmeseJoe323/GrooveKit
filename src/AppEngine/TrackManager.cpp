@@ -340,15 +340,47 @@ double TrackManager::getClipLengthSeconds (int trackIndex, int clipIndex) const
 
 }
 
+void TrackManager::clearFxInsertSlot (int trackIndex, int slotIndex)
+{
+    if (trackIndex < 0 || trackIndex >= getNumTracks())
+        return;
 
+    auto* t = getTrack (trackIndex);
+    if (! t)
+        return;
 
+    const int base = getFxInsertBaseIndex (trackIndex);
+    const int pluginIndex = base + slotIndex;
 
+    if (pluginIndex < 0 || pluginIndex >= t->pluginList.size())
+        return;
 
+    if (auto* plug = t->pluginList[pluginIndex])
+        plug->deleteFromParent();
+}
 
+int TrackManager::getFxInsertBaseIndex (int trackIndex) const
+{
+    if (trackIndex < 0 || trackIndex >= getNumTracks())
+        return 0;
 
+    auto audioTracks = getAudioTracks (edit);
+    auto* t = audioTracks[(size_t) trackIndex];
+    if (! t)
+        return 0;
 
+    if (t->pluginList.size() == 0)
+        return 0;
 
+    auto* p0 = t->pluginList[0];
 
+    const bool isInstrument =
+        dynamic_cast<MorphSynthPlugin*> (p0) != nullptr
+        || dynamic_cast<te::FourOscPlugin*> (p0) != nullptr
+        || (dynamic_cast<te::ExternalPlugin*> (p0) != nullptr
+            && static_cast<te::ExternalPlugin*> (p0)->isSynth());
 
-
-
+    // Instrument at [0] ⇒ [1]=volume, [2]=meter, inserts start at [3]
+    // No instrument     ⇒ [0]=volume, [1]=meter, inserts start at [2]
+    return isInstrument ? 3 : 2;
+}

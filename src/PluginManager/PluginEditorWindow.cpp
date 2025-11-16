@@ -51,8 +51,12 @@ PluginEditorWindow::PluginEditorWindow(AudioPluginInstance& instance,
     setContentOwned(editor, true);
 
     // Size & layout
-    const int w = jmax(editor->getWidth(),  520);
-    const int h = jmax(editor->getHeight(), 360);
+    int w = editor->getWidth();
+    int h = editor->getHeight();
+
+    if (w <= 0) w = 400;
+    if (h <= 0) h = 300;
+    
     centreWithSize(w, h);
 
     setResizable(true, true);

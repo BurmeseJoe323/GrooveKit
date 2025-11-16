@@ -557,21 +557,36 @@ void AppEngine::markSaved()
 
 bool AppEngine::writeEditToFile (const juce::File& file)
 {
-    if (!edit)
+    if (! edit)
         return false;
 
+    // 1) Flush plugin state into the edit's ValueTree
     for (auto* track : te::getAudioTracks (*edit))
     {
-        if (! track) continue;
+        if (! track)
+            continue;
 
         for (auto* p : track->pluginList)
+        {
+            if (! p)
+                continue;
+
             if (auto* morph = dynamic_cast<MorphSynthPlugin*> (p))
-                morph->saveToValueTree();  // <-- no assignment; it mutates plugin.state’s child
+            {
+                morph->saveToValueTree();
+            }
+            else if (auto* ext = dynamic_cast<te::ExternalPlugin*> (p))
+            {
+                ext->flushPluginStateToValueTree();
+            }
+        }
     }
 
+    // 2) Now serialize the edit
     if (auto xml = edit->state.createXml())
     {
         juce::TemporaryFile tf (file);
+
         if (tf.getFile().replaceWithText (xml->toString())
             && tf.overwriteTargetFileWithTemporary())
         {
@@ -579,6 +594,7 @@ bool AppEngine::writeEditToFile (const juce::File& file)
             return true;
         }
     }
+
     return false;
 }
 
@@ -808,8 +824,6 @@ void AppEngine::openInstrumentEditor (int trackIndex)
                     // keep graph running so you can hear it while editing
                     auto& tc = edit->getTransport();
                     tc.ensureContextAllocated();
-                    if (!tc.isPlaying()) { startedTransportForEditor_ = true; tc.play(false); }
-                    else                 { startedTransportForEditor_ = false; }
                     return;
                 }
 
@@ -821,15 +835,6 @@ void AppEngine::openInstrumentEditor (int trackIndex)
 
             auto& tc = edit->getTransport();
             tc.ensureContextAllocated();
-            if (!tc.isPlaying())
-            {
-                startedTransportForEditor_ = true;
-                tc.play(false);
-            }
-            else
-            {
-                startedTransportForEditor_ = false;
-            }
 
             DBG("Plugin type has no editor route.");
         }
@@ -949,8 +954,8 @@ void AppEngine::onFxInsertSlotClicked (int trackIndex,
     if (!track)
         return;
 
-    constexpr int builtInOffset = 2;
-    const int pluginIndex = 1 + builtInOffset + slotIndex;
+    const int base = trackManager->getFxInsertBaseIndex (trackIndex);
+    const int pluginIndex = base + slotIndex;
 
     te::Plugin* existing = nullptr;
     if (pluginIndex >= 0 && pluginIndex < track->pluginList.size())
@@ -994,6 +999,36 @@ void AppEngine::onFxInsertSlotClicked (int trackIndex,
 
     // No plugin in this slot yet -> show the FX menu and insert something
     showFxInsertMenu (trackIndex, slotIndex, std::move (onSlotLabelChange));
+}
+
+static void debugPrintPluginChain (te::Track* track)
+{
+    DBG ("===================== Plugin Chain Dump =====================");
+
+    if (! track)
+    {
+        DBG ("(null track)");
+        DBG ("==============================================================");
+        return;
+    }
+
+    DBG ("Track: " << track->getName());
+
+    int i = 0;
+    for (auto* p : track->pluginList)
+    {
+        if (! p)
+        {
+            DBG ("  [" << i << "]  <null plugin>");
+        }
+        else
+        {
+            DBG ("  [" << i << "]  " << p->getPluginType() << " | " << p->getName());
+        }
+        ++i;
+    }
+
+    DBG ("==============================================================");
 }
 
 void AppEngine::showFxInsertMenu (int trackIndex,
@@ -1062,6 +1097,9 @@ void AppEngine::showFxInsertMenu (int trackIndex,
     if (root.getNumItems() == 0)
         return;
 
+    const int kRemoveFxItem = 100;
+    root.addItem (kRemoveFxItem, "Remove effect");
+
     root.showMenuAsync (juce::PopupMenu::Options(),
                     [this, trackIndex, slotIndex, fxDescs,
                      eqBase, compBase, reverbBase, delayBase, otherBase,
@@ -1070,6 +1108,17 @@ void AppEngine::showFxInsertMenu (int trackIndex,
         if (result == 0 || ! trackManager)
             return;
 
+        // --- Remove effect case ---
+        if (result == kRemoveFxItem)
+        {
+            trackManager->clearFxInsertSlot (trackIndex, slotIndex);
+
+            // Clear the label in the UI
+            if (onSlotLabelChange)
+                onSlotLabelChange ({});
+
+            return;
+        }
         int idx = -1;
 
         auto decode = [&] (int base)
@@ -1087,14 +1136,19 @@ void AppEngine::showFxInsertMenu (int trackIndex,
         if (idx < 0 || idx >= fxDescs.size())
             return;
 
-        constexpr int kBuiltInUtilityCount = 2;
-        const int insertIndex = 1 + kBuiltInUtilityCount + slotIndex;
+        const int base = trackManager->getFxInsertBaseIndex (trackIndex);
+        const int insertIndex = base + slotIndex;
+
+        trackManager->clearFxInsertSlot (trackIndex, slotIndex);
 
         // Insert the FX plugin via TrackManager / PluginManager
         te::Plugin* plugin = trackManager->insertExternalEffect (
             trackIndex,
             fxDescs.getReference (idx),
             insertIndex);
+
+        auto currentTrack = trackManager->getTrack (trackIndex);
+        debugPrintPluginChain (currentTrack);
 
         if (! plugin)
             return;
@@ -1168,8 +1222,8 @@ juce::String AppEngine::getInsertSlotLabel (int trackIndex, int slotIndex) const
     if (!track)
         return {};
 
-    constexpr int builtInOffset = 2;
-    const int pluginIndex = 1 + builtInOffset + slotIndex;
+    const int base = trackManager->getFxInsertBaseIndex (trackIndex);
+    const int pluginIndex = base + slotIndex;
 
     if (pluginIndex < 0 || pluginIndex >= track->pluginList.size())
         return {};
