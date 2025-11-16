@@ -29,8 +29,8 @@ void AudioEngine::play()
 void AudioEngine::stop() {
     if (&edit)
     {
-        // First param = true: Keep any recordings in progress (don't discard)
-        edit.getTransport().stop(true, false);
+        // First param = false: Keep any recordings in progress (don't discard) (Written by Claude Code)
+        edit.getTransport().stop(false, false);
         for (auto* plugin : te::getAllPlugins (edit, false))
             if (auto* morph = dynamic_cast<MorphSynthPlugin*>(plugin))
                 morph->stopAllNotes();
