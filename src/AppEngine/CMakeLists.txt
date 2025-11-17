@@ -1,4 +1,5 @@
-add_library(app_engine)
+add_library(app_engine
+        GrooveKitUIBehaviour.h)
 target_sources(app_engine PRIVATE
         AppEngine.cpp
         TrackManager.cpp

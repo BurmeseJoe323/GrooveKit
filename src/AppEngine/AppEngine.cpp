@@ -74,10 +74,31 @@ namespace
         return true;
     }
 }
+namespace
+{
+    struct GrooveKitUIBehaviour : public te::UIBehaviour
+    {
+        GrooveKitUIBehaviour() = default;
 
+        void runTaskWithProgressBar (te::ThreadPoolJobWithProgress& job) override
+        {
+            // Simple, synchronous run – no actual progress UI yet.
+            while (job.runJob() == juce::ThreadPoolJob::jobNeedsRunningAgain)
+            {
+                // You *could* pump messages here if you wanted:
+                // juce::MessageManager::getInstance()->runDispatchLoopUntil (5);
+            }
+        }
+    };
+}
 AppEngine::AppEngine()
 {
-    engine = std::make_unique<te::Engine> ("GrooveKitEngine");
+    engine = std::make_unique<te::Engine> (
+        "GrooveKitEngine",
+        std::make_unique<GrooveKitUIBehaviour>(),
+        nullptr
+    );
+
     registerMorphSynthCompat(*engine);
 
     createOrLoadEdit();
@@ -1423,4 +1444,57 @@ bool AppEngine::canPasteToTrack (int trackIndex) const
     // Check if clip type matches track type
     const bool targetIsDrum = isDrumTrack (trackIndex);
     return lastCopiedClipWasDrum == targetIsDrum;
+}
+
+bool AppEngine::exportAudio (const juce::File& destFile)
+{
+    if (edit == nullptr)
+        return false;
+
+    auto parentDir = destFile.getParentDirectory();
+    if (! parentDir.exists())
+        parentDir.createDirectory();
+
+    // Stop transport if it's playing
+    auto& transport = edit->getTransport();
+    const bool wasPlaying = transport.isPlaying();
+    if (wasPlaying)
+        transport.stop (false, false);
+
+    // Render ALL tracks (you can refine this later)
+    juce::BigInteger tracksToDo;
+    {
+        auto allTracks = te::getAllTracks (*edit);
+        for (int i = 0; i < allTracks.size(); ++i)
+            tracksToDo.setBit (i);
+    }
+
+    // Time range: 0 -> end of edit
+    const auto start  = t::TimePosition::fromSeconds (0.0);
+    const auto length = edit->getLength();              // TimeDuration
+    const t::TimeRange range { start, length };        // (TimePosition, TimeDuration)
+
+    const bool usePlugins = true;
+    const bool useThread  = false;   // IMPORTANT: avoid UIBehaviour assert
+
+    DBG ("[Export] Rendering audio to: " << destFile.getFullPathName());
+    DBG ("[Export] Edit length (seconds): " << length.inSeconds());
+
+    const bool ok = te::Renderer::renderToFile ("Export audio",
+                                                destFile,
+                                                *edit,
+                                                range,
+                                                tracksToDo,
+                                                usePlugins,
+                                                useThread);   // <-- bool, no clips arg
+
+    // Optionally restart transport if it was playing
+    te::TransportControl::restartAllTransports (*engine, true);
+    if (wasPlaying && ok)
+        transport.play (false);
+
+    // See 2️⃣ below for DBG
+    DBG (juce::String ("[Export] Render ") + (ok ? "OK" : "FAILED"));
+
+    return ok;
 }

@@ -180,6 +180,333 @@ void TrackEditView::mouseDown (const juce::MouseEvent& e)
     juce::Component::mouseDown(e);
 }
 
+void TrackEditView::setupButtons ()
+{
+    // --- Left Controls ---
+    addAndMakeVisible (bpmLabel);
+    bpmLabel.setText ("BPM:", juce::dontSendNotification);
+    bpmLabel.setColour (juce::Label::textColourId, juce::Colours::lightgrey);
+    bpmLabel.setJustificationType (juce::Justification::right);
+
+    addAndMakeVisible (bpmEditField);
+    bpmEditField.setText ("120", juce::dontSendNotification);
+    bpmEditField.setColour (juce::Label::textColourId, juce::Colours::lightgrey);
+    bpmEditField.setColour (juce::Label::outlineColourId, juce::Colours::lightgrey.brighter (0.5f));
+    bpmEditField.setColour (juce::Label::backgroundColourId, juce::Colours::darkgrey.darker ());
+    bpmEditField.setJustificationType (juce::Justification::centred);
+    bpmEditField.setEditable (true);
+    bpmEditField.addListener (this);
+    bpmEditField.setMouseCursor (juce::MouseCursor::IBeamCursor);
+
+    // --- Transport Buttons ---
+    {
+        juce::Path stopShape;
+        stopShape.addRectangle (0.0f, 0.0f, 1.0f, 1.0f);
+        stopButton.setShape (stopShape, true, true, false);
+        stopButton.setColours (juce::Colours::lightgrey, juce::Colours::white, juce::Colours::darkgrey);
+        stopButton.onClick = [this] { appEngine->stop(); };
+        addAndMakeVisible (stopButton);
+
+        juce::Path playShape;
+        playShape.addTriangle (0.0f, 0.0f, 1.0f, 0.5f, 0.0f, 1.0f);
+        playButton.setShape (playShape, true, true, false);
+        playButton.setColours (juce::Colours::lightgrey, juce::Colours::white, juce::Colours::darkgrey);
+        playButton.onClick = [this] { appEngine->play(); };
+        addAndMakeVisible (playButton);
+
+        juce::Path recordShape;
+        recordShape.addEllipse (0.0f, 0.0f, 1.0f, 1.0f);
+        recordButton.setShape (recordShape, true, true, false);
+        recordButton.setColours (juce::Colours::red, juce::Colours::lightcoral, juce::Colours::maroon);
+        addAndMakeVisible (recordButton);
+    }
+
+    // --- Right Switch ---
+    addAndMakeVisible (switchButton);
+    styleMenuButton (switchButton);
+    switchButton.onClick = [this] {
+        if (onOpenMix)
+            onOpenMix();
+    };
+}
+
+juce::StringArray TrackEditView::getMenuBarNames ()
+{
+    return { "File", "View", "Track", "Help" };
+}
+
+juce::PopupMenu TrackEditView::getMenuForIndex (const int topLevelMenuIndex, const juce::String&)
+{
+    juce::PopupMenu menu;
+    enum MenuIDs
+    {
+        OpenMixer = 1002,
+        ShowOutputSettings = 1003,
+        ShowMidiInputSettings = 1004,
+        NewEdit = 2001,
+        OpenEdit = 2002,
+        SaveEdit = 2003,
+        SaveEditAs = 2004,
+        ExportAudio = 2005,
+        NewInstrumentTrack = 3001,
+        NewDrumTrack = 3002
+    };
+
+    if (topLevelMenuIndex == 0) // File
+    {
+        menu.addItem (NewEdit, "New Edit");
+        menu.addItem (OpenEdit, "Open Edit...");
+        menu.addSeparator();
+        menu.addItem (SaveEdit, "Save Edit");
+        menu.addItem (SaveEditAs, "Save Edit As...");
+        menu.addItem (ExportAudio, "Export Audio");
+        menu.addSeparator();
+        menu.addItem (ShowOutputSettings, "Output Device Settings...");
+        menu.addItem (ShowMidiInputSettings, "MIDI Input Device Settings...");
+    }
+    else if (topLevelMenuIndex == 1) // View
+    {
+        menu.addItem (OpenMixer, "Mix View");
+    }
+    else if (topLevelMenuIndex == 2) // Track
+    {
+        menu.addItem (NewInstrumentTrack, "New Instrument Track");
+        menu.addItem (NewDrumTrack, "New Drum Track");
+    }
+    return menu;
+}
+
+void TrackEditView::menuItemSelected (const int menuItemID, int)
+{
+    enum MenuIDs
+    {
+        OpenMixer = 1002,
+        ShowOutputSettings = 1003,
+        ShowMidiInputSettings = 1004,
+        NewEdit = 2001,
+        OpenEdit = 2002,
+        SaveEdit = 2003,
+        SaveEditAs = 2004,
+        ExportAudio = 2005,
+        NewInstrumentTrack = 3001,
+        NewDrumTrack = 3002
+    };
+
+    switch (menuItemID)
+    {
+        case NewInstrumentTrack:
+        case NewDrumTrack:
+        {
+            if (!trackList)
+                return;
+            const int index = (menuItemID == NewInstrumentTrack) ? appEngine->addInstrumentTrack() : appEngine->addDrumTrack();
+            trackList->addNewTrack (index);
+            trackList->setPixelsPerBeat (pixelsPerBeat);
+            trackList->setViewStartBeat (viewStartBeat);
+            break;
+        }
+        case OpenMixer:
+            if (onOpenMix)
+                onOpenMix();
+            break;
+        case ShowOutputSettings:
+            showOutputDeviceSettings(); // TODO : fix positioning
+            break;
+        case ShowMidiInputSettings:
+            showMidiInputDeviceSettings();
+            break;
+        case NewEdit:
+            showNewEditMenu();
+            break;
+        case OpenEdit:
+            showOpenEditMenu();
+            break;
+        case SaveEdit:
+            appEngine->saveEdit();
+            break;
+        case SaveEditAs:
+            appEngine->saveEditAsAsync();
+            break;
+        case ExportAudio:
+            exportAudio();
+            break;
+        default:
+            break;
+    }
+}
+
+void TrackEditView::showOutputDeviceSettings () const
+{
+    auto* content = new OutputDeviceWindow (*appEngine);
+
+    content->setSize (360, 140);
+
+    juce::Rectangle<int> screenBounds;
+    #if JUCE_MAC
+    screenBounds = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea;
+    screenBounds = screenBounds.withHeight (25); // Approx height of mac menu bar
+    #else
+    if (menuBar)
+        screenBounds = menuBar->getScreenBounds();
+    #endif
+    juce::CallOutBox::launchAsynchronously (std::unique_ptr<Component> (content), screenBounds, nullptr);
+}
+
+void TrackEditView::showMidiInputDeviceSettings () const
+{
+    auto* content = new MidiInputDeviceWindow (*appEngine);
+
+    content->setSize (360, 140);
+
+    juce::Rectangle<int> screenBounds;
+    #if JUCE_MAC
+    screenBounds = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea;
+    screenBounds = screenBounds.withHeight (25); // Approx height of mac menu bar
+    #else
+    if (menuBar)
+        screenBounds = menuBar->getScreenBounds();
+    #endif
+    juce::CallOutBox::launchAsynchronously (std::unique_ptr<Component> (content), screenBounds, nullptr);
+}
+
+void TrackEditView::showNewEditMenu () const
+{
+    if (appEngine->isDirty())
+    {
+        const auto opts = juce::MessageBoxOptions()
+            .withIconType (juce::MessageBoxIconType::WarningIcon)
+            .withTitle ("Save changes?")
+            .withMessage ("You have unsaved changes.")
+            .withButton ("Save")
+            .withButton ("Discard")
+            .withButton ("Cancel");
+
+        juce::AlertWindow::showAsync (opts,
+            [this](const int r) {
+                if (r == 1)
+                {
+                    // Save
+                    const bool hasPath =
+                        appEngine->getCurrentEditFile().getFullPathName().isNotEmpty();
+                    if (hasPath)
+                    {
+                        if (appEngine->saveEdit())
+                            appEngine->newUntitledEdit();
+                    }
+                    else
+                    {
+                        appEngine->saveEditAsAsync ([this](const bool ok) {
+                            if (ok)
+                                appEngine->newUntitledEdit();
+                        });
+                    }
+                }
+                else if (r == 2)
+                {
+                    // Discard
+                    appEngine->newUntitledEdit();
+                }
+            });
+    }
+    else
+    {
+        appEngine->newUntitledEdit();
+    }
+}
+
+void TrackEditView::showOpenEditMenu () const
+{
+    if (!appEngine->isDirty())
+    {
+        appEngine->openEditAsync();
+        return;
+    }
+
+    const auto opts = juce::MessageBoxOptions()
+        .withIconType (juce::MessageBoxIconType::WarningIcon)
+        .withTitle ("Save changes?")
+        .withMessage ("You have unsaved changes.")
+        .withButton ("Save")
+        .withButton ("Discard")
+        .withButton ("Cancel");
+
+    juce::AlertWindow::showAsync (opts,
+        [this](const int result) {
+            if (result == 1) // Save
+            {
+                if (appEngine->getCurrentEditFile().getFullPathName().isNotEmpty())
+                {
+                    if (appEngine->saveEdit())
+                        appEngine->openEditAsync();
+                }
+                else
+                {
+                    appEngine->saveEditAsAsync ([this](const bool ok) {
+                        if (ok)
+                            appEngine->openEditAsync();
+                    });
+                }
+            }
+            else if (result == 2) // Discard
+            {
+                appEngine->openEditAsync();
+            }
+        });
+}
+
+void TrackEditView::exportAudio()
+{
+    auto chooser = std::make_shared<juce::FileChooser> (
+        "Export audio",
+        juce::File::getSpecialLocation (juce::File::userDesktopDirectory),
+        "*.wav");
+
+    chooser->launchAsync (juce::FileBrowserComponent::saveMode
+                          | juce::FileBrowserComponent::canSelectFiles,
+                          [this, chooser] (const juce::FileChooser& fc)
+    {
+        DBG ("[TrackEditView] ExportAudio chooser callback hit");
+
+        auto file = fc.getResult();
+
+        if (file == juce::File())
+            return; // user cancelled
+
+        file = file.withFileExtension (".wav");
+
+        // 1) Create and show full-screen overlay
+        exportOverlay = std::make_unique<ExportOverlayComponent>();
+        exportOverlay->setBounds (getLocalBounds());
+        addAndMakeVisible (exportOverlay.get());
+        exportOverlay->toFront (true);
+        repaint();
+
+        // 2) Do the export (synchronous) – UI will be visually dimmed
+        const bool ok = appEngine->exportAudio (file);
+
+        // 3) Remove overlay
+        if (exportOverlay != nullptr)
+        {
+            removeChildComponent (exportOverlay.get());
+            exportOverlay.reset();
+        }
+
+        // 4) Show result
+        if (! ok)
+        {
+            juce::AlertWindow::showMessageBoxAsync (juce::AlertWindow::WarningIcon,
+                                                    "Export failed",
+                                                    "There was a problem rendering the audio.");
+        }
+        else
+        {
+            juce::AlertWindow::showMessageBoxAsync (juce::AlertWindow::InfoIcon,
+                                                    "Export complete",
+                                                    "audio exported to:\n" + file.getFullPathName());
+        }
+    });
+}
+
 void TrackEditView::showPianoRoll (te::MidiClip* clip)
 {
     if (pianoRoll == nullptr)

@@ -226,6 +226,8 @@ public:
 
     PluginManager& getPluginManager() { return *pluginManager; }
 
+    bool exportAudio (const juce::File& destFile);
+
 
 private:
     std::unique_ptr<tracktion::engine::Engine> engine;
@@ -249,6 +251,7 @@ private:
     juce::File currentEditFile;
 
     std::unique_ptr<juce::DocumentWindow> instrumentWindow_;
+
     bool startedTransportForEditor_ = false;
 
     int lastSavedTxn = 0;
