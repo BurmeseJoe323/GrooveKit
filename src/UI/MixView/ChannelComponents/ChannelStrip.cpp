@@ -108,6 +108,7 @@ ChannelStrip::ChannelStrip()
     fader.setSliderStyle (juce::Slider::LinearVertical);
     fader.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
     fader.setRange (0.0, 1.0, 0.001);
+    fader.setSkewFactorFromMidPoint (0.5); // Logarithmic curve for natural volume control
     fader.setValue (0.75);
     fader.setLookAndFeel (&lnf);
 
