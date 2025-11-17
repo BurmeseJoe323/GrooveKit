@@ -5,7 +5,6 @@
 
 namespace te = tracktion::engine;
 
-// Minimal behaviour: just run the job to completion, no fancy UI yet.
 class GrooveKitUIBehaviour : public te::UIBehaviour
 {
 public:
@@ -13,8 +12,6 @@ public:
 
     void runTaskWithProgressBar (te::ThreadPoolJobWithProgress& job) override
     {
-        // This satisfies UIBehaviour and stops the jassert.
-        // If you want to show a modal overlay later, we can extend this.
         while (job.runJob() == juce::ThreadPoolJob::jobNeedsRunningAgain)
         {
             //juce::MessageManager::getInstance()->runDispatchLoopUntil (10);
