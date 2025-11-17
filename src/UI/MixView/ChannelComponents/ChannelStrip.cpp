@@ -1,4 +1,3 @@
-/// JUNIE
 #include "ChannelStrip.h"
 #include "../TrackView/TrackHeaderComponent.h"
 #include "MainComponent.h"
@@ -103,6 +102,10 @@ ChannelStrip::ChannelStrip()
     name.setJustificationType (juce::Justification::centred);
     name.setOpaque (false);
     name.setColour (juce::Label::textColourId, juce::Colour (0xFF343A40));
+    // Make track name editable on double-click (Written by Claude Code)
+    name.setEditable (false, true, false);
+    name.setMouseCursor (juce::MouseCursor::IBeamCursor);
+    name.addListener (this);
 
     addAndMakeVisible (fader);
     fader.setSliderStyle (juce::Slider::LinearVertical);
@@ -127,6 +130,16 @@ ChannelStrip::~ChannelStrip()
     DBG ("[ChannelStrip] dtor");
 }
 
+// Handle user editing the track name label (Written by Claude Code)
+void ChannelStrip::labelTextChanged (juce::Label* labelThatHasChanged)
+{
+    if (labelThatHasChanged == &name && onRequestNameChange)
+    {
+        const juce::String newName = name.getText();
+        onRequestNameChange (trackIndex, newName);
+    }
+}
+
 // Programmatic state sync without re-firing listeners
 bool ChannelStrip::isMuted() const { return muteButton.getToggleState(); }
 void ChannelStrip::setMuted (const bool isMuted)
@@ -145,7 +158,6 @@ void ChannelStrip::setArmed (const bool isArmed)
 {
     recordButton.setToggleState (isArmed, juce::dontSendNotification);
 }
-
 
 void ChannelStrip::bindToTrack (te::AudioTrack& track)
 {
@@ -281,7 +293,7 @@ void ChannelStrip::resized()
 
     // pan knob
     auto panArea = bottom.removeFromTop (48);
-    pan.setBounds (panArea.withSizeKeepingCentre (36, 36));
+    pan.setBounds (panArea.withSizeKeepingCentre (50, 50));
 
     // fader
     fader.setBounds (bottom.reduced (2, 8));

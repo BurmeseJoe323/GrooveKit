@@ -261,6 +261,28 @@ void AppEngine::setTrackSoloed (int i, bool s) { trackManager->setTrackSoloed (i
 bool AppEngine::isTrackSoloed (int i) const { return trackManager->isTrackSoloed (i); }
 bool AppEngine::anyTrackSoloed() const { return trackManager->anyTrackSoloed(); }
 
+// Track naming implementation (Written by Claude Code)
+void AppEngine::setTrackName (int trackIndex, const juce::String& name)
+{
+    auto audioTracks = te::getAudioTracks (*edit);
+    if (trackIndex >= 0 && trackIndex < audioTracks.size())
+    {
+        auto* track = audioTracks[trackIndex];
+        track->setName (name);
+    }
+}
+
+juce::String AppEngine::getTrackName (int trackIndex) const
+{
+    auto audioTracks = te::getAudioTracks (*edit);
+    if (trackIndex >= 0 && trackIndex < audioTracks.size())
+    {
+        auto* track = audioTracks[trackIndex];
+        return track->getName();
+    }
+    return {};
+}
+
 double AppEngine::getBpm () const { return edit->tempoSequence.getTempo (0)->getBpm(); }
 
 void AppEngine::setBpm (double newBpm)

@@ -57,6 +57,9 @@ int TrackManager::addDrumTrack()
     auto* track = te::getAudioTracks(edit)[(size_t) newIndex];
     track->state.setProperty (GKIDs::isDrum, true, nullptr);           // <-- persist
 
+    // Set default drum track name (Written by Claude Code)
+    track->setName ("Drums");
+
     auto adapter = std::make_unique<DrumSamplerEngineAdapter>(edit.engine, *track);
 
     syncBookkeepingToEngine();
@@ -73,6 +76,10 @@ int TrackManager::addInstrumentTrack()
 
     auto* track = te::getAudioTracks(edit)[(size_t) newIndex];
     track->state.setProperty (GKIDs::isDrum, false, nullptr);
+
+    // Set default instrument track name (Written by Claude Code)
+    track->setName ("Track " + juce::String (newIndex + 1));
+
     syncBookkeepingToEngine();
     types[(size_t) newIndex] = TrackType::Instrument;
     if ((int) drumEngines.size() > newIndex)

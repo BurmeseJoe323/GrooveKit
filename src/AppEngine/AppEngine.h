@@ -125,6 +125,10 @@ public:
     bool isTrackSoloed (int index) const;
     bool anyTrackSoloed() const;
 
+    // Track naming (Written by Claude Code)
+    void setTrackName (int trackIndex, const juce::String& name);
+    juce::String getTrackName (int trackIndex) const;
+
     double getBpm() const;
     void setBpm (double newBpm);
 

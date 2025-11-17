@@ -7,12 +7,11 @@ MixerPanel::MixerPanel (AppEngine& engine)
     // Setup viewport for horizontal scrolling of track strips
     addAndMakeVisible (tracksViewport);
     tracksViewport.setViewedComponent (&tracksContainer, false);
-    tracksViewport.setScrollBarsShown (false, true);  // vertical: no, horizontal: yes
+    tracksViewport.setScrollBarsShown (false, true); // vertical: no, horizontal: yes
 
     refreshTracks();
 
-    appEngine.onArmedTrackChanged = [this]
-    {
+    appEngine.onArmedTrackChanged = [this] {
         refreshArmStates();
     };
 }
@@ -47,6 +46,7 @@ void MixerPanel::refreshTracks()
     {
         auto* t = audioTracks[i];
         auto* strip = new ChannelStrip();
+        strip->setTrackIndex (i); // Track index for renaming (Written by Claude Code)
         strip->setTrackName (t->getName());
         strip->bindToTrack (*t);
 
@@ -57,19 +57,23 @@ void MixerPanel::refreshTracks()
         // Always update engine state if listeners aren't present (e.g., Track view not active)
         strip->onRequestMuteChange = [this, idx = i] (bool mute) { appEngine.setTrackMuted (idx, mute); };
         strip->onRequestSoloChange = [this, idx = i] (bool solo) { appEngine.setTrackSoloed (idx, solo); };
-        strip->onRequestArmChange = [this, idx = i](bool armed) {
+        strip->onRequestArmChange = [this, idx = i] (bool armed) {
             const int currentSelected = appEngine.getArmedTrackIndex();
             const int newSelected = armed ? idx : -1;
             if (currentSelected != newSelected)
                 appEngine.setArmedTrack (newSelected);
         };
+        // Handle track name changes (Written by Claude Code)
+        strip->onRequestNameChange = [this] (int trackIndex, const juce::String& newName) {
+            appEngine.setTrackName (trackIndex, newName);
+        };
 
         // Initialize UI state from engine
         strip->setMuted (appEngine.isTrackMuted (i));
-        strip->setSolo  (appEngine.isTrackSoloed (i));
-        strip->setArmed (appEngine.getArmedTrackIndex () == i);
+        strip->setSolo (appEngine.isTrackSoloed (i));
+        strip->setArmed (appEngine.getArmedTrackIndex() == i);
 
-        tracksContainer.addAndMakeVisible (strip);  // Add to scrollable container
+        tracksContainer.addAndMakeVisible (strip); // Add to scrollable container
         trackStrips.add (strip);
     }
 
@@ -104,7 +108,7 @@ void MixerPanel::resized()
     {
         auto masterArea = r.removeFromRight (stripW);
         masterStrip->setBounds (masterArea);
-        r.removeFromRight (gap);  // Add gap between viewport and master
+        r.removeFromRight (gap); // Add gap between viewport and master
     }
 
     // Viewport fills remaining space on left
@@ -116,7 +120,7 @@ void MixerPanel::resized()
 
     // Position strips inside container
     int x = 0;
-    const int h = tracksContainer.getHeight()-gap; // small padding
+    const int h = tracksContainer.getHeight() - gap; // small padding
     for (auto* s : trackStrips)
     {
         s->setBounds ({ x, 0, stripW, h });

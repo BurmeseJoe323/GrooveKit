@@ -1,13 +1,14 @@
-/// JUNIE
 #pragma once
+
+#include "../TrackView/TrackHeaderComponent.h"
+#include "ChannelStripComponents/FaderComponent.h"
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <tracktion_engine/tracktion_engine.h>
-#include "ChannelStripComponents/FaderComponent.h"
-#include "../TrackView/TrackHeaderComponent.h"
 
 namespace te = tracktion::engine;
 
-class ChannelStrip final : public juce::Component
+class ChannelStrip final : public juce::Component,
+                           public juce::Label::Listener
 {
 public:
     ChannelStrip();
@@ -20,20 +21,28 @@ public:
     void paint (juce::Graphics& g) override;
     void resized() override;
 
-    void setTrackName (juce::String s) { name.setText (s, juce::dontSendNotification); }
+    void setTrackName (const juce::String& s) { name.setText (s, juce::dontSendNotification); }
+
+    // Track index management (Written by Claude Code)
+    void setTrackIndex (int index) { trackIndex = index; }
+    int getTrackIndex() const { return trackIndex; }
+
+    // juce::Label::Listener implementation (Written by Claude Code)
+    void labelTextChanged (juce::Label* labelThatHasChanged) override;
 
     // Listener passthrough (store as SafePointers to avoid dangling UI references) (Junie)
     void addListener (TrackHeaderComponent::Listener* l)
     {
-        if (auto* c = dynamic_cast<juce::Component*>(l))
+        if (auto* c = dynamic_cast<juce::Component*> (l))
             listenerComponents.add (juce::Component::SafePointer<juce::Component> (c));
     }
     void removeListener (TrackHeaderComponent::Listener* l)
     {
-        if (l == nullptr) return;
+        if (l == nullptr)
+            return;
         for (int i = listenerComponents.size(); --i >= 0;)
         {
-            if (listenerComponents[i] == dynamic_cast<juce::Component*>(l))
+            if (listenerComponents[i] == dynamic_cast<juce::Component*> (l))
                 listenerComponents.remove (i);
         }
     }
@@ -46,7 +55,7 @@ public:
     bool isSolo() const;
 
     void setArmed (bool isArmed);
-    bool isArmed () const;
+    bool isArmed() const;
 
     // void setMeterLevel(float lin)      { meter.setLevel(lin); }
     // void setMeterPeak(float lin)       { meter.setPeak(lin); }
@@ -56,8 +65,11 @@ public:
     std::function<void (bool)> onRequestMuteChange;
     std::function<void (bool)> onRequestSoloChange;
     std::function<void (bool)> onRequestArmChange;
+    // Track naming callback (Written by Claude Code)
+    std::function<void (int trackIndex, const juce::String& newName)> onRequestNameChange;
 
 private:
+    int trackIndex = -1; // Track index for this channel strip (Written by Claude Code)
     juce::TextButton muteButton, soloButton, recordButton;
     juce::Label name;
     //ChannelMeter     meter;

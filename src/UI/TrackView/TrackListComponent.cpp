@@ -274,7 +274,8 @@ void TrackListComponent::addNewTrack (int engineIdx)
     // Select random color from palette
     const auto newColor = trackColors[tracks.size() % trackColors.size()];
 
-    auto* header = new TrackHeaderComponent();
+    auto* header = new TrackHeaderComponent(*appEngine); // Written by Claude Code - pass AppEngine reference
+    header->setTrackIndex (engineIdx); // Set track index for renaming (Written by Claude Code)
     auto* newTrack = new TrackComponent (appEngine, engineIdx, newColor);
     // newTrack->setEngineIndex (engineIdx);
 
@@ -283,9 +284,13 @@ void TrackListComponent::addNewTrack (int engineIdx)
 
     header->addListener (newTrack);
 
-    // Set the track name on the header
+    // Load track name from engine (Written by Claude Code)
     const bool isDrum = appEngine->isDrumTrack (newTrack->getTrackIndex());
-    header->setTrackName (isDrum ? "Drums" : ("Track " + juce::String (tracks.size() + 1)));
+    juce::String trackName = appEngine->getTrackName (engineIdx);
+    // Fallback to default names if engine doesn't have a name set
+    if (trackName.isEmpty())
+        trackName = isDrum ? "Drums" : ("Track " + juce::String (tracks.size() + 1));
+    header->setTrackName (trackName);
 
     headers.add (header);
 
@@ -359,8 +364,13 @@ void TrackListComponent::updateTrackIndexes() const
 {
     const int n = tracks.size();
     for (int i = 0; i < n; ++i)
+    {
         if (tracks[i] != nullptr)
             tracks[i]->setTrackIndex (i);
+        // Update header trackIndex too (Written by Claude Code)
+        if (i < headers.size() && headers[i] != nullptr)
+            headers[i]->setTrackIndex (i);
+    }
 }
 
 void TrackListComponent::refreshTrackStates() const

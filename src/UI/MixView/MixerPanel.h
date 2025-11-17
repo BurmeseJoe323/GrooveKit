@@ -1,16 +1,16 @@
 #pragma once
-#include <juce_gui_basics/juce_gui_basics.h>
 
 #include "../../AppEngine/AppEngine.h"
 #include "ChannelComponents/ChannelStrip.h"
+#include <juce_gui_basics/juce_gui_basics.h>
 
 namespace te = tracktion::engine;
 
-class MixerPanel : public juce::Component
+class MixerPanel final : public juce::Component
 {
 public:
-    MixerPanel (AppEngine& engine);
-    ~MixerPanel();
+    explicit MixerPanel (AppEngine& engine);
+    ~MixerPanel() override;
 
     void refreshTracks();
     void resized() override;
