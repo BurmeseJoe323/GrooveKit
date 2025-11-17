@@ -16,6 +16,16 @@ MixView::MixView(AppEngine& engine, TransportBar& transport, GrooveKitMenuBar& m
     mixerPanel = std::make_unique<MixerPanel>(appEngine);
     addAndMakeVisible(*mixerPanel);
 
+    // Set up menu bar callbacks to refresh mixer when tracks are created (Written by Claude Code)
+    menuBar->onNewInstrumentTrack = [this] {
+        appEngine.addInstrumentTrack();
+        refreshMixer();
+    };
+    menuBar->onNewDrumTrack = [this] {
+        appEngine.addDrumTrack();
+        refreshMixer();
+    };
+
     // Enable keyboard focus for MIDI playback (Written by Claude Code)
     setWantsKeyboardFocus(true);
 }

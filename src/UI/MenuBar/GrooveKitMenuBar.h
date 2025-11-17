@@ -13,15 +13,15 @@ class AppEngine;
 
 /**
  * Menu bar component that appears in both TrackEditView and MixView.
- * Handles File, View, Track, and Help menus with view-specific item visibility.
+ * Handles File, View, Track, and Help menus. (Written by Claude Code)
  */
 class GrooveKitMenuBar final : public juce::Component, public juce::MenuBarModel
 {
 public:
     enum class ViewMode
     {
-        TrackEdit,  // Shows all menus including Track menu
-        Mix         // Hides Track menu and View > Mix View item
+        TrackEdit,  // Track Edit view mode (Written by Claude Code)
+        Mix         // Mix view mode
     };
 
     explicit GrooveKitMenuBar(AppEngine& engine);

@@ -36,10 +36,8 @@ void GrooveKitMenuBar::resized()
 
 juce::StringArray GrooveKitMenuBar::getMenuBarNames()
 {
-    if (currentViewMode == ViewMode::TrackEdit)
-        return { "File", "View", "Track", "Help" };
-    else
-        return { "File", "View", "Help" };  // Hide Track menu in Mix view
+    // Show Track menu in both views (Written by Claude Code)
+    return { "File", "View", "Track", "Help" };
 }
 
 juce::PopupMenu GrooveKitMenuBar::getMenuForIndex(const int topLevelMenuIndex, const juce::String&)
@@ -74,13 +72,10 @@ juce::PopupMenu GrooveKitMenuBar::getMenuForIndex(const int topLevelMenuIndex, c
         menu.addItem(SwitchToTrackEdit, "Track Edit", true, currentViewMode == ViewMode::TrackEdit);
         menu.addItem(OpenMixer, "Mix View", true, currentViewMode == ViewMode::Mix);
     }
-    else if (topLevelMenuIndex == 2) // Track (only appears in TrackEdit mode)
+    else if (topLevelMenuIndex == 2) // Track (Written by Claude Code)
     {
-        if (currentViewMode == ViewMode::TrackEdit)
-        {
-            menu.addItem(NewInstrumentTrack, "New Instrument Track");
-            menu.addItem(NewDrumTrack, "New Drum Track");
-        }
+        menu.addItem(NewInstrumentTrack, "New Instrument Track");
+        menu.addItem(NewDrumTrack, "New Drum Track");
     }
     // topLevelMenuIndex == 3 or 2 (depending on view mode) is Help - empty for now
 
