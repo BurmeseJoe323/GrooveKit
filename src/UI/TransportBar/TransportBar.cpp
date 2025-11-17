@@ -115,15 +115,24 @@ void TransportBar::setupButtons()
         appEngine->setClickTrackEnabled(metronomeButton.getToggleState());
     };
 
-    // View Switch Button (Written by Claude Code)
-    addAndMakeVisible(switchButton);
-    switchButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0x00000000));
-    switchButton.setColour(juce::TextButton::textColourOffId, juce::Colours::lightgrey);
-    switchButton.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
+    // View Switch Button - initialize with mixer icon (vertical lines)
+    juce::Path mixerIcon;
+    constexpr float lineWidth = 0.08f;
+    constexpr float lineHeight = 0.6f;
+    constexpr float startY = (1.0f - lineHeight) / 2.0f;
+    constexpr float cornerRadius = 0.02f;
+
+    mixerIcon.addRoundedRectangle(0.25f - lineWidth/2, startY, lineWidth, lineHeight, cornerRadius);
+    mixerIcon.addRoundedRectangle(0.50f - lineWidth/2, startY, lineWidth, lineHeight, cornerRadius);
+    mixerIcon.addRoundedRectangle(0.75f - lineWidth/2, startY, lineWidth, lineHeight, cornerRadius);
+
+    switchButton.setShape(mixerIcon, false, true, false);
+    switchButton.setColours(juce::Colours::lightgrey, juce::Colours::white, juce::Colours::darkgrey);
     switchButton.onClick = [this] {
         if (onSwitchView)
             onSwitchView();
     };
+    addAndMakeVisible(switchButton);
 }
 
 void TransportBar::labelTextChanged(juce::Label* labelThatHasChanged)
@@ -150,16 +159,37 @@ void TransportBar::setViewMode(ViewMode mode)
 {
     currentViewMode = mode;
 
-    // Update switch button text based on current view (Written by Claude Code)
+    // Update switch button icon to show destination view
+    juce::Path icon;
+    constexpr float lineThickness = 0.08f;
+    constexpr float lineLength = 0.6f;
+    constexpr float cornerRadius = 0.02f;
+
     switch (currentViewMode)
     {
         case ViewMode::TrackEdit:
-            switchButton.setButtonText("|||");  // Vertical lines - switches to Mix
+        {
+            // Show mixer icon (vertical lines) - switches to Mix view
+            const float startY = (1.0f - lineLength) / 2.0f;
+            icon.addRoundedRectangle(0.25f - lineThickness/2, startY, lineThickness, lineLength, cornerRadius);
+            icon.addRoundedRectangle(0.50f - lineThickness/2, startY, lineThickness, lineLength, cornerRadius);
+            icon.addRoundedRectangle(0.75f - lineThickness/2, startY, lineThickness, lineLength, cornerRadius);
             break;
+        }
         case ViewMode::Mix:
-            switchButton.setButtonText("≡");    // Horizontal lines - switches to Track
+        {
+            // Show track list icon (horizontal lines) - switches to Track Edit view
+            const float startX = (1.0f - lineLength) / 2.0f;
+            icon.addRoundedRectangle(startX, 0.25f - lineThickness/2, lineLength, lineThickness, cornerRadius);
+            icon.addRoundedRectangle(startX, 0.50f - lineThickness/2, lineLength, lineThickness, cornerRadius);
+            icon.addRoundedRectangle(startX, 0.75f - lineThickness/2, lineLength, lineThickness, cornerRadius);
             break;
+        }
     }
+
+    switchButton.setShape(icon, false, true, false);
+    switchButton.setVisible(true);
+    switchButton.repaint();
 }
 
 void TransportBar::updateBpmDisplay()

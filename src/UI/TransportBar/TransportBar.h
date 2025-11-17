@@ -21,8 +21,8 @@ class TransportBar final : public juce::Component, public juce::Label::Listener,
 public:
     enum class ViewMode
     {
-        TrackEdit,  // Shows "|||" button to switch to Mix view
-        Mix         // Shows "≡" button to switch to Track view
+        TrackEdit,  // Shows mixer icon (vertical lines) to switch to Mix view
+        Mix         // Shows track list icon (horizontal lines) to switch to Track Edit view
     };
 
     explicit TransportBar(AppEngine& engine);
@@ -63,7 +63,7 @@ private:
     juce::ShapeButton stopButton{"stop", {}, {}, {}};
     juce::ShapeButton recordButton{"record", {}, {}, {}};
     juce::ToggleButton metronomeButton{"Click"};
-    juce::TextButton switchButton{"|||"};
+    juce::ShapeButton switchButton{"switch", {}, {}, {}};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TransportBar)
 };
