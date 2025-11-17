@@ -15,6 +15,7 @@ MainComponent::MainComponent()
     // Create shared menu bar
     menuBar = std::make_unique<GrooveKitMenuBar>(appEngine);
     menuBar->onSwitchToMix = [this] { showMixView(); };
+    menuBar->onSwitchToTrackEdit = [this] { showTrackView(); }; // (Written by Claude Code)
 
     setSize(1200, 800);
     showTrackView();

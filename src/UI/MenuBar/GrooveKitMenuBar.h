@@ -43,6 +43,7 @@ public:
      * Callbacks for view-specific actions.
      */
     std::function<void()> onSwitchToMix;
+    std::function<void()> onSwitchToTrackEdit; // (Written by Claude Code)
     std::function<void()> onNewInstrumentTrack;
     std::function<void()> onNewDrumTrack;
 

@@ -47,6 +47,7 @@ juce::PopupMenu GrooveKitMenuBar::getMenuForIndex(const int topLevelMenuIndex, c
     juce::PopupMenu menu;
     enum MenuIDs
     {
+        SwitchToTrackEdit = 1001, // (Written by Claude Code)
         OpenMixer = 1002,
         ShowOutputSettings = 1003,
         NewEdit = 2001,
@@ -67,11 +68,11 @@ juce::PopupMenu GrooveKitMenuBar::getMenuForIndex(const int topLevelMenuIndex, c
         menu.addSeparator();
         menu.addItem(ShowOutputSettings, "Output Device Settings...");
     }
-    else if (topLevelMenuIndex == 1) // View
+    else if (topLevelMenuIndex == 1) // View (Written by Claude Code)
     {
-        // Only show "Mix View" when in TrackEdit mode
-        if (currentViewMode == ViewMode::TrackEdit)
-            menu.addItem(OpenMixer, "Mix View");
+        // Show both views with checkmark on current view
+        menu.addItem(SwitchToTrackEdit, "Track Edit", true, currentViewMode == ViewMode::TrackEdit);
+        menu.addItem(OpenMixer, "Mix View", true, currentViewMode == ViewMode::Mix);
     }
     else if (topLevelMenuIndex == 2) // Track (only appears in TrackEdit mode)
     {
@@ -90,6 +91,7 @@ void GrooveKitMenuBar::menuItemSelected(const int menuItemID, int)
 {
     enum MenuIDs
     {
+        SwitchToTrackEdit = 1001, // (Written by Claude Code)
         OpenMixer = 1002,
         ShowOutputSettings = 1003,
         NewEdit = 2001,
@@ -109,6 +111,10 @@ void GrooveKitMenuBar::menuItemSelected(const int menuItemID, int)
         case NewDrumTrack:
             if (onNewDrumTrack)
                 onNewDrumTrack();
+            break;
+        case SwitchToTrackEdit: // (Written by Claude Code)
+            if (onSwitchToTrackEdit)
+                onSwitchToTrackEdit();
             break;
         case OpenMixer:
             if (onSwitchToMix)
