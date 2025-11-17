@@ -1455,13 +1455,11 @@ bool AppEngine::exportAudio (const juce::File& destFile)
     if (! parentDir.exists())
         parentDir.createDirectory();
 
-    // Stop transport if it's playing
     auto& transport = edit->getTransport();
     const bool wasPlaying = transport.isPlaying();
     if (wasPlaying)
         transport.stop (false, false);
 
-    // Render ALL tracks (you can refine this later)
     juce::BigInteger tracksToDo;
     {
         auto allTracks = te::getAllTracks (*edit);
@@ -1469,13 +1467,12 @@ bool AppEngine::exportAudio (const juce::File& destFile)
             tracksToDo.setBit (i);
     }
 
-    // Time range: 0 -> end of edit
     const auto start  = t::TimePosition::fromSeconds (0.0);
-    const auto length = edit->getLength();              // TimeDuration
-    const t::TimeRange range { start, length };        // (TimePosition, TimeDuration)
+    const auto length = edit->getLength();
+    const t::TimeRange range { start, length };
 
     const bool usePlugins = true;
-    const bool useThread  = false;   // IMPORTANT: avoid UIBehaviour assert
+    const bool useThread  = false;
 
     DBG ("[Export] Rendering audio to: " << destFile.getFullPathName());
     DBG ("[Export] Edit length (seconds): " << length.inSeconds());
@@ -1486,14 +1483,12 @@ bool AppEngine::exportAudio (const juce::File& destFile)
                                                 range,
                                                 tracksToDo,
                                                 usePlugins,
-                                                useThread);   // <-- bool, no clips arg
+                                                useThread);
 
-    // Optionally restart transport if it was playing
     te::TransportControl::restartAllTransports (*engine, true);
     if (wasPlaying && ok)
         transport.play (false);
 
-    // See 2️⃣ below for DBG
     DBG (juce::String ("[Export] Render ") + (ok ? "OK" : "FAILED"));
 
     return ok;

@@ -474,24 +474,24 @@ void TrackEditView::exportAudio()
 
         file = file.withFileExtension (".wav");
 
-        // 1) Create and show full-screen overlay
+        // Create and show full-screen overlay
         exportOverlay = std::make_unique<ExportOverlayComponent>();
         exportOverlay->setBounds (getLocalBounds());
         addAndMakeVisible (exportOverlay.get());
         exportOverlay->toFront (true);
         repaint();
 
-        // 2) Do the export (synchronous) – UI will be visually dimmed
+        // Do the export (synchronous) – UI will be visually dimmed
         const bool ok = appEngine->exportAudio (file);
 
-        // 3) Remove overlay
+        // Remove overlay
         if (exportOverlay != nullptr)
         {
             removeChildComponent (exportOverlay.get());
             exportOverlay.reset();
         }
 
-        // 4) Show result
+        // Show result
         if (! ok)
         {
             juce::AlertWindow::showMessageBoxAsync (juce::AlertWindow::WarningIcon,
