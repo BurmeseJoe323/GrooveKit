@@ -481,7 +481,7 @@ void TrackEditView::exportAudio()
         exportOverlay->toFront (true);
         repaint();
 
-        // Do the export (synchronous) – UI will be visually dimmed
+        // Do the export
         const bool ok = appEngine->exportAudio (file);
 
         // Remove overlay

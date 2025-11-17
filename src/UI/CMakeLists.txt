@@ -23,7 +23,6 @@ add_library(app_ui
         Plugins/Synthesizer/MorphSynthView.cpp
         Plugins/Synthesizer/MorphSynthWindow.h
         Plugins/Synthesizer/MorphLookAndFeel.h
-        TrackView/ExportOverlayComponent.h
 )
 
 target_sources(app_ui
