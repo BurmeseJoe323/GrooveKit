@@ -22,6 +22,9 @@ private:
     juce::OwnedArray<ChannelStrip> trackStrips;
     std::unique_ptr<ChannelStrip> masterStrip;
 
+    juce::Viewport tracksViewport;
+    juce::Component tracksContainer;
+
     int innerMargin = 12;
     int gap = 12;
     int stripW = 120;

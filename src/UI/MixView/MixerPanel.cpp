@@ -4,6 +4,11 @@ namespace te = tracktion::engine;
 MixerPanel::MixerPanel (AppEngine& engine)
     : appEngine (engine)
 {
+    // Setup viewport for horizontal scrolling of track strips
+    addAndMakeVisible (tracksViewport);
+    tracksViewport.setViewedComponent (&tracksContainer, false);
+    tracksViewport.setScrollBarsShown (false, true);  // vertical: no, horizontal: yes
+
     refreshTracks();
 
     appEngine.onArmedTrackChanged = [this]
@@ -22,8 +27,13 @@ MixerPanel::~MixerPanel()
 
 void MixerPanel::refreshTracks()
 {
-    removeAllChildren();
+    // Clear only the container's children, not the viewport
+    tracksContainer.removeAllChildren();
     trackStrips.clear (true);
+
+    // Remove and reset master strip
+    if (masterStrip)
+        removeChildComponent (masterStrip.get());
     masterStrip.reset();
 
     auto& edit = appEngine.getEdit();
@@ -59,7 +69,7 @@ void MixerPanel::refreshTracks()
         strip->setSolo  (appEngine.isTrackSoloed (i));
         strip->setArmed (appEngine.getArmedTrackIndex () == i);
 
-        addAndMakeVisible (strip);
+        tracksContainer.addAndMakeVisible (strip);  // Add to scrollable container
         trackStrips.add (strip);
     }
 
@@ -89,19 +99,27 @@ void MixerPanel::resized()
 {
     auto r = getLocalBounds().reduced (innerMargin);
 
+    // Master strip stays fixed on right
     if (masterStrip)
     {
         auto masterArea = r.removeFromRight (stripW);
         masterStrip->setBounds (masterArea);
+        r.removeFromRight (gap);  // Add gap between viewport and master
     }
 
-    int x = r.getX();
-    const int y = r.getY();
-    const int h = r.getHeight();
+    // Viewport fills remaining space on left
+    tracksViewport.setBounds (r);
 
+    // Calculate total width needed for all track strips
+    const int totalTracksWidth = trackStrips.size() * (stripW + gap);
+    tracksContainer.setBounds (0, 0, totalTracksWidth, r.getHeight());
+
+    // Position strips inside container
+    int x = 0;
+    const int h = tracksContainer.getHeight()-gap; // small padding
     for (auto* s : trackStrips)
     {
-        s->setBounds ({ x, y, stripW, h });
+        s->setBounds ({ x, 0, stripW, h });
         x += stripW + gap;
     }
 }
