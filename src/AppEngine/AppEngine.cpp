@@ -74,7 +74,23 @@ namespace
         return true;
     }
 }
+namespace
+{
+    struct GrooveKitUIBehaviour : public te::UIBehaviour
+    {
+        GrooveKitUIBehaviour() = default;
 
+        void runTaskWithProgressBar (te::ThreadPoolJobWithProgress& job) override
+        {
+            // Simple, synchronous run – no actual progress UI yet.
+            while (job.runJob() == juce::ThreadPoolJob::jobNeedsRunningAgain)
+            {
+                // You *could* pump messages here if you wanted:
+                // juce::MessageManager::getInstance()->runDispatchLoopUntil (5);
+            }
+        }
+    };
+}
 AppEngine::AppEngine()
 {
     engine = std::make_unique<te::Engine> (
