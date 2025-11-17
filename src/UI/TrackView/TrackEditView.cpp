@@ -36,6 +36,22 @@ TrackEditView::TrackEditView (AppEngine& engine, TransportBar& transport, Groove
 
     trackList->rebuildFromEngine();
 
+    // Set up menu bar callbacks to refresh UI when tracks are created (Written by Claude Code)
+    menuBar->onNewInstrumentTrack = [this] {
+        const int index = appEngine->addInstrumentTrack();
+        trackList->addNewTrack(index);
+        trackList->setPixelsPerBeat(pixelsPerBeat);
+        trackList->setViewStartBeat(viewStartBeat);
+        trackList->resized(); // Trigger layout update to position new track
+    };
+    menuBar->onNewDrumTrack = [this] {
+        const int index = appEngine->addDrumTrack();
+        trackList->addNewTrack(index);
+        trackList->setPixelsPerBeat(pixelsPerBeat);
+        trackList->setViewStartBeat(viewStartBeat);
+        trackList->resized(); // Trigger layout update to position new track
+    };
+
     appEngine->onEditLoaded = [this] {
         trackList = std::make_unique<TrackListComponent> (appEngine);
         trackList->setPixelsPerBeat (pixelsPerBeat);
