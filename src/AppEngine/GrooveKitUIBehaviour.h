@@ -14,7 +14,7 @@ public:
     {
         while (job.runJob() == juce::ThreadPoolJob::jobNeedsRunningAgain)
         {
-            juce::MessageManager::getInstance()->runDispatchLoopUntil (10);
+            //juce::MessageManager::getInstance()->runDispatchLoopUntil (10);
         }
     }
 };
