@@ -105,6 +105,81 @@ bool MIDIEngine::importMidiFileToTrack (const juce::File& midiFile,
                                         int trackIndex,
                                         t::TimePosition destStart)
 {
+
+    if (! midiFile.existsAsFile())
+    {
+        return false;
+    }
+
+    auto inputStream = std::unique_ptr<juce::FileInputStream> (midiFile.createInputStream());
+    if (inputStream == nullptr || ! inputStream->openedOk())
+    {
+        return false;
+    }
+
+    juce::MidiFile mf;
+    if (! mf.readFrom (*inputStream))
+    {
+        return false;
+    }
+
+    mf.convertTimestampTicksToSeconds();
+
+    juce::MidiMessageSequence sequence;
+    for (int i = 0; i < mf.getNumTracks(); ++i)
+        if (auto* trackSeq = mf.getTrack (i))
+            sequence.addSequence (*trackSeq, 0.0, 0.0, 1.0e6);
+
+    sequence.updateMatchedPairs();
+
+    if (sequence.getNumEvents() == 0)
+    {
+        return false;
+    }
+
+    const double lengthSeconds = sequence.getEndTime();
+
+    if (lengthSeconds <= 0.0)
+        return false;
+
+    auto audioTracks = te::getAudioTracks (edit);
+
+    if (! juce::isPositiveAndBelow (trackIndex, audioTracks.size()))
+        return false;
+
+    if (auto* audioTrack = audioTracks.getUnchecked (trackIndex))
+    {
+        // 4. Create a MidiClip with a dummy length (we’ll fix it right after)
+        const auto clipStart = destStart;
+        const auto dummyEnd  = destStart + t::TimeDuration::fromSeconds (1.0);
+
+        if (auto midiClip = audioTrack->insertMIDIClip ({ clipStart, dummyEnd }, nullptr))
+        {
+            // 5. Merge MIDI sequence into the clip
+            midiClip->mergeInMidiSequence (sequence,
+                                           te::MidiList::NoteAutomationType::none);
+
+            // 6. Resize clip to match imported length
+            const auto clipEnd = destStart + t::TimeDuration::fromSeconds (lengthSeconds);
+
+            tracktion::ClipPosition pos {
+                { clipStart, clipEnd },   // TimeRange
+                {}                        // LoopRange (none)
+            };
+
+            midiClip->setPosition (pos);
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool MIDIEngine::importMidiFileToTrack (const juce::File& midiFile,
+                                        int trackIndex,
+                                        t::TimePosition destStart)
+{
     DBG ("[MIDIEngine] importMidiFileToTrack: " << midiFile.getFullPathName()
          << " trackIndex=" << trackIndex
          << " destStart=" << destStart.inSeconds() << "s");
