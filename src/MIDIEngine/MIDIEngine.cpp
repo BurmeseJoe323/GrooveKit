@@ -120,24 +120,47 @@ bool MIDIEngine::importMidiFileToTrack (const juce::File& midiFile,
     juce::MidiFile mf;
     if (! mf.readFrom (*inputStream))
     {
+        DBG ("[MIDIEngine] MidiFile::readFrom failed");
         return false;
     }
 
+    // Convert ticks to seconds so we can treat event times as seconds
     mf.convertTimestampTicksToSeconds();
+    DBG ("[MIDIEngine] Num tracks in file: " << mf.getNumTracks());
 
+    // Build a *clean* merged sequence: note-on/off only.
     juce::MidiMessageSequence sequence;
-    for (int i = 0; i < mf.getNumTracks(); ++i)
-        if (auto* trackSeq = mf.getTrack (i))
-            sequence.addSequence (*trackSeq, 0.0, 0.0, 1.0e6);
+
+    for (int t = 0; t < mf.getNumTracks(); ++t)
+    {
+        if (auto* trackSeq = mf.getTrack (t))
+        {
+            for (int i = 0; i < trackSeq->getNumEvents(); ++i)
+            {
+                auto* ev  = trackSeq->getEventPointer (i);
+                auto  msg = ev->message;
+
+                // Only keep note-on / note-off
+                if (msg.isNoteOnOrOff())
+                    sequence.addEvent (msg);
+            }
+        }
+    }
 
     sequence.updateMatchedPairs();
 
     if (sequence.getNumEvents() == 0)
     {
+        DBG ("[MIDIEngine] Sequence has no note events");
         return false;
     }
 
     const double lengthSeconds = sequence.getEndTime();
+    DBG ("[MIDIEngine] Sequence lengthSeconds=" << lengthSeconds);
+
+    if (lengthSeconds <= 0.0)
+        return false;
+
 
     if (lengthSeconds <= 0.0)
         return false;
