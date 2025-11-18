@@ -17,6 +17,7 @@ TransportBar::TransportBar(AppEngine& engine)
 TransportBar::~TransportBar()
 {
     stopTimer();
+    metronomeButton.setLookAndFeel(nullptr); // Clean up custom LookAndFeel (Written by Claude Code)
 }
 
 void TransportBar::paint(juce::Graphics& g)
@@ -34,9 +35,10 @@ void TransportBar::resized()
 {
     auto r = getLocalBounds().reduced(10, 0);
 
-    // Right side: Switch button
-    const auto switchArea = r.removeFromRight(50);
-    switchButton.setBounds(switchArea);
+    // Right side: Switch button (Written by Claude Code - made smaller to match transport buttons)
+    constexpr int switchButtonSize = 20;
+    const auto switchArea = r.removeFromRight(switchButtonSize);
+    switchButton.setBounds(switchArea.withSizeKeepingCentre(switchButtonSize, switchButtonSize));
 
     // Left side: BPM controls
     bpmLabel.setBounds(r.removeFromLeft(50));
@@ -45,6 +47,11 @@ void TransportBar::resized()
     valueArea.removeFromBottom(deltaHeight);
     valueArea.removeFromTop(deltaHeight);
     bpmEditField.setBounds(valueArea);
+
+    // Metronome to the right of BPM field (Written by Claude Code)
+    constexpr int metronomeWidth = 60;
+    auto metronomeArea = r.removeFromLeft(metronomeWidth).reduced(5, 8);
+    metronomeButton.setBounds(metronomeArea);
 
     // Center: Transport buttons
     constexpr int buttonSize = 20;
@@ -56,11 +63,6 @@ void TransportBar::resized()
     playButton.setBounds(transportBounds.removeFromLeft(buttonSize));
     transportBounds.removeFromLeft(buttonGap);
     recordButton.setBounds(transportBounds.removeFromLeft(buttonSize));
-
-    // Metronome button to the right of transport controls
-    constexpr int metronomeWidth = 60;
-    auto metronomeArea = r.removeFromRight(metronomeWidth).reduced(5, 8);
-    metronomeButton.setBounds(metronomeArea);
 }
 
 void TransportBar::setupButtons()
@@ -70,6 +72,7 @@ void TransportBar::setupButtons()
     bpmLabel.setText("BPM:", juce::dontSendNotification);
     bpmLabel.setColour(juce::Label::textColourId, juce::Colours::lightgrey);
     bpmLabel.setJustificationType(juce::Justification::right);
+    bpmLabel.setFont(juce::FontOptions(14.0f));
 
     // BPM Edit Field (Written by Claude Code)
     addAndMakeVisible(bpmEditField);
@@ -81,6 +84,7 @@ void TransportBar::setupButtons()
     bpmEditField.setEditable(true);
     bpmEditField.addListener(this);
     bpmEditField.setMouseCursor(juce::MouseCursor::IBeamCursor);
+    bpmEditField.setFont(juce::FontOptions(14.0f));
 
     // Stop Button (Written by Claude Code)
     juce::Path stopShape;
@@ -111,6 +115,7 @@ void TransportBar::setupButtons()
     metronomeButton.setColour(juce::ToggleButton::textColourId, juce::Colours::lightgrey);
     metronomeButton.setColour(juce::ToggleButton::tickColourId, juce::Colours::lightgreen);
     metronomeButton.setToggleState(appEngine->isClickTrackEnabled(), juce::dontSendNotification);
+    metronomeButton.setLookAndFeel(&customLookAndFeel); // Match text size with BPM label
     metronomeButton.onClick = [this] {
         appEngine->setClickTrackEnabled(metronomeButton.getToggleState());
     };

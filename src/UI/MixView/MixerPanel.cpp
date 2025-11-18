@@ -38,10 +38,6 @@ void MixerPanel::refreshTracks()
     auto& edit = appEngine.getEdit();
     auto audioTracks = te::getAudioTracks (edit);
 
-    DBG ("Mixer sees " << te::getAudioTracks (appEngine.getEdit()).size() << " tracks");
-    for (auto* t : te::getAudioTracks (appEngine.getEdit()))
-        DBG ("  " << t->getName());
-
     for (int i = 0; i < audioTracks.size(); ++i)
     {
         auto* t = audioTracks[i];

@@ -12,6 +12,19 @@ namespace t = tracktion;
 class AppEngine;
 
 /**
+ * Custom LookAndFeel to match toggle button font size with labels.
+ * (Written by Claude Code)
+ */
+class TransportBarLookAndFeel : public juce::LookAndFeel_V4
+{
+public:
+    juce::Font getToggleButtonFont(juce::ToggleButton&, int height)
+    {
+        return juce::FontOptions(14.0f);
+    }
+};
+
+/**
  * Transport control bar component that appears at the top of TrackEditView and MixView.
  * Contains play/pause/record buttons, BPM controls, metronome toggle, and view switcher.
  * (Written by Claude Code)
@@ -64,6 +77,9 @@ private:
     juce::ShapeButton recordButton{"record", {}, {}, {}};
     juce::ToggleButton metronomeButton{"Click"};
     juce::ShapeButton switchButton{"switch", {}, {}, {}};
+
+    // Custom LookAndFeel for matching text sizes (Written by Claude Code)
+    TransportBarLookAndFeel customLookAndFeel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TransportBar)
 };
