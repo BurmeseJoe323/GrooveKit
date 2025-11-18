@@ -2,7 +2,8 @@
 #include "../TrackView/TrackHeaderComponent.h"
 #include "MainComponent.h"
 
-ChannelStrip::ChannelStrip()
+ChannelStrip::ChannelStrip(juce::Colour color)
+    : stripColor(color)
 {
     setOpaque (false);
 
@@ -21,20 +22,21 @@ ChannelStrip::ChannelStrip()
     soloButton.setClickingTogglesState (true);
     recordButton.setClickingTogglesState (true);
 
-    muteButton.setColour (juce::TextButton::textColourOffId, juce::Colours::red);
-    muteButton.setColour (juce::TextButton::textColourOnId, juce::Colour (0xFF6C757D));
-    muteButton.setColour (juce::TextButton::buttonColourId, juce::Colour (0xFF6C757D));
+    // Match TrackHeaderComponent button colors (Written by Claude Code)
     muteButton.setColour (juce::TextButton::buttonOnColourId, juce::Colours::red);
+    muteButton.setColour (juce::TextButton::buttonColourId, juce::Colours::darkgrey);
+    muteButton.setColour (juce::TextButton::textColourOnId, juce::Colours::white);
+    muteButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white);
 
-    soloButton.setColour (juce::TextButton::textColourOffId, juce::Colours::yellow);
-    soloButton.setColour (juce::TextButton::textColourOnId, juce::Colour (0xFF6C757D));
-    soloButton.setColour (juce::TextButton::buttonColourId, juce::Colour (0xFF6C757D));
     soloButton.setColour (juce::TextButton::buttonOnColourId, juce::Colours::yellow);
+    soloButton.setColour (juce::TextButton::buttonColourId, juce::Colours::darkgrey);
+    soloButton.setColour (juce::TextButton::textColourOnId, juce::Colours::black);
+    soloButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white);
 
-    recordButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white);
-    recordButton.setColour (juce::TextButton::textColourOnId, juce::Colours::black);
-    recordButton.setColour (juce::TextButton::buttonColourId, juce::Colours::darkgrey);
     recordButton.setColour (juce::TextButton::buttonOnColourId, juce::Colours::darkred);
+    recordButton.setColour (juce::TextButton::buttonColourId, juce::Colours::darkgrey);
+    recordButton.setColour (juce::TextButton::textColourOnId, juce::Colours::black);
+    recordButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white);
 
     // Notify TrackHeaderComponent listeners (safely via SafePointers) (Junie)
     muteButton.onClick = [this] {
@@ -101,7 +103,8 @@ ChannelStrip::ChannelStrip()
     name.setText ("Track 1", juce::dontSendNotification);
     name.setJustificationType (juce::Justification::centred);
     name.setOpaque (false);
-    name.setColour (juce::Label::textColourId, juce::Colour (0xFF343A40));
+    // Match TrackHeaderComponent label color (Written by Claude Code)
+    name.setColour (juce::Label::textColourId, juce::Colours::white.darker (0.1));
     // Make track name editable on double-click (Written by Claude Code)
     name.setEditable (false, true, false);
     name.setMouseCursor (juce::MouseCursor::IBeamCursor);
@@ -257,26 +260,36 @@ void ChannelStrip::bindToVolume (te::VolumeAndPanPlugin& vnp)
 
 void ChannelStrip::paint (juce::Graphics& g)
 {
-    auto r = getLocalBounds().toFloat();
+    // Match TrackComponent styling with custom color (Written by Claude Code)
+    auto bounds = getLocalBounds().toFloat().reduced (2.0f);
 
-    g.setColour (juce::Colour (0xFFCED4DA));
-    g.fillRoundedRectangle (r, 10.0f);
+    // Use custom color darkened like TrackComponent does
+    g.setColour (stripColor.darker (0.4f));
+
+    // Rounded background
+    const float radius = 10.0f;
+    g.fillRoundedRectangle (bounds, radius);
+
+    // Border
+    g.setColour (juce::Colours::white.withAlpha (0.20f));
+    g.drawRoundedRectangle (bounds, radius, 1.5f);
 }
 
 void ChannelStrip::resized()
 {
-    auto r = getLocalBounds().reduced (7); // inner padding
+    // Match TrackHeaderComponent padding and dimensions (Written by Claude Code)
+    auto r = getLocalBounds().reduced (5); // inner padding (matches TrackHeaderComponent)
 
     // top controls stack
     auto top = r.removeFromTop (110);
-    auto btnRowH = 24; // matches your rounded rects
+    constexpr int btnRowH = 25; // matches TrackHeaderComponent button height
     muteButton.setBounds (top.removeFromTop (btnRowH));
-    top.removeFromTop (4);
+    top.removeFromTop (2); // matches TrackHeaderComponent margin
     soloButton.setBounds (top.removeFromTop (btnRowH));
-    top.removeFromTop (4);
+    top.removeFromTop (2);
     recordButton.setBounds (top.removeFromTop (btnRowH));
 
-    const int nameH = 24;
+    constexpr int nameH = 25; // matches TrackHeaderComponent label height
     const int nameGap = 6;
     auto nameArea = r.removeFromBottom (nameH + nameGap);
     name.setBounds (nameArea.removeFromBottom (nameH));

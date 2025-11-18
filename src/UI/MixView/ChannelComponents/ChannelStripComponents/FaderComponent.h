@@ -14,7 +14,8 @@ public:
         auto railX = r.getCentreX() - railW * 0.5f;
         auto rail = juce::Rectangle<float>(railX, r.getY()+8.0f, railW, r.getHeight()-16.0f);
 
-        g.setColour(juce::Colour(0xFF495057));
+        // Darker rail for visibility against new dark background (Written by Claude Code)
+        g.setColour(juce::Colour(0xFF343A40));
         g.fillRect(rail);
 
         const float handleH = juce::jlimit(28.0f, 60.0f, r.getHeight() * 0.08f);
@@ -24,8 +25,8 @@ public:
         auto hy = sliderPos - handleH * 0.5f;
         juce::Rectangle<float> handle(cx - handleW * 0.5f, hy, handleW, handleH);
 
-        // body
-        g.setColour(juce::Colour(0xFF6C757D));
+        // Lighter handle for better visibility (Written by Claude Code)
+        g.setColour(juce::Colour(0xFFADB5BD));
         g.fillRect(handle);
 
         // subtle inner border

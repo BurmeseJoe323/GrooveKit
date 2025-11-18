@@ -36,7 +36,8 @@ MixView::~MixView() {
 
 
 void MixView::paint (juce::Graphics& g) {
-    g.fillAll(juce::Colour(0xFF495057));
+    // Match TrackListComponent background color (Written by Claude Code)
+    g.fillAll(juce::Colour(0xFF343A40));
 }
 
 void MixView::resized()

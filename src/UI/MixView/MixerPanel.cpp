@@ -38,10 +38,25 @@ void MixerPanel::refreshTracks()
     auto& edit = appEngine.getEdit();
     auto audioTracks = te::getAudioTracks (edit);
 
+    // Color palette matching TrackListComponent (Written by Claude Code)
+    static const juce::Array<juce::Colour> trackColors {
+        juce::Colour (0xffff6b6b),  // Red
+        juce::Colour (0xfff06595),  // Pink
+        juce::Colour (0xffcc5de8),  // Purple
+        juce::Colour (0xff845ef7),  // Deep Purple
+        juce::Colour (0xff5c7cfa),  // Indigo
+        juce::Colour (0xff339af0),  // Blue
+        juce::Colour (0xff22b8cf),  // Cyan
+        juce::Colour (0xff20c997),  // Teal
+        juce::Colour (0xff51cf66),  // Green
+        juce::Colour (0xfffcc419)   // Yellow
+    };
+
     for (int i = 0; i < audioTracks.size(); ++i)
     {
         auto* t = audioTracks[i];
-        auto* strip = new ChannelStrip();
+        const auto color = trackColors[i % trackColors.size()]; // Color based on index
+        auto* strip = new ChannelStrip(color); // Pass color to constructor
         strip->setTrackIndex (i); // Track index for renaming (Written by Claude Code)
         strip->setTrackName (t->getName());
         strip->bindToTrack (*t);
@@ -75,7 +90,7 @@ void MixerPanel::refreshTracks()
 
     if (!audioTracks.isEmpty())
     {
-        masterStrip = std::make_unique<ChannelStrip>();
+        masterStrip = std::make_unique<ChannelStrip>(juce::Colours::dimgrey);
         masterStrip->setTrackName ("Master");
         masterStrip->bindToMaster (edit);
         addAndMakeVisible (*masterStrip);

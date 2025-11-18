@@ -15,13 +15,16 @@ TrackComponent::TrackComponent (const std::shared_ptr<AppEngine>& engine, const 
     if (!trackColor.isOpaque())
     {
         static const juce::Colour palette[] = {
-            juce::Colour (0xff6fa8dc), // blue
-            juce::Colour (0xff93c47d), // green
-            juce::Colour (0xfff6b26b), // orange
-            juce::Colour (0xffe06666), // red
-            juce::Colour (0xff8e7cc3), // purple
-            juce::Colour (0xff76a5af), // teal
-            juce::Colour (0xffffd966)  // yellow
+            juce::Colour (0xffff6b6b),  // Red
+            juce::Colour (0xfff06595),  // Pink
+            juce::Colour (0xffcc5de8),  // Purple
+            juce::Colour (0xff845ef7),  // Deep Purple
+            juce::Colour (0xff5c7cfa),  // Indigo
+            juce::Colour (0xff339af0),  // Blue
+            juce::Colour (0xff22b8cf),  // Cyan
+            juce::Colour (0xff20c997),  // Teal
+            juce::Colour (0xff51cf66),  // Green
+            juce::Colour (0xfffcc419)   // Yellow
         };
         trackColor = palette[std::abs (trackIndex) % static_cast<int> (std::size (palette))];
     }

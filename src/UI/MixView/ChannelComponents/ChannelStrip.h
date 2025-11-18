@@ -11,7 +11,7 @@ class ChannelStrip final : public juce::Component,
                            public juce::Label::Listener
 {
 public:
-    ChannelStrip();
+    explicit ChannelStrip(juce::Colour color = juce::Colour(0xFF495057));
     ~ChannelStrip() override;
 
     void bindToTrack (te::AudioTrack& track);
@@ -70,6 +70,7 @@ public:
 
 private:
     int trackIndex = -1; // Track index for this channel strip (Written by Claude Code)
+    juce::Colour stripColor; // Background color for this strip (Written by Claude Code)
     juce::TextButton muteButton, soloButton, recordButton;
     juce::Label name;
     //ChannelMeter     meter;
