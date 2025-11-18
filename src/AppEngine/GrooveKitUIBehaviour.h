@@ -17,6 +17,7 @@ public:
             //juce::MessageManager::getInstance()->runDispatchLoopUntil (10);
             // Keep the UI responsive while rendering
             juce::MessageManager::getInstance()->runDispatchLoopUntil (10);
+            //juce::MessageManager::getInstance()->runDispatchLoopUntil (10);
         }
     }
 };

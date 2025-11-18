@@ -2,6 +2,8 @@
 
 #include "../DrumSamplerEngine/DefaultSampleLibrary.h"
 #include "../PluginManager/PluginEditorWindow.h"
+#include "../UI/Plugins/FourOsc/FourOscGUI.h"
+#include "../PluginManager/PluginEditorWindow.h"
 #include "../UI/Plugins/Synthesizer/MorphSynthRegistration.h"
 #include "../UI/Plugins/Synthesizer/MorphSynthView.h"
 #include "../UI/Plugins/Synthesizer/MorphSynthWindow.h"
@@ -74,23 +76,7 @@ namespace
         return true;
     }
 }
-namespace
-{
-    struct GrooveKitUIBehaviour : public te::UIBehaviour
-    {
-        GrooveKitUIBehaviour() = default;
 
-        void runTaskWithProgressBar (te::ThreadPoolJobWithProgress& job) override
-        {
-            // Simple, synchronous run – no actual progress UI yet.
-            while (job.runJob() == juce::ThreadPoolJob::jobNeedsRunningAgain)
-            {
-                // You *could* pump messages here if you wanted:
-                // juce::MessageManager::getInstance()->runDispatchLoopUntil (5);
-            }
-        }
-    };
-}
 AppEngine::AppEngine()
 {
     engine = std::make_unique<te::Engine> (
@@ -814,7 +800,6 @@ void AppEngine::openInstrumentEditor (int trackIndex)
                 return;
             }
 
-            // NEW: External plugin path (works for any plugin with a JUCE editor)
             if (auto* ext = dynamic_cast<te::ExternalPlugin*>(plug))
             {
                 if (instrumentWindow_) { instrumentWindow_->toFront(true); return; }
