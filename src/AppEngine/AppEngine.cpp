@@ -1400,6 +1400,46 @@ bool AppEngine::deleteMidiClip (te::MidiClip* clip)
     return true;
 }
 
+void AppEngine::importMidiClipViaChooser (int trackIndex,
+                                          t::TimePosition destStart,
+                                          std::function<void()> onSuccess)
+{
+    auto chooser = std::make_shared<juce::FileChooser> (
+        "Import MIDI File",
+        juce::File(),
+        "*.mid;*.midi"
+    );
+
+    chooser->launchAsync (
+        juce::FileBrowserComponent::openMode
+        | juce::FileBrowserComponent::canSelectFiles,
+        [this, chooser, trackIndex, destStart, onSuccess] (const juce::FileChooser& fc)
+        {
+            auto file = fc.getResult();
+
+            if (! file.existsAsFile())
+            {
+                return;
+            }
+
+            const bool ok = midiEngine->importMidiFileToTrack (file, trackIndex, destStart);
+
+            if (! ok)
+            {
+                juce::AlertWindow::showMessageBoxAsync (
+                    juce::AlertWindow::WarningIcon,
+                    "MIDI Import Failed",
+                    "Could not import the selected MIDI file into this track.");
+            }
+            else
+            {
+                if (onSuccess)
+                    onSuccess();
+            }
+        }
+    );
+}
+
 bool AppEngine::hasClipboardContent() const
 {
     const auto* cb = te::Clipboard::getInstance();

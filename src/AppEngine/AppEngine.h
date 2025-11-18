@@ -204,6 +204,13 @@ public:
     bool duplicateMidiClip (te::MidiClip* clip);
     // Delete a specific MIDI clip
     bool deleteMidiClip (te::MidiClip* clip);
+    /** Opens a file chooser, imports a MIDI file, and drops it on the given track.
+        @param trackIndex Index of the target track
+        @param destStart  Where to place the clip (usually current transport pos or bar boundary)
+    */
+    void importMidiClipViaChooser (int trackIndex,
+                               t::TimePosition destStart,
+                               std::function<void()> onSuccess = {});
     // Check if clipboard has content (Junie)
     bool hasClipboardContent() const;
     // Check if clipboard content can be pasted to a specific track (Junie)

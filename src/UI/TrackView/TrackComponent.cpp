@@ -125,6 +125,8 @@ void TrackComponent::onSettingsClicked()
         m.addItem (2, "Paste at End");
 
     m.addSeparator();
+    m.addItem (3, "Import MIDI Clip");
+    m.addSeparator();
 
     m.addSeparator();
     m.addItem (100, "Delete Track");
@@ -149,6 +151,24 @@ void TrackComponent::onSettingsClicked()
 
                     if (appEngine->pasteClipboardAt (trackIndex, startBeats))
                         rebuildAndRefreshHighlight();
+                }
+                break;
+            }
+            case 3: // Import MIDI Clip
+            {
+                if (appEngine)
+                {
+                    auto destStart = appEngine->getEdit()
+                                               .getTransport()
+                                               .getPosition();
+
+                    appEngine->importMidiClipViaChooser (
+                        trackIndex,
+                        destStart,
+                        [this]()
+                        {
+                            rebuildAndRefreshHighlight();
+                        });
                 }
                 break;
             }
