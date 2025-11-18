@@ -1389,7 +1389,7 @@ void AppEngine::importMidiClipViaChooser (int trackIndex,
                 juce::AlertWindow::showMessageBoxAsync (
                     juce::AlertWindow::WarningIcon,
                     "MIDI Import Failed",
-                    "Could not import the selected MIDI file into this track.");
+                    "Could not import the MIDI file into this track.");
             }
             else
             {
