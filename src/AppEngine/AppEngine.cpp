@@ -205,6 +205,9 @@ void AppEngine::newUntitledEdit()
     selectionManager = std::make_unique<te::SelectionManager> (*engine);
     editViewState = std::make_unique<EditViewState> (*edit, *selectionManager);
 
+    if (pluginManager)
+        trackManager->setPluginManager (pluginManager.get());
+
     markSaved();
 
     audioEngine->initialiseDefaults (48000.0, 512);
@@ -752,6 +755,10 @@ bool AppEngine::loadEditFromFile (const juce::File& file)
     selectionManager = std::make_unique<te::SelectionManager> (*engine);
     editViewState = std::make_unique<EditViewState> (*edit, *selectionManager);
 
+    if (pluginManager)
+        trackManager->setPluginManager (pluginManager.get());
+
+
     audioEngine = std::make_unique<AudioEngine> (*edit, *engine);
     audioEngine->initialiseDefaults (48000.0, 512);
     audioEngine->setupMidiInputDevices(*edit);
@@ -1000,15 +1007,6 @@ void AppEngine::onFxInsertSlotClicked (int trackIndex,
 
             auto& tc = edit->getTransport();
             tc.ensureContextAllocated();
-            if (!tc.isPlaying())
-            {
-                startedTransportForEditor_ = true;
-                tc.play (false);
-            }
-            else
-            {
-                startedTransportForEditor_ = false;
-            }
         }
         else
         {
@@ -1196,15 +1194,6 @@ void AppEngine::showFxInsertMenu (int trackIndex,
 
                 auto& tc = edit->getTransport();
                 tc.ensureContextAllocated();
-                if (!tc.isPlaying())
-                {
-                    startedTransportForEditor_ = true;
-                    tc.play (false);
-                }
-                else
-                {
-                    startedTransportForEditor_ = false;
-                }
             }
             else
             {
