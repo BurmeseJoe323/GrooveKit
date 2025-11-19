@@ -15,6 +15,9 @@ namespace GKIDs {
     static const juce::Identifier isDrumClip ("gk_isDrumClip");
 }
 
+//==============================================================================
+// Construction / Destruction
+
 AppEngine::AppEngine()
 {
     engine = std::make_unique<te::Engine> ("GrooveKitEngine");
@@ -44,7 +47,9 @@ AppEngine::~AppEngine()
     trackListenerMap.clear();
 }
 
-// Listener registry methods (Junie)
+//==============================================================================
+// Track Listener Registry
+
 void AppEngine::registerTrackListener (const int index, TrackHeaderComponent::Listener* l)
 {
     // Guard against invalid indices to avoid JUCE HashMap hash assertions
@@ -74,6 +79,9 @@ TrackHeaderComponent::Listener* AppEngine::getTrackListener (const int index) co
         return trackListenerMap[index];
     return nullptr;
 }
+
+//==============================================================================
+// Edit Management
 
 void AppEngine::createOrLoadEdit()
 {
@@ -135,242 +143,6 @@ void AppEngine::newUntitledEdit()
     edit->restartPlayback();
 }
 
-void AppEngine::setArmedTrack (int index)
-{
-    if (selectedTrackIndex == index)
-        return;
-
-    selectedTrackIndex = index;
-
-    // Route MIDI to armed track (setTarget will update the routing automatically)
-    if (index >= 0)
-        audioEngine->routeMidiToTrack(*edit, index);
-
-    if (onArmedTrackChanged)
-        onArmedTrackChanged();
-}
-
-te::AudioTrack* AppEngine::getArmedTrack ()
-{
-    return getTrackManager().getTrack (selectedTrackIndex);
-}
-
-int AppEngine::getArmedTrackIndex () const
-{
-    return selectedTrackIndex;
-}
-
-void AppEngine::toggleRecord()
-{
-    if (selectedTrackIndex < 0 && !isRecording())
-    {
-        juce::Logger::writeToLog("[Recording] Cannot start recording: no track armed");
-        return;
-    }
-
-    bool wasRecording = isRecording();
-
-    // Toggle recording using EngineHelpers
-    audioEngine->toggleRecord(*edit);
-
-    // If we just stopped recording, notify listeners
-    if (wasRecording)
-    {
-        juce::Logger::writeToLog("[AppEngine] Recording stopped");
-
-        // Give Tracktion a moment to finalize the clip creation
-        juce::MessageManager::callAsync([this]()
-        {
-            if (onRecordingStopped)
-            {
-                juce::Logger::writeToLog("[AppEngine] Notifying listeners that recording stopped");
-                onRecordingStopped();
-            }
-        });
-    }
-    else
-    {
-        juce::Logger::writeToLog("[AppEngine] Recording started");
-    }
-}
-
-bool AppEngine::isRecording() const
-{
-    return audioEngine->isRecording();
-}
-
-void AppEngine::play() { audioEngine->play(); }
-
-void AppEngine::stop() { audioEngine->stop(); }
-
-bool AppEngine::isPlaying() const { return audioEngine->isPlaying(); }
-
-void AppEngine::deleteMidiTrack (int index)
-{
-    if (index == selectedTrackIndex)
-        selectedTrackIndex = -1;
-
-    trackManager->deleteTrack (index);
-}
-
-bool AppEngine::addMidiClipToTrack (int trackIndex)
-{
-    if (! midiEngine)
-        return false;
-    return midiEngine->addMidiClipToTrack (trackIndex);
-}
-
-te::MidiClip* AppEngine::getMidiClipFromTrack (int trackIndex)
-{
-    if (! midiEngine)
-        return nullptr;
-    return midiEngine->getMidiClipFromTrack (trackIndex);
-}
-
-juce::Array<te::MidiClip*> AppEngine::getMidiClipsFromTrack (int trackIndex)
-{
-    if (! midiEngine)
-        return {};
-    return midiEngine->getMidiClipsFromTrack (trackIndex);
-}
-
-int AppEngine::getNumTracks() { return trackManager ? trackManager->getNumTracks() : 0; }
-
-EditViewState& AppEngine::getEditViewState() { return *editViewState; }
-
-te::Edit& AppEngine::getEdit() { return *edit; }
-
-bool AppEngine::isDrumTrack (int i) const { return trackManager ? trackManager->isDrumTrack (i) : false; }
-
-DrumSamplerEngineAdapter* AppEngine::getDrumAdapter (int i) { return trackManager ? trackManager->getDrumAdapter (i) : nullptr; }
-
-int AppEngine::addDrumTrack()
-{
-    jassert (trackManager != nullptr);
-    return trackManager->addDrumTrack();
-}
-
-int AppEngine::addInstrumentTrack()
-{
-    jassert (trackManager != nullptr);
-    return trackManager->addInstrumentTrack();
-}
-
-void AppEngine::soloTrack (int i) { trackManager->soloTrack (i); }
-void AppEngine::setTrackSoloed (int i, bool s) { trackManager->setTrackSoloed (i, s); }
-bool AppEngine::isTrackSoloed (int i) const { return trackManager->isTrackSoloed (i); }
-bool AppEngine::anyTrackSoloed() const { return trackManager->anyTrackSoloed(); }
-
-// Track naming implementation (Written by Claude Code)
-void AppEngine::setTrackName (int trackIndex, const juce::String& name)
-{
-    auto audioTracks = te::getAudioTracks (*edit);
-    if (trackIndex >= 0 && trackIndex < audioTracks.size())
-    {
-        auto* track = audioTracks[trackIndex];
-        track->setName (name);
-    }
-}
-
-juce::String AppEngine::getTrackName (int trackIndex) const
-{
-    auto audioTracks = te::getAudioTracks (*edit);
-    if (trackIndex >= 0 && trackIndex < audioTracks.size())
-    {
-        auto* track = audioTracks[trackIndex];
-        return track->getName();
-    }
-    return {};
-}
-
-double AppEngine::getBpm () const { return edit->tempoSequence.getTempo (0)->getBpm(); }
-
-void AppEngine::setBpm (double newBpm)
-{
-    // Capture old state before changing BPM
-    const double oldBpm = getBpm();
-    const auto oldLoopRange = edit->getTransport().getLoopRange();
-    const auto oldPlayheadPos = edit->getTransport().getPosition();
-
-    // GrooveKit does not have tempo changes, so just get the first one
-    edit->tempoSequence.getTempo (0)->setBpm (newBpm);
-
-    // Notify listeners of BPM change with original values
-    // (Tracktion may have already adjusted loop range/playhead by this point)
-    if (onBpmChanged)
-        onBpmChanged(oldBpm, newBpm, oldLoopRange, oldPlayheadPos);
-}
-
-// Metronome/Click Track controls
-void AppEngine::setClickTrackEnabled (bool enabled)
-{
-    edit->clickTrackEnabled = enabled;
-}
-
-bool AppEngine::isClickTrackEnabled() const
-{
-    return edit->clickTrackEnabled;
-}
-
-void AppEngine::setClickTrackRecordingOnly (bool recordingOnly)
-{
-    edit->clickTrackRecordingOnly = recordingOnly;
-}
-
-bool AppEngine::isClickTrackRecordingOnly() const
-{
-    return edit->clickTrackRecordingOnly;
-}
-
-AudioEngine& AppEngine::getAudioEngine() { return *audioEngine; }
-MIDIEngine& AppEngine::getMidiEngine() { return *midiEngine; }
-
-int AppEngine::currentUndoTxn() const
-{
-    if (!edit)
-        return 0;
-    if (auto xml = edit->state.createXml())
-        return (int) xml->toString().hashCode();
-    return 0;
-}
-
-bool AppEngine::isDirty() const noexcept
-{
-    return currentUndoTxn() != lastSavedTxn;
-}
-
-void AppEngine::markSaved()
-{
-    lastSavedTxn = currentUndoTxn();
-}
-
-bool AppEngine::writeEditToFile (const juce::File& file)
-{
-    if (!edit)
-        return false;
-
-    for (auto* track : te::getAudioTracks (*edit))
-    {
-        if (! track) continue;
-
-        for (auto* p : track->pluginList)
-            if (auto* morph = dynamic_cast<MorphSynthPlugin*> (p))
-                morph->saveToValueTree();  // <-- no assignment; it mutates plugin.state’s child
-    }
-
-    if (auto xml = edit->state.createXml())
-    {
-        juce::TemporaryFile tf (file);
-        if (tf.getFile().replaceWithText (xml->toString())
-            && tf.overwriteTargetFileWithTemporary())
-        {
-            DBG ("Saved edit to: " << file.getFullPathName());
-            return true;
-        }
-    }
-    return false;
-}
-
 bool AppEngine::saveEdit()
 {
     if (!edit)
@@ -426,31 +198,6 @@ void AppEngine::saveEditAsAsync (std::function<void (bool)> onDone)
             if (onDone)
                 onDone (ok);
         });
-}
-
-void AppEngine::setAutosaveMinutes (int minutes)
-{
-    if (minutes <= 0)
-    {
-        stopTimer();
-        return;
-    }
-    startTimer (juce::jmax (1, minutes) * 60 * 1000);
-}
-
-juce::File AppEngine::getAutosaveFile() const
-{
-    if (currentEditFile.getFullPathName().isNotEmpty())
-        return currentEditFile.getSiblingFile (currentEditFile.getFileNameWithoutExtension()
-                                               + "_autosave.tracktionedit");
-    return juce::File::getSpecialLocation (juce::File::tempDirectory)
-        .getChildFile ("groovekit_autosave.tracktionedit");
-}
-
-void AppEngine::timerCallback()
-{
-    if (isDirty())
-        writeEditToFile (getAutosaveFile());
 }
 
 void AppEngine::openEditAsync (std::function<void (bool)> onDone)
@@ -525,88 +272,211 @@ bool AppEngine::loadEditFromFile (const juce::File& file)
 
     return true;
 }
-void AppEngine::makeFourOscAuditionPatch (int trackIndex)
-{
-    if (!trackManager) return;
-    if (auto* plug = trackManager->getInstrumentPluginOnTrack (trackIndex))
-    {
-        auto params = plug->getAutomatableParameters();
-        auto set = [&] (const juce::String& key, float norm)
-        {
-            for (auto* p : params)
-                if (p && p->getParameterName().containsIgnoreCase (key))
-                { p->setParameter (norm, juce::sendNotification); break; }
-        };
 
-        set ("Level 1",   1.00f);
-        set ("Level 2",   0.00f);  set ("Level 3", 0.00f);  set ("Level 4", 0.00f);
-        set ("Cutoff",    0.40f);
-        set ("Resonance", 0.20f);
-        set ("Amp Attack",  0.01f);
-        set ("Amp Decay",   0.20f);
-        set ("Amp Sustain", 0.80f);
-        set ("Amp Release", 0.20f);
-    }
+bool AppEngine::isDirty() const noexcept
+{
+    return currentUndoTxn() != lastSavedTxn;
 }
 
-void AppEngine::openInstrumentEditor (int trackIndex)
+void AppEngine::setAutosaveMinutes (int minutes)
 {
-    auto open = [this, trackIndex]
+    if (minutes <= 0)
     {
-        if (!trackManager) { DBG("AppEngine: no trackManager"); return; }
+        stopTimer();
+        return;
+    }
+    startTimer (juce::jmax (1, minutes) * 60 * 1000);
+}
 
-        if (auto* track = trackManager->getTrack (trackIndex))
+//==============================================================================
+// Transport Control
+
+void AppEngine::play() { audioEngine->play(); }
+
+void AppEngine::stop() { audioEngine->stop(); }
+
+bool AppEngine::isPlaying() const { return audioEngine->isPlaying(); }
+
+void AppEngine::toggleRecord()
+{
+    if (selectedTrackIndex < 0 && !isRecording())
+    {
+        juce::Logger::writeToLog("[Recording] Cannot start recording: no track armed");
+        return;
+    }
+
+    bool wasRecording = isRecording();
+
+    // Toggle recording using EngineHelpers
+    audioEngine->toggleRecord(*edit);
+
+    // If we just stopped recording, notify listeners
+    if (wasRecording)
+    {
+        juce::Logger::writeToLog("[AppEngine] Recording stopped");
+
+        // Give Tracktion a moment to finalize the clip creation
+        juce::MessageManager::callAsync([this]()
         {
-            te::Plugin* plug = nullptr;
-
-            // Prefer the first MorphSynth on the track
-            for (auto* p : track->pluginList)
-                if (p && p->getPluginType() == MorphSynthPlugin::pluginType)
-                { plug = p; break; }
-
-            // Fallback: whatever your old helper returns
-            if (!plug)
-                plug = trackManager->getInstrumentPluginOnTrack (trackIndex);
-
-            if (plug)
+            if (onRecordingStopped)
             {
-                if (auto* morph = dynamic_cast<MorphSynthPlugin*>(plug))
-                {
-                    // If already open, just bring it to front
-                    if (instrumentWindow_ != nullptr)
-                    {
-                        instrumentWindow_->toFront (true);
-                        return;
-                    }
-
-                    instrumentWindow_ = std::make_unique<MorphSynthWindow>(
-                        *morph,
-                        [this] { this->closeInstrumentWindow(); }
-                    );
-
-                    auto self = std::shared_ptr<AppEngine>(this, [] (AppEngine*) {});
-                    static_cast<MorphSynthWindow*>(instrumentWindow_.get())->setAppEngine(self);
-
-                    instrumentWindow_->toFront (true);
-                    return;
-                }
-
+                juce::Logger::writeToLog("[AppEngine] Notifying listeners that recording stopped");
+                onRecordingStopped();
             }
-            DBG("No instrument plugin found on track " << trackIndex);
-        }
-    };
-
-    if (juce::MessageManager::getInstance()->isThisTheMessageThread()) open();
-    else juce::MessageManager::callAsync (open);
+        });
+    }
+    else
+    {
+        juce::Logger::writeToLog("[AppEngine] Recording started");
+    }
 }
 
-void AppEngine::closeInstrumentWindow()
+bool AppEngine::isRecording() const
 {
-    if (instrumentWindow_ != nullptr)
+    return audioEngine->isRecording();
+}
+
+//==============================================================================
+// Tempo and Metronome
+
+double AppEngine::getBpm () const { return edit->tempoSequence.getTempo (0)->getBpm(); }
+
+void AppEngine::setBpm (double newBpm)
+{
+    // Capture old state before changing BPM
+    const double oldBpm = getBpm();
+    const auto oldLoopRange = edit->getTransport().getLoopRange();
+    const auto oldPlayheadPos = edit->getTransport().getPosition();
+
+    // GrooveKit does not have tempo changes, so just get the first one
+    edit->tempoSequence.getTempo (0)->setBpm (newBpm);
+
+    // Notify listeners of BPM change with original values
+    // (Tracktion may have already adjusted loop range/playhead by this point)
+    if (onBpmChanged)
+        onBpmChanged(oldBpm, newBpm, oldLoopRange, oldPlayheadPos);
+}
+
+void AppEngine::setClickTrackEnabled (bool enabled)
+{
+    edit->clickTrackEnabled = enabled;
+}
+
+bool AppEngine::isClickTrackEnabled() const
+{
+    return edit->clickTrackEnabled;
+}
+
+void AppEngine::setClickTrackRecordingOnly (bool recordingOnly)
+{
+    edit->clickTrackRecordingOnly = recordingOnly;
+}
+
+bool AppEngine::isClickTrackRecordingOnly() const
+{
+    return edit->clickTrackRecordingOnly;
+}
+
+//==============================================================================
+// Track Management
+
+int AppEngine::addMidiTrack()
+{
+    jassert (trackManager != nullptr);
+    return trackManager->addInstrumentTrack();
+}
+
+int AppEngine::addDrumTrack()
+{
+    jassert (trackManager != nullptr);
+    return trackManager->addDrumTrack();
+}
+
+int AppEngine::addInstrumentTrack()
+{
+    jassert (trackManager != nullptr);
+    return trackManager->addInstrumentTrack();
+}
+
+int AppEngine::getNumTracks() { return trackManager ? trackManager->getNumTracks() : 0; }
+
+void AppEngine::deleteMidiTrack (int index)
+{
+    if (index == selectedTrackIndex)
+        selectedTrackIndex = -1;
+
+    trackManager->deleteTrack (index);
+}
+
+bool AppEngine::isDrumTrack (int i) const { return trackManager ? trackManager->isDrumTrack (i) : false; }
+
+DrumSamplerEngineAdapter* AppEngine::getDrumAdapter (int i) { return trackManager ? trackManager->getDrumAdapter (i) : nullptr; }
+
+//==============================================================================
+// Track State (Mute/Solo/Naming)
+
+void AppEngine::soloTrack (int i) { trackManager->soloTrack (i); }
+void AppEngine::setTrackSoloed (int i, bool s) { trackManager->setTrackSoloed (i, s); }
+bool AppEngine::isTrackSoloed (int i) const { return trackManager->isTrackSoloed (i); }
+bool AppEngine::anyTrackSoloed() const { return trackManager->anyTrackSoloed(); }
+
+void AppEngine::setTrackName (int trackIndex, const juce::String& name)
+{
+    auto audioTracks = te::getAudioTracks (*edit);
+    if (trackIndex >= 0 && trackIndex < audioTracks.size())
     {
-        instrumentWindow_->setVisible (false);
-        instrumentWindow_.reset();
+        auto* track = audioTracks[trackIndex];
+        track->setName (name);
     }
+}
+
+juce::String AppEngine::getTrackName (int trackIndex) const
+{
+    auto audioTracks = te::getAudioTracks (*edit);
+    if (trackIndex >= 0 && trackIndex < audioTracks.size())
+    {
+        auto* track = audioTracks[trackIndex];
+        return track->getName();
+    }
+    return {};
+}
+
+//==============================================================================
+// Track Arming (for Recording)
+
+void AppEngine::setArmedTrack (int index)
+{
+    if (selectedTrackIndex == index)
+        return;
+
+    selectedTrackIndex = index;
+
+    // Route MIDI to armed track (setTarget will update the routing automatically)
+    if (index >= 0)
+        audioEngine->routeMidiToTrack(*edit, index);
+
+    if (onArmedTrackChanged)
+        onArmedTrackChanged();
+}
+
+te::AudioTrack* AppEngine::getArmedTrack ()
+{
+    return getTrackManager().getTrack (selectedTrackIndex);
+}
+
+int AppEngine::getArmedTrackIndex () const
+{
+    return selectedTrackIndex;
+}
+
+//==============================================================================
+// MIDI Clip Management
+
+bool AppEngine::addMidiClipToTrack (int trackIndex)
+{
+    if (! midiEngine)
+        return false;
+    return midiEngine->addMidiClipToTrack (trackIndex);
 }
 
 bool AppEngine::addMidiClipToTrackAt(int trackIndex, t::TimePosition start, t::BeatDuration length)
@@ -615,6 +485,23 @@ bool AppEngine::addMidiClipToTrackAt(int trackIndex, t::TimePosition start, t::B
         return false;
     return midiEngine->addMidiClipToTrackAt (trackIndex, start, length);
 }
+
+te::MidiClip* AppEngine::getMidiClipFromTrack (int trackIndex)
+{
+    if (! midiEngine)
+        return nullptr;
+    return midiEngine->getMidiClipFromTrack (trackIndex);
+}
+
+juce::Array<te::MidiClip*> AppEngine::getMidiClipsFromTrack (int trackIndex)
+{
+    if (! midiEngine)
+        return {};
+    return midiEngine->getMidiClipsFromTrack (trackIndex);
+}
+
+//==============================================================================
+// Clipboard Operations
 
 void AppEngine::copyMidiClip (te::MidiClip* clip)
 {
@@ -792,4 +679,158 @@ bool AppEngine::canPasteToTrack (int trackIndex) const
     // Check if clip type matches track type
     const bool targetIsDrum = isDrumTrack (trackIndex);
     return lastCopiedClipWasDrum == targetIsDrum;
+}
+
+//==============================================================================
+// Instrument/Plugin Management
+
+void AppEngine::makeFourOscAuditionPatch (int trackIndex)
+{
+    if (!trackManager) return;
+    if (auto* plug = trackManager->getInstrumentPluginOnTrack (trackIndex))
+    {
+        auto params = plug->getAutomatableParameters();
+        auto set = [&] (const juce::String& key, float norm)
+        {
+            for (auto* p : params)
+                if (p && p->getParameterName().containsIgnoreCase (key))
+                { p->setParameter (norm, juce::sendNotification); break; }
+        };
+
+        set ("Level 1",   1.00f);
+        set ("Level 2",   0.00f);  set ("Level 3", 0.00f);  set ("Level 4", 0.00f);
+        set ("Cutoff",    0.40f);
+        set ("Resonance", 0.20f);
+        set ("Amp Attack",  0.01f);
+        set ("Amp Decay",   0.20f);
+        set ("Amp Sustain", 0.80f);
+        set ("Amp Release", 0.20f);
+    }
+}
+
+void AppEngine::openInstrumentEditor (int trackIndex)
+{
+    auto open = [this, trackIndex]
+    {
+        if (!trackManager) { DBG("AppEngine: no trackManager"); return; }
+
+        if (auto* track = trackManager->getTrack (trackIndex))
+        {
+            te::Plugin* plug = nullptr;
+
+            // Prefer the first MorphSynth on the track
+            for (auto* p : track->pluginList)
+                if (p && p->getPluginType() == MorphSynthPlugin::pluginType)
+                { plug = p; break; }
+
+            // Fallback: whatever your old helper returns
+            if (!plug)
+                plug = trackManager->getInstrumentPluginOnTrack (trackIndex);
+
+            if (plug)
+            {
+                if (auto* morph = dynamic_cast<MorphSynthPlugin*>(plug))
+                {
+                    // If already open, just bring it to front
+                    if (instrumentWindow_ != nullptr)
+                    {
+                        instrumentWindow_->toFront (true);
+                        return;
+                    }
+
+                    instrumentWindow_ = std::make_unique<MorphSynthWindow>(
+                        *morph,
+                        [this] { this->closeInstrumentWindow(); }
+                    );
+
+                    auto self = std::shared_ptr<AppEngine>(this, [] (AppEngine*) {});
+                    static_cast<MorphSynthWindow*>(instrumentWindow_.get())->setAppEngine(self);
+
+                    instrumentWindow_->toFront (true);
+                    return;
+                }
+
+            }
+            DBG("No instrument plugin found on track " << trackIndex);
+        }
+    };
+
+    if (juce::MessageManager::getInstance()->isThisTheMessageThread()) open();
+    else juce::MessageManager::callAsync (open);
+}
+
+void AppEngine::closeInstrumentWindow()
+{
+    if (instrumentWindow_ != nullptr)
+    {
+        instrumentWindow_->setVisible (false);
+        instrumentWindow_.reset();
+    }
+}
+
+//==============================================================================
+// Subsystem Access
+
+AudioEngine& AppEngine::getAudioEngine() { return *audioEngine; }
+MIDIEngine& AppEngine::getMidiEngine() { return *midiEngine; }
+EditViewState& AppEngine::getEditViewState() { return *editViewState; }
+te::Edit& AppEngine::getEdit() { return *edit; }
+
+//==============================================================================
+// Internal Methods
+
+bool AppEngine::writeEditToFile (const juce::File& file)
+{
+    if (!edit)
+        return false;
+
+    for (auto* track : te::getAudioTracks (*edit))
+    {
+        if (! track) continue;
+
+        for (auto* p : track->pluginList)
+            if (auto* morph = dynamic_cast<MorphSynthPlugin*> (p))
+                morph->saveToValueTree();  // <-- no assignment; it mutates plugin.state's child
+    }
+
+    if (auto xml = edit->state.createXml())
+    {
+        juce::TemporaryFile tf (file);
+        if (tf.getFile().replaceWithText (xml->toString())
+            && tf.overwriteTargetFileWithTemporary())
+        {
+            DBG ("Saved edit to: " << file.getFullPathName());
+            return true;
+        }
+    }
+    return false;
+}
+
+void AppEngine::markSaved()
+{
+    lastSavedTxn = currentUndoTxn();
+}
+
+int AppEngine::currentUndoTxn() const
+{
+    if (!edit)
+        return 0;
+    if (auto xml = edit->state.createXml())
+        return (int) xml->toString().hashCode();
+    return 0;
+}
+
+juce::File AppEngine::getAutosaveFile() const
+{
+    if (currentEditFile.getFullPathName().isNotEmpty())
+        return currentEditFile.getSiblingFile (currentEditFile.getFileNameWithoutExtension()
+                                               + "_autosave.tracktionedit");
+    return juce::File::getSpecialLocation (juce::File::tempDirectory)
+        .getChildFile ("groovekit_autosave.tracktionedit");
+}
+
+void AppEngine::timerCallback()
+{
+    if (isDirty())
+        writeEditToFile (getAutosaveFile());
 }
