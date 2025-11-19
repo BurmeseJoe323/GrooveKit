@@ -7,6 +7,9 @@ namespace t = tracktion;
 using namespace std::literals;
 using namespace t::literals;
 
+//==============================================================================
+// Construction / Destruction
+
 AudioEngine::AudioEngine(te::Edit& editRef, te::Engine& engine)
     : edit(editRef), engine(engine)
 {
@@ -14,6 +17,9 @@ AudioEngine::AudioEngine(te::Edit& editRef, te::Engine& engine)
 }
 
 AudioEngine::~AudioEngine() = default;
+
+//==============================================================================
+// Transport Control
 
 void AudioEngine::play()
 {
@@ -26,10 +32,11 @@ void AudioEngine::play()
         transport.play(false);
 }
 
-void AudioEngine::stop() {
+void AudioEngine::stop()
+{
     if (&edit)
     {
-        // First param = false: Keep any recordings in progress (don't discard) (Written by Claude Code)
+        // First param = false: Keep any recordings in progress (don't discard)
         edit.getTransport().stop(false, false);
         for (auto* plugin : te::getAllPlugins (edit, false))
             if (auto* morph = dynamic_cast<MorphSynthPlugin*>(plugin))
@@ -39,10 +46,8 @@ void AudioEngine::stop() {
 
 bool AudioEngine::isPlaying() const { return edit.getTransport().isPlaying(); }
 
-AudioDeviceManager& AudioEngine::adm() const
-{
-    return engine.getDeviceManager().deviceManager;
-}
+//==============================================================================
+// Audio Output Device Management
 
 void AudioEngine::initialiseDefaults (double sampleRate, int bufferSize)
 {
@@ -130,7 +135,9 @@ AudioDeviceManager& AudioEngine::getAudioDeviceManager()
     return adm();
 }
 
-// Audio configuration methods (Written by Claude Code)
+//==============================================================================
+// Audio Configuration
+
 Array<int> AudioEngine::getAvailableBufferSizes() const
 {
     auto& dm = const_cast<AudioEngine*>(this)->adm();
@@ -185,20 +192,8 @@ bool AudioEngine::setSampleRate (double sampleRate)
     return applySetup (setup);
 }
 
-bool AudioEngine::applySetup (const AudioDeviceManager::AudioDeviceSetup& newSetup)
-{
-    auto& dm = adm();
-    auto err = dm.setAudioDeviceSetup (newSetup, true);
-    if (err.isNotEmpty())
-    {
-        Logger::writeToLog ("[Audio] setAudioDeviceSetup error: " + err);
-        return false;
-    }
-
-    Logger::writeToLog ("[Audio] Output now: " + getCurrentOutputDeviceName());
-
-    return true;
-}
+//==============================================================================
+// MIDI Input Device Management
 
 StringArray AudioEngine::listMidiInputDevices() const
 {
@@ -232,7 +227,6 @@ void AudioEngine::logAvailableMidiDevices() const
     }
 }
 
-// MIDI device enable/disable (Written by Claude Code)
 StringArray AudioEngine::getEnabledMidiDevices() const
 {
     StringArray enabledDevices;
@@ -317,6 +311,9 @@ void AudioEngine::routeMidiToTrack(te::Edit& editToRoute, int trackIndex)
     Logger::writeToLog("[MIDI] Routed and pre-armed all MIDI inputs to track " + String(trackIndex));
 }
 
+//==============================================================================
+// Recording Control
+
 void AudioEngine::toggleRecord(te::Edit& editToRecord)
 {
     auto& transport = editToRecord.getTransport();
@@ -363,4 +360,25 @@ bool AudioEngine::isRecording() const
     return edit.getTransport().isRecording();
 }
 
+//==============================================================================
+// Internal Methods
 
+AudioDeviceManager& AudioEngine::adm() const
+{
+    return engine.getDeviceManager().deviceManager;
+}
+
+bool AudioEngine::applySetup (const AudioDeviceManager::AudioDeviceSetup& newSetup)
+{
+    auto& dm = adm();
+    auto err = dm.setAudioDeviceSetup (newSetup, true);
+    if (err.isNotEmpty())
+    {
+        Logger::writeToLog ("[Audio] setAudioDeviceSetup error: " + err);
+        return false;
+    }
+
+    Logger::writeToLog ("[Audio] Output now: " + getCurrentOutputDeviceName());
+
+    return true;
+}
