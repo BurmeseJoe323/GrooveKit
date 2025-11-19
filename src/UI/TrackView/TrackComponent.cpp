@@ -158,9 +158,16 @@ void TrackComponent::onSettingsClicked()
             {
                 if (appEngine)
                 {
-                    auto destStart = appEngine->getEdit()
-                                               .getTransport()
-                                               .getPosition();
+                    auto destStart = t::TimePosition::fromSeconds (0.0);
+
+                    auto midiClips = appEngine->getMidiClipsFromTrack (trackIndex);
+
+                    for (auto* mc : midiClips)
+                    {
+                        auto clipEnd = mc->getPosition().getEnd();
+                        if (clipEnd > destStart)
+                            destStart = clipEnd;
+                    }
 
                     appEngine->importMidiClipViaChooser (
                         trackIndex,
