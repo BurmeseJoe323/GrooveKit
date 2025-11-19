@@ -101,6 +101,8 @@ TrackEditView::~TrackEditView() = default;
 void TrackEditView::paint (juce::Graphics& g)
 {
     // TransportBar now handles its own painting (Written by Claude Code)
+    // Set all arm record buttons to be enabled or disabled depending on state of AppEngine
+    trackList->setAllArmButtonsEnabled (!appEngine->isRecording());
 }
 
 void TrackEditView::resized ()
@@ -151,8 +153,6 @@ bool TrackEditView::keyPressed (const juce::KeyPress& key_press)
         if (appEngine->isPlaying())
         {
             appEngine->stop();
-            // In case we are stopping recording, ensure all arm buttons are enabled
-            trackList->setAllArmButtonsEnabled (true);
         }
         else
         {
@@ -327,8 +327,6 @@ TrackEditView::PianoRollResizerBar::~PianoRollResizerBar ()
 
 void TrackEditView::timerCallback()
 {
-    updateRecordButtonAppearance();
-
     const bool isRecording = appEngine->isRecording();
     const int armedTrackIndex = appEngine->getArmedTrackIndex();
 
@@ -346,25 +344,3 @@ void TrackEditView::timerCallback()
 
     wasRecording = isRecording;
 }
-
-void TrackEditView::updateRecordButtonAppearance()
-{
-    // Update record button appearance based on recording state
-    const bool isRecording = appEngine->isRecording();
-
-    if (isRecording)
-    {
-        // Make record button brighter when recording for visual feedback
-        recordButton.setColours (juce::Colours::red.brighter (0.3f),
-                                 juce::Colours::lightcoral.brighter (0.3f),
-                                 juce::Colours::red.brighter (0.5f));
-    }
-    else
-    {
-        // Grey normally, dark red on hover hint, darker grey on press
-        recordButton.setColours (juce::Colours::lightgrey,
-                                 juce::Colours::darkred,
-                                 juce::Colours::darkgrey);
-    }
-}
-

@@ -34,7 +34,7 @@ class GrooveKitMenuBar;
  *  3. Timer callback updates button appearance to indicate recording state
  *  4. User clicks record button again to stop
  */
-class TrackEditView final : public juce::Component
+class TrackEditView final : public juce::Component, juce::Timer
 {
 public:
     explicit TrackEditView (AppEngine& engine, TransportBar& transport, GrooveKitMenuBar& menuBar);
@@ -91,15 +91,12 @@ private:
     /**
      * @brief Timer callback for UI state updates (100ms interval).
      *
-     * Updates the record button appearance based on the current recording state:
-     *  - Recording: Brighter red color for visual feedback
-     *  - Not recording: Normal red color
+     * Updates the track color with a red tint when recording
      *
      * This provides real-time visual indication of recording status without
      * requiring manual UI refresh calls from the recording subsystem.
      */
     void timerCallback() override;
-    void updateRecordButtonAppearance();
 
     juce::TextButton backButton { "Back" }, newEditButton { "New" },
         openEditButton { "Open Edit" }, newTrackButton { "New Track" }, outputButton { "Output Device" },

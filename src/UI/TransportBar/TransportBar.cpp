@@ -210,16 +210,16 @@ void TransportBar::timerCallback()
 
     if (isRecording)
     {
-        // Make record button brighter when recording
-        recordButton.setColours(juce::Colours::red.brighter(0.3f),
-                                juce::Colours::lightcoral.brighter(0.3f),
-                                juce::Colours::red.brighter(0.5f));
+        // Make record button brighter when recording for visual feedback
+        recordButton.setColours (juce::Colours::red.brighter (0.3f),
+                                 juce::Colours::lightcoral.brighter (0.3f),
+                                 juce::Colours::red.brighter (0.5f));
     }
     else
     {
-        // Normal colors when not recording
-        recordButton.setColours(juce::Colours::red,
-                                juce::Colours::lightcoral,
-                                juce::Colours::maroon);
+        // Grey normally, dark red on hover hint, darker grey on press
+        recordButton.setColours (juce::Colours::lightgrey,
+                                 juce::Colours::darkred,
+                                 juce::Colours::darkgrey);
     }
 }
