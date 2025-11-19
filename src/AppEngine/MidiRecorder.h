@@ -145,10 +145,12 @@ private:
 
     std::atomic<bool> recording{false};                      ///< Whether recording is currently active.
     int targetTrackIndex = -1;                               ///< Index of track being recorded to.
+    std::vector<std::pair<te::Clip*, bool>> clipsToRestore;  ///< Clips and their original mute states to restore after recording.
 
     juce::MidiMessageSequence recordedSequence;              ///< Buffer of recorded MIDI messages.
     double recordingStartTime = 0.0;                         ///< Time when recording started (in seconds).
     tracktion::TimePosition recordingStartPosition;          ///< Transport position when recording started.
+    tracktion::TimePosition lastRecordedPosition;            ///< Last transport position when MIDI was recorded (for loop detection).
 
     std::vector<juce::MidiKeyboardState*> attachedSources;   ///< Keyboard states we're listening to.
 

@@ -256,10 +256,12 @@ void TrackEditView::setupButtons ()
         juce::Path recordShape;
         recordShape.addEllipse (0.0f, 0.0f, 1.0f, 1.0f);
         recordButton.setShape (recordShape, true, true, false);
-        recordButton.setColours (juce::Colours::red, juce::Colours::lightcoral, juce::Colours::maroon);
+        recordButton.setColours (juce::Colours::lightgrey, juce::Colours::darkred, juce::Colours::darkgrey);
         recordButton.onClick = [this] {
-            // Simply toggle record state - EngineHelpers handles the logic
+            // Simply toggle record state
             appEngine->toggleRecord();
+            // Update button appearance immediately
+            updateRecordButtonAppearance();
         };
         addAndMakeVisible (recordButton);
     }
@@ -573,6 +575,11 @@ TrackEditView::PianoRollResizerBar::~PianoRollResizerBar ()
 
 void TrackEditView::timerCallback()
 {
+    updateRecordButtonAppearance();
+}
+
+void TrackEditView::updateRecordButtonAppearance()
+{
     // Update record button appearance based on recording state
     const bool isRecording = appEngine->isRecording();
 
@@ -585,10 +592,10 @@ void TrackEditView::timerCallback()
     }
     else
     {
-        // Normal colors when not recording
-        recordButton.setColours (juce::Colours::red,
-                                 juce::Colours::lightcoral,
-                                 juce::Colours::maroon);
+        // Grey normally, dark red on hover hint, darker grey on press
+        recordButton.setColours (juce::Colours::lightgrey,
+                                 juce::Colours::darkred,
+                                 juce::Colours::darkgrey);
     }
 }
 

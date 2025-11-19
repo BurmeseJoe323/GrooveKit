@@ -119,6 +119,7 @@ private:
      * requiring manual UI refresh calls from the recording subsystem.
      */
     void timerCallback() override;
+    void updateRecordButtonAppearance();
 
     juce::TextButton backButton { "Back" }, newEditButton { "New" },
         openEditButton { "Open Edit" }, newTrackButton { "New Track" }, outputButton { "Output Device" },

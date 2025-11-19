@@ -38,6 +38,25 @@ void MidiRecorder::startRecording(te::Edit& edit, int trackIndex,
     currentEdit = &edit;
     targetTrackIndex = trackIndex;
 
+    // Mute all clips on the track to prevent playback during recording
+    // (but keep the track itself unmuted so live input can be heard)
+    auto tracks = te::getAudioTracks(edit);
+    if (trackIndex >= 0 && trackIndex < tracks.size())
+    {
+        auto* track = tracks[trackIndex];
+        clipsToRestore.clear();
+
+        for (auto* clip : track->getClips())
+        {
+            bool wasClipMuted = clip->isMuted();
+            clipsToRestore.push_back({clip, wasClipMuted});
+            clip->setMuted(true);
+        }
+
+        Logger::writeToLog("[MidiRecorder] Muted " + String(clipsToRestore.size()) +
+                          " clip(s) on track during recording");
+    }
+
     // Clear previous recording buffer
     {
         const ScopedLock sl(recordingLock);
@@ -58,10 +77,23 @@ void MidiRecorder::startRecording(te::Edit& edit, int trackIndex,
     // Record start time and position
     auto& transport = edit.getTransport();
     recordingStartTime = Time::getMillisecondCounterHiRes() / 1000.0;
-    recordingStartPosition = transport.getPosition();
 
-    Logger::writeToLog("[MidiRecorder] Recording start position: " +
-                      String(recordingStartPosition.inSeconds()) + " seconds");
+    // If looping is enabled, always record from loop start position
+    if (transport.looping)
+    {
+        recordingStartPosition = transport.getLoopRange().getStart();
+        Logger::writeToLog("[MidiRecorder] Loop recording - using loop start position: " +
+                          String(recordingStartPosition.inSeconds()) + " seconds");
+    }
+    else
+    {
+        recordingStartPosition = transport.getPosition();
+        Logger::writeToLog("[MidiRecorder] Recording start position: " +
+                          String(recordingStartPosition.inSeconds()) + " seconds");
+    }
+
+    // Initialize last recorded position for loop detection
+    lastRecordedPosition = recordingStartPosition;
 
     // Start transport if not already playing
     if (!transport.isPlaying())
@@ -88,6 +120,15 @@ bool MidiRecorder::stopRecording(te::Edit& edit)
     Logger::writeToLog("[MidiRecorder] ========== STOP RECORDING ==========");
 
     recording = false;
+
+    // Restore clips' original mute states
+    for (auto& [clip, wasMuted] : clipsToRestore)
+    {
+        clip->setMuted(wasMuted);
+    }
+    Logger::writeToLog("[MidiRecorder] Restored mute state for " +
+                      String(clipsToRestore.size()) + " clip(s)");
+    clipsToRestore.clear();
 
     // Detach from all sources
     detachFromAllSources();
@@ -223,35 +264,61 @@ bool MidiRecorder::createClipFromRecording(te::Edit& edit)
                       String(clipStart.inSeconds(), 3) + "s to " +
                       String(clipEnd.inSeconds(), 3) + "s");
 
-    // Create MIDI clip with a TimeRange
+    // Check if there's already a clip that overlaps with our recording range
+    te::MidiClip* targetClip = nullptr;
     auto clipRange = t::TimeRange(clipStart, clipEnd);
-    track->insertMIDIClip(track->getName() + " Recording", clipRange, nullptr);
 
-    // Get the clip we just created (should be the last one)
-    te::MidiClip* newClip = nullptr;
     for (auto* clip : track->getClips())
     {
         if (auto* midiClip = dynamic_cast<te::MidiClip*>(clip))
         {
-            if (midiClip->getPosition().getStart() == clipStart)
+            auto clipPos = midiClip->getPosition();
+            auto existingRange = t::TimeRange(clipPos.getStart(), clipPos.getEnd());
+
+            // Check if the recording range overlaps with this clip
+            if (existingRange.overlaps(clipRange))
             {
-                newClip = midiClip;
+                targetClip = midiClip;
+                Logger::writeToLog("[MidiRecorder] Found existing clip to overwrite: " + midiClip->getName());
                 break;
             }
         }
     }
 
-    if (!newClip)
+    // If no existing clip found, create a new one
+    if (!targetClip)
     {
-        Logger::writeToLog("[MidiRecorder] ERROR: Failed to create MIDI clip");
-        return false;
+        Logger::writeToLog("[MidiRecorder] Creating new MIDI clip");
+        track->insertMIDIClip(track->getName() + " Recording", clipRange, nullptr);
+
+        // Find the newly created clip
+        for (auto* clip : track->getClips())
+        {
+            if (auto* midiClip = dynamic_cast<te::MidiClip*>(clip))
+            {
+                if (midiClip->getPosition().getStart() == clipStart)
+                {
+                    targetClip = midiClip;
+                    break;
+                }
+            }
+        }
+
+        if (!targetClip)
+        {
+            Logger::writeToLog("[MidiRecorder] ERROR: Failed to create MIDI clip");
+            return false;
+        }
     }
 
-    // Set clip length
-    newClip->setLength(clipEnd - clipStart, true);
+    // Clear existing notes in the clip before adding new ones
+    auto& sequence = targetClip->getSequence();
+    sequence.clear(nullptr);
+
+    // Set clip length to match recording
+    targetClip->setLength(clipEnd - clipStart, true);
 
     // Populate clip with recorded MIDI events
-    auto& sequence = newClip->getSequence();
     auto& tempoSequence = edit.tempoSequence;
 
     int notesAdded = 0;
@@ -318,6 +385,36 @@ bool MidiRecorder::createClipFromRecording(te::Edit& edit)
 
 void MidiRecorder::recordMidiMessage(const juce::MidiMessage& message)
 {
+    if (!currentEdit)
+        return;
+
+    auto& transport = currentEdit->getTransport();
+    auto currentPosition = transport.getPosition();
+
+    // Detect loop wraparound: if looping is enabled and the position jumped backwards significantly
+    if (transport.looping)
+    {
+        auto loopRange = transport.getLoopRange();
+
+        // Check if we wrapped from near the end back to near the start
+        if (lastRecordedPosition > loopRange.getStart() &&
+            currentPosition < lastRecordedPosition)
+        {
+            Logger::writeToLog("[MidiRecorder] Loop wraparound detected - clearing recording buffer");
+
+            // Clear the buffer to start a fresh recording pass
+            {
+                const ScopedLock sl(recordingLock);
+                recordedSequence.clear();
+            }
+
+            // Reset start time for new loop pass
+            recordingStartTime = Time::getMillisecondCounterHiRes() / 1000.0;
+        }
+    }
+
+    lastRecordedPosition = currentPosition;
+
     // Calculate timestamp relative to recording start
     double currentTime = Time::getMillisecondCounterHiRes() / 1000.0;
     double relativeTime = currentTime - recordingStartTime;

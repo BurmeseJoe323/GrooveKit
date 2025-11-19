@@ -220,7 +220,20 @@ bool AppEngine::isRecording() const
 
 void AppEngine::play() { audioEngine->play(); }
 
-void AppEngine::stop() { audioEngine->stop(); }
+void AppEngine::stop()
+{
+    // Stop recording if active
+    if (isRecording())
+    {
+        juce::Logger::writeToLog("[AppEngine] Stopping recording due to transport stop");
+        midiRecorder->stopRecording(*edit);
+
+        if (onRecordingStopped)
+            onRecordingStopped();
+    }
+
+    audioEngine->stop();
+}
 
 bool AppEngine::isPlaying() const { return audioEngine->isPlaying(); }
 
