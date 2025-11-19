@@ -105,15 +105,20 @@ bool MIDIEngine::importMidiFileToTrack (const juce::File& midiFile,
                                         int trackIndex,
                                         t::TimePosition destStart)
 {
+    DBG ("[MIDIEngine] importMidiFileToTrack: " << midiFile.getFullPathName()
+         << " trackIndex=" << trackIndex
+         << " destStart=" << destStart.inSeconds() << "s");
 
     if (! midiFile.existsAsFile())
     {
+        DBG ("[MIDIEngine] File doesn't exist");
         return false;
     }
 
     auto inputStream = std::unique_ptr<juce::FileInputStream> (midiFile.createInputStream());
     if (inputStream == nullptr || ! inputStream->openedOk())
     {
+        DBG ("[MIDIEngine] Failed to open input stream");
         return false;
     }
 
@@ -124,76 +129,151 @@ bool MIDIEngine::importMidiFileToTrack (const juce::File& midiFile,
         return false;
     }
 
-    // Convert ticks to seconds so we can treat event times as seconds
-    mf.convertTimestampTicksToSeconds();
-    DBG ("[MIDIEngine] Num tracks in file: " << mf.getNumTracks());
-
-    // Build a *clean* merged sequence: note-on/off only.
-    juce::MidiMessageSequence sequence;
-
-    for (int t = 0; t < mf.getNumTracks(); ++t)
+    const int timeFormat = mf.getTimeFormat();
+    if (timeFormat <= 0)
     {
-        if (auto* trackSeq = mf.getTrack (t))
+        DBG ("[MIDIEngine] Unsupported time format (SMPTE) or <= 0");
+        return false;
+    }
+
+    DBG ("[MIDIEngine] Num tracks in file: " << mf.getNumTracks()
+         << " PPQ=" << timeFormat);
+
+    // --- Build merged sequence in ticks (note on/off only) ---
+    juce::MidiMessageSequence tickSeq;
+
+    for (int tIndex = 0; tIndex < mf.getNumTracks(); ++tIndex)
+    {
+        if (auto* trackSeq = mf.getTrack (tIndex))
         {
             for (int i = 0; i < trackSeq->getNumEvents(); ++i)
             {
                 auto* ev  = trackSeq->getEventPointer (i);
                 auto  msg = ev->message;
 
-                // Only keep note-on / note-off
                 if (msg.isNoteOnOrOff())
-                    sequence.addEvent (msg);
+                    tickSeq.addEvent (msg);
             }
         }
     }
 
-    sequence.updateMatchedPairs();
+    tickSeq.updateMatchedPairs();
 
-    if (sequence.getNumEvents() == 0)
+    if (tickSeq.getNumEvents() == 0)
     {
         DBG ("[MIDIEngine] Sequence has no note events");
         return false;
     }
 
-    const double lengthSeconds = sequence.getEndTime();
-    DBG ("[MIDIEngine] Sequence lengthSeconds=" << lengthSeconds);
-
-    if (lengthSeconds <= 0.0)
-        return false;
-
-
-    if (lengthSeconds <= 0.0)
-        return false;
-
-    auto audioTracks = te::getAudioTracks (edit);
-
-    if (! juce::isPositiveAndBelow (trackIndex, audioTracks.size()))
-        return false;
-
-    if (auto* audioTrack = audioTracks.getUnchecked (trackIndex))
+    // --- Normalise ticks so first event is at 0 ticks ---
+    const double firstTick = tickSeq.getEventTime (0);
+    for (int i = 0; i < tickSeq.getNumEvents(); ++i)
     {
-        // 4. Create a MidiClip with a dummy length (we’ll fix it right after)
-        const auto clipStart = destStart;
-        const auto dummyEnd  = destStart + t::TimeDuration::fromSeconds (1.0);
+        auto* ev  = tickSeq.getEventPointer (i);
+        auto  msg = ev->message;
+        msg.setTimeStamp (msg.getTimeStamp() - firstTick);
+        ev->message = msg;
+    }
 
-        if (auto midiClip = audioTrack->insertMIDIClip ({ clipStart, dummyEnd }, nullptr))
+    const double endTick = tickSeq.getEndTime();
+    if (endTick <= 0.0)
+    {
+        DBG ("[MIDIEngine] endTick <= 0");
+        return false;
+    }
+
+    // --- Convert ticks -> seconds using the edit tempo ---
+    auto& tempoSeq = edit.tempoSequence;
+
+    // GrooveKit uses a single global tempo, so just grab the first one.
+    double bpm = 120.0;
+    if (auto* tempo = tempoSeq.getTempo (0))
+        bpm = tempo->getBpm();
+
+    const double secondsPerBeat = 60.0 / bpm;
+
+    // ticks -> beats -> seconds
+    const double lengthBeats    = endTick / (double) timeFormat;
+    const double lengthSeconds  = lengthBeats * secondsPerBeat;
+
+    DBG ("[MIDIEngine] lengthBeats="   << lengthBeats
+         << " lengthSeconds="          << lengthSeconds
+         << " (endTick="               << endTick
+         << ", bpm="                   << bpm << ")");
+
+    // --- Build a sequence whose timestamps are SECONDS from clip start ---
+    juce::MidiMessageSequence secondsSeq;
+
+    for (int i = 0; i < tickSeq.getNumEvents(); ++i)
+    {
+        auto* ev  = tickSeq.getEventPointer (i);
+        auto  msg = ev->message;
+
+        const double ticks  = msg.getTimeStamp();
+        const double beats  = ticks / (double) timeFormat;      // quarter-note beats
+        const double secs   = beats * secondsPerBeat;           // seconds from clip start
+
+        msg.setTimeStamp (secs);
+        secondsSeq.addEvent (msg);
+    }
+
+    secondsSeq.updateMatchedPairs();
+
+    if (secondsSeq.getNumEvents() == 0)
+    {
+        DBG ("[MIDIEngine] secondsSeq has no events after tick->sec conversion");
+        return false;
+    }
+
+    // --- Find target audio track ---
+    auto audioTracks = te::getAudioTracks (edit);
+    if (! juce::isPositiveAndBelow (trackIndex, audioTracks.size()))
+    {
+        DBG ("[MIDIEngine] trackIndex out of range for audioTracks");
+        return false;
+    }
+
+    auto* audioTrack = audioTracks.getUnchecked (trackIndex);
+    if (audioTrack == nullptr)
+    {
+        DBG ("[MIDIEngine] audioTracks[trackIndex] is null");
+        return false;
+    }
+
+    // Clip lives from destStart .. destStart + lengthSeconds (all in seconds)
+    const auto clipStartTime = destStart;
+    const auto clipEndTime   = destStart + t::TimeDuration::fromSeconds (lengthSeconds);
+    t::TimeRange range { clipStartTime, clipEndTime };
+
+    DBG ("[MIDIEngine] clipStartTime=" << clipStartTime.inSeconds()
+         << " clipEndTime="            << clipEndTime.inSeconds()
+         << " (lenSeconds="            << lengthSeconds << ")");
+
+    if (auto* baseClip = audioTrack->insertNewClip (te::TrackItem::Type::midi,
+                                                    "MIDI",
+                                                    range,
+                                                    nullptr))
+    {
+        if (auto* midiClip = dynamic_cast<te::MidiClip*> (baseClip))
         {
-            // 5. Merge MIDI sequence into the clip
-            midiClip->mergeInMidiSequence (sequence,
+            DBG ("[MIDIEngine] insertNewClip -> MidiClip OK, merging "
+                 << secondsSeq.getNumEvents() << " events (seconds)");
+
+            midiClip->mergeInMidiSequence (secondsSeq,
                                            te::MidiList::NoteAutomationType::none);
 
-            // 6. Resize clip to match imported length
-            const auto clipEnd = destStart + t::TimeDuration::fromSeconds (lengthSeconds);
-
-            tracktion::ClipPosition pos {
-                { clipStart, clipEnd },   // TimeRange
-                {}                        // LoopRange (none)
-            };
-
-            midiClip->setPosition (pos);
+            DBG ("[MIDIEngine] MidiClip import complete. "
+                 << "pos start=" << midiClip->getPosition().time.getStart().inSeconds()
+                 << " end="      << midiClip->getPosition().time.getEnd().inSeconds());
 
             return true;
         }
+
+        DBG ("[MIDIEngine] insertNewClip didn't return a MidiClip");
+    }
+    else
+    {
+        DBG ("[MIDIEngine] insertNewClip returned null");
     }
 
     return false;

@@ -2,7 +2,6 @@
 
 #include "../DrumSamplerEngine/DefaultSampleLibrary.h"
 #include "../PluginManager/PluginEditorWindow.h"
-#include "../UI/Plugins/FourOsc/FourOscGUI.h"
 #include "../UI/Plugins/Synthesizer/MorphSynthRegistration.h"
 #include "../UI/Plugins/Synthesizer/MorphSynthView.h"
 #include "../UI/Plugins/Synthesizer/MorphSynthWindow.h"
@@ -766,29 +765,6 @@ bool AppEngine::loadEditFromFile (const juce::File& file)
 
     return true;
 }
-void AppEngine::makeFourOscAuditionPatch (int trackIndex)
-{
-    if (!trackManager) return;
-    if (auto* plug = trackManager->getInstrumentPluginOnTrack (trackIndex))
-    {
-        auto params = plug->getAutomatableParameters();
-        auto set = [&] (const juce::String& key, float norm)
-        {
-            for (auto* p : params)
-                if (p && p->getParameterName().containsIgnoreCase (key))
-                { p->setParameter (norm, juce::sendNotification); break; }
-        };
-
-        set ("Level 1",   1.00f);
-        set ("Level 2",   0.00f);  set ("Level 3", 0.00f);  set ("Level 4", 0.00f);
-        set ("Cutoff",    0.40f);
-        set ("Resonance", 0.20f);
-        set ("Amp Attack",  0.01f);
-        set ("Amp Decay",   0.20f);
-        set ("Amp Sustain", 0.80f);
-        set ("Amp Release", 0.20f);
-    }
-}
 
 void AppEngine::openInstrumentEditor (int trackIndex)
 {
@@ -883,10 +859,8 @@ void AppEngine::showInstrumentChooser (int trackIndex)
 
     // --- Built-in instruments
     const int kBuiltMorph = 1001;
-    const int kBuiltFour  = 1002;
 
     builtIn.addItem (kBuiltMorph, "Morph Synth");
-    builtIn.addItem (kBuiltFour,  "FourOSC");
 
     // --- External instruments (scanned)
     auto owned = pluginManager->getInstrumentDescriptions();   // OwnedArray<PluginDescription>
@@ -916,21 +890,6 @@ void AppEngine::showInstrumentChooser (int trackIndex)
         {
             trackManager->clearInstrumentSlot0 (trackIndex);
             inserted = trackManager->insertMorphSynth (trackIndex);
-        }
-        else if (result == 1002) // FourOSC
-        {
-            if (auto* t = trackManager->getTrack (trackIndex))
-            {
-                trackManager->clearInstrumentSlot0 (trackIndex);
-
-                if (auto plugin = edit->getPluginCache().createNewPlugin (te::FourOscPlugin::xmlTypeName, {}))
-                {
-                    t->pluginList.insertPlugin (std::move (plugin), 0, nullptr);
-                    for (auto* p : t->pluginList)
-                        if (dynamic_cast<te::FourOscPlugin*> (p))
-                            inserted = p;
-                }
-            }
         }
         else if (result >= 2000)
         {
