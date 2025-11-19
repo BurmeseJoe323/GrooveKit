@@ -203,7 +203,75 @@ void AudioEngine::setupMidiInputDevices(te::Edit& editToSetup)
     // Ensure transport context is allocated for recording
     editToSetup.getTransport().ensureContextAllocated();
 
+    // Attach MIDI event logger to all physical MIDI inputs for debugging
+    auto midiInputs = juce::MidiInput::getAvailableDevices();
+    for (const auto& deviceInfo : midiInputs)
+    {
+        // Note: We can't directly attach our logger to JUCE's MidiInput from here
+        // because Tracktion Engine manages the MIDI inputs internally.
+        // Instead, we'll add logging at the Tracktion InputDevice level.
+    }
+
     Logger::writeToLog("[MIDI] Enabled all MIDI input devices via Tracktion InputDevice system");
+}
+
+void AudioEngine::setMidiEventLoggingEnabled(bool enable)
+{
+    midiEventLogger.setEnabled(enable);
+
+    if (enable)
+    {
+        Logger::writeToLog("[MIDI EVENT LOGGING] ========================================");
+        Logger::writeToLog("[MIDI EVENT LOGGING] ENABLED - will log InputDevice state");
+        Logger::writeToLog("[MIDI EVENT LOGGING] ========================================");
+
+        // Log current state of all MIDI input device instances
+        Logger::writeToLog("[MIDI EVENT LOGGING] Current MIDI Input Device States:");
+        for (auto* instance : edit.getAllInputDevices())
+        {
+            auto& device = instance->getInputDevice();
+
+            if (device.getDeviceType() != te::InputDevice::physicalMidiDevice)
+                continue;
+
+            Logger::writeToLog("[MIDI EVENT LOGGING]   Device: " + device.getName());
+            Logger::writeToLog("[MIDI EVENT LOGGING]     Enabled: " +
+                             String(device.isEnabled() ? "YES" : "NO"));
+
+            auto monitorMode = device.getMonitorMode();
+            String modeName = (monitorMode == te::InputDevice::MonitorMode::on) ? "ON" :
+                            (monitorMode == te::InputDevice::MonitorMode::off) ? "OFF" : "AUTOMATIC";
+            Logger::writeToLog("[MIDI EVENT LOGGING]     Monitor Mode: " + modeName);
+
+            // Check which tracks this device instance is targeting
+            auto targetIDs = instance->getTargets();
+            if (targetIDs.size() > 0)
+            {
+                Logger::writeToLog("[MIDI EVENT LOGGING]     Targeting " +
+                                 String(targetIDs.size()) + " track(s):");
+
+                // Find track names
+                auto tracks = te::getAudioTracks(edit);
+                for (const auto& targetID : targetIDs)
+                {
+                    for (auto* track : tracks)
+                    {
+                        if (track->itemID == targetID)
+                        {
+                            Logger::writeToLog("[MIDI EVENT LOGGING]       - Track: " + track->getName() +
+                                             " (ID: " + targetID.toString() + ")");
+                            Logger::writeToLog("[MIDI EVENT LOGGING]         Recording Enabled: " +
+                                             String(instance->isRecordingEnabled(targetID) ? "YES" : "NO"));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        Logger::writeToLog("[MIDI EVENT LOGGING] DISABLED");
+    }
 }
 
 void AudioEngine::routeMidiToTrack(te::Edit& editToRoute, int trackIndex)
@@ -254,199 +322,6 @@ void AudioEngine::routeMidiToTrack(te::Edit& editToRoute, int trackIndex)
     // Tracktion's MidiRecordingDemo only calls restartPlayback() during initial setup,
     // not when changing routing. Calling it on every arm was causing audio glitches
     // and the "track created after launch" bug.
-}
-
-//==============================================================================
-// Recording Control
-
-void AudioEngine::toggleRecord(te::Edit& editToRecord)
-{
-    auto& transport = editToRecord.getTransport();
-    bool wasRecording = transport.isRecording();
-    bool wasPlaying = transport.isPlaying();
-
-    // Log call stack to see who's calling us
-    static int callCount = 0;
-    callCount++;
-    Logger::writeToLog("[DEBUG] ========== toggleRecord CALLED (call #" + String(callCount) + ") ==========");
-    Logger::writeToLog("[DEBUG] Current state: isRecording=" + String(wasRecording ? "TRUE" : "FALSE") +
-                       ", isPlaying=" + String(wasPlaying ? "TRUE" : "FALSE"));
-
-    // Check loop range
-    if (transport.looping)
-    {
-        auto loopRange = transport.getLoopRange();
-        Logger::writeToLog("[DEBUG] Looping is ENABLED: " +
-                         String(loopRange.getStart().inSeconds()) + "s to " +
-                         String(loopRange.getEnd().inSeconds()) + "s (" +
-                         String(loopRange.getLength().inSeconds()) + "s duration)");
-    }
-    else
-    {
-        Logger::writeToLog("[DEBUG] Looping is DISABLED");
-    }
-
-    // Check armed tracks and their recording state
-    auto tracks = te::getAudioTracks(editToRecord);
-    Logger::writeToLog("[DEBUG] Total tracks: " + String(tracks.size()));
-
-    for (int i = 0; i < tracks.size(); ++i)
-    {
-        auto* track = tracks[i];
-        bool trackArmed = false;
-
-        for (auto* instance : editToRecord.getAllInputDevices())
-        {
-            if (instance->getInputDevice().getDeviceType() == te::InputDevice::physicalMidiDevice)
-            {
-                if (instance->isRecordingEnabled(track->itemID))
-                {
-                    trackArmed = true;
-                    Logger::writeToLog("[DEBUG] Track " + String(i) + " (" + track->getName() + ") is ARMED for recording");
-                    break;
-                }
-            }
-        }
-
-        if (!trackArmed)
-            Logger::writeToLog("[DEBUG] Track " + String(i) + " (" + track->getName() + ") is NOT armed");
-    }
-
-    // Position at loop start if we're about to start recording and looping is enabled
-    if (!wasRecording && transport.looping)
-    {
-        Logger::writeToLog("[DEBUG] Positioning at loop start before recording");
-        transport.setPosition(transport.getLoopRange().getStart());
-    }
-
-    // Check playback context allocation before recording
-    if (!wasRecording)
-    {
-        auto* context = transport.getCurrentPlaybackContext();
-        Logger::writeToLog("[DEBUG] Playback context before record: " +
-                         String(context != nullptr ? "ALLOCATED" : "NULL"));
-    }
-
-    // Use Tracktion's battle-tested helper function
-    Logger::writeToLog("[DEBUG] Calling EngineHelpers::toggleRecord()...");
-    EngineHelpers::toggleRecord(editToRecord);
-
-    // Check state immediately after toggle
-    bool nowRecording = transport.isRecording();
-    bool nowPlaying = transport.isPlaying();
-    Logger::writeToLog("[DEBUG] After toggleRecord: isRecording=" + String(nowRecording ? "TRUE" : "FALSE") +
-                       ", isPlaying=" + String(nowPlaying ? "TRUE" : "FALSE"));
-
-    // If we just started recording, check context again
-    if (!wasRecording && nowRecording)
-    {
-        auto* context = transport.getCurrentPlaybackContext();
-        Logger::writeToLog("[DEBUG] Playback context after record start: " +
-                         String(context != nullptr ? "ALLOCATED" : "NULL"));
-    }
-
-    // Log clip count after stopping recording
-    if (wasRecording)
-    {
-        Logger::writeToLog("[DEBUG] Recording was just STOPPED - checking for new clips...");
-
-        // Try to flush state to ensure clips are finalized
-        Logger::writeToLog("[DEBUG] Flushing edit state...");
-        editToRecord.flushState();
-
-        // IMMEDIATE CHECK
-        Logger::writeToLog("[DEBUG] === IMMEDIATE CHECK (right after stop) ===");
-        Logger::writeToLog("[DEBUG] Checking ALL tracks in edit for clips:");
-        Logger::writeToLog("[DEBUG] Total audio tracks in edit: " + String(tracks.size()));
-
-        for (int i = 0; i < tracks.size(); ++i)
-        {
-            auto* track = tracks[i];
-
-            // Check all clips on track, not just MIDI clips
-            int totalClips = track->getClips().size();
-            Logger::writeToLog("[DEBUG] Track " + String(i) + " (" + track->getName() + ") has " +
-                             String(totalClips) + " total clips (IMMEDIATE)");
-
-            int clipCount = 0;
-            for (auto* clip : track->getClips())
-            {
-                if (auto* midiClip = dynamic_cast<te::MidiClip*>(clip))
-                {
-                    clipCount++;
-                    auto& sequence = midiClip->getSequence();
-                    Logger::writeToLog("[DEBUG]   MIDI Clip " + String(clipCount) + ": " +
-                                     "start=" + String(midiClip->getPosition().getStart().inSeconds()) + "s, " +
-                                     "length=" + String(midiClip->getPosition().getLength().inSeconds()) + "s, " +
-                                     "notes=" + String(sequence.getNumNotes()));
-                }
-                else
-                {
-                    Logger::writeToLog("[DEBUG]   Non-MIDI clip found: " + clip->getName() +
-                                     " (type: " + clip->getSelectableDescription() + ")");
-                }
-            }
-
-            if (clipCount == 0)
-                Logger::writeToLog("[DEBUG] Track " + String(i) + " has NO MIDI clips (IMMEDIATE)!");
-        }
-
-        // DELAYED CHECK - wait for async clip finalization
-        Logger::writeToLog("[DEBUG] === Scheduling DELAYED CHECK (500ms later) ===");
-        juce::MessageManager::callAsync([&editToRecord]()
-        {
-            // Wait a bit for Tracktion to finalize clips
-            juce::Thread::sleep(500);
-
-            Logger::writeToLog("[DEBUG] === DELAYED CHECK (500ms after stop) ===");
-            auto delayedTracks = te::getAudioTracks(editToRecord);
-            Logger::writeToLog("[DEBUG] Total audio tracks in edit: " + String(delayedTracks.size()));
-
-            for (int i = 0; i < delayedTracks.size(); ++i)
-            {
-                auto* track = delayedTracks[i];
-
-                // Check all clips on track, not just MIDI clips
-                int totalClips = track->getClips().size();
-                Logger::writeToLog("[DEBUG] Track " + String(i) + " (" + track->getName() + ") has " +
-                                 String(totalClips) + " total clips (DELAYED)");
-
-                int clipCount = 0;
-                for (auto* clip : track->getClips())
-                {
-                    if (auto* midiClip = dynamic_cast<te::MidiClip*>(clip))
-                    {
-                        clipCount++;
-                        auto& sequence = midiClip->getSequence();
-                        Logger::writeToLog("[DEBUG]   MIDI Clip " + String(clipCount) + ": " +
-                                         "start=" + String(midiClip->getPosition().getStart().inSeconds()) + "s, " +
-                                         "length=" + String(midiClip->getPosition().getLength().inSeconds()) + "s, " +
-                                         "notes=" + String(sequence.getNumNotes()));
-                    }
-                    else
-                    {
-                        Logger::writeToLog("[DEBUG]   Non-MIDI clip found: " + clip->getName() +
-                                         " (type: " + clip->getSelectableDescription() + ")");
-                    }
-                }
-
-                if (clipCount == 0)
-                    Logger::writeToLog("[DEBUG] Track " + String(i) + " has NO MIDI clips (DELAYED)!");
-            }
-        });
-    }
-    else
-    {
-        Logger::writeToLog("[DEBUG] Recording was just STARTED");
-    }
-
-    Logger::writeToLog("[DEBUG] ========== toggleRecord END ==========");
-}
-
-bool AudioEngine::isRecording() const
-{
-    // Check if the transport is in recording mode
-    return edit.getTransport().isRecording();
 }
 
 

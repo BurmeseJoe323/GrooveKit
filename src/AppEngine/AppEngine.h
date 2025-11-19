@@ -5,6 +5,7 @@
 #include "../UI/TrackView/TrackHeaderComponent.h"
 #include "TrackManager.h"
 #include "MidiListener.h"
+#include "MidiRecorder.h"
 #include <tracktion_engine/tracktion_engine.h>
 
 
@@ -162,6 +163,22 @@ public:
      */
     bool isClickTrackRecordingOnly() const;
 
+    /**
+     * @brief Enables verbose MIDI input device state logging for debugging.
+     *
+     * When enabled, logs the state of all MIDI input devices including:
+     *  - Device enabled status
+     *  - Recording enabled status
+     *  - Monitor mode settings
+     *  - Target track routing
+     *
+     * Useful for debugging recording issues. Call this before starting a
+     * recording session to see diagnostic information.
+     *
+     * @param enable True to enable logging, false to disable.
+     */
+    void setMidiEventLoggingEnabled(bool enable);
+
     //==============================================================================
     // Track Arming and Recording Control
 
@@ -299,6 +316,7 @@ private:
     std::unique_ptr<AudioEngine> audioEngine;
     std::unique_ptr<TrackManager> trackManager;
     std::unique_ptr<MidiListener> midiListener;
+    std::unique_ptr<MidiRecorder> midiRecorder;
 
     // Map from track index to its controller listener (TrackComponent) (Junie)
     juce::HashMap<int, TrackHeaderComponent::Listener*> trackListenerMap;

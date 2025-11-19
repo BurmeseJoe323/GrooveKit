@@ -23,6 +23,7 @@ AppEngine::AppEngine()
     trackManager = std::make_unique<TrackManager> (*edit);
     selectionManager = std::make_unique<te::SelectionManager> (*engine);
     midiListener = std::make_unique<MidiListener> (this);
+    midiRecorder = std::make_unique<MidiRecorder> (*engine);
 
     editViewState = std::make_unique<EditViewState> (*edit, *selectionManager);
 
@@ -168,49 +169,50 @@ int AppEngine::getArmedTrackIndex () const
 
 void AppEngine::toggleRecord()
 {
-    static int appEngineCallCount = 0;
-    appEngineCallCount++;
-    juce::Logger::writeToLog("[AppEngine] toggleRecord() called (call #" + juce::String(appEngineCallCount) + ")");
-
-    if (selectedTrackIndex < 0 && !isRecording())
-    {
-        juce::Logger::writeToLog("[Recording] Cannot start recording: no track armed");
-        return;
-    }
+    juce::Logger::writeToLog("[AppEngine] toggleRecord() called");
 
     bool wasRecording = isRecording();
-    juce::Logger::writeToLog("[AppEngine] Before toggle: isRecording=" + juce::String(wasRecording ? "TRUE" : "FALSE"));
 
-    // Toggle recording using EngineHelpers
-    audioEngine->toggleRecord(*edit);
-
-    bool nowRecording = isRecording();
-    juce::Logger::writeToLog("[AppEngine] After toggle: isRecording=" + juce::String(nowRecording ? "TRUE" : "FALSE"));
-
-    // If we just stopped recording, notify listeners
-    if (wasRecording)
+    if (!wasRecording)
     {
-        juce::Logger::writeToLog("[AppEngine] Recording stopped");
-
-        // Give Tracktion a moment to finalize the clip creation
-        juce::MessageManager::callAsync([this]()
+        // Start recording
+        if (selectedTrackIndex < 0)
         {
-            if (onRecordingStopped)
-            {
-                juce::Logger::writeToLog("[AppEngine] Notifying listeners that recording stopped");
-                onRecordingStopped();
-            }
-        });
+            juce::Logger::writeToLog("[AppEngine] Cannot start recording: no track armed");
+            return;
+        }
+
+        juce::Logger::writeToLog("[AppEngine] Starting recording on track " + juce::String(selectedTrackIndex));
+
+        // Start recording with both hardware MIDI and QWERTY keyboard
+        midiRecorder->startRecording(*edit, selectedTrackIndex,
+                                     &midiListener->getMidiKeyboardState());
     }
     else
     {
-        juce::Logger::writeToLog("[AppEngine] Recording started");
+        // Stop recording
+        juce::Logger::writeToLog("[AppEngine] Stopping recording");
+
+        bool clipCreated = midiRecorder->stopRecording(*edit);
+
+        if (clipCreated)
+        {
+            juce::Logger::writeToLog("[AppEngine] Recording stopped - clip created successfully");
+
+            // Notify listeners that recording stopped
+            if (onRecordingStopped)
+                onRecordingStopped();
+        }
+        else
+        {
+            juce::Logger::writeToLog("[AppEngine] Recording stopped - no clip created (no MIDI captured)");
+        }
     }
 }
 
 bool AppEngine::isRecording() const
 {
-    return audioEngine->isRecording();
+    return midiRecorder && midiRecorder->isRecording();
 }
 
 //==============================================================================
@@ -230,7 +232,7 @@ void AppEngine::deleteMidiTrack (int index)
     trackManager->deleteTrack (index);
 }
 
-bool AppEngine::addMidiClipToTrack (int trackIndex) { midiEngine->addMidiClipToTrack (trackIndex); }
+bool AppEngine::addMidiClipToTrack (int trackIndex) { midiEngine->addMidiClipToTrack (trackIndex); return true; }
 
 te::MidiClip* AppEngine::getMidiClipFromTrack (int trackIndex)
 {
@@ -310,6 +312,12 @@ void AppEngine::setClickTrackRecordingOnly (bool recordingOnly)
 bool AppEngine::isClickTrackRecordingOnly() const
 {
     return edit->clickTrackRecordingOnly;
+}
+
+void AppEngine::setMidiEventLoggingEnabled(bool enable)
+{
+    if (audioEngine)
+        audioEngine->setMidiEventLoggingEnabled(enable);
 }
 
 AudioEngine& AppEngine::getAudioEngine() { return *audioEngine; }

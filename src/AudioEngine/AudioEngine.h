@@ -1,6 +1,5 @@
 #pragma once
 #include "../MIDIEngine/MIDIEngine.h"
-#include "EngineHelpers.h"
 #include <juce_audio_devices/juce_audio_devices.h>
 #include <tracktion_engine/tracktion_engine.h>
 
@@ -128,6 +127,17 @@ public:
     void setupMidiInputDevices(te::Edit& edit);
 
     /**
+     * @brief Enables verbose MIDI event logging for debugging.
+     *
+     * When enabled, logs all incoming MIDI messages (note on/off, CC, etc.) with
+     * timestamps to help diagnose recording issues. Call this before starting recording
+     * if you need to debug MIDI event capture.
+     *
+     * @param enable True to enable logging, false to disable.
+     */
+    void setMidiEventLoggingEnabled(bool enable);
+
+    /**
      * @brief Routes all MIDI input devices to a specific track and pre-arms it.
      *
      * This sets the target track for all physical MIDI inputs and enables recording
@@ -155,30 +165,6 @@ public:
      */
     void logAvailableMidiDevices() const;
 
-    //==============================================================================
-    // Recording Control
-
-    /**
-     * @brief Toggles recording state on the specified edit.
-     *
-     * If currently recording, stops and keeps recorded clips (does not discard).
-     * If not recording, starts recording on all armed tracks. Automatically positions
-     * the playhead at the loop start if looping is enabled before starting recording.
-     *
-     * Uses EngineHelpers::toggleRecord() to ensure correct transport parameters.
-     * Logs clip counts after stopping recording for diagnostic purposes.
-     *
-     * @param edit The edit to toggle recording on.
-     */
-    void toggleRecord(te::Edit& edit);
-
-    /**
-     * @brief Returns whether the transport is currently recording.
-     *
-     * @return True if recording, false otherwise.
-     */
-    bool isRecording() const;
-
 private:
     //==============================================================================
     // Internal Methods
@@ -199,9 +185,57 @@ private:
     bool applySetup (const juce::AudioDeviceManager::AudioDeviceSetup& setup);
 
     //==============================================================================
+    // Internal Classes
+
+    /**
+     * @brief MIDI event logger for debugging recording issues.
+     *
+     * Attached to the engine's MIDI device manager to intercept and log all
+     * incoming MIDI messages during recording sessions.
+     */
+    class MidiEventLogger : public juce::MidiInputCallback
+    {
+    public:
+        MidiEventLogger() = default;
+
+        void handleIncomingMidiMessage(juce::MidiInput* source,
+                                       const juce::MidiMessage& message) override
+        {
+            if (!enabled)
+                return;
+
+            juce::String desc;
+
+            if (message.isNoteOn())
+                desc = "NOTE ON:  Note=" + juce::String(message.getNoteNumber()) +
+                       " Velocity=" + juce::String(message.getVelocity());
+            else if (message.isNoteOff())
+                desc = "NOTE OFF: Note=" + juce::String(message.getNoteNumber()) +
+                       " Velocity=" + juce::String(message.getVelocity());
+            else if (message.isController())
+                desc = "CC:       Controller=" + juce::String(message.getControllerNumber()) +
+                       " Value=" + juce::String(message.getControllerValue());
+            else if (message.isPitchWheel())
+                desc = "PITCH BEND: " + juce::String(message.getPitchWheelValue());
+            else
+                desc = message.getDescription();
+
+            juce::Logger::writeToLog("[MIDI EVENT] " + desc +
+                                    " | Time=" + juce::String(message.getTimeStamp(), 3) + "s" +
+                                    " | Channel=" + juce::String(message.getChannel()));
+        }
+
+        void setEnabled(bool shouldEnable) { enabled = shouldEnable; }
+
+    private:
+        std::atomic<bool> enabled{false};
+    };
+
+    //==============================================================================
     // Member Variables
 
     te::Edit& edit;                            ///< Reference to the Tracktion Edit (not owned).
     std::unique_ptr<MIDIEngine> midiEngine;    ///< MIDI clip management engine.
     te::Engine& engine;                        ///< Reference to the Tracktion Engine (not owned).
+    MidiEventLogger midiEventLogger;           ///< MIDI event logger for debugging.
 };
