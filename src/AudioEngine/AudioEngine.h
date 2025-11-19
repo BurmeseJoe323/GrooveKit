@@ -23,11 +23,24 @@ public:
     juce::AudioDeviceManager& getAudioDeviceManager();
     void initialiseDefaults (double sampleRate = 48000.0, int bufferSize = 512);
 
+    // Audio configuration (Written by Claude Code)
+    juce::Array<int> getAvailableBufferSizes() const;
+    juce::Array<double> getAvailableSampleRates() const;
+    int getCurrentBufferSize() const;
+    double getCurrentSampleRate() const;
+    bool setBufferSize (int bufferSize);
+    bool setSampleRate (double sampleRate);
+
     // MIDI Input device management (Tracktion InputDevice system)
     void setupMidiInputDevices(te::Edit& edit);
     void routeMidiToTrack(te::Edit& edit, int trackIndex);
     juce::StringArray listMidiInputDevices() const;
     void logAvailableMidiDevices() const;
+
+    // MIDI device enable/disable (Written by Claude Code)
+    juce::StringArray getEnabledMidiDevices() const;
+    bool isMidiDeviceEnabled (const juce::String& deviceName) const;
+    void setMidiDeviceEnabled (const juce::String& deviceName, bool enabled);
 
     // Recording control (simplified - uses EngineHelpers)
     void toggleRecord(te::Edit& edit);

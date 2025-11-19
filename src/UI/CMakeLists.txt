@@ -30,6 +30,9 @@ target_sources(app_ui
         MainComponent.cpp MainComponent.h
         TransportBar/TransportBar.cpp TransportBar/TransportBar.h
         MenuBar/GrooveKitMenuBar.cpp MenuBar/GrooveKitMenuBar.h
+        Settings/SettingsDialog.cpp Settings/SettingsDialog.h
+        Settings/AudioSettingsPanel.cpp Settings/AudioSettingsPanel.h
+        Settings/MidiSettingsPanel.cpp Settings/MidiSettingsPanel.h
         TrackView/TrackEditView.cpp TrackView/TrackEditView.h
         TrackView/TrackComponent.cpp TrackView/TrackComponent.h
         TrackView/TrackHeaderComponent.cpp TrackView/TrackHeaderComponent.h

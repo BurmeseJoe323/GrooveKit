@@ -154,8 +154,19 @@ public:
     juce::StringArray listOutputDevices()            const { return audioEngine->listOutputDevices(); }
     juce::String getCurrentOutputDeviceName()        const { return audioEngine->getCurrentOutputDeviceName(); }
 
-    // MIDI Input device management (for diagnostic purposes only - devices are auto-managed)
+    // Audio configuration (Written by Claude Code)
+    juce::Array<int> getAvailableBufferSizes()       const { return audioEngine->getAvailableBufferSizes(); }
+    juce::Array<double> getAvailableSampleRates()    const { return audioEngine->getAvailableSampleRates(); }
+    int getCurrentBufferSize()                       const { return audioEngine->getCurrentBufferSize(); }
+    double getCurrentSampleRate()                    const { return audioEngine->getCurrentSampleRate(); }
+    bool setBufferSize (int bufferSize)                    { return audioEngine->setBufferSize (bufferSize); }
+    bool setSampleRate (double sampleRate)                 { return audioEngine->setSampleRate (sampleRate); }
+
+    // MIDI Input device management (Written by Claude Code)
     juce::StringArray listMidiInputDevices()         const { return audioEngine->listMidiInputDevices(); }
+    juce::StringArray getEnabledMidiDevices()        const { return audioEngine->getEnabledMidiDevices(); }
+    bool isMidiDeviceEnabled (const juce::String& deviceName) const { return audioEngine->isMidiDeviceEnabled (deviceName); }
+    void setMidiDeviceEnabled (const juce::String& deviceName, bool enabled) { audioEngine->setMidiDeviceEnabled (deviceName, enabled); }
 
     bool saveEdit();
     void saveEditAsAsync (std::function<void (bool success)> onDone = {});

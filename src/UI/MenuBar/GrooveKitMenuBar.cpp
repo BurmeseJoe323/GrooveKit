@@ -2,7 +2,7 @@
 // GrooveKitMenuBar - Shared menu bar component implementation
 
 #include "GrooveKitMenuBar.h"
-#include "../PopupWindows/OutputDevice/OutputDeviceWindow.h"
+#include "../Settings/SettingsDialog.h"
 
 GrooveKitMenuBar::GrooveKitMenuBar(AppEngine& engine)
 {
@@ -47,7 +47,7 @@ juce::PopupMenu GrooveKitMenuBar::getMenuForIndex(const int topLevelMenuIndex, c
     {
         SwitchToTrackEdit = 1001, // (Written by Claude Code)
         OpenMixer = 1002,
-        ShowOutputSettings = 1003,
+        ShowPreferences = 1003, // (Written by Claude Code)
         NewEdit = 2001,
         OpenEdit = 2002,
         SaveEdit = 2003,
@@ -64,7 +64,7 @@ juce::PopupMenu GrooveKitMenuBar::getMenuForIndex(const int topLevelMenuIndex, c
         menu.addItem(SaveEdit, "Save Edit");
         menu.addItem(SaveEditAs, "Save Edit As...");
         menu.addSeparator();
-        menu.addItem(ShowOutputSettings, "Output Device Settings...");
+        menu.addItem(ShowPreferences, "Preferences..."); // (Written by Claude Code)
     }
     else if (topLevelMenuIndex == 1) // View (Written by Claude Code)
     {
@@ -88,7 +88,7 @@ void GrooveKitMenuBar::menuItemSelected(const int menuItemID, int)
     {
         SwitchToTrackEdit = 1001, // (Written by Claude Code)
         OpenMixer = 1002,
-        ShowOutputSettings = 1003,
+        ShowPreferences = 1003, // (Written by Claude Code)
         NewEdit = 2001,
         OpenEdit = 2002,
         SaveEdit = 2003,
@@ -115,8 +115,8 @@ void GrooveKitMenuBar::menuItemSelected(const int menuItemID, int)
             if (onSwitchToMix)
                 onSwitchToMix();
             break;
-        case ShowOutputSettings:
-            showOutputDeviceSettings();
+        case ShowPreferences: // (Written by Claude Code)
+            showPreferences();
             break;
         case NewEdit:
             showNewEditMenu();
@@ -141,20 +141,18 @@ void GrooveKitMenuBar::setViewMode(ViewMode mode)
     menuItemsChanged();  // Notify JUCE to rebuild menus
 }
 
-void GrooveKitMenuBar::showOutputDeviceSettings() const
+void GrooveKitMenuBar::showPreferences() const
 {
-    auto* content = new OutputDeviceWindow(*appEngine);
-    content->setSize(360, 140);
+    // Created by Claude Code on 2025-11-18.
+    auto* settingsComponent = new SettingsDialog(*appEngine);
+    settingsComponent->setSize(600, 400);
 
-    juce::Rectangle<int> screenBounds;
-    #if JUCE_MAC
-    screenBounds = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea;
-    screenBounds = screenBounds.withHeight(25); // Approx height of mac menu bar
-    #else
-    if (menuBarComponent)
-        screenBounds = menuBarComponent->getScreenBounds();
-    #endif
-    juce::CallOutBox::launchAsynchronously(std::unique_ptr<juce::Component>(content), screenBounds, nullptr);
+    juce::DialogWindow::LaunchOptions opts;
+    opts.content.setOwned(settingsComponent);
+    opts.dialogTitle = "Preferences";
+    opts.resizable = false;
+    opts.useNativeTitleBar = true;
+    opts.launchAsync();
 }
 
 void GrooveKitMenuBar::showNewEditMenu() const

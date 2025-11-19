@@ -130,6 +130,61 @@ AudioDeviceManager& AudioEngine::getAudioDeviceManager()
     return adm();
 }
 
+// Audio configuration methods (Written by Claude Code)
+Array<int> AudioEngine::getAvailableBufferSizes() const
+{
+    auto& dm = const_cast<AudioEngine*>(this)->adm();
+    if (auto* device = dm.getCurrentAudioDevice())
+        return device->getAvailableBufferSizes();
+    return {};
+}
+
+Array<double> AudioEngine::getAvailableSampleRates() const
+{
+    auto& dm = const_cast<AudioEngine*>(this)->adm();
+    if (auto* device = dm.getCurrentAudioDevice())
+        return device->getAvailableSampleRates();
+    return {};
+}
+
+int AudioEngine::getCurrentBufferSize() const
+{
+    auto& dm = const_cast<AudioEngine*>(this)->adm();
+    AudioDeviceManager::AudioDeviceSetup setup;
+    dm.getAudioDeviceSetup (setup);
+    return setup.bufferSize;
+}
+
+double AudioEngine::getCurrentSampleRate() const
+{
+    auto& dm = const_cast<AudioEngine*>(this)->adm();
+    AudioDeviceManager::AudioDeviceSetup setup;
+    dm.getAudioDeviceSetup (setup);
+    return setup.sampleRate;
+}
+
+bool AudioEngine::setBufferSize (int bufferSize)
+{
+    auto& dm = adm();
+    AudioDeviceManager::AudioDeviceSetup setup;
+    dm.getAudioDeviceSetup (setup);
+
+    setup.bufferSize = bufferSize;
+
+    return applySetup (setup);
+}
+
+bool AudioEngine::setSampleRate (double sampleRate)
+{
+    auto& dm = adm();
+    AudioDeviceManager::AudioDeviceSetup setup;
+    dm.getAudioDeviceSetup (setup);
+
+    setup.sampleRate = sampleRate;
+
+    return applySetup (setup);
+}
+
 bool AudioEngine::applySetup (const AudioDeviceManager::AudioDeviceSetup& newSetup)
 {
     auto& dm = adm();
@@ -175,6 +230,43 @@ void AudioEngine::logAvailableMidiDevices() const
                               " (ID: " + device.identifier + ")");
         }
     }
+}
+
+// MIDI device enable/disable (Written by Claude Code)
+StringArray AudioEngine::getEnabledMidiDevices() const
+{
+    StringArray enabledDevices;
+    for (const auto& midiIn : engine.getDeviceManager().getMidiInDevices())
+    {
+        if (midiIn->isEnabled())
+            enabledDevices.add (midiIn->getName());
+    }
+    return enabledDevices;
+}
+
+bool AudioEngine::isMidiDeviceEnabled (const String& deviceName) const
+{
+    for (const auto& midiIn : engine.getDeviceManager().getMidiInDevices())
+    {
+        if (midiIn->getName() == deviceName)
+            return midiIn->isEnabled();
+    }
+    return false;
+}
+
+void AudioEngine::setMidiDeviceEnabled (const String& deviceName, bool enabled)
+{
+    for (const auto& midiIn : engine.getDeviceManager().getMidiInDevices())
+    {
+        if (midiIn->getName() == deviceName)
+        {
+            midiIn->setEnabled (enabled);
+            Logger::writeToLog ("[MIDI] Device '" + deviceName + "' " +
+                              (enabled ? "enabled" : "disabled"));
+            return;
+        }
+    }
+    Logger::writeToLog ("[MIDI] Device '" + deviceName + "' not found");
 }
 
 void AudioEngine::setupMidiInputDevices(te::Edit& editToSetup)
