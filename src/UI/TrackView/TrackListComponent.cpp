@@ -389,6 +389,18 @@ void TrackListComponent::armTrack (int trackIndex, bool shouldBeArmed)
         appEngine->setArmedTrack (newIndex);
 }
 
+void TrackListComponent::setAllArmButtonsEnabled(bool enabled)
+{
+    // Loop through all headers and set enabled or disabled state
+    for (TrackHeaderComponent *header : headers)
+    {
+        if (header != nullptr)
+        {
+            header->setArmButtonEnabled (enabled);
+        }
+    }
+}
+
 void TrackListComponent::repaintTrack(int trackIndex)
 {
     if (trackIndex >= 0 && trackIndex < tracks.size())

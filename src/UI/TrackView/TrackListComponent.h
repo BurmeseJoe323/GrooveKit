@@ -28,6 +28,7 @@ public:
     void rebuildFromEngine();
 
     void armTrack(int trackIndex, bool shouldBeArmed);
+    void setAllArmButtonsEnabled(bool enabled);
     void repaintTrack(int trackIndex);
 
     void setPixelsPerBeat (double ppb);

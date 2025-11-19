@@ -36,6 +36,7 @@ public:
 
     void setArmed (bool shouldBeArmed);
     bool isArmed() const;
+    void setArmButtonEnabled(bool enabled);
     void setDimmed (bool dim);
 
     void setTrackName (juce::String name);

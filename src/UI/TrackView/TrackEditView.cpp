@@ -178,6 +178,8 @@ bool TrackEditView::keyPressed (const juce::KeyPress& key_press)
         if (appEngine->isPlaying())
         {
             appEngine->stop();
+            // In case we are stopping recording, ensure all arm buttons are enabled
+            trackList->setAllArmButtonsEnabled (true);
         }
         else
         {
@@ -243,7 +245,10 @@ void TrackEditView::setupButtons ()
         stopShape.addRectangle (0.0f, 0.0f, 1.0f, 1.0f);
         stopButton.setShape (stopShape, true, true, false);
         stopButton.setColours (juce::Colours::lightgrey, juce::Colours::white, juce::Colours::darkgrey);
-        stopButton.onClick = [this] { appEngine->stop(); };
+        stopButton.onClick = [this] {
+            appEngine->stop();
+            trackList->setAllArmButtonsEnabled (true); // Ensure arm buttons are enable
+        };
         addAndMakeVisible (stopButton);
 
         juce::Path playShape;
@@ -260,6 +265,8 @@ void TrackEditView::setupButtons ()
         recordButton.onClick = [this] {
             // Simply toggle record state
             appEngine->toggleRecord();
+            // Enable or disable track's arm buttons depending on whether we are recording or not
+            trackList->setAllArmButtonsEnabled (!appEngine->isRecording());
             // Update button appearance immediately
             updateRecordButtonAppearance();
         };
