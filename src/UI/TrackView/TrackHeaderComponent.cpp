@@ -5,7 +5,7 @@
 #include "TrackComponent.h"
 #include "../../AppEngine/AppEngine.h" // Full definition needed for implementation (Written by Claude Code)
 
-TrackHeaderComponent::TrackHeaderComponent (AppEngine& engine) : appEngine (engine)
+TrackHeaderComponent::TrackHeaderComponent (AppEngine& engine)
 {
     addAndMakeVisible (instrumentButton);
     addAndMakeVisible (instrumentMenuButton);
@@ -123,7 +123,7 @@ void TrackHeaderComponent::labelTextChanged (juce::Label* labelThatHasChanged)
         if (trackIndex >= 0)
         {
             const juce::String newName = trackNameLabel.getText();
-            appEngine.setTrackName (trackIndex, newName);
+            appEngine->setTrackName (trackIndex, newName);
         }
     }
 }

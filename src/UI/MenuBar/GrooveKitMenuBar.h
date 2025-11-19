@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../../AppEngine/AppEngine.h"
+#include <TrackView/ExportOverlayComponent.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 
 namespace te = tracktion::engine;
@@ -51,8 +52,10 @@ private:
     void showOutputDeviceSettings() const;
     void showNewEditMenu() const;
     void showOpenEditMenu() const;
+    void exportAudio();
 
     std::shared_ptr<AppEngine> appEngine;
+    std::unique_ptr<ExportOverlayComponent> exportOverlay;
     ViewMode currentViewMode = ViewMode::TrackEdit;
 
     #if !JUCE_MAC

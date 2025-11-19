@@ -38,9 +38,6 @@ void MixerPanel::refreshTracks()
     auto& edit = appEngine.getEdit();
     auto audioTracks = te::getAudioTracks (edit);
 
-    DBG ("Mixer sees " << audioTracks.size() << " tracks");
-    for (auto* t : audioTracks)
-        DBG ("  " << t->getName());
     // Color palette matching TrackListComponent (Written by Claude Code)
     static const juce::Array<juce::Colour> trackColors {
         juce::Colour (0xffff6b6b),  // Red
@@ -59,7 +56,6 @@ void MixerPanel::refreshTracks()
     {
         auto* t = audioTracks[i];
 
-        auto* strip = new ChannelStrip();
         const auto color = trackColors[i % trackColors.size()]; // Color based on index
         auto* strip = new ChannelStrip(color); // Pass color to constructor
         strip->setTrackIndex (i); // Track index for renaming (Written by Claude Code)
@@ -71,9 +67,9 @@ void MixerPanel::refreshTracks()
             strip->addListener (listener);
 
         // Always update engine state if listeners aren't present (e.g., Track view not active)
-        strip->onRequestMuteChange = [this, idx = i] (bool mute) { appEngine.setTrackMuted (idx, mute); };
-        strip->onRequestSoloChange = [this, idx = i] (bool solo) { appEngine.setTrackSoloed (idx, solo); };
-        strip->onRequestArmChange = [this, idx = i] (bool armed) {
+        // strip->onRequestMuteChange = [this, idx = i] (bool mute) { appEngine.setTrackMuted (idx, mute); };
+        // strip->onRequestSoloChange = [this, idx = i] (bool solo) { appEngine.setTrackSoloed (idx, solo); };
+        // strip->onRequestArmChange = [this, idx = i] (bool armed) {
         // Always update engine state if listeners aren't present (e.g. Track view not active)
         strip->onRequestMuteChange = [this, idx = i] (bool mute) {
             appEngine.setTrackMuted (idx, mute);

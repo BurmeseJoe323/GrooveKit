@@ -366,9 +366,7 @@ void ChannelStrip::resized()
     // Match TrackHeaderComponent padding and dimensions (Written by Claude Code)
     auto r = getLocalBounds().reduced (5); // inner padding (matches TrackHeaderComponent)
 
-    // --- Track name at bottom ---
-    const int nameH = 24;
-    name.setBounds (r.removeFromBottom (nameH));
+
 
     // --- Metrics ---
     const int bigBtnH = 24;   // Instrument, M, S, R
@@ -380,49 +378,32 @@ void ChannelStrip::resized()
     const int slotGap  = 2;
     const int menuW    = 18;   // width of ▼ button
     const int menuGap  = 2;    // spacing between main slot and ▼
-    const int slotH   = 18;
-    const int slotGap = 2;
-    // top controls stack
-    auto top = r.removeFromTop (110);
-    constexpr int btnRowH = 25; // matches TrackHeaderComponent button height
-    muteButton.setBounds (top.removeFromTop (btnRowH));
-    top.removeFromTop (2); // matches TrackHeaderComponent margin
-    soloButton.setBounds (top.removeFromTop (btnRowH));
-    top.removeFromTop (2);
-    recordButton.setBounds (top.removeFromTop (btnRowH));
+
+    const int numSlots = insertSlots.size();
+    const int slotsTotalH =
+    (numSlots > 0 ? numSlots * slotH + (numSlots - 1) * slotGap : 0);
+
+    // compute exact needed height for the whole top stack:
+
+    const int topH =
+        /* Instrument */    bigBtnH +
+        gapS +
+        /* INSERTS label */ labelH +
+        /* slots */         slotsTotalH +
+        gapM +
+        /* M, S, R */       3 * bigBtnH;
+
+
+    auto top = r.removeFromTop (topH);
 
     constexpr int nameH = 25; // matches TrackHeaderComponent label height
     const int nameGap = 6;
     auto nameArea = r.removeFromBottom (nameH + nameGap);
     name.setBounds (nameArea.removeFromBottom (nameH));
 
-    const int numSlots = insertSlots.size(); // typically 4
-
-    // compute exact needed height for the whole top stack:
-    const int topH =
-        /* Instrument */          bigBtnH +
-        gapS +
-        /* M */                   bigBtnH +
-        gapS +
-        /* S */                   bigBtnH +
-        gapS +
-        /* R */                   bigBtnH +
-        gapM +
-        /* INSERTS label */       labelH +
-        /* slots */               (numSlots > 0 ? (numSlots * (slotH + slotGap)) - slotGap : 0);
-
-    auto top = r.removeFromTop (topH);
-
     // === Top controls ===
     instrumentButton.setBounds (top.removeFromTop (bigBtnH));
     top.removeFromTop (gapS);
-
-    muteButton.setBounds   (top.removeFromTop (bigBtnH));
-    top.removeFromTop (gapS);
-    soloButton.setBounds   (top.removeFromTop (bigBtnH));
-    top.removeFromTop (gapS);
-    recordButton.setBounds (top.removeFromTop (bigBtnH));
-    top.removeFromTop (gapM);
 
     // === INSERTS label ===
     insertsLabel.setBounds (top.removeFromTop (labelH));
@@ -448,14 +429,27 @@ void ChannelStrip::resized()
             top.removeFromTop (slotGap);
     }
 
-    // === Pan + Fader ===
-    auto body = r;
-    body.removeFromRight (6);
+    // Gap before M/S/R row
+    top.removeFromTop (gapM);
 
-    auto panArea = body.removeFromTop (48);
-    pan.setBounds (panArea.withSizeKeepingCentre (36, 36));
+    // === MUTE / SOLO / RECORD (below inserts) ===
+    muteButton.setBounds   (top.removeFromTop (bigBtnH));
+    top.removeFromTop (gapS);
+    soloButton.setBounds   (top.removeFromTop (bigBtnH));
+    top.removeFromTop (gapS);
+    recordButton.setBounds (top.removeFromTop (bigBtnH));
 
-    fader.setBounds (body.reduced (2, 8));
+
+    // bottom area: fader + meter
+    auto bottom = r.removeFromBottom (r.getHeight()); // whatever remains
+
+    // meter
+    // const int meterW = juce::jmax(12, getWidth() / 9);
+    // auto meterArea = bottom.removeFromRight(meterW);
+    // meter.setBounds(meterArea.reduced(1, 6));
+
+    bottom.removeFromRight (6);
+
     // pan knob
     auto panArea = bottom.removeFromTop (48);
     pan.setBounds (panArea.withSizeKeepingCentre (50, 50));

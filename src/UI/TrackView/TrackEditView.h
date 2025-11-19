@@ -73,9 +73,6 @@ private:
     double pixelsPerBeat = 100.0;
     t::BeatPosition viewStartBeat = t::BeatPosition::fromBeats(0.0);
 
-    // --- Top Bar Components ---
-    std::unique_ptr<juce::MenuBarComponent> menuBar;
-
     // Center controls
     juce::Label bpmLabel, bpmEditField;
     juce::ShapeButton playButton { "play", {}, {}, {} };
@@ -90,7 +87,6 @@ private:
     void showMidiInputDeviceSettings() const;
     void showNewEditMenu() const;
     void showOpenEditMenu() const;
-    void exportAudio();
 
     void parentHierarchyChanged() override;
     void mouseDown (const juce::MouseEvent&) override;
