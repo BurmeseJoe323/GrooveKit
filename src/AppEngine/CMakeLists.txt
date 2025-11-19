@@ -1,6 +1,5 @@
 add_library(app_engine
-        ../PluginManager/PluginManager.h
-        ../PluginManager/PluginManager.cpp)
+        GrooveKitUIBehaviour.h)
 target_sources(app_engine PRIVATE
         AppEngine.cpp
         TrackManager.cpp
@@ -23,4 +22,5 @@ target_link_libraries(app_engine
         audio_engine
         drum_sampler_engine
         GrooveKitResources
+        plugin_manager
 )

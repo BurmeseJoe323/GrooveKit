@@ -109,6 +109,12 @@ void TrackComponent::onInstrumentClicked()
     appEngine->openInstrumentEditor (trackIndex);
 }
 
+void TrackComponent::onInstrumentMenuRequested()
+{
+    if (appEngine)
+        appEngine->showInstrumentChooser (trackIndex);
+}
+
 void TrackComponent::onSettingsClicked()
 {
     juce::PopupMenu m;
@@ -118,6 +124,8 @@ void TrackComponent::onSettingsClicked()
     if (appEngine && appEngine->canPasteToTrack (trackIndex))
         m.addItem (2, "Paste at End");
 
+    m.addSeparator();
+    m.addItem (3, "Import MIDI Clip");
     m.addSeparator();
 
     m.addSeparator();
@@ -146,6 +154,31 @@ void TrackComponent::onSettingsClicked()
                 }
                 break;
             }
+            case 3: // Import MIDI Clip
+            {
+                if (appEngine)
+                {
+                    auto destStart = t::TimePosition::fromSeconds (0.0);
+
+                    auto midiClips = appEngine->getMidiClipsFromTrack (trackIndex);
+
+                    for (auto* mc : midiClips)
+                    {
+                        auto clipEnd = mc->getPosition().getEnd();
+                        if (clipEnd > destStart)
+                            destStart = clipEnd;
+                    }
+
+                    appEngine->importMidiClipViaChooser (
+                        trackIndex,
+                        destStart,
+                        [this]()
+                        {
+                            rebuildAndRefreshHighlight();
+                        });
+                }
+                break;
+            }
             case 10: // Open Drum Sampler
                 if (onRequestOpenDrumSampler)
                     onRequestOpenDrumSampler (trackIndex);
@@ -159,6 +192,7 @@ void TrackComponent::onSettingsClicked()
         }
     });
 }
+
 
 void TrackComponent::setTrackIndex (const int index)
 {

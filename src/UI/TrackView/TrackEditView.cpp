@@ -133,7 +133,7 @@ void TrackEditView::resized ()
 bool TrackEditView::keyPressed (const juce::KeyPress& key_press)
 {
     // The note keys are being handled by keyStateChanged, so we'll just say that the event is consumed
-    if (appEngine->getMidiListener().getNoteKeys().contains (key_press.getKeyCode()))
+    if (appEngine->getMidiListener()->getNoteKeys().contains (key_press.getKeyCode()))
         return true;
 
     if (key_press == juce::KeyPress::spaceKey)
@@ -151,7 +151,7 @@ bool TrackEditView::keyPressed (const juce::KeyPress& key_press)
     }
 
     // Let MidiListener handle octave changes (Z/X keys)
-    if (appEngine->getMidiListener().handleKeyPress(key_press))
+    if (appEngine->getMidiListener()->handleKeyPress(key_press))
         return true;
 
     // This is the top level of our application, so if the key press has not been consumed,
@@ -161,7 +161,7 @@ bool TrackEditView::keyPressed (const juce::KeyPress& key_press)
 
 bool TrackEditView::keyStateChanged (bool isKeyDown)
 {
-    return appEngine->getMidiListener().handleKeyStateChanged(isKeyDown);
+    return appEngine->getMidiListener()->handleKeyStateChanged(isKeyDown);
 }
 
 void TrackEditView::parentHierarchyChanged()
@@ -178,6 +178,91 @@ void TrackEditView::mouseDown (const juce::MouseEvent& e)
 {
     grabKeyboardFocus();
     juce::Component::mouseDown(e);
+}
+
+void TrackEditView::showNewEditMenu () const
+{
+    if (appEngine->isDirty())
+    {
+        const auto opts = juce::MessageBoxOptions()
+            .withIconType (juce::MessageBoxIconType::WarningIcon)
+            .withTitle ("Save changes?")
+            .withMessage ("You have unsaved changes.")
+            .withButton ("Save")
+            .withButton ("Discard")
+            .withButton ("Cancel");
+
+        juce::AlertWindow::showAsync (opts,
+            [this](const int r) {
+                if (r == 1)
+                {
+                    // Save
+                    const bool hasPath =
+                        appEngine->getCurrentEditFile().getFullPathName().isNotEmpty();
+                    if (hasPath)
+                    {
+                        if (appEngine->saveEdit())
+                            appEngine->newUntitledEdit();
+                    }
+                    else
+                    {
+                        appEngine->saveEditAsAsync ([this](const bool ok) {
+                            if (ok)
+                                appEngine->newUntitledEdit();
+                        });
+                    }
+                }
+                else if (r == 2)
+                {
+                    // Discard
+                    appEngine->newUntitledEdit();
+                }
+            });
+    }
+    else
+    {
+        appEngine->newUntitledEdit();
+    }
+}
+
+void TrackEditView::showOpenEditMenu () const
+{
+    if (!appEngine->isDirty())
+    {
+        appEngine->openEditAsync();
+        return;
+    }
+
+    const auto opts = juce::MessageBoxOptions()
+        .withIconType (juce::MessageBoxIconType::WarningIcon)
+        .withTitle ("Save changes?")
+        .withMessage ("You have unsaved changes.")
+        .withButton ("Save")
+        .withButton ("Discard")
+        .withButton ("Cancel");
+
+    juce::AlertWindow::showAsync (opts,
+        [this](const int result) {
+            if (result == 1) // Save
+            {
+                if (appEngine->getCurrentEditFile().getFullPathName().isNotEmpty())
+                {
+                    if (appEngine->saveEdit())
+                        appEngine->openEditAsync();
+                }
+                else
+                {
+                    appEngine->saveEditAsAsync ([this](const bool ok) {
+                        if (ok)
+                            appEngine->openEditAsync();
+                    });
+                }
+            }
+            else if (result == 2) // Discard
+            {
+                appEngine->openEditAsync();
+            }
+        });
 }
 
 void TrackEditView::showPianoRoll (te::MidiClip* clip)

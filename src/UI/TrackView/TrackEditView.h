@@ -6,6 +6,7 @@
 #include "../../AppEngine/AppEngine.h"
 #include "../PopupWindows/PianoRollComponents/PianoRollEditor.h"
 #include "TrackListComponent.h"
+#include "ExportOverlayComponent.h"
 #include <juce_gui_basics/juce_gui_basics.h>
 
 namespace te = tracktion::engine;
@@ -67,8 +68,25 @@ private:
     int pianoRollTrackIndex = -1;
     bool pianoRollVisible = false;
 
+    std::unique_ptr<ExportOverlayComponent> exportOverlay;
+
     double pixelsPerBeat = 100.0;
     t::BeatPosition viewStartBeat = t::BeatPosition::fromBeats(0.0);
+
+    // Center controls
+    juce::Label bpmLabel, bpmEditField;
+    juce::ShapeButton playButton { "play", {}, {}, {} };
+    juce::ShapeButton stopButton { "stop", {}, {}, {} };
+    juce::ShapeButton recordButton { "record", {}, {}, {} };
+
+    // Right side (placeholder)
+    juce::TextButton switchButton { "|||" };
+
+    // Private helper methods for menu actions
+    void showOutputDeviceSettings() const;
+    void showMidiInputDeviceSettings() const;
+    void showNewEditMenu() const;
+    void showOpenEditMenu() const;
 
     void parentHierarchyChanged() override;
     void mouseDown (const juce::MouseEvent&) override;

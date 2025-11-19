@@ -117,6 +117,18 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
         refreshTrackStates();
     };
 
+    appEngine->onInstrumentLabelChanged = [this] (int trackIdx)
+    {
+        if (trackIdx < 0 || trackIdx >= headers.size())
+            return;
+
+        if (auto* header = headers[trackIdx])
+        {
+            header->setInstrumentLabel (
+                appEngine->getInstrumentLabelForTrack (trackIdx));
+        }
+    };
+
     // Handle recording stopped: refresh clips on armed track
     appEngine->onRecordingStopped = [this] {
         const int armedIndex = appEngine->getArmedTrackIndex();
@@ -278,6 +290,9 @@ void TrackListComponent::addNewTrack (int engineIdx)
     header->setTrackIndex (engineIdx); // Set track index for renaming (Written by Claude Code)
     auto* newTrack = new TrackComponent (appEngine, engineIdx, newColor);
     // newTrack->setEngineIndex (engineIdx);
+
+    header->setTrackIndex (newTrack->getTrackIndex());
+    header->setInstrumentLabel (appEngine->getInstrumentLabelForTrack (newTrack->getTrackIndex()));
 
     newTrack->setPixelsPerBeat (100.0);
     newTrack->setViewStartBeat (t::BeatPosition::fromBeats(0.0));

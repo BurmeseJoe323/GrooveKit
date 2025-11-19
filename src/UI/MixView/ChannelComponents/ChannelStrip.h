@@ -60,11 +60,19 @@ public:
     // void setMeterLevel(float lin)      { meter.setLevel(lin); }
     // void setMeterPeak(float lin)       { meter.setPeak(lin); }
 
-public:
+    void setInsertSlotName (int slotIndex, const juce::String& text);
+    void setInstrumentButtonText (const juce::String& text);
+    int getNumInsertSlots() const { return insertSlots.size(); }
+
+
+
     // Fallback callbacks used when TrackComponents (listeners) are not present (e.g., in Mix view) (Junie)
     std::function<void (bool)> onRequestMuteChange;
     std::function<void (bool)> onRequestSoloChange;
     std::function<void (bool)> onRequestArmChange;
+    std::function<void()> onOpenInstrumentEditor;
+    std::function<void (int slotIndex)> onInsertSlotClicked;
+    std::function<void (int)> onInsertSlotMenuRequested;
     // Track naming callback (Written by Claude Code)
     std::function<void (int trackIndex, const juce::String& newName)> onRequestNameChange;
 
@@ -72,11 +80,16 @@ private:
     int trackIndex = -1; // Track index for this channel strip (Written by Claude Code)
     juce::Colour stripColor; // Background color for this strip (Written by Claude Code)
     juce::TextButton muteButton, soloButton, recordButton;
+    juce::TextButton instrumentButton;
+    juce::Label insertsLabel;
+    juce::OwnedArray<juce::TextButton> insertSlots;
+    juce::OwnedArray<juce::TextButton> insertSlotMenus;
     juce::Label name;
     //ChannelMeter     meter;
     FaderComponent lnf;
     juce::Slider fader;
     juce::Slider pan;
+    te::AudioTrack* boundTrack { nullptr };
 
     te::VolumeAndPanPlugin* boundVnp { nullptr };
     bool ignoreSliderCallback { false };

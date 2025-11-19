@@ -4,6 +4,8 @@
 #include "GrooveKitMenuBar.h"
 #include "../PopupWindows/OutputDevice/OutputDeviceWindow.h"
 
+#include <TrackView/ExportOverlayComponent.h>
+
 GrooveKitMenuBar::GrooveKitMenuBar(AppEngine& engine)
 {
     appEngine = std::shared_ptr<AppEngine>(&engine, [](AppEngine*) {});
@@ -52,6 +54,7 @@ juce::PopupMenu GrooveKitMenuBar::getMenuForIndex(const int topLevelMenuIndex, c
         OpenEdit = 2002,
         SaveEdit = 2003,
         SaveEditAs = 2004,
+        ExportAudio = 2005,
         NewInstrumentTrack = 3001,
         NewDrumTrack = 3002
     };
@@ -63,6 +66,7 @@ juce::PopupMenu GrooveKitMenuBar::getMenuForIndex(const int topLevelMenuIndex, c
         menu.addSeparator();
         menu.addItem(SaveEdit, "Save Edit");
         menu.addItem(SaveEditAs, "Save Edit As...");
+        menu.addItem (ExportAudio, "Export Audio");
         menu.addSeparator();
         menu.addItem(ShowOutputSettings, "Output Device Settings...");
     }
@@ -93,6 +97,7 @@ void GrooveKitMenuBar::menuItemSelected(const int menuItemID, int)
         OpenEdit = 2002,
         SaveEdit = 2003,
         SaveEditAs = 2004,
+        ExportAudio = 2005,
         NewInstrumentTrack = 3001,
         NewDrumTrack = 3002
     };
@@ -130,6 +135,9 @@ void GrooveKitMenuBar::menuItemSelected(const int menuItemID, int)
         case SaveEditAs:
             appEngine->saveEditAsAsync();
             break;
+        case ExportAudio:
+            exportAudio();
+        break;
         default:
             break;
     }
@@ -240,4 +248,56 @@ void GrooveKitMenuBar::showOpenEditMenu() const
                 appEngine->openEditAsync();
             }
         });
+}
+void GrooveKitMenuBar::exportAudio()
+{
+    auto chooser = std::make_shared<juce::FileChooser> (
+        "Export audio",
+        juce::File::getSpecialLocation (juce::File::userDesktopDirectory),
+        "*.wav");
+
+    chooser->launchAsync (juce::FileBrowserComponent::saveMode
+                          | juce::FileBrowserComponent::canSelectFiles,
+                          [this, chooser] (const juce::FileChooser& fc)
+    {
+        DBG ("[TrackEditView] ExportAudio chooser callback hit");
+
+        auto file = fc.getResult();
+
+        if (file == juce::File())
+            return; // user cancelled
+
+        file = file.withFileExtension (".wav");
+
+        // Create and show full-screen overlay
+        exportOverlay = std::make_unique<ExportOverlayComponent>();
+        exportOverlay->setBounds (getLocalBounds());
+        addAndMakeVisible (exportOverlay.get());
+        exportOverlay->toFront (true);
+        repaint();
+
+        // Do the export
+        const bool ok = appEngine->exportAudio (file);
+
+        // Remove overlay
+        if (exportOverlay != nullptr)
+        {
+            removeChildComponent (exportOverlay.get());
+            exportOverlay.reset();
+        }
+
+        // Show result
+        if (! ok)
+        {
+            juce::AlertWindow::showMessageBoxAsync (juce::AlertWindow::WarningIcon,
+                                                    "Export failed",
+                                                    "There was a problem rendering the audio.");
+        }
+        else
+        {
+            juce::AlertWindow::showMessageBoxAsync (juce::AlertWindow::InfoIcon,
+                                                    "Export complete",
+                                                    "audio exported to:\n" + file.getFullPathName());
+        }
+    });
 }

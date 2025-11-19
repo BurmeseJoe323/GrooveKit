@@ -43,6 +43,16 @@ public:
      */
     juce::Array<te::MidiClip*> getMidiClipsFromTrack(int trackIndex);
 
+    /** Import a MIDI file as a single MidiClip on the given track.
+        @param midiFile   The .mid file to import
+        @param trackIndex Index of the target track in the Edit's track list
+        @param destStart  Where to place the start of the imported clip in the Edit
+        @return true on success, false if something failed (bad file, bad track, etc.)
+    */
+    bool importMidiFileToTrack (const juce::File& midiFile,
+                                int trackIndex,
+                                t::TimePosition destStart);
+
     int addMidiTrack();
 
 private:

@@ -48,7 +48,8 @@ juce_add_binary_data(GrooveKitResources
 
 target_sources(GrooveKitResources PRIVATE ${GROOVEKIT_DEFAULT_WAVS})
 
-# ---- Your libraries
+# ---- libraries
+add_subdirectory(src/PluginManager)
 add_subdirectory(src/AppEngine)
 add_subdirectory(src/MIDIEngine)
 add_subdirectory(src/AudioEngine)
@@ -64,6 +65,13 @@ if(BUILD_TESTING)
     enable_testing()
     add_subdirectory(tests)
 endif()
+
+target_compile_definitions(GrooveKit
+        PRIVATE
+        JUCE_PLUGINHOST_VST3=1
+        JUCE_PLUGINHOST_AU=1 # macOS only
+)
+
 
 # ---- Link once (cleaned)
 target_link_libraries(GrooveKit
