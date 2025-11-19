@@ -271,4 +271,3 @@ void ui::TimelineComponent::snapSecondsToBeats (double& seconds) const
     const auto snappedBeat = std::round(beat);
     seconds = ts.toTime (t::BeatPosition::fromBeats(snappedBeat)).inSeconds();
 }
-
