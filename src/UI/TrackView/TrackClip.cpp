@@ -200,6 +200,11 @@ void TrackClip::onResizeEnd()
 
     auto b = getBounds();
     setBounds (b.withWidth (juce::jmax (correctWidth, 20)));
+
+    // Trigger layout update in TrackListComponent to recalculate total width (Written by Claude Code)
+    // This ensures the viewport expands when clips are resized past the visible edge
+    if (tl)
+        tl->resized();
 }
 
 t::TimePosition TrackClip::mouseToTime (const juce::MouseEvent& e)
