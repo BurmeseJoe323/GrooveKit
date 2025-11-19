@@ -131,6 +131,7 @@ public:
     // Track naming (Written by Claude Code)
     void setTrackName (int trackIndex, const juce::String& name);
     juce::String getTrackName (int trackIndex) const;
+    std::function<void(int)> onInstrumentLabelChanged;
 
     //==============================================================================
     // Transport and Tempo
