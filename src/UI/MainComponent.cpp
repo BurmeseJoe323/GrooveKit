@@ -18,6 +18,9 @@ MainComponent::MainComponent()
     menuBar->onSwitchToTrackEdit = [this] { showTrackView(); }; // (Written by Claude Code)
 
     setSize(1200, 800);
+
+    appEngine.initialise();
+
     showTrackView();
 }
 

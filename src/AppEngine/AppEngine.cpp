@@ -1,10 +1,15 @@
 #include "AppEngine.h"
+
 #include "../DrumSamplerEngine/DefaultSampleLibrary.h"
-#include <tracktion_engine/tracktion_engine.h>
+#include "../PluginManager/PluginEditorWindow.h"
 #include "../UI/Plugins/FourOsc/FourOscGUI.h"
+#include "../PluginManager/PluginEditorWindow.h"
 #include "../UI/Plugins/Synthesizer/MorphSynthRegistration.h"
 #include "../UI/Plugins/Synthesizer/MorphSynthView.h"
 #include "../UI/Plugins/Synthesizer/MorphSynthWindow.h"
+#include "GrooveKitUIBehaviour.h"
+#include "TrackManager.h"
+#include <tracktion_engine/tracktion_engine.h>
 
 namespace te = tracktion::engine;
 namespace t = tracktion;
@@ -15,9 +20,71 @@ namespace GKIDs {
     static const juce::Identifier isDrumClip ("gk_isDrumClip");
 }
 
+struct MidiListenerKeyAdapter : public juce::KeyListener
+{
+    explicit MidiListenerKeyAdapter (MidiListener& target) : ml (target) {}
+
+    bool keyPressed (const juce::KeyPress& key, juce::Component* /*origin*/) override
+    {
+        // Let MidiListener handle octave keys & note-key recognition
+        bool handled = ml.handleKeyPress (key);
+
+        // Drive its state machine for note-on based on currently-down keys
+        bool handledState = ml.handleKeyStateChanged (true);
+
+        return handled || handledState; // swallow if we did anything
+    }
+
+    bool keyStateChanged (bool isDown, juce::Component* /*origin*/) override
+    {
+        // Release notes (and handle any new downs if needed)
+        return ml.handleKeyStateChanged (isDown);
+    }
+
+private:
+    MidiListener& ml;
+};
+
+namespace
+{
+    const juce::StringArray applePluginNameBlacklist
+    {
+        "AUGraphicEQ",
+        "AUNBandEQ",
+        "AUParametricEQ",
+        "Apple: AUMatrixReverb",
+        "Apple: AUDynamicsProcessor",
+        // add any problematic plugins
+    };
+
+    bool isAppleBuiltInPlugin (const juce::PluginDescription& d)
+    {
+        const auto fmt  = d.pluginFormatName.toLowerCase();
+        const auto manu = d.manufacturerName.toLowerCase();
+        const auto name = d.name.toLowerCase();
+
+        if (! fmt.contains ("audiounit"))
+            return false;
+
+        if (! manu.contains ("apple"))
+            return false;
+
+        for (auto& n : applePluginNameBlacklist)
+            if (name == n.toLowerCase())
+                return true;
+
+        return true;
+    }
+}
+
 AppEngine::AppEngine()
 {
-    engine = std::make_unique<te::Engine> ("GrooveKitEngine");
+    engine = std::make_unique<te::Engine> (
+        "GrooveKitEngine",
+        std::make_unique<GrooveKitUIBehaviour>(),
+        nullptr
+    );
+
     registerMorphSynthCompat(*engine);
 
     createOrLoadEdit();
@@ -132,6 +199,9 @@ void AppEngine::newUntitledEdit()
     selectionManager = std::make_unique<te::SelectionManager> (*engine);
     editViewState = std::make_unique<EditViewState> (*edit, *selectionManager);
 
+    if (pluginManager)
+        trackManager->setPluginManager (pluginManager.get());
+
     markSaved();
 
     audioEngine->initialiseDefaults (48000.0, 512);
@@ -177,6 +247,9 @@ void AppEngine::setArmedTrack (int index)
 
     if (onArmedTrackChanged)
         onArmedTrackChanged();
+
+    if (auto* t = getArmedTrack())
+        wireAllMidiInputsToTrack (*t);
 }
 
 te::AudioTrack* AppEngine::getArmedTrack ()
@@ -282,6 +355,66 @@ bool AppEngine::addMidiClipToTrack (int trackIndex)
     return midiEngine->addMidiClipToTrack (trackIndex);
 }
 
+static te::InputDeviceInstance* findInstanceForDevice (te::Edit& edit, const te::InputDevice& dev)
+{
+    // getAllInputDevices() -> juce::Array<InputDeviceInstance*>
+    auto instances = edit.getAllInputDevices();
+
+    for (auto* inst : instances)
+    {
+        if (inst == nullptr)
+            continue;
+
+        if (&inst->getInputDevice() == &dev)
+            return inst;
+    }
+
+    return nullptr;
+}
+
+void AppEngine::wireAllMidiInputsToTrack (te::AudioTrack& track)
+{
+    if (!engine || !edit)
+        return;
+
+    auto& dm  = engine->getDeviceManager();     // confirmed on your version
+    auto& um  = edit->getUndoManager();
+    auto targetID = track.itemID;               // each track has an EditItemID
+
+    // 1) Enable all MIDI input devices globally
+    for (const auto& midiPtr : dm.getMidiInDevices())     // std::vector<std::shared_ptr<MidiInputDevice>>
+    {
+        if (midiPtr)
+            midiPtr->setEnabled (true);
+    }
+
+    // 2) Route each device’s InputDeviceInstance to this track
+    for (const auto& midiPtr : dm.getMidiInDevices())
+    {
+        if (!midiPtr)
+            continue;
+
+        auto& dev = *midiPtr;
+
+        if (auto* inst = findInstanceForDevice (*edit, dev))
+        {
+            auto result = inst->setTarget (targetID, /*moveToTrack*/ true, &um, /*index*/ 0);
+            if (!result)
+            {
+                DBG ("[MIDI Wire] Failed to setTarget for " << dev.getName() << ": " << result.error());
+                continue;
+            }
+
+            inst->setRecordingEnabled (targetID, true);
+            DBG ("[MIDI Wire] Connected " << dev.getName() << " -> " << track.getName());
+        }
+    }
+
+    // Make sure monitoring graph exists even when transport is stopped
+    edit->getTransport().ensureContextAllocated();
+}
+
+
 te::MidiClip* AppEngine::getMidiClipFromTrack (int trackIndex)
 {
     if (! midiEngine)
@@ -315,8 +448,14 @@ int AppEngine::addDrumTrack()
 int AppEngine::addInstrumentTrack()
 {
     jassert (trackManager != nullptr);
-    return trackManager->addInstrumentTrack();
+    const int idx = trackManager->addInstrumentTrack();
+
+    // Arm/select the new track so MIDI gets routed
+    // setArmedTrack (idx);
+
+    return idx;
 }
+
 
 void AppEngine::soloTrack (int i) { trackManager->soloTrack (i); }
 void AppEngine::setTrackSoloed (int i, bool s) { trackManager->setTrackSoloed (i, s); }
@@ -363,6 +502,88 @@ void AppEngine::setBpm (double newBpm)
         onBpmChanged(oldBpm, newBpm, oldLoopRange, oldPlayheadPos);
 }
 
+void AppEngine::initialise()
+{
+    // --- App support dir (for caches, dead-mans file, etc.) ---
+   #if JUCE_MAC
+    auto appSupport = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+                        .getChildFile("GrooveKit");
+   #else
+    auto appSupport = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+                        .getChildFile("GrooveKit");
+   #endif
+    appSupport.createDirectory();
+
+    // --- Your app-level plugin manager (keep as-is) ---
+    PluginManager::Settings pmSettings;
+    pmSettings.appDataDir      = appSupport;
+    pmSettings.scanAudioUnits  = true;
+    pmSettings.scanVST3        = true;
+
+    pluginManager = std::make_unique<PluginManager>(*edit, pmSettings);
+    trackManager->setPluginManager(pluginManager.get());
+
+    // --- NEW: Initialise Tracktion Engine's PluginManager too ---
+    auto& tePM = engine->getPluginManager();
+
+    // Add formats we intend to host (guarded by JUCE host flags)
+   #if JUCE_PLUGINHOST_AU
+    tePM.pluginFormatManager.addFormat(new juce::AudioUnitPluginFormat());
+   #endif
+   #if JUCE_PLUGINHOST_VST3
+    tePM.pluginFormatManager.addFormat(new juce::VST3PluginFormat());
+   #endif
+
+    // Do a quick blocking scan once so TE's knownPluginList is populated.
+    // ExternalPlugin resolves/instantiates using *this* list+formats.
+    {
+        juce::FileSearchPath searchPaths;
+       #if JUCE_MAC
+        // AU locations (Components) — TE will use these only for AU formats
+        searchPaths.add(juce::File("/Library/Audio/Plug-Ins/Components"));
+        searchPaths.add(juce::File("~/Library/Audio/Plug-Ins/Components"));
+
+        // VST3 locations
+        searchPaths.add(juce::File("/Library/Audio/Plug-Ins/VST3"));
+        searchPaths.add(juce::File("~/Library/Audio/Plug-Ins/VST3"));
+       #endif
+
+        static juce::File teDeadMans = appSupport.getChildFile("TE_ScanDeadMans.txt");
+
+        for (int i = 0; i < tePM.pluginFormatManager.getNumFormats(); ++i)
+        {
+            auto* fmt = tePM.pluginFormatManager.getFormat(i);
+            if (!fmt) continue;
+
+            DBG("[TE-PM] Scan started for format: " + fmt->getName()
+                + " paths: " + searchPaths.toString());
+
+            juce::PluginDirectoryScanner scanner(tePM.knownPluginList,
+                                                 *fmt,
+                                                 searchPaths,
+                                                 /*recursive*/ true,
+                                                 teDeadMans,
+                                                 /*allowAsync*/ false);
+
+            juce::String err;
+            while (scanner.scanNextFile(true, err))
+                ; // pump scan
+
+            if (err.isNotEmpty())
+                DBG("[TE-PM] Scanner reported: " + err);
+        }
+
+        DBG("[TE-PM] Scan finished. TE known types: "
+            + juce::String(tePM.knownPluginList.getNumTypes()));
+    }
+
+    // You can still keep your async scan/UI for your own list
+    pluginManager->scanForPluginsAsync();
+
+    // --- Ensure playback graph exists (useful for live monitoring) ---
+    edit->getTransport().ensureContextAllocated();
+}
+
 // Metronome/Click Track controls
 void AppEngine::setClickTrackEnabled (bool enabled)
 {
@@ -397,9 +618,10 @@ int AppEngine::currentUndoTxn() const
 {
     if (!edit)
         return 0;
-    if (auto xml = edit->state.createXml())
-        return (int) xml->toString().hashCode();
-    return 0;
+
+    auto& um = edit->getUndoManager();
+
+    return um.getUndoDescriptions().size();
 }
 
 bool AppEngine::isDirty() const noexcept
@@ -414,21 +636,36 @@ void AppEngine::markSaved()
 
 bool AppEngine::writeEditToFile (const juce::File& file)
 {
-    if (!edit)
+    if (! edit)
         return false;
 
+    // 1) Flush plugin state into the edit's ValueTree
     for (auto* track : te::getAudioTracks (*edit))
     {
-        if (! track) continue;
+        if (! track)
+            continue;
 
         for (auto* p : track->pluginList)
+        {
+            if (! p)
+                continue;
+
             if (auto* morph = dynamic_cast<MorphSynthPlugin*> (p))
-                morph->saveToValueTree();  // <-- no assignment; it mutates plugin.state’s child
+            {
+                morph->saveToValueTree();
+            }
+            else if (auto* ext = dynamic_cast<te::ExternalPlugin*> (p))
+            {
+                ext->flushPluginStateToValueTree();
+            }
+        }
     }
 
+    // 2) Now serialize the edit
     if (auto xml = edit->state.createXml())
     {
         juce::TemporaryFile tf (file);
+
         if (tf.getFile().replaceWithText (xml->toString())
             && tf.overwriteTargetFileWithTemporary())
         {
@@ -436,6 +673,7 @@ bool AppEngine::writeEditToFile (const juce::File& file)
             return true;
         }
     }
+
     return false;
 }
 
@@ -572,6 +810,10 @@ bool AppEngine::loadEditFromFile (const juce::File& file)
     selectionManager = std::make_unique<te::SelectionManager> (*engine);
     editViewState = std::make_unique<EditViewState> (*edit, *selectionManager);
 
+    if (pluginManager)
+        trackManager->setPluginManager (pluginManager.get());
+
+
     audioEngine = std::make_unique<AudioEngine> (*edit, *engine);
     audioEngine->initialiseDefaults (48000.0, 512);
     audioEngine->setupMidiInputDevices(*edit);
@@ -595,74 +837,67 @@ bool AppEngine::loadEditFromFile (const juce::File& file)
 
     return true;
 }
-void AppEngine::makeFourOscAuditionPatch (int trackIndex)
-{
-    if (!trackManager) return;
-    if (auto* plug = trackManager->getInstrumentPluginOnTrack (trackIndex))
-    {
-        auto params = plug->getAutomatableParameters();
-        auto set = [&] (const juce::String& key, float norm)
-        {
-            for (auto* p : params)
-                if (p && p->getParameterName().containsIgnoreCase (key))
-                { p->setParameter (norm, juce::sendNotification); break; }
-        };
-
-        set ("Level 1",   1.00f);
-        set ("Level 2",   0.00f);  set ("Level 3", 0.00f);  set ("Level 4", 0.00f);
-        set ("Cutoff",    0.40f);
-        set ("Resonance", 0.20f);
-        set ("Amp Attack",  0.01f);
-        set ("Amp Decay",   0.20f);
-        set ("Amp Sustain", 0.80f);
-        set ("Amp Release", 0.20f);
-    }
-}
 
 void AppEngine::openInstrumentEditor (int trackIndex)
 {
     auto open = [this, trackIndex]
     {
         if (!trackManager) { DBG("AppEngine: no trackManager"); return; }
-
         if (auto* track = trackManager->getTrack (trackIndex))
         {
             te::Plugin* plug = nullptr;
 
-            // Prefer the first MorphSynth on the track
+            // your existing preference order…
             for (auto* p : track->pluginList)
                 if (p && p->getPluginType() == MorphSynthPlugin::pluginType)
                 { plug = p; break; }
 
-            // Fallback: whatever your old helper returns
             if (!plug)
                 plug = trackManager->getInstrumentPluginOnTrack (trackIndex);
 
-            if (plug)
+            if (!plug) { DBG("No instrument plugin on track " << trackIndex); return; }
+
+            // MorphSynth path
+            if (auto* morph = dynamic_cast<MorphSynthPlugin*>(plug))
             {
-                if (auto* morph = dynamic_cast<MorphSynthPlugin*>(plug))
+                if (instrumentWindow_) { instrumentWindow_->toFront (true); return; }
+                instrumentWindow_ = std::make_unique<MorphSynthWindow>(
+                    *morph,
+                    [this]{ this->closeInstrumentWindow(); },
+                    qwertyForwarder_.get()      // <— add this
+                );
+                instrumentWindow_->toFront (true);
+                return;
+            }
+
+            if (auto* ext = dynamic_cast<te::ExternalPlugin*>(plug))
+            {
+                if (instrumentWindow_) { instrumentWindow_->toFront(true); return; }
+
+                if (auto w = PluginEditorWindow::createFor(
+                    *ext,
+                    [this]{ this->closeInstrumentWindow(); },
+                    qwertyForwarder_.get()   // <-- forward QWERTY to your MidiListener
+                ))
                 {
-                    // If already open, just bring it to front
-                    if (instrumentWindow_ != nullptr)
-                    {
-                        instrumentWindow_->toFront (true);
-                        return;
-                    }
+                    instrumentWindow_ = std::move(w);
 
-                    instrumentWindow_ = std::make_unique<MorphSynthWindow>(
-                        *morph,
-                        [this] { this->closeInstrumentWindow(); }
-                    );
-
-                    auto self = std::shared_ptr<AppEngine>(this, [] (AppEngine*) {});
-                    static_cast<MorphSynthWindow*>(instrumentWindow_.get())->setAppEngine(self);
-
-                    instrumentWindow_->toFront (true);
+                    // keep graph running so you can hear it while editing
+                    auto& tc = edit->getTransport();
+                    tc.ensureContextAllocated();
                     return;
                 }
 
+
+                DBG("ExternalPlugin has no instance/editor yet.");
+                return;
             }
-            DBG("No instrument plugin found on track " << trackIndex);
+
+
+            auto& tc = edit->getTransport();
+            tc.ensureContextAllocated();
+
+            DBG("Plugin type has no editor route.");
         }
     };
 
@@ -674,15 +909,367 @@ void AppEngine::closeInstrumentWindow()
 {
     if (instrumentWindow_ != nullptr)
     {
-        instrumentWindow_->setVisible (false);
+        instrumentWindow_->setVisible(false);
         instrumentWindow_.reset();
     }
+
+    // If we started transport just to hear the editor, stop it now
+    if (startedTransportForEditor_)
+    {
+        startedTransportForEditor_ = false;
+        edit->getTransport().stop(/*discardRecordings=*/false, /*clearDevices=*/false);
+    }
+}
+
+void AppEngine::showInstrumentChooser (int trackIndex)
+{
+    if (!trackManager || !pluginManager)
+        return;
+
+    juce::PopupMenu root, builtIn, external;
+
+    // --- Built-in instruments
+    const int kBuiltMorph = 1001;
+
+    builtIn.addItem (kBuiltMorph, "Morph Synth");
+
+    // --- External instruments (scanned)
+    auto owned = pluginManager->getInstrumentDescriptions();   // OwnedArray<PluginDescription>
+    juce::Array<juce::PluginDescription> descs;
+    for (int i = 0; i < owned.size(); ++i)
+        descs.add (*owned[i]);
+
+    const int kExtBase = 2000;
+    for (int i = 0; i < descs.size(); ++i)
+    {
+        const int id = kExtBase + i;
+        external.addItem (id, descs[i].name + "  [" + descs[i].pluginFormatName + "]");
+    }
+
+    root.addSubMenu ("Built-in", std::move (builtIn));
+    root.addSubMenu ("External", std::move (external));
+
+    // Capture `descs` by value (copyable); no OwnedArray in the lambda
+    root.showMenuAsync ({}, [this, trackIndex, descs] (int result)
+    {
+        if (result == 0 || !trackManager)
+            return;
+
+        te::Plugin* inserted = nullptr;
+
+        if (result == 1001) // Morph
+        {
+            trackManager->clearInstrumentSlot0 (trackIndex);
+            inserted = trackManager->insertMorphSynth (trackIndex);
+        }
+        else if (result >= 2000)
+        {
+            const int idx = result - 2000;
+            if (idx >= 0 && idx < descs.size())
+            {
+                trackManager->clearInstrumentSlot0 (trackIndex);
+                inserted = trackManager->insertExternalInstrument (trackIndex, descs.getReference (idx));
+            }
+        }
+
+        if (inserted)
+        {
+            if (auto* track = trackManager->getTrack (trackIndex))
+                wireAllMidiInputsToTrack (*track);
+
+            // Notify UI that the instrument label should update
+            if (onInstrumentLabelChanged)
+                onInstrumentLabelChanged (trackIndex);
+
+            openInstrumentEditor (trackIndex);
+        }
+    });
+
+}
+
+void AppEngine::onFxInsertSlotClicked (int trackIndex,
+                                       int slotIndex,
+                                       std::function<void (const juce::String&)> onSlotLabelChange)
+{
+    if (!trackManager)
+        return;
+
+    auto* track = trackManager->getTrack (trackIndex);
+    if (!track)
+        return;
+
+    const int base = trackManager->getFxInsertBaseIndex (trackIndex);
+    const int pluginIndex = base + slotIndex;
+
+    te::Plugin* existing = nullptr;
+    if (pluginIndex >= 0 && pluginIndex < track->pluginList.size())
+        existing = track->pluginList[pluginIndex];
+
+    if (auto* ext = dynamic_cast<te::ExternalPlugin*> (existing))
+    {
+        // 🔁 Same pattern as the ExternalPlugin branch in openInstrumentEditor
+        if (instrumentWindow_)
+        {
+            instrumentWindow_->toFront (true);
+            return;
+        }
+
+        if (auto w = PluginEditorWindow::createFor(
+                *ext,
+                [this] { this->closeInstrumentWindow(); },
+                qwertyForwarder_.get()))
+        {
+            instrumentWindow_ = std::move (w);
+
+            auto& tc = edit->getTransport();
+            tc.ensureContextAllocated();
+        }
+        else
+        {
+            DBG ("[FX] ExternalPlugin has no instance/editor yet.");
+        }
+
+        return;
+    }
+
+    // No plugin in this slot yet -> show the FX menu and insert something
+    showFxInsertMenu (trackIndex, slotIndex, std::move (onSlotLabelChange));
+}
+
+static void debugPrintPluginChain (te::Track* track)
+{
+    DBG ("===================== Plugin Chain Dump =====================");
+
+    if (! track)
+    {
+        DBG ("(null track)");
+        DBG ("==============================================================");
+        return;
+    }
+
+    DBG ("Track: " << track->getName());
+
+    int i = 0;
+    for (auto* p : track->pluginList)
+    {
+        if (! p)
+        {
+            DBG ("  [" << i << "]  <null plugin>");
+        }
+        else
+        {
+            DBG ("  [" << i << "]  " << p->getPluginType() << " | " << p->getName());
+        }
+        ++i;
+    }
+
+    DBG ("==============================================================");
+}
+
+void AppEngine::showFxInsertMenu (int trackIndex,
+                                  int slotIndex,
+                                  std::function<void (const juce::String&)> onSlotLabelChange)
+{
+    if (! trackManager || ! pluginManager)
+        return;
+
+    // Get all scanned plugins and keep only non-instruments
+    auto all = pluginManager->getAllPluginDescriptions();
+    juce::Array<juce::PluginDescription> fxDescs;
+
+    for (int i = 0; i < all.size(); ++i)
+    {
+        const auto& d = *all[i];
+
+        // Skip instruments
+        if (d.isInstrument)
+            continue;
+
+        if (isAppleBuiltInPlugin (d))
+            continue;
+
+        fxDescs.add (d);
+    }
+
+
+    if (fxDescs.isEmpty())
+        return;
+
+    // Root + category submenus (all external)
+    juce::PopupMenu root, eqMenu, compMenu, reverbMenu, delayMenu, otherMenu;
+
+    const int eqBase     = 2000;
+    const int compBase   = 3000;
+    const int reverbBase = 4000;
+    const int delayBase  = 5000;
+    const int otherBase  = 6000;
+
+    for (int i = 0; i < fxDescs.size(); ++i)
+    {
+        const auto& d = fxDescs.getReference (i);
+        auto displayName = d.name;
+
+        auto lower = d.name.toLowerCase();
+
+        if (lower.contains ("eq"))
+            eqMenu.addItem (eqBase + i, displayName);
+        else if (lower.contains ("comp"))
+            compMenu.addItem (compBase + i, displayName);
+        else if (lower.contains ("reverb") || lower.contains ("verb"))
+            reverbMenu.addItem (reverbBase + i, displayName);
+        else if (lower.contains ("delay") || lower.contains ("echo"))
+            delayMenu.addItem (delayBase + i, displayName);
+        else
+            otherMenu.addItem (otherBase + i, displayName);
+    }
+
+    if (eqMenu.getNumItems()     > 0) root.addSubMenu ("EQ",         eqMenu);
+    if (compMenu.getNumItems()   > 0) root.addSubMenu ("Compressor", compMenu);
+    if (reverbMenu.getNumItems() > 0) root.addSubMenu ("Reverb",     reverbMenu);
+    if (delayMenu.getNumItems()  > 0) root.addSubMenu ("Delay",      delayMenu);
+    if (otherMenu.getNumItems()  > 0) root.addSubMenu ("Other FX",   otherMenu);
+
+    if (root.getNumItems() == 0)
+        return;
+
+    const int kRemoveFxItem = 100;
+    root.addItem (kRemoveFxItem, "Remove effect");
+
+    root.showMenuAsync (juce::PopupMenu::Options(),
+                    [this, trackIndex, slotIndex, fxDescs,
+                     eqBase, compBase, reverbBase, delayBase, otherBase,
+                     onSlotLabelChange] (int result)
+    {
+        if (result == 0 || ! trackManager)
+            return;
+
+        // --- Remove effect case ---
+        if (result == kRemoveFxItem)
+        {
+            trackManager->clearFxInsertSlot (trackIndex, slotIndex);
+
+            // Clear the label in the UI
+            if (onSlotLabelChange)
+                onSlotLabelChange ({});
+
+            return;
+        }
+        int idx = -1;
+
+        auto decode = [&] (int base)
+        {
+            if (result >= base && result < base + fxDescs.size())
+                idx = result - base;
+        };
+
+        decode (eqBase);
+        decode (compBase);
+        decode (reverbBase);
+        decode (delayBase);
+        decode (otherBase);
+
+        if (idx < 0 || idx >= fxDescs.size())
+            return;
+
+        const int base = trackManager->getFxInsertBaseIndex (trackIndex);
+        const int insertIndex = base + slotIndex;
+
+        trackManager->clearFxInsertSlot (trackIndex, slotIndex);
+
+        // Insert the FX plugin via TrackManager / PluginManager
+        te::Plugin* plugin = trackManager->insertExternalEffect (
+            trackIndex,
+            fxDescs.getReference (idx),
+            insertIndex);
+
+        auto currentTrack = trackManager->getTrack (trackIndex);
+        debugPrintPluginChain (currentTrack);
+
+        if (! plugin)
+            return;
+
+        // 1) Update the button label in the channel strip
+        if (onSlotLabelChange)
+            onSlotLabelChange (fxDescs.getReference (idx).name);
+
+        // 2) Open the plugin editor right away (same pattern as instruments)
+        if (auto* ext = dynamic_cast<te::ExternalPlugin*> (plugin))
+        {
+            if (instrumentWindow_)
+            {
+                instrumentWindow_->toFront (true);
+                return;
+            }
+
+            if (auto w = PluginEditorWindow::createFor(
+                    *ext,
+                    [this] { this->closeInstrumentWindow(); },
+                    qwertyForwarder_.get()))
+            {
+                instrumentWindow_ = std::move (w);
+
+                auto& tc = edit->getTransport();
+                tc.ensureContextAllocated();
+            }
+            else
+            {
+                DBG ("[FX] ExternalPlugin has no instance/editor yet (after insert).");
+            }
+        }
+    });
+
+}
+
+juce::String AppEngine::getInstrumentLabelForTrack (int trackIndex) const
+{
+    if (!trackManager)
+        return "Instrument";
+
+    if (auto* plug = trackManager->getInstrumentPluginOnTrack (trackIndex))
+    {
+        // Prefer external plugin name if it is one, else generic plugin name
+        if (auto* ext = dynamic_cast<te::ExternalPlugin*> (plug))
+            return ext->getName();
+
+        auto name = plug->getName();
+        if (name.isNotEmpty())
+            return name;
+    }
+
+    return "Instrument";
+}
+
+juce::String AppEngine::getInsertSlotLabel (int trackIndex, int slotIndex) const
+{
+    if (!trackManager)
+        return {};
+
+    auto* track = trackManager->getTrack (trackIndex);
+    if (!track)
+        return {};
+
+    const int base = trackManager->getFxInsertBaseIndex (trackIndex);
+    const int pluginIndex = base + slotIndex;
+
+    if (pluginIndex < 0 || pluginIndex >= track->pluginList.size())
+        return {};
+
+    if (auto* plug = track->pluginList[pluginIndex])
+    {
+        if (auto* ext = dynamic_cast<te::ExternalPlugin*> (plug))
+            return ext->getName();
+
+        return plug->getName();
+    }
+
+    return {};
 }
 
 bool AppEngine::addMidiClipToTrackAt(int trackIndex, t::TimePosition start, t::BeatDuration length)
 {
     if (!midiEngine)
         return false;
+
     return midiEngine->addMidiClipToTrackAt (trackIndex, start, length);
 }
 
@@ -843,6 +1430,46 @@ bool AppEngine::deleteMidiClip (te::MidiClip* clip)
     return true;
 }
 
+void AppEngine::importMidiClipViaChooser (int trackIndex,
+                                          t::TimePosition destStart,
+                                          std::function<void()> onSuccess)
+{
+    auto chooser = std::make_shared<juce::FileChooser> (
+        "Import MIDI File",
+        juce::File(),
+        "*.mid;*.midi"
+    );
+
+    chooser->launchAsync (
+        juce::FileBrowserComponent::openMode
+        | juce::FileBrowserComponent::canSelectFiles,
+        [this, chooser, trackIndex, destStart, onSuccess] (const juce::FileChooser& fc)
+        {
+            auto file = fc.getResult();
+
+            if (! file.existsAsFile())
+            {
+                return;
+            }
+
+            const bool ok = midiEngine->importMidiFileToTrack (file, trackIndex, destStart);
+
+            if (! ok)
+            {
+                juce::AlertWindow::showMessageBoxAsync (
+                    juce::AlertWindow::WarningIcon,
+                    "MIDI Import Failed",
+                    "Could not import the MIDI file into this track.");
+            }
+            else
+            {
+                if (onSuccess)
+                    onSuccess();
+            }
+        }
+    );
+}
+
 bool AppEngine::hasClipboardContent() const
 {
     const auto* cb = te::Clipboard::getInstance();
@@ -862,4 +1489,52 @@ bool AppEngine::canPasteToTrack (int trackIndex) const
     // Check if clip type matches track type
     const bool targetIsDrum = isDrumTrack (trackIndex);
     return lastCopiedClipWasDrum == targetIsDrum;
+}
+
+bool AppEngine::exportAudio (const juce::File& destFile)
+{
+    if (edit == nullptr)
+        return false;
+
+    auto parentDir = destFile.getParentDirectory();
+    if (! parentDir.exists())
+        parentDir.createDirectory();
+
+    auto& transport = edit->getTransport();
+    const bool wasPlaying = transport.isPlaying();
+    if (wasPlaying)
+        transport.stop (false, false);
+
+    juce::BigInteger tracksToDo;
+    {
+        auto allTracks = te::getAllTracks (*edit);
+        for (int i = 0; i < allTracks.size(); ++i)
+            tracksToDo.setBit (i);
+    }
+
+    const auto start  = t::TimePosition::fromSeconds (0.0);
+    const auto length = edit->getLength();
+    const t::TimeRange range { start, length };
+
+    const bool usePlugins = true;
+    const bool useThread  = false;
+
+    DBG ("[Export] Rendering audio to: " << destFile.getFullPathName());
+    DBG ("[Export] Edit length (seconds): " << length.inSeconds());
+
+    const bool ok = te::Renderer::renderToFile ("Export audio",
+                                                destFile,
+                                                *edit,
+                                                range,
+                                                tracksToDo,
+                                                usePlugins,
+                                                useThread);
+
+    te::TransportControl::restartAllTransports (*engine, true);
+    if (wasPlaying && ok)
+        transport.play (false);
+
+    DBG (juce::String ("[Export] Render ") + (ok ? "OK" : "FAILED"));
+
+    return ok;
 }

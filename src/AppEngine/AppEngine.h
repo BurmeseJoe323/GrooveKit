@@ -2,13 +2,13 @@
 
 #include "../AudioEngine/AudioEngine.h"
 #include "../MIDIEngine/MIDIEngine.h"
+#include "../PluginManager/PluginManager.h"
 #include "../UI/TrackView/TrackHeaderComponent.h"
 #include "TrackManager.h"
 #include "MidiListener.h"
 #include "MidiRecorder.h"
 #include <tracktion_engine/tracktion_engine.h>
-
-
+struct MidiListenerKeyAdapter;
 namespace IDs
 {
 #define DECLARE_ID(name)  const juce::Identifier name (#name);
@@ -95,6 +95,8 @@ public:
     AppEngine();
     ~AppEngine() override;
 
+    void initialise();
+
     void createOrLoadEdit();
     void play();
     void stop();
@@ -106,7 +108,7 @@ public:
     bool addMidiClipToTrack (int trackIndex);
     // Add an empty MIDI clip at a specific beat on the given track (Junie)
     bool addMidiClipToTrackAt (int trackIndex, t::TimePosition start, t::BeatDuration length);
-
+    void wireAllMidiInputsToTrack (tracktion::engine::AudioTrack& track);
 
     bool isDrumTrack (int index) const;
 
@@ -319,12 +321,37 @@ public:
     bool duplicateMidiClip (te::MidiClip* clip);
     // Delete a specific MIDI clip
     bool deleteMidiClip (te::MidiClip* clip);
+    /** Opens a file chooser, imports a MIDI file, and drops it on the given track.
+        @param trackIndex Index of the target track
+        @param destStart  Where to place the clip (usually current transport pos or bar boundary)
+    */
+    void importMidiClipViaChooser (int trackIndex,
+                               t::TimePosition destStart,
+                               std::function<void()> onSuccess = {});
     // Check if clipboard has content (Junie)
     bool hasClipboardContent() const;
     // Check if clipboard content can be pasted to a specific track (Junie)
     bool canPasteToTrack (int trackIndex) const;
     // Get clipboard clip length in beats (Written by Claude Code)
     double getClipboardClipLengthBeats() const { return lastCopiedClipLengthBeats; }
+
+    void showInstrumentChooser (int trackIndex);
+
+    void onFxInsertSlotClicked (int trackIndex,
+                            int slotIndex,
+                            std::function<void (const juce::String&)> onSlotLabelChange);
+
+    void showFxInsertMenu (int trackIndex,
+                           int slotIndex,
+                           std::function<void (const juce::String&)> onSlotLabelChange);
+
+    juce::String getInstrumentLabelForTrack (int trackIndex) const;
+    juce::String getInsertSlotLabel       (int trackIndex, int slotIndex) const;
+
+    PluginManager& getPluginManager() { return *pluginManager; }
+
+    bool exportAudio (const juce::File& destFile);
+
 
 private:
     std::unique_ptr<tracktion::engine::Engine> engine;
@@ -336,8 +363,10 @@ private:
     std::unique_ptr<MIDIEngine> midiEngine;
     std::unique_ptr<AudioEngine> audioEngine;
     std::unique_ptr<TrackManager> trackManager;
+    std::unique_ptr<PluginManager> pluginManager;
     std::unique_ptr<MidiListener> midiListener;
     std::unique_ptr<MidiRecorder> midiRecorder;
+    std::unique_ptr<MidiListenerKeyAdapter> qwertyForwarder_;
 
     // Map from track index to its controller listener (TrackComponent) (Junie)
     juce::HashMap<int, TrackHeaderComponent::Listener*> trackListenerMap;
@@ -348,7 +377,11 @@ private:
 
     std::unique_ptr<juce::DocumentWindow> instrumentWindow_;
 
+    bool startedTransportForEditor_ = false;
+
     int lastSavedTxn = 0;
+
+
 
     bool writeEditToFile (const juce::File& file);
     void markSaved();
@@ -356,6 +389,7 @@ private:
 
     juce::File getAutosaveFile() const;
     void timerCallback() override;
+
 
     int selectedTrackIndex = -1;
 

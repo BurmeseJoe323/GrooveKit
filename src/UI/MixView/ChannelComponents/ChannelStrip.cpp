@@ -7,6 +7,55 @@ ChannelStrip::ChannelStrip(juce::Colour color)
 {
     setOpaque (false);
 
+    addAndMakeVisible (&instrumentButton);
+    instrumentButton.setColour (juce::TextButton::buttonColourId, juce::Colour (0xFFADB5BD));
+    instrumentButton.setColour (juce::TextButton::textColourOffId, juce::Colour (0xFF343A40));
+
+    instrumentButton.setButtonText ("Instrument");
+
+    addAndMakeVisible (insertsLabel);
+    insertsLabel.setText ("Inserts", juce::dontSendNotification);
+    insertsLabel.setJustificationType (juce::Justification::centred);
+    insertsLabel.setColour (juce::Label::textColourId, juce::Colour (0xFF212529));
+    insertsLabel.setFont (juce::Font (12.0f).boldened());
+
+    if (insertSlots.isEmpty())
+    {
+        for (int i = 0; i < 4; ++i)
+        {
+            const int slotIndex = i;
+
+            // Main slot button
+            auto* slot = new juce::TextButton();
+            slot->setButtonText ("");  // will be set to plugin name later
+            slot->setColour (juce::TextButton::buttonColourId, juce::Colour (0xFFDDE0E3));
+            slot->setColour (juce::TextButton::textColourOffId, juce::Colour (0xFF343A40));
+            slot->onClick = [this, slotIndex]
+            {
+                if (onInsertSlotClicked)
+                    onInsertSlotClicked (slotIndex);   // open editor or choose FX if empty
+            };
+            addAndMakeVisible (slot);
+            insertSlots.add (slot);
+
+            // Tiny ▼ menu button
+            auto* menuBtn = new juce::TextButton();
+            menuBtn->setButtonText (juce::String::fromUTF8 (u8"\u25BE"));
+            menuBtn->setTooltip ("Change effect");
+            menuBtn->setColour (juce::TextButton::buttonColourId, juce::Colour (0xFFC4C9CF));
+            menuBtn->setColour (juce::TextButton::textColourOffId, juce::Colour (0xFF343A40));
+            menuBtn->onClick = [this, slotIndex]
+            {
+                if (onInsertSlotMenuRequested)
+                    onInsertSlotMenuRequested (slotIndex);  // always show FX menu
+            };
+            addAndMakeVisible (menuBtn);
+            insertSlotMenus.add (menuBtn);
+        }
+
+    }
+
+
     for (auto* b : { &muteButton, &soloButton, &recordButton })
     {
         addAndMakeVisible (*b);
@@ -37,6 +86,13 @@ ChannelStrip::ChannelStrip(juce::Colour color)
     recordButton.setColour (juce::TextButton::buttonColourId, juce::Colours::darkgrey);
     recordButton.setColour (juce::TextButton::textColourOnId, juce::Colours::black);
     recordButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white);
+
+    instrumentButton.onClick = [this]
+    {
+        if (onOpenInstrumentEditor)
+            onOpenInstrumentEditor();
+    };
+
 
     // Notify TrackHeaderComponent listeners (safely via SafePointers) (Junie)
     muteButton.onClick = [this] {
@@ -164,6 +220,8 @@ void ChannelStrip::setArmed (const bool isArmed)
 
 void ChannelStrip::bindToTrack (te::AudioTrack& track)
 {
+    boundTrack = &track;
+
     boundVnp = track.getVolumePlugin();
     const double pos = boundVnp ? boundVnp->getSliderPos() : 0.0;
     const double gain = te::volumeFaderPositionToGain (pos);
@@ -179,6 +237,10 @@ void ChannelStrip::bindToTrack (te::AudioTrack& track)
         const double pos = te::gainToVolumeFaderPosition (gain);
         boundVnp->setSliderPos (pos);
     };
+
+    instrumentButton.setVisible (true);
+    insertsLabel.setVisible (true);
+    for (auto* s : insertSlots) s->setVisible (true);
 
     // Pan binding (Written by Claude Code)
     const float panValue = boundVnp ? boundVnp->getPan() : 0.0f;
@@ -196,6 +258,8 @@ void ChannelStrip::bindToTrack (te::AudioTrack& track)
 
 void ChannelStrip::bindToMaster (te::Edit& edit)
 {
+    boundTrack = nullptr;
+
     boundVnp = edit.getMasterVolumePlugin();
     const double pos = boundVnp->getSliderPos();
     const double gain = te::volumeFaderPositionToGain (pos);
@@ -211,6 +275,7 @@ void ChannelStrip::bindToMaster (te::Edit& edit)
         const double pos = te::gainToVolumeFaderPosition (gain);
         boundVnp->setSliderPos (pos);
     };
+    instrumentButton.setVisible (false);
 
     // Pan binding (Written by Claude Code)
     const float panValue = boundVnp ? boundVnp->getPan() : 0.0f;
@@ -258,6 +323,27 @@ void ChannelStrip::bindToVolume (te::VolumeAndPanPlugin& vnp)
     };
 }
 
+void ChannelStrip::setInsertSlotName (int slotIndex, const juce::String& text)
+{
+    if (! juce::isPositiveAndBelow (slotIndex, insertSlots.size()))
+        return;
+
+    auto* button = insertSlots[slotIndex];
+    if (! button)
+        return;
+
+    button->setButtonText (text);
+}
+
+void ChannelStrip::setInstrumentButtonText (const juce::String& text)
+{
+    auto label = text;
+    if (label.isEmpty())
+        label = "Instrument";
+
+    instrumentButton.setButtonText (label);
+}
+
 void ChannelStrip::paint (juce::Graphics& g)
 {
     // Match TrackComponent styling with custom color (Written by Claude Code)
@@ -280,19 +366,79 @@ void ChannelStrip::resized()
     // Match TrackHeaderComponent padding and dimensions (Written by Claude Code)
     auto r = getLocalBounds().reduced (5); // inner padding (matches TrackHeaderComponent)
 
-    // top controls stack
-    auto top = r.removeFromTop (110);
-    constexpr int btnRowH = 25; // matches TrackHeaderComponent button height
-    muteButton.setBounds (top.removeFromTop (btnRowH));
-    top.removeFromTop (2); // matches TrackHeaderComponent margin
-    soloButton.setBounds (top.removeFromTop (btnRowH));
-    top.removeFromTop (2);
-    recordButton.setBounds (top.removeFromTop (btnRowH));
+
+
+    // --- Metrics ---
+    const int bigBtnH = 24;   // Instrument, M, S, R
+    const int gapS    = 4;
+    const int gapM    = 6;
+    const int labelH  = 16;
+
+    const int slotH    = 18;
+    const int slotGap  = 2;
+    const int menuW    = 18;   // width of ▼ button
+    const int menuGap  = 2;    // spacing between main slot and ▼
+
+    const int numSlots = insertSlots.size();
+    const int slotsTotalH =
+    (numSlots > 0 ? numSlots * slotH + (numSlots - 1) * slotGap : 0);
+
+    // compute exact needed height for the whole top stack:
+
+    const int topH =
+        /* Instrument */    bigBtnH +
+        gapS +
+        /* INSERTS label */ labelH +
+        /* slots */         slotsTotalH +
+        gapM +
+        /* M, S, R */       3 * bigBtnH;
+
+
+    auto top = r.removeFromTop (topH);
 
     constexpr int nameH = 25; // matches TrackHeaderComponent label height
     const int nameGap = 6;
     auto nameArea = r.removeFromBottom (nameH + nameGap);
     name.setBounds (nameArea.removeFromBottom (nameH));
+
+    // === Top controls ===
+    instrumentButton.setBounds (top.removeFromTop (bigBtnH));
+    top.removeFromTop (gapS);
+
+    // === INSERTS label ===
+    insertsLabel.setBounds (top.removeFromTop (labelH));
+
+    // === INSERT SLOTS WITH ▼ MENUS ===
+    for (int i = 0; i < numSlots; ++i)
+    {
+        auto row = top.removeFromTop (slotH);
+
+        // Reserve right-side space for ▼
+        auto menuArea = row.removeFromRight (menuW);
+        menuArea = menuArea.reduced (0, 1); // small vertical inset
+        row.removeFromRight (menuGap);
+
+        // Main button
+        insertSlots[i]->setBounds (row);
+
+        // ▼ button
+        if (i < insertSlotMenus.size() && insertSlotMenus[i] != nullptr)
+            insertSlotMenus[i]->setBounds (menuArea);
+
+        if (i < numSlots - 1)
+            top.removeFromTop (slotGap);
+    }
+
+    // Gap before M/S/R row
+    top.removeFromTop (gapM);
+
+    // === MUTE / SOLO / RECORD (below inserts) ===
+    muteButton.setBounds   (top.removeFromTop (bigBtnH));
+    top.removeFromTop (gapS);
+    soloButton.setBounds   (top.removeFromTop (bigBtnH));
+    top.removeFromTop (gapS);
+    recordButton.setBounds (top.removeFromTop (bigBtnH));
+
 
     // bottom area: fader + meter
     auto bottom = r.removeFromBottom (r.getHeight()); // whatever remains
