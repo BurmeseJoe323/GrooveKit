@@ -286,7 +286,60 @@ public:
     juce::StringArray listOutputDevices()            const { return audioEngine->listOutputDevices(); }
     juce::String getCurrentOutputDeviceName()        const { return audioEngine->getCurrentOutputDeviceName(); }
 
-    // MIDI Input device management (for diagnostic purposes only - devices are auto-managed)
+    /**
+     * @brief Returns available buffer sizes supported by the current audio device.
+     *
+     * @return Array of buffer sizes in samples.
+     */
+    juce::Array<int> getAvailableBufferSizes()       const { return audioEngine->getAvailableBufferSizes(); }
+
+    /**
+     * @brief Returns available sample rates supported by the current audio device.
+     *
+     * @return Array of sample rates in Hz.
+     */
+    juce::Array<double> getAvailableSampleRates()    const { return audioEngine->getAvailableSampleRates(); }
+
+    /**
+     * @brief Returns the current audio buffer size.
+     *
+     * @return Buffer size in samples.
+     */
+    int getCurrentBufferSize()                       const { return audioEngine->getCurrentBufferSize(); }
+
+    /**
+     * @brief Returns the current audio sample rate.
+     *
+     * @return Sample rate in Hz.
+     */
+    double getCurrentSampleRate()                    const { return audioEngine->getCurrentSampleRate(); }
+
+    /**
+     * @brief Sets the audio buffer size.
+     *
+     * @param bufferSize Buffer size in samples.
+     * @return true if successful, false on error.
+     */
+    bool setBufferSize (int bufferSize)                    { return audioEngine->setBufferSize (bufferSize); }
+
+    /**
+     * @brief Sets the audio sample rate.
+     *
+     * @param sampleRate Sample rate in Hz.
+     * @return true if successful, false on error.
+     */
+    bool setSampleRate (double sampleRate)                 { return audioEngine->setSampleRate (sampleRate); }
+
+    //==============================================================================
+    // MIDI Input Device Management
+
+    /**
+     * @brief Lists all available MIDI input devices.
+     *
+     * Tracktion automatically manages MIDI device enabling, so this is for display purposes only.
+     *
+     * @return StringArray of MIDI device names.
+     */
     juce::StringArray listMidiInputDevices()         const { return audioEngine->listMidiInputDevices(); }
 
     bool saveEdit();

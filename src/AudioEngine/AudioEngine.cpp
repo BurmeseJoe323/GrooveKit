@@ -140,6 +140,60 @@ AudioDeviceManager& AudioEngine::getAudioDeviceManager()
     return adm();
 }
 
+Array<int> AudioEngine::getAvailableBufferSizes() const
+{
+    auto& dm = const_cast<AudioEngine*>(this)->adm();
+    if (auto* device = dm.getCurrentAudioDevice())
+        return device->getAvailableBufferSizes();
+    return {};
+}
+
+Array<double> AudioEngine::getAvailableSampleRates() const
+{
+    auto& dm = const_cast<AudioEngine*>(this)->adm();
+    if (auto* device = dm.getCurrentAudioDevice())
+        return device->getAvailableSampleRates();
+    return {};
+}
+
+int AudioEngine::getCurrentBufferSize() const
+{
+    auto& dm = const_cast<AudioEngine*>(this)->adm();
+    AudioDeviceManager::AudioDeviceSetup setup;
+    dm.getAudioDeviceSetup (setup);
+    return setup.bufferSize;
+}
+
+double AudioEngine::getCurrentSampleRate() const
+{
+    auto& dm = const_cast<AudioEngine*>(this)->adm();
+    AudioDeviceManager::AudioDeviceSetup setup;
+    dm.getAudioDeviceSetup (setup);
+    return setup.sampleRate;
+}
+
+bool AudioEngine::setBufferSize (int bufferSize)
+{
+    auto& dm = adm();
+    AudioDeviceManager::AudioDeviceSetup setup;
+    dm.getAudioDeviceSetup (setup);
+
+    setup.bufferSize = bufferSize;
+
+    return applySetup (setup);
+}
+
+bool AudioEngine::setSampleRate (double sampleRate)
+{
+    auto& dm = adm();
+    AudioDeviceManager::AudioDeviceSetup setup;
+    dm.getAudioDeviceSetup (setup);
+
+    setup.sampleRate = sampleRate;
+
+    return applySetup (setup);
+}
+
 bool AudioEngine::applySetup (const AudioDeviceManager::AudioDeviceSetup& newSetup)
 {
     auto& dm = adm();

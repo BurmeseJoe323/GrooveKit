@@ -110,6 +110,50 @@ public:
      */
     void initialiseDefaults (double sampleRate = 48000.0, int bufferSize = 512);
 
+    /**
+     * @brief Returns available buffer sizes supported by the current audio device.
+     *
+     * @return Array of buffer sizes in samples.
+     */
+    juce::Array<int> getAvailableBufferSizes() const;
+
+    /**
+     * @brief Returns available sample rates supported by the current audio device.
+     *
+     * @return Array of sample rates in Hz.
+     */
+    juce::Array<double> getAvailableSampleRates() const;
+
+    /**
+     * @brief Returns the current audio buffer size.
+     *
+     * @return Buffer size in samples.
+     */
+    int getCurrentBufferSize() const;
+
+    /**
+     * @brief Returns the current audio sample rate.
+     *
+     * @return Sample rate in Hz.
+     */
+    double getCurrentSampleRate() const;
+
+    /**
+     * @brief Sets the audio buffer size.
+     *
+     * @param bufferSize Buffer size in samples.
+     * @return true if successful, false on error.
+     */
+    bool setBufferSize (int bufferSize);
+
+    /**
+     * @brief Sets the audio sample rate.
+     *
+     * @param sampleRate Sample rate in Hz.
+     * @return true if successful, false on error.
+     */
+    bool setSampleRate (double sampleRate);
+
     //==============================================================================
     // MIDI Input Device Management
 
@@ -153,6 +197,8 @@ public:
 
     /**
      * @brief Lists all available MIDI input devices.
+     *
+     * Tracktion automatically manages MIDI device enabling, so this is for display purposes only.
      *
      * @return Array of MIDI input device names.
      */
