@@ -187,8 +187,9 @@ void TrackClip::onResizeEnd()
     const auto endTime = tempoSeq.toTime (t::BeatPosition::fromBeats (clipEndBeats));
     const auto finalDuration = endTime - startTime;
 
-    // Update the model - preserveSync=false since we're manually resizing
-    clip->setLength (finalDuration, false);
+    // Update the model - preserveSync=true prevents offset adjustment (Written by Claude Code)
+    // This keeps the clip content at the same timeline position and removes notes from the END
+    clip->setLength (finalDuration, true);
 
     // Update only the width from the model, using the same calculation as TrackComponent::resized()
     // This preserves the X position and avoids visual "jump"
