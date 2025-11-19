@@ -6,6 +6,7 @@
 #include "../../AppEngine/AppEngine.h" // Full definition needed for implementation (Written by Claude Code)
 
 TrackHeaderComponent::TrackHeaderComponent (AppEngine& engine)
+    : appEngine (&engine)
 {
     addAndMakeVisible (instrumentButton);
     addAndMakeVisible (instrumentMenuButton);
@@ -197,6 +198,8 @@ void TrackHeaderComponent::paint (juce::Graphics& g)
     // Border
     g.setColour (juce::Colours::white.withAlpha (0.20f));
     g.drawRoundedRectangle (bounds, radius, 1.5f);
+    refreshInstrumentButton();
+
 }
 
 void TrackHeaderComponent::resized()

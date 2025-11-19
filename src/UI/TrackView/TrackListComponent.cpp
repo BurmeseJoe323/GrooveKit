@@ -625,4 +625,3 @@ void TrackListComponent::mouseDown (const juce::MouseEvent& e)
     juce::Component::mouseDown(e);
 }
 
-
