@@ -146,9 +146,7 @@ void PluginManager::startScanner (bool reset)
     if (scanner != nullptr)
         return;
 
-    // The code below is effectively a fallback path that will only execute
-    // if startNextFormatScan did not create a scanner. It uses a single
-    // format instead of iterating formats here.
+    // Fallback path: only executes if startNextFormatScan did not create a scanner.
     auto searchPaths = buildSearchPaths();
 
     if (! scannerThread)
