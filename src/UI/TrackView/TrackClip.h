@@ -45,6 +45,7 @@ public:
 private:
     void updateSizeFromClip();
     void onResizeEnd();
+    void quantizeWidth (juce::Rectangle<int>& bounds); // Live quantization during resize (Written by Claude Code)
 
     // Drag helper methods - Written by Claude Code
     t::TimePosition mouseToTime (const juce::MouseEvent& e);
@@ -52,10 +53,31 @@ private:
     t::TimePosition quantizeToGrid (t::TimePosition time, double gridSize = 0.25);
 
     // Custom constrainer that notifies us when resizing completes
+    // and provides live quantization during drag (Written by Claude Code)
     class ResizeConstrainer : public juce::ComponentBoundsConstrainer
     {
     public:
         explicit ResizeConstrainer (TrackClip& owner) : trackClip (owner) {}
+
+        void checkBounds (juce::Rectangle<int>& bounds,
+                         const juce::Rectangle<int>& previousBounds,
+                         const juce::Rectangle<int>& limits,
+                         bool isStretchingTop,
+                         bool isStretchingLeft,
+                         bool isStretchingBottom,
+                         bool isStretchingRight) override
+        {
+            // Call base class first to apply min/max constraints
+            juce::ComponentBoundsConstrainer::checkBounds (bounds, previousBounds, limits,
+                                                           isStretchingTop, isStretchingLeft,
+                                                           isStretchingBottom, isStretchingRight);
+
+            // Apply live quantization when resizing right edge (Written by Claude Code)
+            if (isStretchingRight)
+            {
+                trackClip.quantizeWidth (bounds);
+            }
+        }
 
         void resizeEnd() override
         {

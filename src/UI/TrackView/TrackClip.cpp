@@ -208,6 +208,72 @@ void TrackClip::onResizeEnd()
         tl->resized();
 }
 
+void TrackClip::quantizeWidth (juce::Rectangle<int>& bounds)
+{
+    // Written by Claude Code - Live quantization during resize drag
+    auto* tl = findParentComponentOfClass<TrackListComponent>();
+    if (!tl)
+        return;
+
+    const double ppb = tl->getPixelsPerBeat();
+    if (ppb <= 0.0)
+        return;
+
+    // Calculate the new length in beats from the proposed width
+    const double newLengthBeats = static_cast<double> (bounds.getWidth()) / ppb;
+
+    // Quantize to 0.25 beat grid
+    constexpr double gridSize = 0.25;
+    double quantizedLengthBeats = std::round (newLengthBeats / gridSize) * gridSize;
+    double finalLengthBeats = juce::jmax (gridSize, quantizedLengthBeats); // Minimum one grid unit
+
+    // Check for overlap with adjacent clips and constrain if needed
+    auto* trackComp = findParentComponentOfClass<TrackComponent>();
+    if (trackComp && clip)
+    {
+        auto& tempoSeq = clip->edit.tempoSequence;
+        const auto clipStart = clip->getPosition().getStart();
+        const double clipStartBeats = tempoSeq.toBeats (clipStart).inBeats();
+
+        // Find the nearest clip that starts after this one
+        double nearestClipStartBeats = std::numeric_limits<double>::max();
+
+        for (int i = 0; i < trackComp->getNumChildComponents(); ++i)
+        {
+            if (auto* otherClipUI = dynamic_cast<TrackClip*> (trackComp->getChildComponent (i)))
+            {
+                if (otherClipUI == this)
+                    continue;
+
+                auto* otherClip = otherClipUI->getMidiClip();
+                if (!otherClip)
+                    continue;
+
+                const auto otherStart = otherClip->getPosition().getStart();
+                const double otherStartBeats = tempoSeq.toBeats (otherStart).inBeats();
+
+                if (otherStartBeats > clipStartBeats)
+                    nearestClipStartBeats = std::min (nearestClipStartBeats, otherStartBeats);
+            }
+        }
+
+        // Constrain to not overlap adjacent clip
+        if (nearestClipStartBeats < std::numeric_limits<double>::max())
+        {
+            const double maxAllowedLengthBeats = nearestClipStartBeats - clipStartBeats;
+            if (finalLengthBeats > maxAllowedLengthBeats)
+            {
+                const double constrainedLengthBeats = std::floor (maxAllowedLengthBeats / gridSize) * gridSize;
+                finalLengthBeats = juce::jmax (gridSize, constrainedLengthBeats);
+            }
+        }
+    }
+
+    // Convert back to pixels and update the bounds width
+    const int quantizedWidth = static_cast<int> (juce::roundToIntAccurate (finalLengthBeats * ppb));
+    bounds.setWidth (juce::jmax (20, quantizedWidth)); // Minimum 20 pixels
+}
+
 t::TimePosition TrackClip::mouseToTime (const juce::MouseEvent& e)
 {
     // Written by Claude Code (fixed seconds/beats conversion)
