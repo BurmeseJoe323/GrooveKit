@@ -13,8 +13,8 @@ MidiSettingsPanel::MidiSettingsPanel (AppEngine& engine)
 
     addAndMakeVisible (infoLabel);
     infoLabel.setJustificationType (Justification::centredLeft);
-    infoLabel.setFont (Font (13.0f));
-    infoLabel.setColour (Label::textColourId, Colours::lightgrey);
+    infoLabel.setFont (Font (12.0f));
+    infoLabel.setColour (Label::textColourId, Colours::grey);
 
     addAndMakeVisible (deviceViewport);
     deviceViewport.setViewedComponent (&deviceContainer, false);
@@ -43,14 +43,14 @@ void MidiSettingsPanel::resized()
 
     deviceViewport.setBounds (r);
 
-    // Layout device toggles in container
+    // Layout device labels in container
     auto containerBounds = Rectangle<int> (0, 0, deviceViewport.getWidth() - 20, 0);
     int yPos = 10;
 
-    for (auto* toggle : deviceToggles)
+    for (auto* label : deviceLabels)
     {
-        toggle->setBounds (10, yPos, containerBounds.getWidth() - 20, 28);
-        yPos += 36;
+        label->setBounds (10, yPos, containerBounds.getWidth() - 20, 24);
+        yPos += 30;
     }
 
     deviceContainer.setSize (containerBounds.getWidth(), yPos + 10);
@@ -58,37 +58,41 @@ void MidiSettingsPanel::resized()
 
 void MidiSettingsPanel::refreshDeviceList()
 {
-    deviceToggles.clear();
+    deviceLabels.clear();
 
     auto devices = appEngine.listMidiInputDevices();
 
     if (devices.isEmpty())
     {
         infoLabel.setText ("No MIDI input devices detected", dontSendNotification);
+
+        // Add a placeholder label
+        auto* noDeviceLabel = new Label();
+        noDeviceLabel->setText ("No devices found", dontSendNotification);
+        noDeviceLabel->setJustificationType (Justification::centredLeft);
+        noDeviceLabel->setFont (Font (13.0f));
+        noDeviceLabel->setColour (Label::textColourId, Colours::grey);
+
+        deviceContainer.addAndMakeVisible (noDeviceLabel);
+        deviceLabels.add (noDeviceLabel);
+
+        resized();
         return;
     }
 
-    infoLabel.setText ("Enable or disable MIDI input devices", dontSendNotification);
+    infoLabel.setText (String (devices.size()) + " device" + (devices.size() == 1 ? "" : "s") + " detected", dontSendNotification);
 
     for (const auto& deviceName : devices)
     {
-        auto* toggle = new ToggleButton (deviceName);
-        toggle->setToggleState (appEngine.isMidiDeviceEnabled (deviceName), dontSendNotification);
+        auto* label = new Label();
+        label->setText ("• " + deviceName, dontSendNotification);
+        label->setJustificationType (Justification::centredLeft);
+        label->setFont (Font (13.0f));
+        label->setColour (Label::textColourId, Colours::white);
 
-        toggle->onClick = [this, deviceName, toggle]
-        {
-            bool enabled = toggle->getToggleState();
-            onDeviceToggled (deviceName, enabled);
-        };
-
-        deviceContainer.addAndMakeVisible (toggle);
-        deviceToggles.add (toggle);
+        deviceContainer.addAndMakeVisible (label);
+        deviceLabels.add (label);
     }
 
     resized();
-}
-
-void MidiSettingsPanel::onDeviceToggled (const String& deviceName, bool enabled)
-{
-    appEngine.setMidiDeviceEnabled (deviceName, enabled);
 }
