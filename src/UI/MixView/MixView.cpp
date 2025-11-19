@@ -1,22 +1,24 @@
-#pragma once
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "MixView.h"
 #include "../TransportBar/TransportBar.h"
 #include "../MenuBar/GrooveKitMenuBar.h"
+
+//==============================================================================
+// Construction / Destruction
 
 MixView::MixView(AppEngine& engine, TransportBar& transport, GrooveKitMenuBar& menu)
     : appEngine(engine), transportBar(&transport), menuBar(&menu)
 {
     setOpaque(true);
 
-    // Add menu bar and transport bar (Written by Claude Code)
+    // Add menu bar and transport bar
     addAndMakeVisible(menuBar);
     addAndMakeVisible(transportBar);
 
     mixerPanel = std::make_unique<MixerPanel>(appEngine);
     addAndMakeVisible(*mixerPanel);
 
-    // Set up menu bar callbacks to refresh mixer when tracks are created (Written by Claude Code)
+    // Set up menu bar callbacks to refresh mixer when tracks are created
     menuBar->onNewInstrumentTrack = [this] {
         appEngine.addInstrumentTrack();
         refreshMixer();
@@ -26,17 +28,21 @@ MixView::MixView(AppEngine& engine, TransportBar& transport, GrooveKitMenuBar& m
         refreshMixer();
     };
 
-    // Enable keyboard focus for MIDI playback (Written by Claude Code)
+    // Enable keyboard focus for MIDI playback
     setWantsKeyboardFocus(true);
 }
 
-MixView::~MixView() {
+MixView::~MixView()
+{
     mixerPanel.reset();
 }
 
+//==============================================================================
+// Component Overrides
 
-void MixView::paint (juce::Graphics& g) {
-    // Match TrackListComponent background color (Written by Claude Code)
+void MixView::paint (juce::Graphics& g)
+{
+    // Match TrackListComponent background color
     g.fillAll(juce::Colour(0xFF343A40));
 }
 
@@ -44,7 +50,7 @@ void MixView::resized()
 {
     auto bounds = getLocalBounds();
 
-    // Position menu bar at top on non-Mac platforms (Written by Claude Code)
+    // Position menu bar at top on non-Mac platforms
     #if !JUCE_MAC
     constexpr int menuHeight = 24;
     menuBar->setBounds(bounds.removeFromTop(menuHeight));
@@ -59,7 +65,9 @@ void MixView::resized()
     mixerPanel->setBounds(bounds);
 }
 
-// Keyboard event handlers for MIDI playback (Written by Claude Code)
+//==============================================================================
+// Keyboard and Mouse Handlers
+
 bool MixView::keyPressed(const juce::KeyPress& key_press)
 {
     // The note keys are being handled by keyStateChanged, so we'll just say that the event is consumed

@@ -49,7 +49,7 @@ public:
     std::function<void()> onNewDrumTrack;
 
 private:
-    void showOutputDeviceSettings() const;
+    void showPreferences() const; // (Written by Claude Code)
     void showNewEditMenu() const;
     void showOpenEditMenu() const;
     void exportAudio();

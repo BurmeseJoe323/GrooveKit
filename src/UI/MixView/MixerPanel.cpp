@@ -1,6 +1,9 @@
 #include "MixerPanel.h"
 namespace te = tracktion::engine;
 
+//==============================================================================
+// Construction / Destruction
+
 MixerPanel::MixerPanel (AppEngine& engine)
     : appEngine (engine)
 {
@@ -24,6 +27,9 @@ MixerPanel::~MixerPanel()
     DBG ("[MixerPanel] dtor");
 }
 
+//==============================================================================
+// Public API
+
 void MixerPanel::refreshTracks()
 {
     // Clear only the container's children, not the viewport
@@ -38,7 +44,7 @@ void MixerPanel::refreshTracks()
     auto& edit = appEngine.getEdit();
     auto audioTracks = te::getAudioTracks (edit);
 
-    // Color palette matching TrackListComponent (Written by Claude Code)
+    // Color palette matching TrackListComponent
     static const juce::Array<juce::Colour> trackColors {
         juce::Colour (0xffff6b6b),  // Red
         juce::Colour (0xfff06595),  // Pink
@@ -58,7 +64,7 @@ void MixerPanel::refreshTracks()
 
         const auto color = trackColors[i % trackColors.size()]; // Color based on index
         auto* strip = new ChannelStrip(color); // Pass color to constructor
-        strip->setTrackIndex (i); // Track index for renaming (Written by Claude Code)
+        strip->setTrackIndex (i); // Track index for renaming
         strip->setTrackName (t->getName());
         strip->bindToTrack (*t);
 
@@ -83,7 +89,7 @@ void MixerPanel::refreshTracks()
             if (currentSelected != newSelected)
                 appEngine.setArmedTrack (newSelected);
         };
-        // Handle track name changes (Written by Claude Code)
+        // Handle track name changes
         strip->onRequestNameChange = [this] (int trackIndex, const juce::String& newName) {
             appEngine.setTrackName (trackIndex, newName);
         };
@@ -157,6 +163,9 @@ void MixerPanel::refreshArmStates()
             strip->setArmed (i == selectedTrack);
     }
 }
+
+//==============================================================================
+// Component Overrides
 
 void MixerPanel::resized()
 {
