@@ -264,9 +264,9 @@ bool MidiRecorder::createClipFromRecording(te::Edit& edit)
                       String(clipStart.inSeconds(), 3) + "s to " +
                       String(clipEnd.inSeconds(), 3) + "s");
 
-    // Check if there's already a clip that overlaps with our recording range
-    te::MidiClip* targetClip = nullptr;
+    // Find ALL clips that overlap with our recording range and delete them
     auto clipRange = t::TimeRange(clipStart, clipEnd);
+    std::vector<te::Clip*> clipsToDelete;
 
     for (auto* clip : track->getClips())
     {
@@ -278,47 +278,50 @@ bool MidiRecorder::createClipFromRecording(te::Edit& edit)
             // Check if the recording range overlaps with this clip
             if (existingRange.overlaps(clipRange))
             {
+                clipsToDelete.push_back(midiClip);
+                Logger::writeToLog("[MidiRecorder] Found overlapping clip to delete: " + midiClip->getName());
+            }
+        }
+    }
+
+    // Delete all overlapping clips
+    for (auto* clipToDelete : clipsToDelete)
+    {
+        clipToDelete->removeFromParent();
+    }
+
+    if (!clipsToDelete.empty())
+    {
+        Logger::writeToLog("[MidiRecorder] Deleted " + String(clipsToDelete.size()) +
+                          " overlapping clip(s)");
+    }
+
+    // Create a new clip for the recording
+    Logger::writeToLog("[MidiRecorder] Creating new MIDI clip");
+    track->insertMIDIClip(track->getName() + " Recording", clipRange, nullptr);
+
+    // Find the newly created clip
+    te::MidiClip* targetClip = nullptr;
+    for (auto* clip : track->getClips())
+    {
+        if (auto* midiClip = dynamic_cast<te::MidiClip*>(clip))
+        {
+            if (midiClip->getPosition().getStart() == clipStart)
+            {
                 targetClip = midiClip;
-                Logger::writeToLog("[MidiRecorder] Found existing clip to overwrite: " + midiClip->getName());
                 break;
             }
         }
     }
 
-    // If no existing clip found, create a new one
     if (!targetClip)
     {
-        Logger::writeToLog("[MidiRecorder] Creating new MIDI clip");
-        track->insertMIDIClip(track->getName() + " Recording", clipRange, nullptr);
-
-        // Find the newly created clip
-        for (auto* clip : track->getClips())
-        {
-            if (auto* midiClip = dynamic_cast<te::MidiClip*>(clip))
-            {
-                if (midiClip->getPosition().getStart() == clipStart)
-                {
-                    targetClip = midiClip;
-                    break;
-                }
-            }
-        }
-
-        if (!targetClip)
-        {
-            Logger::writeToLog("[MidiRecorder] ERROR: Failed to create MIDI clip");
-            return false;
-        }
+        Logger::writeToLog("[MidiRecorder] ERROR: Failed to create MIDI clip");
+        return false;
     }
 
-    // Clear existing notes in the clip before adding new ones
-    auto& sequence = targetClip->getSequence();
-    sequence.clear(nullptr);
-
-    // Set clip length to match recording
-    targetClip->setLength(clipEnd - clipStart, true);
-
     // Populate clip with recorded MIDI events
+    auto& sequence = targetClip->getSequence();
     auto& tempoSequence = edit.tempoSequence;
 
     int notesAdded = 0;
