@@ -215,6 +215,14 @@ bool AppEngine::isRecording() const
     return midiRecorder && midiRecorder->isRecording();
 }
 
+tracktion::TimeRange AppEngine::getRecordingPreviewBounds() const
+{
+    if (midiRecorder)
+        return midiRecorder->getPreviewClipBounds();
+
+    return tracktion::TimeRange();
+}
+
 //==============================================================================
 // Transport Control
 

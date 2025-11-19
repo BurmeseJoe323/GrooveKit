@@ -243,6 +243,17 @@ public:
     bool isRecording() const;
 
     /**
+     * @brief Returns the current recording preview clip bounds.
+     *
+     * Used for real-time visual feedback during recording. Returns the time range
+     * from when the first MIDI note was captured to the current transport position.
+     * Returns an empty range if not recording or no notes captured yet.
+     *
+     * @return TimeRange representing the preview clip bounds, or empty if no notes recorded.
+     */
+    tracktion::TimeRange getRecordingPreviewBounds() const;
+
+    /**
      * @brief Callback invoked after recording stops and clips are finalized.
      *
      * This is called asynchronously (via MessageManager::callAsync) to allow

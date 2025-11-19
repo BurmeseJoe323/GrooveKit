@@ -75,6 +75,24 @@ public:
      */
     bool isRecording() const { return recording; }
 
+    /**
+     * @brief Returns the current recording preview clip bounds.
+     *
+     * Used for real-time visual feedback during recording. Returns the time range
+     * from when the first MIDI note was captured to the current transport position.
+     * Returns an empty range if no notes have been recorded yet.
+     *
+     * @return TimeRange representing the preview clip bounds, or empty if no notes recorded.
+     */
+    tracktion::TimeRange getPreviewClipBounds() const;
+
+    /**
+     * @brief Returns the track index currently being recorded to.
+     *
+     * @return Track index, or -1 if not recording.
+     */
+    int getRecordingTrackIndex() const { return targetTrackIndex; }
+
     //==============================================================================
     // MidiKeyboardStateListener Implementation
 
@@ -151,6 +169,8 @@ private:
     double recordingStartTime = 0.0;                         ///< Time when recording started (in seconds).
     tracktion::TimePosition recordingStartPosition;          ///< Transport position when recording started.
     tracktion::TimePosition lastRecordedPosition;            ///< Last transport position when MIDI was recorded (for loop detection).
+    tracktion::TimePosition firstNotePosition;               ///< Transport position when first MIDI note was captured (for preview clip start).
+    bool hasRecordedNotes = false;                           ///< Whether any MIDI notes have been captured yet.
 
     std::vector<juce::MidiKeyboardState*> attachedSources;   ///< Keyboard states we're listening to.
 

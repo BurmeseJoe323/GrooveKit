@@ -159,6 +159,19 @@ bool MidiRecorder::stopRecording(te::Edit& edit)
     return success;
 }
 
+tracktion::TimeRange MidiRecorder::getPreviewClipBounds() const
+{
+    if (!recording || !currentEdit)
+        return tracktion::TimeRange();
+
+    // Return range from recording start position to current transport position
+    // This shows the preview immediately when recording starts
+    auto& transport = currentEdit->getTransport();
+    auto currentPos = transport.getPosition();
+
+    return tracktion::TimeRange(recordingStartPosition, currentPos);
+}
+
 //==============================================================================
 // MidiKeyboardStateListener Implementation
 
@@ -236,29 +249,11 @@ bool MidiRecorder::createClipFromRecording(te::Edit& edit)
     auto* track = tracks[targetTrackIndex];
     Logger::writeToLog("[MidiRecorder] Creating clip on track: " + track->getName());
 
-    // Calculate clip length from recorded sequence
-    double clipLengthSeconds = 0.0;
-    {
-        const ScopedLock sl(recordingLock);
-        if (recordedSequence.getNumEvents() > 0)
-        {
-            // Find the latest event time
-            for (int i = 0; i < recordedSequence.getNumEvents(); ++i)
-            {
-                auto* event = recordedSequence.getEventPointer(i);
-                clipLengthSeconds = jmax(clipLengthSeconds, event->message.getTimeStamp());
-            }
-
-            // Add a small buffer to ensure the last note-off is included
-            clipLengthSeconds += 0.1;
-        }
-    }
-
-    Logger::writeToLog("[MidiRecorder] Clip length: " + String(clipLengthSeconds, 3) + " seconds");
-
-    // Convert to Tracktion time positions
+    // Use the EXACT preview bounds: from recording start to current transport position
+    // This ensures the created clip matches the preview clip perfectly
+    auto& transport = edit.getTransport();
     auto clipStart = recordingStartPosition;
-    auto clipEnd = clipStart + t::TimeDuration::fromSeconds(clipLengthSeconds);
+    auto clipEnd = transport.getPosition();
 
     Logger::writeToLog("[MidiRecorder] Clip position: " +
                       String(clipStart.inSeconds(), 3) + "s to " +
@@ -383,7 +378,9 @@ bool MidiRecorder::createClipFromRecording(te::Edit& edit)
         recordedSequence.clear();
     }
 
-    return notesAdded > 0;
+    // Always return true if we created a clip (even if empty)
+    // This matches the preview behavior - clip exists from first note position to end
+    return true;
 }
 
 void MidiRecorder::recordMidiMessage(const juce::MidiMessage& message)
@@ -410,17 +407,15 @@ void MidiRecorder::recordMidiMessage(const juce::MidiMessage& message)
                 const ScopedLock sl(recordingLock);
                 recordedSequence.clear();
             }
-
-            // Reset start time for new loop pass
-            recordingStartTime = Time::getMillisecondCounterHiRes() / 1000.0;
         }
     }
 
     lastRecordedPosition = currentPosition;
 
-    // Calculate timestamp relative to recording start
-    double currentTime = Time::getMillisecondCounterHiRes() / 1000.0;
-    double relativeTime = currentTime - recordingStartTime;
+    // Calculate timestamp based on transport position, not wall-clock time
+    // This ensures notes are positioned correctly even after loop wraparound
+    auto timeSinceRecordingStart = currentPosition - recordingStartPosition;
+    double relativeTime = timeSinceRecordingStart.inSeconds();
 
     // Create timestamped message
     auto timestampedMessage = message;
