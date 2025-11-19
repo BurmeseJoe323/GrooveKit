@@ -70,7 +70,7 @@ public:
         juce::Font font (13.0f); font.setBold (true);
         g.setFont (font);
 
-        g.drawFittedText (title.isNotEmpty() ? title : "Pad " + juce::String (slot + 1),
+        g.drawFittedText (title.isNotEmpty() ? title : juce::String("Pad " + juce::String(slot)),
                           getLocalBounds().reduced (6), juce::Justification::centred, 2);
     }
 

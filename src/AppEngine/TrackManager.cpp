@@ -23,8 +23,9 @@ void TrackManager::syncBookkeepingToEngine()
     auto audioTracks = te::getAudioTracks(edit);
     const int n = (int) audioTracks.size();
 
-    types.clear();        types.resize(n, TrackType::Instrument);
-    drumEngines.clear();  drumEngines.resize(n);
+    // Resize vectors instead of clearing to preserve existing adapters
+    types.resize(n, TrackType::Instrument);
+    drumEngines.resize(n);
 
     for (int i = 0; i < n; ++i)
     {
@@ -34,7 +35,17 @@ void TrackManager::syncBookkeepingToEngine()
         if (isDrum)
         {
             types[(size_t) i] = TrackType::Drum;
-            drumEngines[(size_t) i] = std::make_unique<DrumSamplerEngineAdapter>(edit.engine, *track);
+            // Only create adapter if it doesn't already exist
+            if (!drumEngines[(size_t) i])
+            {
+                drumEngines[(size_t) i] = std::make_unique<DrumSamplerEngineAdapter>(edit.engine, *track);
+            }
+        }
+        else
+        {
+            types[(size_t) i] = TrackType::Instrument;
+            // Clear drum adapter if track is not a drum track
+            drumEngines[(size_t) i].reset();
         }
     }
 }
@@ -62,9 +73,8 @@ int TrackManager::addDrumTrack()
 
     auto adapter = std::make_unique<DrumSamplerEngineAdapter>(edit.engine, *track);
 
+    // syncBookkeepingToEngine will create the adapter if needed
     syncBookkeepingToEngine();
-    types[(size_t) newIndex] = TrackType::Drum;
-    drumEngines[(size_t) newIndex] = std::move(adapter);
     edit.getTransport().ensureContextAllocated();
     return newIndex;
 }
@@ -76,14 +86,11 @@ int TrackManager::addInstrumentTrack()
 
     auto* track = te::getAudioTracks(edit)[(size_t) newIndex];
     track->state.setProperty (GKIDs::isDrum, false, nullptr);
-
     // Set default instrument track name (Written by Claude Code)
     track->setName ("Track " + juce::String (newIndex + 1));
 
+    // syncBookkeepingToEngine will set type and clear drum adapter if needed
     syncBookkeepingToEngine();
-    types[(size_t) newIndex] = TrackType::Instrument;
-    if ((int) drumEngines.size() > newIndex)
-        drumEngines[(size_t) newIndex].reset();
 
     // if (auto plugin = edit.getPluginCache().createNewPlugin(te::FourOscPlugin::xmlTypeName, {}))
     //     track->pluginList.insertPlugin(std::move(plugin), 0, nullptr);
