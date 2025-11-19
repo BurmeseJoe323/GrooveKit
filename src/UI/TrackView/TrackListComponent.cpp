@@ -192,7 +192,15 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
     };
 }
 
-TrackListComponent::~TrackListComponent() = default;
+TrackListComponent::~TrackListComponent()
+{
+    // Clear callbacks to prevent use-after-free when AppEngine outlives this component
+    if (appEngine)
+    {
+        appEngine->onBpmChanged = nullptr;
+        appEngine->onArmedTrackChanged = nullptr;
+    }
+}
 
 void TrackListComponent::paint (juce::Graphics& g)
 {

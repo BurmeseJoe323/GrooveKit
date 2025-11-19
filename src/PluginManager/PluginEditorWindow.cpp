@@ -18,7 +18,16 @@ PluginEditorWindow::createFor(te::ExternalPlugin& ext,
                               std::function<void()> onClose,
                               KeyListener* keyForward)
 {
-    if (auto* pi = ext.getAudioPluginInstance())
+    auto* pi = ext.getAudioPluginInstance();
+
+    if (!pi)
+    {
+        DBG("PluginEditorWindow: No AudioPluginInstance for " << ext.getName()
+            << " (plugin type: " << ext.getPluginType() << ")");
+        DBG("PluginEditorWindow: Plugin enabled: " << (ext.isEnabled() ? "yes" : "no"));
+    }
+
+    if (pi)
         return createFor(*pi, std::move(onClose), keyForward);
 
     return {};

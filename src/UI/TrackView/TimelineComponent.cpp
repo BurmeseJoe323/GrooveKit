@@ -106,6 +106,12 @@ static bool near (int px, int target, int slop) { return std::abs(px - target) <
 
 void ui::TimelineComponent::mouseDown (const juce::MouseEvent& e)
 {
+    // Alt/Option + Click: Position playhead at clicked location
+    if (e.mods.isAltDown())
+    {
+        setTransportPositionFromX (e.x, false);
+        return;
+    }
 
     if (e.mods.isMiddleButtonDown() || (e.mods.isShiftDown() && e.mods.isLeftButtonDown()))
     {
