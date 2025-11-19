@@ -9,7 +9,8 @@ namespace te = tracktion::engine;
 TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine)
     : appEngine (engine),
       playhead (engine->getEdit(),
-          engine->getEditViewState()),
+          engine->getEditViewState(),
+          *engine),
       loopRangeComponent (engine->getEdit())
 {
     //Add initial track pair
@@ -396,6 +397,27 @@ void TrackListComponent::armTrack (int trackIndex, bool shouldBeArmed)
     const int newIndex = shouldBeArmed ? trackIndex : -1;
     if (appEngine->getArmedTrackIndex() != newIndex)
         appEngine->setArmedTrack (newIndex);
+}
+
+void TrackListComponent::setAllArmButtonsEnabled(bool enabled)
+{
+    // Loop through all headers and set enabled or disabled state
+    for (TrackHeaderComponent *header : headers)
+    {
+        if (header != nullptr)
+        {
+            header->setArmButtonEnabled (enabled);
+        }
+    }
+}
+
+void TrackListComponent::repaintTrack(int trackIndex)
+{
+    if (trackIndex >= 0 && trackIndex < tracks.size())
+    {
+        if (auto* track = tracks[trackIndex])
+            track->repaint();
+    }
 }
 
 void TrackListComponent::setPixelsPerBeat (double ppb)

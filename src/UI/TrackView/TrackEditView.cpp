@@ -7,6 +7,9 @@
 #include "../../AppEngine/ValidationUtils.h"
 #include <regex>
 
+//==============================================================================
+// Helper Functions
+
 // Helper for styling the menu buttons
 void styleMenuButton (juce::TextButton& button)
 {
@@ -14,6 +17,9 @@ void styleMenuButton (juce::TextButton& button)
     button.setColour (juce::TextButton::textColourOffId, juce::Colours::lightgrey);
     button.setColour (juce::TextButton::textColourOnId, juce::Colours::white);
 }
+
+//==============================================================================
+// Construction / Destruction
 
 TrackEditView::TrackEditView (AppEngine& engine, TransportBar& transport, GrooveKitMenuBar& menu)
     : transportBar(&transport), menuBar(&menu)
@@ -89,6 +95,9 @@ TrackEditView::TrackEditView (AppEngine& engine, TransportBar& transport, Groove
 
 TrackEditView::~TrackEditView() = default;
 
+//==============================================================================
+// Component Overrides
+
 void TrackEditView::paint (juce::Graphics& g)
 {
     // TransportBar now handles its own painting (Written by Claude Code)
@@ -142,6 +151,8 @@ bool TrackEditView::keyPressed (const juce::KeyPress& key_press)
         if (appEngine->isPlaying())
         {
             appEngine->stop();
+            // In case we are stopping recording, ensure all arm buttons are enabled
+            trackList->setAllArmButtonsEnabled (true);
         }
         else
         {
@@ -179,6 +190,9 @@ void TrackEditView::mouseDown (const juce::MouseEvent& e)
     grabKeyboardFocus();
     juce::Component::mouseDown(e);
 }
+
+//==============================================================================
+// UI Setup
 
 void TrackEditView::showPianoRoll (te::MidiClip* clip)
 {
@@ -308,4 +322,49 @@ TrackEditView::PianoRollResizerBar::PianoRollResizerBar (juce::StretchableLayout
 TrackEditView::PianoRollResizerBar::~PianoRollResizerBar ()
 = default;
 
+//==============================================================================
+// Timer Callback (Recording Visual Feedback)
+
+void TrackEditView::timerCallback()
+{
+    updateRecordButtonAppearance();
+
+    const bool isRecording = appEngine->isRecording();
+    const int armedTrackIndex = appEngine->getArmedTrackIndex();
+
+    // Repaint the armed track while recording to show red tint
+    if (isRecording && armedTrackIndex >= 0 && trackList)
+    {
+        trackList->repaintTrack(armedTrackIndex);
+    }
+
+    // If recording just stopped, repaint one more time to clear the red tint
+    if (wasRecording && !isRecording && armedTrackIndex >= 0 && trackList)
+    {
+        trackList->repaintTrack(armedTrackIndex);
+    }
+
+    wasRecording = isRecording;
+}
+
+void TrackEditView::updateRecordButtonAppearance()
+{
+    // Update record button appearance based on recording state
+    const bool isRecording = appEngine->isRecording();
+
+    if (isRecording)
+    {
+        // Make record button brighter when recording for visual feedback
+        recordButton.setColours (juce::Colours::red.brighter (0.3f),
+                                 juce::Colours::lightcoral.brighter (0.3f),
+                                 juce::Colours::red.brighter (0.5f));
+    }
+    else
+    {
+        // Grey normally, dark red on hover hint, darker grey on press
+        recordButton.setColours (juce::Colours::lightgrey,
+                                 juce::Colours::darkred,
+                                 juce::Colours::darkgrey);
+    }
+}
 

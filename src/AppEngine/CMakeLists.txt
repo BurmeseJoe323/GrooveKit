@@ -5,6 +5,7 @@ target_sources(app_engine PRIVATE
         AppEngine.cpp
         TrackManager.cpp
         MidiListener.cpp
+        MidiRecorder.cpp
         ${CMAKE_SOURCE_DIR}/src/UI/Plugins/Synthesizer/MorphSynthPlugin.cpp
         ${CMAKE_SOURCE_DIR}/src/UI/Plugins/Synthesizer/MorphSynthPlugin.h
         ${CMAKE_SOURCE_DIR}/src/UI/Plugins/Synthesizer/MorphVoice.h
@@ -14,6 +15,7 @@ target_sources(app_engine PRIVATE
         AppEngine.h
         TrackManager.h
         MidiListener.h
+        MidiRecorder.h
 )
 target_include_directories(app_engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(app_engine

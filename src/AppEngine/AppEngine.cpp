@@ -27,13 +27,18 @@ AppEngine::AppEngine()
     trackManager = std::make_unique<TrackManager> (*edit);
     selectionManager = std::make_unique<te::SelectionManager> (*engine);
     midiListener = std::make_unique<MidiListener> (this);
+    midiRecorder = std::make_unique<MidiRecorder> (*engine);
 
     editViewState = std::make_unique<EditViewState> (*edit, *selectionManager);
 
     audioEngine->initialiseDefaults (48000.0, 512);
 
     // Setup MIDI input devices using Tracktion's InputDevice system
+    // CRITICAL: This must be called BEFORE restartPlayback() to ensure proper MIDI routing
     audioEngine->setupMidiInputDevices(*edit);
+
+    // Now restart playback with MIDI devices properly enabled
+    edit->restartPlayback();
 }
 
 AppEngine::~AppEngine()
@@ -75,6 +80,9 @@ TrackHeaderComponent::Listener* AppEngine::getTrackListener (const int index) co
     return nullptr;
 }
 
+//==============================================================================
+// Edit Management
+
 void AppEngine::createOrLoadEdit()
 {
     auto baseDir = juce::File::getSpecialLocation (juce::File::userDocumentsDirectory)
@@ -92,7 +100,7 @@ void AppEngine::createOrLoadEdit()
     edit->clickTrackEmphasiseBars = true;  // Emphasize downbeats with different click sample
 
     markSaved();
-    edit->restartPlayback();
+    // NOTE: restartPlayback() moved to AppEngine constructor after MIDI setup
 }
 
 void AppEngine::newUntitledEdit()
@@ -135,6 +143,9 @@ void AppEngine::newUntitledEdit()
     edit->restartPlayback();
 }
 
+//==============================================================================
+// Track Arming and Recording Control
+
 void AppEngine::setArmedTrack (int index)
 {
     if (selectedTrackIndex == index)
@@ -142,9 +153,27 @@ void AppEngine::setArmedTrack (int index)
 
     selectedTrackIndex = index;
 
-    // Route MIDI to armed track (setTarget will update the routing automatically)
+    // Route MIDI to armed track, or clear routing if disarming
     if (index >= 0)
+    {
         audioEngine->routeMidiToTrack(*edit, index);
+    }
+    else
+    {
+        // Disarm: clear MIDI routing from all devices by setting target to invalid ID
+        for (auto* instance : edit->getAllInputDevices())
+        {
+            if (instance->getInputDevice().getDeviceType() == te::InputDevice::physicalMidiDevice)
+            {
+                // Clear target by setting to an invalid EditItemID
+                [[maybe_unused]] auto result = instance->setTarget(te::EditItemID(), false, nullptr, 0);
+                // Disable recording on all tracks for this device
+                for (auto* track : te::getAudioTracks(*edit))
+                    instance->setRecordingEnabled(track->itemID, false);
+            }
+        }
+        juce::Logger::writeToLog("[AppEngine] Cleared MIDI routing (track disarmed)");
+    }
 
     if (onArmedTrackChanged)
         onArmedTrackChanged();
@@ -162,46 +191,79 @@ int AppEngine::getArmedTrackIndex () const
 
 void AppEngine::toggleRecord()
 {
-    if (selectedTrackIndex < 0 && !isRecording())
-    {
-        juce::Logger::writeToLog("[Recording] Cannot start recording: no track armed");
-        return;
-    }
+    juce::Logger::writeToLog("[AppEngine] toggleRecord() called");
 
     bool wasRecording = isRecording();
 
-    // Toggle recording using EngineHelpers
-    audioEngine->toggleRecord(*edit);
-
-    // If we just stopped recording, notify listeners
-    if (wasRecording)
+    if (!wasRecording)
     {
-        juce::Logger::writeToLog("[AppEngine] Recording stopped");
-
-        // Give Tracktion a moment to finalize the clip creation
-        juce::MessageManager::callAsync([this]()
+        // Start recording
+        if (selectedTrackIndex < 0)
         {
-            if (onRecordingStopped)
-            {
-                juce::Logger::writeToLog("[AppEngine] Notifying listeners that recording stopped");
-                onRecordingStopped();
-            }
-        });
+            juce::Logger::writeToLog("[AppEngine] Cannot start recording: no track armed");
+            return;
+        }
+
+        juce::Logger::writeToLog("[AppEngine] Starting recording on track " + juce::String(selectedTrackIndex));
+
+        // Start recording with both hardware MIDI and QWERTY keyboard
+        midiRecorder->startRecording(*edit, selectedTrackIndex,
+                                     &midiListener->getMidiKeyboardState());
     }
     else
     {
-        juce::Logger::writeToLog("[AppEngine] Recording started");
+        // Stop recording
+        juce::Logger::writeToLog("[AppEngine] Stopping recording");
+
+        bool clipCreated = midiRecorder->stopRecording(*edit);
+
+        if (clipCreated)
+        {
+            juce::Logger::writeToLog("[AppEngine] Recording stopped - clip created successfully");
+
+            // Notify listeners that recording stopped
+            if (onRecordingStopped)
+                onRecordingStopped();
+        }
+        else
+        {
+            juce::Logger::writeToLog("[AppEngine] Recording stopped - no clip created (no MIDI captured)");
+        }
     }
 }
 
 bool AppEngine::isRecording() const
 {
-    return audioEngine->isRecording();
+    return midiRecorder && midiRecorder->isRecording();
 }
+
+tracktion::TimeRange AppEngine::getRecordingPreviewBounds() const
+{
+    if (midiRecorder)
+        return midiRecorder->getPreviewClipBounds();
+
+    return tracktion::TimeRange();
+}
+
+//==============================================================================
+// Transport Control
 
 void AppEngine::play() { audioEngine->play(); }
 
-void AppEngine::stop() { audioEngine->stop(); }
+void AppEngine::stop()
+{
+    // Stop recording if active
+    if (isRecording())
+    {
+        juce::Logger::writeToLog("[AppEngine] Stopping recording due to transport stop");
+        midiRecorder->stopRecording(*edit);
+
+        if (onRecordingStopped)
+            onRecordingStopped();
+    }
+
+    audioEngine->stop();
+}
 
 bool AppEngine::isPlaying() const { return audioEngine->isPlaying(); }
 
@@ -320,6 +382,12 @@ void AppEngine::setClickTrackRecordingOnly (bool recordingOnly)
 bool AppEngine::isClickTrackRecordingOnly() const
 {
     return edit->clickTrackRecordingOnly;
+}
+
+void AppEngine::setMidiEventLoggingEnabled(bool enable)
+{
+    if (audioEngine)
+        audioEngine->setMidiEventLoggingEnabled(enable);
 }
 
 AudioEngine& AppEngine::getAudioEngine() { return *audioEngine; }
@@ -507,6 +575,8 @@ bool AppEngine::loadEditFromFile (const juce::File& file)
     audioEngine = std::make_unique<AudioEngine> (*edit, *engine);
     audioEngine->initialiseDefaults (48000.0, 512);
     audioEngine->setupMidiInputDevices(*edit);
+
+    edit->restartPlayback();  // Rebuild playback graph with MIDI devices enabled
 
     for (auto* track : te::getAudioTracks (*edit))
     {

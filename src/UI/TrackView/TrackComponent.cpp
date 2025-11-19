@@ -44,9 +44,58 @@ void TrackComponent::paint (juce::Graphics& g)
     const auto r = getLocalBounds().toFloat().reduced (1.0f);
     constexpr float radius = 10.0f;
 
-    // Background
-    g.setColour (trackColor.darker (0.4f));
+    // Background - add red tint if this track is armed and recording
+    auto bgColor = trackColor.darker (0.4f);
+
+    if (appEngine && appEngine->isRecording() &&
+        appEngine->getArmedTrackIndex() == trackIndex)
+    {
+        // Blend with red to indicate active recording on this track
+        bgColor = bgColor.interpolatedWith(juce::Colours::darkred, 0.3f);
+    }
+
+    g.setColour (bgColor);
     g.fillRoundedRectangle (r, radius);
+
+    // Draw recording preview clip if this track is being recorded to
+    if (appEngine && appEngine->isRecording() &&
+        appEngine->getArmedTrackIndex() == trackIndex)
+    {
+        auto previewBounds = appEngine->getRecordingPreviewBounds();
+        if (!previewBounds.isEmpty())
+        {
+            // Get beat-based coordinates from parent TrackListComponent
+            auto* tl = findParentComponentOfClass<TrackListComponent>();
+            if (tl)
+            {
+                const double pixelsPerBeat = tl->getPixelsPerBeat();
+                const double viewStartBeats = tl->getViewStartBeat().inBeats();
+                auto& tempoSeq = appEngine->getEdit().tempoSequence;
+
+                // Convert preview time range to beat positions
+                const double clipStartBeats = tempoSeq.toBeats(previewBounds.getStart()).inBeats();
+                const double clipEndBeats = tempoSeq.toBeats(previewBounds.getEnd()).inBeats();
+                const double clipLenBeats = clipEndBeats - clipStartBeats;
+
+                // Calculate preview clip position and size
+                const int x = (int) juce::roundToIntAccurate((clipStartBeats - viewStartBeats) * pixelsPerBeat);
+                const int w = (int) juce::roundToIntAccurate(clipLenBeats * pixelsPerBeat);
+
+                // Draw semi-transparent preview clip
+                const auto clipBounds = getLocalBounds().reduced(5);
+                const auto previewRect = juce::Rectangle<int>(x, clipBounds.getY(),
+                                                               juce::jmax(w, 2), clipBounds.getHeight());
+
+                // Use track color with transparency for preview
+                g.setColour(trackColor.withAlpha(0.4f));
+                g.fillRoundedRectangle(previewRect.toFloat(), 8.0f);
+
+                // Draw border around preview
+                g.setColour(trackColor.brighter(0.3f).withAlpha(0.7f));
+                g.drawRoundedRectangle(previewRect.toFloat(), 8.0f, 2.0f);
+            }
+        }
+    }
 
     // Rounded border
     g.setColour (juce::Colours::white.withAlpha (0.35f));

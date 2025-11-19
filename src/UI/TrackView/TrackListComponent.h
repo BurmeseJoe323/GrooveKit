@@ -31,6 +31,8 @@ public:
     void updateClipEditState (int trackIndex, te::MidiClip* editedClip); // Written by Claude Code
 
     void armTrack(int trackIndex, bool shouldBeArmed);
+    void setAllArmButtonsEnabled(bool enabled);
+    void repaintTrack(int trackIndex);
 
     void setPixelsPerBeat (double ppb);
     void setViewStartBeat (t::BeatPosition b);

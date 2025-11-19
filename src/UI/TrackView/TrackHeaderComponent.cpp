@@ -116,6 +116,8 @@ void TrackHeaderComponent::setArmed (const bool shouldBeArmed)
     recordArmButton.setToggleState (shouldBeArmed, juce::dontSendNotification);
 }
 
+void TrackHeaderComponent::setArmButtonEnabled (const bool enabled) { recordArmButton.setEnabled (enabled); }
+
 void TrackHeaderComponent::setDimmed (const bool dim)
 {
     setAlpha (dim ? 0.6f : 1.0f);

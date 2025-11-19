@@ -16,8 +16,23 @@ class TransportBar;
 class GrooveKitMenuBar;
 
 /**
- * Represents the track editor view, with functionality for adding and deleting tracks.
- * Each track contains a corresponding header, footer, and a series of MIDI clips.
+ * @brief Main track editor view with transport controls and MIDI recording UI.
+ *
+ * TrackEditView provides the primary sequencer interface, including:
+ *  - Transport controls (play, stop, record)
+ *  - BPM editing and metronome toggle
+ *  - Track list display with scrolling viewport
+ *  - Piano roll editor for MIDI clip editing
+ *  - Menu bar for file and track operations
+ *
+ * The view inherits from juce::Timer to update UI state in real-time, such as
+ * the record button visual feedback during recording.
+ *
+ * Recording workflow:
+ *  1. User arms a track (handled by TrackHeaderComponent)
+ *  2. User clicks the record button
+ *  3. Timer callback updates button appearance to indicate recording state
+ *  4. User clicks record button again to stop
  */
 class TrackEditView final : public juce::Component
 {
@@ -73,9 +88,24 @@ private:
     void parentHierarchyChanged() override;
     void mouseDown (const juce::MouseEvent&) override;
 
+    /**
+     * @brief Timer callback for UI state updates (100ms interval).
+     *
+     * Updates the record button appearance based on the current recording state:
+     *  - Recording: Brighter red color for visual feedback
+     *  - Not recording: Normal red color
+     *
+     * This provides real-time visual indication of recording status without
+     * requiring manual UI refresh calls from the recording subsystem.
+     */
+    void timerCallback() override;
+    void updateRecordButtonAppearance();
+
     juce::TextButton backButton { "Back" }, newEditButton { "New" },
         openEditButton { "Open Edit" }, newTrackButton { "New Track" }, outputButton { "Output Device" },
         mixViewButton { "Mix View" };
     juce::TextButton loopButton { "loop" };
+
+    bool wasRecording = false;  ///< Track previous recording state to detect changes
 
 };
