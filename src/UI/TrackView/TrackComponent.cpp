@@ -38,8 +38,17 @@ void TrackComponent::paint (juce::Graphics& g)
     const auto r = getLocalBounds().toFloat().reduced (1.0f);
     constexpr float radius = 10.0f;
 
-    // Background
-    g.setColour (trackColor.darker (0.4f));
+    // Background - add red tint if this track is armed and recording
+    auto bgColor = trackColor.darker (0.4f);
+
+    if (appEngine && appEngine->isRecording() &&
+        appEngine->getArmedTrackIndex() == trackIndex)
+    {
+        // Blend with red to indicate active recording on this track
+        bgColor = bgColor.interpolatedWith(juce::Colours::darkred, 0.3f);
+    }
+
+    g.setColour (bgColor);
     g.fillRoundedRectangle (r, radius);
 
     // Rounded border

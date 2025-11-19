@@ -576,6 +576,23 @@ TrackEditView::PianoRollResizerBar::~PianoRollResizerBar ()
 void TrackEditView::timerCallback()
 {
     updateRecordButtonAppearance();
+
+    const bool isRecording = appEngine->isRecording();
+    const int armedTrackIndex = appEngine->getArmedTrackIndex();
+
+    // Repaint the armed track while recording to show red tint
+    if (isRecording && armedTrackIndex >= 0 && trackList)
+    {
+        trackList->repaintTrack(armedTrackIndex);
+    }
+
+    // If recording just stopped, repaint one more time to clear the red tint
+    if (wasRecording && !isRecording && armedTrackIndex >= 0 && trackList)
+    {
+        trackList->repaintTrack(armedTrackIndex);
+    }
+
+    wasRecording = isRecording;
 }
 
 void TrackEditView::updateRecordButtonAppearance()

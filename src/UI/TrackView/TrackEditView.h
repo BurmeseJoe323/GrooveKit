@@ -126,4 +126,6 @@ private:
         mixViewButton { "Mix View" };
     juce::TextButton loopButton { "loop" };
 
+    bool wasRecording = false;  ///< Track previous recording state to detect changes
+
 };

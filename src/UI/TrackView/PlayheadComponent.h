@@ -10,7 +10,7 @@ namespace t = tracktion;
 class PlayheadComponent final : public juce::Component, juce::Timer
 {
 public:
-    PlayheadComponent (te::Edit&, EditViewState&);
+    PlayheadComponent (te::Edit&, EditViewState&, AppEngine&);
 
     void paint (juce::Graphics& g) override;
     bool hitTest (int x, int y) override;
@@ -25,6 +25,7 @@ private:
 
     te::Edit& edit;
     EditViewState& editViewState;
+    AppEngine& appEngine;
 
     int xPosition = 0;
     double pixelsPerBeat = 100.0;

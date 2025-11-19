@@ -1,15 +1,21 @@
 #include "PlayheadComponent.h"
 
-PlayheadComponent::PlayheadComponent (te::Edit& e, EditViewState& evs)
+PlayheadComponent::PlayheadComponent (te::Edit& e, EditViewState& evs, AppEngine& ae)
     : edit (e),
-      editViewState (evs)
+      editViewState (evs),
+      appEngine (ae)
 {
     startTimerHz (30);
 }
 
 void PlayheadComponent::paint (juce::Graphics& g)
 {
-    g.setColour (juce::Colours::aqua);
+    // Change playhead color to red during recording
+    if (appEngine.isRecording())
+        g.setColour (juce::Colours::red);
+    else
+        g.setColour (juce::Colours::aqua);
+
     g.drawRect (xPosition, 0, 2, getHeight());
 }
 
