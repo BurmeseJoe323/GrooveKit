@@ -16,66 +16,201 @@ class TransportBar;
 class GrooveKitMenuBar;
 
 /**
- * Represents the track editor view, with functionality for adding and deleting tracks.
- * Each track contains a corresponding header, footer, and a series of MIDI clips.
+ * @brief Main track editing view with timeline, MIDI clips, and resizable piano roll editor.
+ *
+ * TrackEditView is the primary interface for arranging and editing MIDI content in GrooveKit.
+ * It presents a horizontal timeline with track lanes, MIDI clips, and an integrated piano roll
+ * that appears when a clip is double-clicked. This view complements MixView by focusing on
+ * composition and MIDI editing rather than mixing.
+ *
+ * Architecture:
+ *  - Owns TrackListComponent (scrollable track lanes with headers and clips)
+ *  - Owns PianoRollEditor (resizable MIDI note editor)
+ *  - Shares TransportBar and GrooveKitMenuBar with MixView (non-owning pointers)
+ *  - Uses StretchableLayoutManager for vertical piano roll resizing
+ *  - Handles MIDI keyboard input (QWERTY and physical MIDI) for live playback
+ *
+ * Piano Roll System:
+ *  - Piano roll visibility controlled by showPianoRoll()/hidePianoRoll()
+ *  - Tracks currently edited clip via pianoRollClip pointer
+ *  - Resizable with drag bar using JUCE's StretchableLayoutResizerBar
+ *  - PianoRollResizerBar nested class handles resize events
+ *
+ * View Management:
+ *  - Updates menu bar to Track Edit mode when becoming visible
+ *  - Maintains zoom state (pixelsPerBeat) and scroll position (viewStartBeat)
+ *  - Propagates zoom/scroll changes to TrackListComponent
+ *
+ * Usage:
+ *  - Created by MainComponent alongside MixView
+ *  - Double-click MIDI clip to show piano roll (via TrackClip callbacks)
+ *  - Set onBack callback for navigation to home screen
+ *  - Set onOpenMix callback for switching to Mix view
  */
 class TrackEditView final : public juce::Component
 {
 public:
+    //==============================================================================
+    // Construction / Destruction
+
+    /**
+     * @brief Constructs the Track Edit view with shared components.
+     *
+     * @param engine Reference to AppEngine for track/clip access
+     * @param transport Reference to shared TransportBar component
+     * @param menuBar Reference to shared GrooveKitMenuBar component
+     */
     explicit TrackEditView (AppEngine& engine, TransportBar& transport, GrooveKitMenuBar& menuBar);
+
+    /** Destructor. */
     ~TrackEditView() override;
+
+    //==============================================================================
+    // Component Overrides
 
     void paint (juce::Graphics&) override;
     void resized() override;
-    bool keyPressed (const juce::KeyPress&) override;
-    bool keyStateChanged(bool isKeyDown) override;
+
+    //==============================================================================
+    // Keyboard and Mouse Handlers
 
     /**
-     * Called when Back is pressed. Should return to home screen.
+     * @brief Handles keyboard presses for MIDI playback via QWERTY keyboard.
+     *
+     * Maps Q-I keys to MIDI notes C-C for live performance input.
+     * Spacebar toggles transport play/stop.
+     *
+     * @param key KeyPress event
+     * @return true if handled
      */
-    std::function<void()> onBack;
-    std::function<void()> onOpenMix;
+    bool keyPressed (const juce::KeyPress&) override;
 
+    /**
+     * @brief Handles key state changes for note-off events.
+     *
+     * @param isKeyDown True if any key is currently pressed
+     * @return true if handled
+     */
+    bool keyStateChanged(bool isKeyDown) override;
+
+    //==============================================================================
+    // Piano Roll Management
+
+    /**
+     * @brief Shows the piano roll editor for the given MIDI clip.
+     *
+     * Opens the resizable piano roll panel below the track list, allowing
+     * note editing for the specified clip. Updates menu bar callbacks to
+     * ensure piano roll closes when tracks are added.
+     *
+     * @param clip Pointer to MidiClip to edit (must be valid)
+     */
     void showPianoRoll (te::MidiClip* clip);
-    void hidePianoRoll();
-    void refreshClipEditState(); // Restore clip highlight after rebuild (Written by Claude Code)
 
+    /**
+     * @brief Hides the piano roll editor and returns to track-only view.
+     *
+     * Collapses the piano roll panel and clears the edited clip reference.
+     */
+    void hidePianoRoll();
+
+    /**
+     * @brief Restores clip highlight state after track rebuild.
+     *
+     * When tracks are rebuilt (e.g., after adding/deleting tracks), this method
+     * re-applies the visual highlight to the currently edited clip in the piano roll.
+     */
+    void refreshClipEditState();
+
+    /**
+     * @brief Returns the track index of the clip currently being edited in piano roll.
+     *
+     * @return Track index, or -1 if piano roll not visible
+     */
     int getPianoRollIndex() const;
 
+    //==============================================================================
+    // Callbacks
+
+    std::function<void()> onBack; ///< Callback to navigate back to home screen
+    std::function<void()> onOpenMix; ///< Callback to switch to Mix view
+
+    //==============================================================================
+    // Nested Classes
+
+    /**
+     * @brief Custom resizer bar for adjusting piano roll height.
+     *
+     * Extends StretchableLayoutResizerBar to provide visual feedback and
+     * handle drag events for resizing the piano roll panel.
+     */
     class PianoRollResizerBar final : public juce::StretchableLayoutResizerBar
     {
     public:
+        /**
+         * @brief Constructs the resizer bar.
+         *
+         * @param layoutToUse Pointer to the layout manager
+         * @param itemIndexInLayout Index of the resizable item
+         * @param isBarVertical True if vertical orientation
+         */
         PianoRollResizerBar (juce::StretchableLayoutManager* layoutToUse, int itemIndexInLayout, bool isBarVertical);
+
+        /** Destructor. */
         ~PianoRollResizerBar() override;
 
+        /**
+         * @brief Called when the resizer bar has been moved.
+         */
         void hasBeenMoved() override;
+
+        /**
+         * @brief Handles mouse drag events for resizing.
+         *
+         * @param event Mouse event
+         */
         void mouseDrag (const juce::MouseEvent& event) override;
     };
 
 private:
-    std::shared_ptr<AppEngine> appEngine;
-    TransportBar* transportBar;
-    GrooveKitMenuBar* menuBar;
+    //==============================================================================
+    // Component Overrides (Private)
 
-    std::unique_ptr<TrackListComponent> trackList;
-    juce::Viewport viewport;
-
-    std::unique_ptr<PianoRollEditor> pianoRoll;
-    juce::StretchableLayoutManager verticalLayout;
-    std::unique_ptr<PianoRollResizerBar> resizerBar;
-    te::MidiClip* pianoRollClip = nullptr; // currently edited clip (if any)
-    int pianoRollTrackIndex = -1;
-    bool pianoRollVisible = false;
-
-    double pixelsPerBeat = 100.0;
-    t::BeatPosition viewStartBeat = t::BeatPosition::fromBeats(0.0);
-
+    /**
+     * @brief Updates menu bar mode when view becomes visible.
+     */
     void parentHierarchyChanged() override;
+
+    /**
+     * @brief Ensures focus for keyboard input.
+     *
+     * @param event Mouse event
+     */
     void mouseDown (const juce::MouseEvent&) override;
+
+    //==============================================================================
+    // Member Variables
+
+    std::shared_ptr<AppEngine> appEngine; ///< Shared pointer to global engine (non-owning wrapper)
+    TransportBar* transportBar; ///< Non-owning pointer to shared transport bar
+    GrooveKitMenuBar* menuBar; ///< Non-owning pointer to shared menu bar
+
+    std::unique_ptr<TrackListComponent> trackList; ///< Owned track list with timeline and clips
+    juce::Viewport viewport; ///< Scrollable viewport containing track list
+
+    std::unique_ptr<PianoRollEditor> pianoRoll; ///< Owned piano roll editor (created on demand)
+    juce::StretchableLayoutManager verticalLayout; ///< Layout manager for piano roll resizing
+    std::unique_ptr<PianoRollResizerBar> resizerBar; ///< Owned resizer bar between track list and piano roll
+    te::MidiClip* pianoRollClip = nullptr; ///< Currently edited clip in piano roll (not owned)
+    int pianoRollTrackIndex = -1; ///< Track index of currently edited clip
+    bool pianoRollVisible = false; ///< Whether piano roll is currently visible
+
+    double pixelsPerBeat = 100.0; ///< Horizontal zoom level (pixels per beat)
+    t::BeatPosition viewStartBeat = t::BeatPosition::fromBeats(0.0); ///< Horizontal scroll position
 
     juce::TextButton backButton { "Back" }, newEditButton { "New" },
         openEditButton { "Open Edit" }, newTrackButton { "New Track" }, outputButton { "Output Device" },
-        mixViewButton { "Mix View" };
-    juce::TextButton loopButton { "loop" };
+        mixViewButton { "Mix View" }; ///< Legacy UI buttons (deprecated)
+    juce::TextButton loopButton { "loop" }; ///< Legacy loop button (deprecated)
 
 };
