@@ -155,6 +155,14 @@ private:
      */
     void recordMidiMessage(const juce::MidiMessage& message);
 
+    /**
+     * @brief Handles loop wraparound by clearing the recording buffer.
+     *
+     * Called when the transport loops back to the start while recording.
+     * Clears the recorded sequence and active notes to start a fresh loop pass.
+     */
+    void handleLoopWraparound();
+
     //==============================================================================
     // Member Variables
 
@@ -173,6 +181,7 @@ private:
     bool hasRecordedNotes = false;                           ///< Whether any MIDI notes have been captured yet.
 
     std::vector<juce::MidiKeyboardState*> attachedSources;   ///< Keyboard states we're listening to.
+    std::set<int> activeNotes;                               ///< Currently held notes (note numbers without matching note-offs).
 
     juce::CriticalSection recordingLock;                     ///< Thread safety for recording buffer.
 };

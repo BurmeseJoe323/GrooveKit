@@ -61,6 +61,7 @@ void MidiRecorder::startRecording(te::Edit& edit, int trackIndex,
     {
         const ScopedLock sl(recordingLock);
         recordedSequence.clear();
+        activeNotes.clear();
     }
 
     // Attach to hardware MIDI devices
@@ -121,6 +122,57 @@ bool MidiRecorder::stopRecording(te::Edit& edit)
 
     recording = false;
 
+    // Handle any notes that are still being held down
+    // Synthesize note-off events at the current transport position
+    std::set<int> heldNotes;
+    {
+        const ScopedLock sl(recordingLock);
+        heldNotes = activeNotes;  // Copy the set
+    }
+
+    if (!heldNotes.empty())
+    {
+        Logger::writeToLog("[MidiRecorder] Synthesizing note-offs for " +
+                          String(heldNotes.size()) + " held note(s)");
+
+        auto& transport = edit.getTransport();
+        auto currentPosition = transport.getPosition();
+        auto timeSinceRecordingStart = currentPosition - recordingStartPosition;
+        double relativeTime = timeSinceRecordingStart.inSeconds();
+
+        for (int noteNumber : heldNotes)
+        {
+            // Add note-off to the recording sequence at current position
+            auto noteOffMessage = juce::MidiMessage::noteOff(1, noteNumber, 0.0f);
+            noteOffMessage.setTimeStamp(relativeTime);
+
+            {
+                const ScopedLock sl(recordingLock);
+                recordedSequence.addEvent(noteOffMessage);
+            }
+
+            Logger::writeToLog("[MidiRecorder] Synthesized note-off for note " + String(noteNumber));
+        }
+    }
+
+    // Send note-offs to all attached keyboard states to stop any hanging notes in the synth
+    for (auto* keyboardState : attachedSources)
+    {
+        if (keyboardState != nullptr)
+        {
+            for (int noteNumber : heldNotes)
+            {
+                keyboardState->noteOff(1, noteNumber, 0.0f);
+            }
+        }
+    }
+
+    // Clear active notes tracking
+    {
+        const ScopedLock sl(recordingLock);
+        activeNotes.clear();
+    }
+
     // Restore clips' original mute states
     for (auto& [clip, wasMuted] : clipsToRestore)
     {
@@ -164,11 +216,30 @@ tracktion::TimeRange MidiRecorder::getPreviewClipBounds() const
     if (!recording || !currentEdit)
         return tracktion::TimeRange();
 
-    // Return range from recording start position to current transport position
-    // This shows the preview immediately when recording starts
     auto& transport = currentEdit->getTransport();
     auto currentPos = transport.getPosition();
 
+    // Detect loop wraparound proactively (even if no MIDI is being played)
+    // This ensures the buffer clears when looping, even during silence
+    if (transport.looping)
+    {
+        auto loopRange = transport.getLoopRange();
+
+        // Check if we wrapped from near the end back to near the start
+        if (lastRecordedPosition > loopRange.getStart() &&
+            currentPos < lastRecordedPosition)
+        {
+            // Loop wraparound detected - clear the buffer
+            // Need to cast away const since we're modifying state, but this is
+            // called from UI thread at 30Hz so it's safe
+            const_cast<MidiRecorder*>(this)->handleLoopWraparound();
+        }
+    }
+
+    // Update last position (cast away const - safe because called from UI thread)
+    const_cast<MidiRecorder*>(this)->lastRecordedPosition = currentPos;
+
+    // Return range from recording start position to current transport position
     return tracktion::TimeRange(recordingStartPosition, currentPos);
 }
 
@@ -184,6 +255,12 @@ void MidiRecorder::handleNoteOn(juce::MidiKeyboardState* source, int midiChannel
     auto message = MidiMessage::noteOn(midiChannel, midiNoteNumber, velocity);
     recordMidiMessage(message);
 
+    // Track this note as active (held down)
+    {
+        const ScopedLock sl(recordingLock);
+        activeNotes.insert(midiNoteNumber);
+    }
+
     Logger::writeToLog("[MidiRecorder] NOTE ON:  Note=" + String(midiNoteNumber) +
                       " Velocity=" + String(velocity, 2) +
                       " Channel=" + String(midiChannel));
@@ -195,8 +272,29 @@ void MidiRecorder::handleNoteOff(juce::MidiKeyboardState* source, int midiChanne
     if (!recording)
         return;
 
+    // Check if this note-off has a corresponding note-on in the buffer
+    // If not, discard it (this happens when holding notes across loop boundary)
+    bool hasMatchingNoteOn = false;
+    {
+        const ScopedLock sl(recordingLock);
+        hasMatchingNoteOn = activeNotes.count(midiNoteNumber) > 0;
+    }
+
+    if (!hasMatchingNoteOn)
+    {
+        Logger::writeToLog("[MidiRecorder] Discarding orphaned NOTE OFF (no matching note-on): Note=" +
+                          String(midiNoteNumber));
+        return;
+    }
+
     auto message = MidiMessage::noteOff(midiChannel, midiNoteNumber, velocity);
     recordMidiMessage(message);
+
+    // Remove this note from active set
+    {
+        const ScopedLock sl(recordingLock);
+        activeNotes.erase(midiNoteNumber);
+    }
 
     Logger::writeToLog("[MidiRecorder] NOTE OFF: Note=" + String(midiNoteNumber) +
                       " Velocity=" + String(velocity, 2) +
@@ -383,6 +481,16 @@ bool MidiRecorder::createClipFromRecording(te::Edit& edit)
     return true;
 }
 
+void MidiRecorder::handleLoopWraparound()
+{
+    Logger::writeToLog("[MidiRecorder] Loop wraparound detected - clearing recording buffer");
+
+    // Clear the buffer to start a fresh recording pass
+    const ScopedLock sl(recordingLock);
+    recordedSequence.clear();
+    activeNotes.clear();  // Clear held notes from previous loop pass
+}
+
 void MidiRecorder::recordMidiMessage(const juce::MidiMessage& message)
 {
     if (!currentEdit)
@@ -400,13 +508,7 @@ void MidiRecorder::recordMidiMessage(const juce::MidiMessage& message)
         if (lastRecordedPosition > loopRange.getStart() &&
             currentPosition < lastRecordedPosition)
         {
-            Logger::writeToLog("[MidiRecorder] Loop wraparound detected - clearing recording buffer");
-
-            // Clear the buffer to start a fresh recording pass
-            {
-                const ScopedLock sl(recordingLock);
-                recordedSequence.clear();
-            }
+            handleLoopWraparound();
         }
     }
 

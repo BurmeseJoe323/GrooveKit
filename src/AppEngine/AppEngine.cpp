@@ -149,9 +149,27 @@ void AppEngine::setArmedTrack (int index)
 
     selectedTrackIndex = index;
 
-    // Route MIDI to armed track (setTarget will update the routing automatically)
+    // Route MIDI to armed track, or clear routing if disarming
     if (index >= 0)
+    {
         audioEngine->routeMidiToTrack(*edit, index);
+    }
+    else
+    {
+        // Disarm: clear MIDI routing from all devices by setting target to invalid ID
+        for (auto* instance : edit->getAllInputDevices())
+        {
+            if (instance->getInputDevice().getDeviceType() == te::InputDevice::physicalMidiDevice)
+            {
+                // Clear target by setting to an invalid EditItemID
+                [[maybe_unused]] auto result = instance->setTarget(te::EditItemID(), false, nullptr, 0);
+                // Disable recording on all tracks for this device
+                for (auto* track : te::getAudioTracks(*edit))
+                    instance->setRecordingEnabled(track->itemID, false);
+            }
+        }
+        juce::Logger::writeToLog("[AppEngine] Cleared MIDI routing (track disarmed)");
+    }
 
     if (onArmedTrackChanged)
         onArmedTrackChanged();
