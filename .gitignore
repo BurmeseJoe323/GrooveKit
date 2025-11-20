@@ -20,10 +20,6 @@ x64/Release/
 **/melatonin_inspector/
 EOF
 
-# Ignore user-specific JUCE path configuration
-cmake/JUCEPath.cmake
-cmake/TracktionPath.cmake
-
 .idea/
 
 #ignore users database
@@ -35,7 +31,6 @@ groovekit.db
 .vscode/
 # VSCode
 .vscode/
-tracktion_engine/
 # Claude config
 /CLAUDE.md
 .claude/
