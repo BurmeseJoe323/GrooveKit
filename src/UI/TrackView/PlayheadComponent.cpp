@@ -8,9 +8,20 @@ PlayheadComponent::PlayheadComponent (te::Edit& e, EditViewState& evs, AppEngine
     startTimerHz (30);
 }
 
+/**
+ * @brief Renders the playhead as a vertical line at the current transport position.
+ *
+ * **Visual Feedback** (added Nov 19, 2025):
+ * - **Red**: Recording is active (provides clear visual indication of capture in progress)
+ * - **Aqua**: Normal playback or stopped (default playhead color)
+ *
+ * The 2-pixel wide line is drawn at the xPosition calculated in timerCallback().
+ *
+ * @param g Graphics context for rendering.
+ */
 void PlayheadComponent::paint (juce::Graphics& g)
 {
-    // Change playhead color to red during recording
+    // Change playhead color to red during recording (Nov 19, 2025)
     if (appEngine.isRecording())
         g.setColour (juce::Colours::red);
     else

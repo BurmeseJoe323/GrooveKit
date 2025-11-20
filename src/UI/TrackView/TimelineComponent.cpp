@@ -154,9 +154,23 @@ static bool near (int px, int target, int slop)
     return std::abs (px - target) <= slop;
 }
 
+/**
+ * @brief Handles mouse-down events for playhead positioning, loop range editing, and panning.
+ *
+ * Mouse interaction modes:
+ * - **Alt/Option + Click**: Instantly position playhead at clicked beat (added Nov 19, 2025)
+ * - **Shift + Left Click**: Begin horizontal panning of timeline view
+ * - **Middle Mouse Button**: Begin horizontal panning of timeline view
+ * - **Normal Click**: Create new loop range or resize existing loop boundaries
+ *
+ * Loop range editing supports dragging start/end boundaries and snaps to whole beats.
+ *
+ * @param e The mouse event containing position and modifiers.
+ */
 void ui::TimelineComponent::mouseDown (const juce::MouseEvent& e)
 {
-    // Alt/Option + Click: Position playhead at clicked location
+    // Alt/Option + Click: Position playhead at clicked location (Nov 19, 2025)
+    // Provides quick navigation following standard DAW conventions
     if (e.mods.isAltDown())
     {
         setTransportPositionFromX (e.x, false);
