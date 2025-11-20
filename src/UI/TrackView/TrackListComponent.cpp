@@ -192,6 +192,23 @@ TrackListComponent::TrackListComponent (const std::shared_ptr<AppEngine>& engine
     };
 }
 
+/**
+ * @brief Destructor. Clears AppEngine callbacks to prevent use-after-free crashes.
+ *
+ * **CRITICAL**: UI components that register callbacks on AppEngine MUST clear them in
+ * destructors. AppEngine typically outlives UI components (e.g., when switching views).
+ * If callbacks capture `this` pointer, invoking them after component destruction causes
+ * segmentation fault.
+ *
+ * **Bug History**: BPM change crashed with segfault when external plugins loaded (Nov 19, 2025).
+ * Root cause: onBpmChanged callback captured `this` pointer that became dangling when
+ * TrackListComponent was destroyed but AppEngine remained alive.
+ *
+ * **Pattern**: All UI components registering AppEngine callbacks should follow this pattern.
+ *
+ * @see AppEngine::onBpmChanged
+ * @see AppEngine::onArmedTrackChanged
+ */
 TrackListComponent::~TrackListComponent()
 {
     // Clear callbacks to prevent use-after-free when AppEngine outlives this component
