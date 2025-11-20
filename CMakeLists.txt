@@ -3,8 +3,8 @@ project(GrooveKit VERSION 1.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include(${CMAKE_SOURCE_DIR}/cmake/JUCEPath.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/TracktionPath.cmake)
+# Use Tracktion Engine from third-party/ (includes JUCE as submodule)
+set(TRACKTION_ENGINE_PATH "${CMAKE_SOURCE_DIR}/third-party/tracktion_engine" CACHE PATH "Path to Tracktion Engine")
 
 add_subdirectory(${TRACKTION_ENGINE_PATH}/modules/juce ${CMAKE_BINARY_DIR}/juce)
 
