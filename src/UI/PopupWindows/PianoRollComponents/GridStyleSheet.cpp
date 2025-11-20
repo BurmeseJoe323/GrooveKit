@@ -4,11 +4,19 @@
 
 #include "GridStyleSheet.h"
 
+//==============================================================================
+// Lifecycle
+//==============================================================================
+
 GridStyleSheet::GridStyleSheet() {
     drawMIDINum = false;
     drawMIDINoteStr = false;
     drawVelocity = false;
 }
+
+//==============================================================================
+// Display Option Accessors
+//==============================================================================
 
 bool GridStyleSheet::getDrawMIDINum() {
     return drawMIDINum;

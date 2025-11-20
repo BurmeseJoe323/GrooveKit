@@ -4,6 +4,10 @@
 
 #include "PianoRollEditor.h"
 
+//==============================================================================
+// Construction / Destruction
+//==============================================================================
+
 PianoRollEditor::PianoRollEditor (AppEngine& engine, te::MidiClip* clip)
     : noteGrid (gridStyleSheet, engine, clip),
       controlPanel (noteGrid, gridStyleSheet)
@@ -82,6 +86,10 @@ PianoRollEditor::PianoRollEditor (AppEngine& engine, int trackIndex)
 }())
 {}
 
+//==============================================================================
+// Component Overrides
+//==============================================================================
+
 void PianoRollEditor::paint (juce::Graphics& g)
 {
     g.fillAll (juce::Colours::darkgrey.darker());
@@ -95,6 +103,10 @@ void PianoRollEditor::paintOverChildren (juce::Graphics& g)
     g.setColour (juce::Colours::greenyellow);
     g.drawLine (x - xAbsolute, 0, x - xAbsolute, getHeight(), 5.0);
 }
+
+//==============================================================================
+// UI Control
+//==============================================================================
 
 void PianoRollEditor::showControlPanel (bool state)
 {
@@ -120,6 +132,10 @@ void PianoRollEditor::resized()
 
     controlPanel.setBounds (5, gridView.getBottom() + 5, getWidth() - 10, 80);
 }
+
+//==============================================================================
+// Setup and Configuration
+//==============================================================================
 
 void PianoRollEditor::setStyleSheet (GridStyleSheet style)
 {
@@ -171,15 +187,32 @@ void PianoRollEditor::updateBars (const int newNumberOfBars)
 //     //    setScroll(0.0, scrollRatio);
 // }
 
+//==============================================================================
+// Data Access
+//==============================================================================
+
 const te::MidiList& PianoRollEditor::getSequence()
 {
     return noteGrid.getSequence();
 }
 
+GridControlPanel& PianoRollEditor::getControlPanel()
+{
+    return controlPanel;
+}
+
+//==============================================================================
+// Scrolling and View Control
+//==============================================================================
+
 void PianoRollEditor::setScroll (double x, double y)
 {
     gridView.setViewPositionProportionately (x, y);
 }
+
+//==============================================================================
+// Playback Marker
+//==============================================================================
 
 void PianoRollEditor::setPlaybackMarkerPosition (const st_int ticks, bool isVisible)
 {
@@ -196,11 +229,6 @@ void PianoRollEditor::setPlaybackMarkerPosition (const st_int ticks, bool isVisi
     const int xAbsolute = gridView.getViewPosition().getX();
 
     repaint();
-}
-
-GridControlPanel& PianoRollEditor::getControlPanel()
-{
-    return controlPanel;
 }
 
 bool PianoRollEditor::keyPressed (const juce::KeyPress& k)
