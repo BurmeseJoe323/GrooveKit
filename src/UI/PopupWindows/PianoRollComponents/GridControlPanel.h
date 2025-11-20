@@ -40,8 +40,6 @@ private:
     NoteGridComponent & noteGrid;
     GridStyleSheet & styleSheet;
 
-    juce::Slider noteCompHeight, pixelsPerBar;
-
     juce::TextButton deleteNotes;
     // juce::ToggleButton drawMIDINotes, drawMIDIText, drawVelocity;
 

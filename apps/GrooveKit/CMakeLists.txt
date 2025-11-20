@@ -11,9 +11,8 @@ target_compile_definitions(GrooveKit PRIVATE
 
 target_link_libraries(GrooveKit
         PRIVATE
-        app_ui
         app_engine
-        database_manager
+        app_ui
         tracktion_engine
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags

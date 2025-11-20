@@ -2,10 +2,10 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "TrackView/TrackEditView.h"
+#include "MixView/MixView.h"
+#include "TransportBar/TransportBar.h"
+#include "MenuBar/GrooveKitMenuBar.h"
 #include "../AppEngine/AppEngine.h"
-#include "TrackEditViewTutorial/TrackEditViewTutorial.h"
-#include "../DatabaseManager/DatabaseManager.h"
-#include <juce_gui_basics/juce_gui_basics.h>
 
 class MainComponent final : public juce::Component
 {
@@ -13,18 +13,16 @@ public:
     MainComponent();
     ~MainComponent() override;
 
-
-    void showWelcomeView();
-    void showTrackViewTutorial();
-    void showInstrumentTutorial();
-
     void resized() override;
 
-    void reportDatabaseSize();
-
 private:
-    std::unique_ptr<Component> view;
-    AppEngine appEngine;
+    void showTrackView();
+    void showMixView();
 
-    DatabaseManager databaseManager;
+    void setView(std::unique_ptr<juce::Component> newView);
+
+    std::unique_ptr<juce::Component> view;
+    AppEngine appEngine;
+    std::unique_ptr<TransportBar> transportBar;
+    std::unique_ptr<GrooveKitMenuBar> menuBar;
 };

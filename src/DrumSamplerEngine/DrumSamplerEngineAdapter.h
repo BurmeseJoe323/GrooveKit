@@ -1,158 +1,195 @@
 #pragma once
+
 #include "../UI/DrumSamplerView/DrumSamplerEngine.h"
 #include <tracktion_engine/tracktion_engine.h>
 #include <tracktion_graph/tracktion_graph.h>
 #include <juce_audio_formats/juce_audio_formats.h>
 
 #include <utility>
-namespace te = tracktion;
 
-static inline int padToMidiNote (int padIndex) { return 36 + juce::jlimit (0, 15, padIndex); }
+namespace te = tracktion::engine;
 
+/**
+ * @brief Converts drum pad index (0–15) to MIDI note number (36–51).
+ *
+ * Maps pad layout to General MIDI drum map range:
+ *  - Pad 0 → MIDI note 36 (Kick)
+ *  - Pad 15 → MIDI note 51 (Ride cymbal)
+ *
+ * @param padIndex Pad index (0–15, clamped if out of range).
+ * @return MIDI note number in the range [36, 51].
+ */
+static inline int padToMidiNote (int padIndex)
+{
+    return 36 + juce::jlimit (0, 15, padIndex);
+}
+
+/**
+ * @brief Adapts Tracktion Engine's SamplerPlugin to GrooveKit's DrumSamplerEngine interface.
+ *
+ * DrumSamplerEngineAdapter bridges the gap between GrooveKit's abstract DrumSamplerEngine
+ * interface (used by DrumSamplerView UI) and Tracktion Engine's concrete SamplerPlugin.
+ *
+ * Responsibilities:
+ *  - Create or find a te::SamplerPlugin on the given te::AudioTrack.
+ *  - Manage a 16-pad drum sampler mapped to MIDI notes 36–51.
+ *  - Load WAV files into specific note slots.
+ *  - Trigger samples via live MIDI injection into the track.
+ *  - Keep per-pad display names for the UI.
+ *
+ * Ownership:
+ *  - Holds references to te::Engine and te::AudioTrack (not owned).
+ *  - Holds a raw pointer to a te::SamplerPlugin created/owned by the Edit.
+ *
+ * Usage:
+ *  - Created by TrackManager when a drum track is added.
+ *  - DrumSamplerView calls loadSampleIntoSlot() to assign WAV files.
+ *  - DrumPadComponent calls triggerSlot() to play a pad.
+ */
 class DrumSamplerEngineAdapter : public DrumSamplerEngine
 {
 public:
-    DrumSamplerEngineAdapter (te::Engine& eng, te::AudioTrack& trk)
-        : engine (eng), track (trk)
-    {
-        sampler = findOrCreateSampler();
+    //==============================================================================
+    // Construction / Destruction
 
-        for (int i = 0; i < 16; ++i)
-            slotNames[i] = "Pad " + juce::String (i + 1);
-    }
+    /**
+     * @brief Constructs an adapter bound to a specific Tracktion audio track.
+     *
+     * Attempts to find an existing SamplerPlugin on the track. If none is found,
+     * it creates a new SamplerPlugin and inserts it at index 0 in the track's
+     * plugin list.
+     *
+     * @param engine Tracktion Engine instance (not owned).
+     * @param track Audio track to attach the sampler to (not owned).
+     */
+    DrumSamplerEngineAdapter (te::Engine& engine, te::AudioTrack& track);
 
-    void loadSampleIntoSlot (int slot, const juce::File& file) override
-    {
-        if (! sampler) return;
+    /** Default virtual destructor. */
+    ~DrumSamplerEngineAdapter() override = default;
 
-        const int pad   = juce::jlimit (0, 15, slot);
-        const int note  = padToMidiNote (pad);
-        const auto name = file.getFileNameWithoutExtension();
+    //==============================================================================
+    // DrumSamplerEngine Overrides
 
-        if (int idx = findSoundForNote (note); idx >= 0)
-        {
-            sampler->setSoundMedia  (idx, file.getFullPathName());
-            sampler->setSoundParams (idx, note, note, note);
-            sampler->setSoundName   (idx, name);
-            DBG ("[Sampler] Reused sound idx=" << idx << " for note " << note << " -> " << file.getFileName());
-        }
-        else
-        {
-            const double len   = fileLengthSeconds (file);
-            const int    before = sampler->getNumSounds();
+    /**
+     * @brief Loads a sample file into a drum pad slot.
+     *
+     * Assigns the sample to the pad's corresponding MIDI note (36–51) in the
+     * underlying SamplerPlugin. If a sound is already mapped to this note,
+     * it reuses the slot; otherwise a new sound is created.
+     *
+     * @param slot Drum pad index (0–15).
+     * @param file WAV file to load into the pad.
+     */
+    void loadSampleIntoSlot (int slot, const juce::File& file) override;
 
-            sampler->addSound (file.getFullPathName(),
-                               name,
-                               0.0,
-                               len > 0.0 ? len : 1.0,
-                               0.0f);
+    /**
+     * @brief Triggers playback of a pad at a given velocity.
+     *
+     * Sends a MIDI note-on followed by an automatic note-off after a short
+     * delay (80 ms) by injecting MIDI into the associated track.
+     *
+     * @param slot Drum pad index (0–15).
+     * @param velocity Linear velocity [0.0, 1.0], mapped to MIDI 1–127.
+     */
+    void triggerSlot (int slot, float velocity) override;
 
-            const int index = (sampler->getNumSounds() > before ? before
-                                                                : sampler->getNumSounds() - 1);
+    /**
+     * @brief Sets the track's volume.
+     *
+     * Applies volume to the track's VolumePlugin, affecting all samples
+     * played on this track.
+     *
+     * @param linear01 Linear gain in [0.0, 1.0].
+     */
+    void setVolume (float linear01) override;
 
-            if (index >= 0)
-            {
-                sampler->setSoundParams (index, note, note, note);
-                sampler->setSoundName   (index, name);
-                DBG ("[Sampler] Added new sound idx=" << index << " for note " << note << " -> " << file.getFileName());
-            }
-            else
-            {
-                DBG ("[Sampler][WARN] addSound didn't create a sound (count=" << sampler->getNumSounds() << ")");
-            }
-        }
+    /**
+     * @brief Sets ADSR envelope parameters (currently unused).
+     *
+     * SamplerPlugin uses per-sample envelope settings rather than a global
+     * ADSR, so this is currently a no-op.
+     *
+     * @param a Attack time.
+     * @param d Decay time.
+     * @param s Sustain level.
+     * @param r Release time.
+     */
+    void setADSR (float a, float d, float s, float r) override;
 
-        slotNames[pad] = name;
-    }
+    /**
+     * @brief Returns the display name for a given drum pad slot.
+     *
+     * Defaults to pitch names for the mapped note (e.g., "C1", "C#1") until
+     * a sample is loaded, after which it becomes the file's base name.
+     *
+     * @param slot Drum pad index (0–15).
+     * @return Display name for the pad.
+     */
+    [[nodiscard]] juce::String getSlotName (int slot) const override;
 
-    void triggerSlot (int slot, float velocity) override
-    {
-        if (! sampler) return;
+    //==============================================================================
+    // Public Accessors
 
-        const int note = padToMidiNote (slot);
-        const juce::uint8 vel = (juce::uint8) juce::jlimit (1, 127,
-                                   (int) juce::roundToInt (velocity * 127.0f));
-
-        const int mappedIdx = findSoundForNote (note);
-        if (mappedIdx < 0)
-        {
-            DBG ("[Sampler] No sound mapped for note " << note << " (slot " << slot << ")");
-            return;
-        }
-
-        track.edit.getTransport().ensureContextAllocated();
-
-        const te::MPESourceID source ((juce::uint8) 1);
-
-        juce::MidiMessage on  = juce::MidiMessage::noteOn  (1, note, vel);
-        track.injectLiveMidiMessage (te::MidiMessageWithSource (on, source));
-
-        juce::MidiMessage off = juce::MidiMessage::noteOff (1, note);
-        juce::Timer::callAfterDelay (80, [this, off, source]
-        {
-            track.injectLiveMidiMessage (te::MidiMessageWithSource (off, source));
-        });
-    }
-
-
-
-
-
-
-    void setVolume (float linear01) override
-    {
-        track.getVolumePlugin()->setVolumeDb (juce::Decibels::gainToDecibels (juce::jlimit (0.0f, 1.0f, linear01)));
-    }
-
-    void setADSR (float a, float d, float s, float r) override
-    {
-        juce::ignoreUnused (a, d, s, r);
-    }
-    juce::String getSlotName (int slot) const override
-    {
-        return slotNames[juce::jlimit (0, 15, slot)];
-    }
-
-    te::SamplerPlugin* getSampler() const { return sampler; }
+    /**
+     * @brief Returns the underlying Tracktion SamplerPlugin.
+     *
+     * Exposes the SamplerPlugin for advanced or custom operations.
+     *
+     * @return Pointer to SamplerPlugin (may be nullptr if creation failed).
+     */
+    [[nodiscard]] te::SamplerPlugin* getSampler() const noexcept { return sampler; }
 
 private:
-    te::SamplerPlugin* findOrCreateSampler()
+    //==============================================================================
+    // Internal Methods
+
+    /**
+     * @brief Finds an existing SamplerPlugin on the track or creates a new one.
+     *
+     * Iterates the track's plugin list, returning the first SamplerPlugin if one
+     * is found. If none exists, a new SamplerPlugin is created via the plugin
+     * cache and inserted at index 0.
+     *
+     * @return Pointer to SamplerPlugin or nullptr if creation fails.
+     */
+    te::SamplerPlugin* findOrCreateSampler();
+
+    /**
+     * @brief Finds the sound index mapped to a particular MIDI note.
+     *
+     * @param note MIDI note number.
+     * @return Index of the sound mapped to this note, or -1 if none.
+     */
+    int findSoundForNote (int note) const;
+
+    /**
+     * @brief Returns the length of an audio file in seconds.
+     *
+     * Uses a JUCE AudioFormatReader to obtain the duration from metadata.
+     *
+     * @param file Audio file to inspect.
+     * @return Length in seconds, or 0.0 if the file cannot be read.
+     */
+    static double fileLengthSeconds (const juce::File& file);
+
+    //==============================================================================
+    // Member Variables
+
+    te::Engine& engine;          ///< Reference to Tracktion Engine (not owned).
+    te::AudioTrack& track;       ///< Reference to audio track (not owned).
+    te::SamplerPlugin* sampler = nullptr; ///< Underlying sampler plugin (not owned).
+
+    /**
+     * @brief Cached display names for 16 drum pads.
+     *
+     * Initially set to pitch names for the mapped MIDI notes. Updated to the
+     * sample file base name when a sample is loaded into the pad.
+     */
+    juce::Array<juce::String> slotNames
     {
-        for (auto* p : track.pluginList.getPlugins())
-            if (auto* sp = dynamic_cast<te::SamplerPlugin*>(p))
-                return sp;
-
-        te::Plugin::Ptr plugin = track.edit.getPluginCache()
-                                     .createNewPlugin(te::SamplerPlugin::xmlTypeName, {});
-        if (!plugin)
-            return nullptr;
-
-        track.pluginList.insertPlugin(plugin, 0, nullptr);
-        return dynamic_cast<te::SamplerPlugin*>(plugin.get());
-    }
-
-
-    int findSoundForNote (int note) const
-    {
-        if (!sampler) return -1;
-        const int n = sampler->getNumSounds();
-        for (int i = 0; i < n; ++i)
-            if (sampler->getKeyNote (i) == note)
-                return i;
-        return -1;
-    }
-
-    static double fileLengthSeconds (const juce::File& f)
-    {
-        juce::AudioFormatManager fm; fm.registerBasicFormats();
-        std::unique_ptr<juce::AudioFormatReader> r (fm.createReaderFor (f));
-        if (!r) return 0.0;
-        return r->lengthInSamples / r->sampleRate;
-    }
-
-    te::Engine& engine;
-    te::AudioTrack& track;
-    te::SamplerPlugin* sampler = nullptr;
-
-    juce::String slotNames[16];
+        "C1",  "C#1", "D1",  "D#1",
+        "E1",  "F1",  "F#1", "G1",
+        "G#1", "A1",  "A#1", "B1",
+        "C2",  "C#2", "D2",  "D#2"
+    };
 };

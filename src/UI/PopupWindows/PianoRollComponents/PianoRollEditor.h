@@ -8,33 +8,43 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <tracktion_engine/tracktion_engine.h>
 
+#include "../../../AppEngine/AppEngine.h"
 #include "GridControlPanel.h"
 #include "KeyboardComponent.h"
 #include "NoteGridComponent.h"
 #include "TimelineComponent.h"
-#include "../../../AppEngine/AppEngine.h"
 
-namespace te = tracktion;
+namespace te = tracktion::engine;
 
-/*
- * Custom viewport that synchronizes the scrolling movement of several viewports at once
+/**
+ * Custom viewport that synchronizes the scrolling movement of several viewports at once:
+ * Scrolls keyboard and NoteGrid vertically.
+ * Scrolls timeline and NoteGrid horizontally.
  */
-class CustomViewport : public juce::Viewport {
+class CustomViewport : public juce::Viewport
+{
 public:
-    void visibleAreaChanged(const juce::Rectangle<int> &newVisibleArea) override {
-        Viewport::visibleAreaChanged(newVisibleArea);
-        if (positionMoved) {
-            positionMoved(getViewPositionX(), getViewPositionY());
+    void visibleAreaChanged (const juce::Rectangle<int>& newVisibleArea) override
+    {
+        Viewport::visibleAreaChanged (newVisibleArea);
+        if (positionMoved)
+        {
+            positionMoved (getViewPositionX(), getViewPositionY());
         }
     }
 
-    std::function<void(int, int)> positionMoved;
+    std::function<void (int, int)> positionMoved;
 };
 
-class PianoRollEditor : public juce::Component {
+class PianoRollEditor : public juce::Component
+{
 public:
-    PianoRollEditor(std::shared_ptr<AppEngine> engine, int trackIndex);
+    PianoRollEditor (AppEngine& engine, te::MidiClip* clip);
+    PianoRollEditor (AppEngine& engine, int trackIndex);
     ~PianoRollEditor() override = default;
+
+    // Change the currently viewed/edited clip
+    void setClip (te::MidiClip* clip);
 
     /*
      * Called after the constructor to determine the size of the grid
@@ -43,21 +53,23 @@ public:
     void setup (const int bars, const int pixelsPerBar, const int noteHeight);
     void updateBars (const int newNumberOfBars);
 
-    void setScroll(double x, double y);
-    void paint(juce::Graphics &g) override;
+    void setScroll (double x, double y);
+    void paint (juce::Graphics& g) override;
     void paintOverChildren (juce::Graphics& g) override;
     void setPlaybackMarkerPosition (const st_int ticks, bool isVisible = true);
     void resized() override;
 
-    const te::MidiList &getSequence();
+    const te::MidiList& getSequence();
     // void loadSequence();
 
-    void disableEditing(bool value);
-    void setStyleSheet(GridStyleSheet styleSheet);
+    void setStyleSheet (GridStyleSheet styleSheet);
 
-    void showControlPanel(bool state);
+    void showControlPanel (bool state);
+    bool keyPressed (const juce::KeyPress& key) override;
 
-    GridControlPanel &getControlPanel();
+    GridControlPanel& getControlPanel();
+
+    std::function<void()> onClose;
 
     /*
      This is called when the grid is edited.
@@ -68,8 +80,15 @@ public:
      You can use this to implement simple MIDI synthesis when notes are being edited,
      when notes are edited this function will be called
      */
-    std::function<void(int note, int velocity)> sendChange;
+    std::function<void (int note, int velocity)> sendChange;
+
 private:
+    // Adjustable parameters for pixels per bar and pixels per note
+    float pixelsPerBar = 550, noteHeight = 15;
+
+    // Number of bars to draw
+    int numBars = 10;
+
     // Style sheet for the grid
     GridStyleSheet gridStyleSheet;
 
@@ -89,7 +108,9 @@ private:
     // this panel should be disposed of or adapted to new controls before merging into main
     GridControlPanel controlPanel;
 
-    st_int  playbackTicks;
-    bool    showPlaybackMarker;
+    st_int playbackTicks;
+    bool showPlaybackMarker;
+
+    juce::TextButton closeButton { "x" };
 };
 #endif

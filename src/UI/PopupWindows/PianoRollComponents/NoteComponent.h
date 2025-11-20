@@ -11,7 +11,7 @@
 
 #include <tracktion_engine/tracktion_engine.h>
 
-namespace te = tracktion;
+namespace te = tracktion::engine;
 
 class NoteComponent : public juce::Component, public juce::ComponentDragger {
     public:
@@ -50,10 +50,12 @@ class NoteComponent : public juce::Component, public juce::ComponentDragger {
 
     std::function<void(NoteComponent *, const juce::MouseEvent &)> onNoteSelect;
     std::function<void(NoteComponent *)> onPositionMoved;
-    // Send the drag event to other components
+    // Send the drag event to all selected components
     std::function<void(NoteComponent *, const juce::MouseEvent &)> onDragging;
+    // Send the note length change event to all selected components
+    std::function<void(NoteComponent *, const juce::MouseEvent &)> onEdgeDragging;
     // Sends the difference as this is relative for all components
-    std::function<void(NoteComponent *, int)> onLengthChange;
+    std::function<void(NoteComponent *)> onLengthChange;
 
     int minWidth = 10;
      // Used when resizing the noteComponents length

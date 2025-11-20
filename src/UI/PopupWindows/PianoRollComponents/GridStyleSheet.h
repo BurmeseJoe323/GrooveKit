@@ -25,8 +25,6 @@ public:
 
     bool getDrawVelocity();
 
-    bool disableEditing;
-
 private:
     bool drawMIDINum, drawMIDINoteStr, drawVelocity;
 };

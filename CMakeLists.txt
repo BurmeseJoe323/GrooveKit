@@ -9,8 +9,18 @@ include(${CMAKE_SOURCE_DIR}/cmake/TracktionPath.cmake)
 add_subdirectory(${TRACKTION_ENGINE_PATH}/modules/juce ${CMAKE_BINARY_DIR}/juce)
 
 # Tracktion-bundled JUCE
-juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_graph)
-juce_add_modules(${TRACKTION_ENGINE_PATH}/modules/tracktion_engine)
+juce_add_modules(
+        ${TRACKTION_ENGINE_PATH}/modules/tracktion_graph
+        ${TRACKTION_ENGINE_PATH}/modules/tracktion_engine
+)
+
+# Melatonin Inspector
+Include (FetchContent)
+FetchContent_Declare (melatonin_inspector
+        GIT_REPOSITORY https://github.com/sudara/melatonin_inspector.git
+        GIT_TAG origin/main
+        SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/melatonin_inspector)
+FetchContent_MakeAvailable (melatonin_inspector)
 
 file(GLOB_RECURSE GROOVEKIT_DEFAULT_WAVS
         ${CMAKE_SOURCE_DIR}/src/resources/Samples/*.[Ww][Aa][Vv]
@@ -38,19 +48,34 @@ juce_add_binary_data(GrooveKitResources
 
 target_sources(GrooveKitResources PRIVATE ${GROOVEKIT_DEFAULT_WAVS})
 
-# ---- Your libraries
+# ---- libraries
+add_subdirectory(src/PluginManager)
 add_subdirectory(src/AppEngine)
 add_subdirectory(src/MIDIEngine)
 add_subdirectory(src/AudioEngine)
 add_subdirectory(src/DrumSamplerEngine)
 add_subdirectory(src/UI)
-add_subdirectory(src/DatabaseManager)
 
 # ---- App target (defines GrooveKit)
 add_subdirectory(apps/GrooveKit)
+
+# ---- Tests
+option(BUILD_TESTING "Build the testing tree" ON)
+if(BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
+target_compile_definitions(GrooveKit
+        PRIVATE
+        JUCE_PLUGINHOST_VST3=1
+        JUCE_PLUGINHOST_AU=1 # macOS only
+)
+
 
 # ---- Link once (cleaned)
 target_link_libraries(GrooveKit
         PRIVATE
         GrooveKitResources
+        melatonin_inspector
 )

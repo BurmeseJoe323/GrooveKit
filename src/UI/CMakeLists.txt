@@ -14,19 +14,33 @@ add_library(app_ui
         MixView/ChannelComponents/ChannelStripComponents/FaderComponent.h
         MixView/ChannelComponents/ChannelStrip.h
         MixView/ChannelComponents/ChannelStrip.cpp
-        MixView/MixerPanel.cpp)
+        MixView/MixerPanel.cpp
+        Plugins/FourOsc/FourOscGUI.h
+        Plugins/FourOsc/FourOscGUI.cpp
+        TrackView/TimelineComponent.h
+        TrackView/TimelineComponent.cpp
+        Plugins/Synthesizer/MorphSynthView.h
+        Plugins/Synthesizer/MorphSynthView.cpp
+        Plugins/Synthesizer/MorphSynthWindow.h
+        Plugins/Synthesizer/MorphLookAndFeel.h
+)
 
 target_sources(app_ui
         PRIVATE
         MainComponent.cpp MainComponent.h
-        MainViews/WelcomeView.cpp MainViews/WelcomeView.h
+        TransportBar/TransportBar.cpp TransportBar/TransportBar.h
+        MenuBar/GrooveKitMenuBar.cpp MenuBar/GrooveKitMenuBar.h
+        Settings/SettingsDialog.cpp Settings/SettingsDialog.h
+        Settings/AudioSettingsPanel.cpp Settings/AudioSettingsPanel.h
+        Settings/MidiSettingsPanel.cpp Settings/MidiSettingsPanel.h
         TrackView/TrackEditView.cpp TrackView/TrackEditView.h
         TrackView/TrackComponent.cpp TrackView/TrackComponent.h
         TrackView/TrackHeaderComponent.cpp TrackView/TrackHeaderComponent.h
         TrackView/TrackClip.cpp TrackView/TrackClip.h
+        TrackView/GhostClipComponent.cpp TrackView/GhostClipComponent.h
         TrackView/TrackListComponent.cpp TrackView/TrackListComponent.h
         TrackView/PlayheadComponent.cpp TrackView/PlayheadComponent.h
-        PopupWindows/PianoRollWindow.cpp PopupWindows/PianoRollWindow.h
+        TrackView/LoopRangeComponent.cpp TrackView/LoopRangeComponent.h
         PopupWindows/PianoRollComponents/PianoRollEditor.cpp PopupWindows/PianoRollComponents/PianoRollEditor.h
         PopupWindows/PianoRollComponents/KeyboardComponent.cpp PopupWindows/PianoRollComponents/KeyboardComponent.h
         PopupWindows/PianoRollComponents/NoteGridComponent.cpp PopupWindows/PianoRollComponents/NoteGridComponent.h
@@ -34,10 +48,6 @@ target_sources(app_ui
         PopupWindows/PianoRollComponents/GridControlPanel.cpp PopupWindows/PianoRollComponents/GridControlPanel.h
         PopupWindows/PianoRollComponents/GridStyleSheet.cpp PopupWindows/PianoRollComponents/GridStyleSheet.h
         PopupWindows/PianoRollComponents/NoteComponent.cpp PopupWindows/PianoRollComponents/NoteComponent.h
-        PopupWindows/PianoRollComponents/PianoRollMainComponent.cpp PopupWindows/PianoRollComponents/PianoRollMainComponent.h
-        TrackEditViewTutorial/TrackEditViewTutorial.cpp TrackEditViewTutorial/TrackEditViewTutorial.h
-        TutorialManager/TutorialManagerComponent.cpp TutorialManager/TutorialManagerComponent.h
-        InstrumentTutorial/InstrumentTutorial.cpp InstrumentTutorial/InstrumentTutorial.h
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/UI/DrumSamplerView/DefaultSampleLibrary.cpp
         # Resources
@@ -63,4 +73,3 @@ target_link_libraries(app_ui
         PRIVATE
             GrooveKitResources
 )
-

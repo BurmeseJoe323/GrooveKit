@@ -8,7 +8,6 @@ GridStyleSheet::GridStyleSheet() {
     drawMIDINum = false;
     drawMIDINoteStr = false;
     drawVelocity = false;
-    disableEditing = false;
 }
 
 bool GridStyleSheet::getDrawMIDINum() {

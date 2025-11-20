@@ -8,14 +8,17 @@
 /dataSources.local.xml
 
 # Ignore CMake build directories
-cmake-build-debug/
-cmake-build-release/
+cmake-build*/
 cmake-build-debug-visual-studio/
 CMakeBuild/
 out/build/
 build/
 x64/Debug/
 x64/Release/
+**/GrooveKit_artefacts/
+**/JuceLibraryCode/
+**/melatonin_inspector/
+EOF
 
 # Ignore user-specific JUCE path configuration
 cmake/JUCEPath.cmake
@@ -27,3 +30,13 @@ cmake/TracktionPath.cmake
 ./third-party/database/groovekit.db
 groovekit.db
 **/.DS_Store
+
+# Ignore Visual Studio Code settings
+.vscode/
+# VSCode
+.vscode/
+tracktion_engine/
+# Claude config
+/CLAUDE.md
+.claude/
+/SESSION_NOTES.md

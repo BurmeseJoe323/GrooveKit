@@ -1,13 +1,21 @@
 #include "PlayheadComponent.h"
 
-PlayheadComponent::PlayheadComponent (te::Edit& e, EditViewState& evs) : edit (e), editViewState (evs)
+PlayheadComponent::PlayheadComponent (te::Edit& e, EditViewState& evs, AppEngine& ae)
+    : edit (e),
+      editViewState (evs),
+      appEngine (ae)
 {
     startTimerHz (30);
 }
 
 void PlayheadComponent::paint (juce::Graphics& g)
 {
-    g.setColour (juce::Colours::yellow);
+    // Change playhead color to red during recording
+    if (appEngine.isRecording())
+        g.setColour (juce::Colours::red);
+    else
+        g.setColour (juce::Colours::aqua);
+
     g.drawRect (xPosition, 0, 2, getHeight());
 }
 
@@ -19,36 +27,39 @@ bool PlayheadComponent::hitTest (int x, int)
     return false;
 }
 
-// void PlayheadComponent::mouseDown (const juce::MouseEvent&)
-// {
-//     edit.getTransport().setUserDragging (true);
-// }
-//
-// void PlayheadComponent::mouseUp (const juce::MouseEvent&)
-// {
-//     edit.getTransport().setUserDragging (false);
-// }
-//
-// void PlayheadComponent::mouseDrag (const juce::MouseEvent& e)
-// {
-//     auto t = editViewState.xToTime (e.x, getWidth());
-//     edit.getTransport().setPosition (t);
-//     timerCallback();
-// }
-
-void PlayheadComponent::timerCallback()
+void PlayheadComponent::mouseDown (const juce::MouseEvent&)
 {
-    if (firstTimer)
-    {
-        // On Linux, don't set the mouse cursor until after the Component has appeared
-        firstTimer = false;
-        setMouseCursor (juce::MouseCursor::LeftRightResizeCursor);
-    }
+    edit.getTransport().setUserDragging (true);
+}
 
-    int newX = editViewState.timeToX (edit.getTransport().getPosition(), getWidth());
-    if (newX != xPosition)
+void PlayheadComponent::mouseUp (const juce::MouseEvent&)
+{
+    edit.getTransport().setUserDragging (false);
+}
+
+void PlayheadComponent::mouseDrag (const juce::MouseEvent& e)
+{
+    // Convert mouse x to beat position, then to time using tempo sequence
+    const double beats = e.x / pixelsPerBeat + viewStartBeat.inBeats();
+    const auto beatPos = t::BeatPosition::fromBeats(juce::jmax(0.0, beats));
+    const auto timePos = edit.tempoSequence.toTime(beatPos);
+    edit.getTransport().setPosition(timePos);
+    timerCallback();
+}
+
+void PlayheadComponent::timerCallback ()
+{
+    // Convert transport position (time) to beat position, then to x coordinate
+    const auto timePos = edit.getTransport().getPosition();
+    const auto beatPos = edit.tempoSequence.toBeats(timePos);
+    const double beats = beatPos.inBeats();
+
+    if (const int newX = (beats - viewStartBeat.inBeats()) * pixelsPerBeat; newX != xPosition)
     {
-        repaint (juce::jmin (newX, xPosition) - 1, 0, juce::jmax (newX, xPosition) - juce::jmin (newX, xPosition) + 3, getHeight());
+        repaint (juce::jmin (newX, xPosition) - 2,
+            0,
+            std::abs (newX - xPosition) + 4,
+            getHeight());
         xPosition = newX;
     }
 }
