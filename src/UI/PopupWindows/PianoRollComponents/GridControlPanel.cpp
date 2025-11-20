@@ -7,6 +7,10 @@
 #include "NoteGridComponent.h"
 #include "PConstants.h"
 
+//==============================================================================
+// Lifecycle
+//==============================================================================
+
 GridControlPanel::GridControlPanel(NoteGridComponent &component, GridStyleSheet &ss) : noteGrid(component),
     styleSheet(ss) {
     // TODO : figure out how and if we want to resize the grid ?
@@ -49,6 +53,10 @@ GridControlPanel::GridControlPanel(NoteGridComponent &component, GridStyleSheet 
 
 GridControlPanel::~GridControlPanel() {
 }
+
+//==============================================================================
+// Component Overrides
+//==============================================================================
 
 void GridControlPanel::resized() {
 

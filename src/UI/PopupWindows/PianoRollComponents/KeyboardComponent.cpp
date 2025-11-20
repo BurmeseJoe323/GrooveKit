@@ -4,9 +4,17 @@
 
 #include "KeyboardComponent.h"
 
+//==============================================================================
+// Construction / Destruction
+//==============================================================================
+
 KeyboardComponent::KeyboardComponent() {
     blackPitches = {1, 3, 6, 8, 10};
 }
+
+//==============================================================================
+// Component Overrides
+//==============================================================================
 
 void KeyboardComponent::paint(juce::Graphics &g) {
     const float noteCompHeight = getHeight() / 128.0;

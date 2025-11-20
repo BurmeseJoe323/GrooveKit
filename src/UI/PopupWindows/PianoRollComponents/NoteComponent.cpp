@@ -4,6 +4,10 @@
 
 #include "NoteComponent.h"
 
+//==============================================================================
+// Lifecycle
+//==============================================================================
+
 NoteComponent::NoteComponent (GridStyleSheet styleSheet)
     : styleSheet (styleSheet),
       edgeResizer (this,
@@ -24,6 +28,10 @@ NoteComponent::NoteComponent (GridStyleSheet styleSheet)
 
     setCustomColour (juce::Colours::green);
 }
+
+//==============================================================================
+// Component Overrides
+//==============================================================================
 
 void NoteComponent::paint (juce::Graphics& g)
 {
@@ -70,11 +78,19 @@ void NoteComponent::resized ()
     edgeResizer.setBounds (getWidth() - 10, 0, 10, getHeight());
 }
 
+//==============================================================================
+// Appearance Configuration
+//==============================================================================
+
 void NoteComponent::setCustomColour (juce::Colour c)
 {
     customColour = c;
     useCustomColour = true;
 }
+
+//==============================================================================
+// Model Binding
+//==============================================================================
 
 void NoteComponent::setModel (te::MidiNote* model)
 {
@@ -87,6 +103,10 @@ te::MidiNote* NoteComponent::getModel ()
     return model;
 }
 
+//==============================================================================
+// Selection State Management
+//==============================================================================
+
 void NoteComponent::setState (eState s)
 {
     state = s;
@@ -97,6 +117,10 @@ NoteComponent::eState NoteComponent::getState ()
 {
     return state;
 }
+
+//==============================================================================
+// Mouse Event Handlers
+//==============================================================================
 
 void NoteComponent::mouseEnter (const juce::MouseEvent&)
 {

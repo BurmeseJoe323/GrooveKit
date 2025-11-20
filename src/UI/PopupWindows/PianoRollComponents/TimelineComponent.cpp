@@ -4,12 +4,20 @@
 
 #include "TimelineComponent.h"
 
+//==============================================================================
+// Lifecycle
+//==============================================================================
+
 TimelineComponent::TimelineComponent()
 {
     barsToDraw = 4;
     pixelsPerBar = 500;
     setBounds (getParentWidth() * 0.15, 0, getParentWidth() * 0.85, getParentHeight() * 0.15);
 }
+
+//==============================================================================
+// Configuration
+//==============================================================================
 
 void TimelineComponent::setup (const int barsToDraw, const int pixelsPerBar)
 {
@@ -25,6 +33,10 @@ void TimelineComponent::setup (const int barsToDraw, const int pixelsPerBar)
     this->pixelsPerBar = pixelsPerBar;
     setSize (pixelsPerBar * barsToDraw, getHeight()); //height is set externally.
 }
+
+//==============================================================================
+// Component Overrides
+//==============================================================================
 
 void TimelineComponent::paint (juce::Graphics& g)
 {
