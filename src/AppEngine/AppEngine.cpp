@@ -96,6 +96,8 @@ AppEngine::AppEngine()
     midiListener = std::make_unique<MidiListener> (this);
     midiRecorder = std::make_unique<MidiRecorder> (*engine);
 
+    qwertyForwarder_ = std::make_unique<MidiListenerKeyAdapter>(*midiListener);
+
     editViewState = std::make_unique<EditViewState> (*edit, *selectionManager);
 
     audioEngine->initialiseDefaults (48000.0, 512);

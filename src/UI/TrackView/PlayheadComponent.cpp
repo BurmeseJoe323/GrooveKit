@@ -1,5 +1,9 @@
 #include "PlayheadComponent.h"
 
+//==============================================================================
+// Construction
+//==============================================================================
+
 PlayheadComponent::PlayheadComponent (te::Edit& e, EditViewState& evs, AppEngine& ae)
     : edit (e),
       editViewState (evs),
@@ -8,9 +12,13 @@ PlayheadComponent::PlayheadComponent (te::Edit& e, EditViewState& evs, AppEngine
     startTimerHz (30);
 }
 
+//==============================================================================
+// Component Overrides
+//==============================================================================
+
 void PlayheadComponent::paint (juce::Graphics& g)
 {
-    // Change playhead color to red during recording
+    // Change playhead color to red during recording (Nov 19, 2025)
     if (appEngine.isRecording())
         g.setColour (juce::Colours::red);
     else
@@ -26,6 +34,10 @@ bool PlayheadComponent::hitTest (int x, int)
 
     return false;
 }
+
+//==============================================================================
+// Mouse Event Handling
+//==============================================================================
 
 void PlayheadComponent::mouseDown (const juce::MouseEvent&)
 {
@@ -46,6 +58,10 @@ void PlayheadComponent::mouseDrag (const juce::MouseEvent& e)
     edit.getTransport().setPosition(timePos);
     timerCallback();
 }
+
+//==============================================================================
+// Timer Callback
+//==============================================================================
 
 void PlayheadComponent::timerCallback ()
 {

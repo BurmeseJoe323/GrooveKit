@@ -4,6 +4,10 @@
 namespace t = tracktion;
 namespace te = tracktion::engine;
 
+//==============================================================================
+// Construction / Destruction
+//==============================================================================
+
 NoteGridComponent::NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, te::MidiClip* clip)
   : styleSheet(sheet), appEngine(engine), clipModel(clip)
 {
@@ -46,6 +50,10 @@ NoteGridComponent::~NoteGridComponent()
             removeChildComponent (raw);
     noteComps.clear();
 }
+
+//==============================================================================
+// Component Overrides
+//==============================================================================
 
 void NoteGridComponent::paint (juce::Graphics& g)
 {
@@ -141,6 +149,10 @@ void NoteGridComponent::resized()
     }
 }
 
+//==============================================================================
+// Setup and Configuration
+//==============================================================================
+
 void NoteGridComponent::setupGrid (float pixelsPerBar, float compHeight, const int bars)
 {
     this->pixelsPerBar = pixelsPerBar;
@@ -152,6 +164,10 @@ void NoteGridComponent::setQuantisation (float newVal)
 {
     currentQValue = newVal;
 }
+
+//==============================================================================
+// NoteComponent Event Handlers
+//==============================================================================
 
 void NoteGridComponent::noteCompSelected (NoteComponent* noteComponent, const juce::MouseEvent& e)
 {
@@ -381,6 +397,10 @@ void NoteGridComponent::setTimeSignature (unsigned int beatsPerBar, unsigned int
     timeSignature.beatValue = beatValue;
 }
 
+//==============================================================================
+// Mouse Event Handling
+//==============================================================================
+
 void NoteGridComponent::mouseDown (const juce::MouseEvent&)
 {
     for (auto& up : noteComps)
@@ -497,6 +517,10 @@ void NoteGridComponent::mouseDoubleClick (const juce::MouseEvent& e)
     sendEdit();
 }
 
+//==============================================================================
+// Keyboard Event Handling
+//==============================================================================
+
 bool NoteGridComponent::keyPressed (const juce::KeyPress& key, Component*)
 {
     // #ifndef LIB_VERSION
@@ -576,6 +600,10 @@ bool NoteGridComponent::keyPressed (const juce::KeyPress& key, Component*)
     return false;
 }
 
+//==============================================================================
+// Note Management
+//==============================================================================
+
 void NoteGridComponent::deleteAllSelected()
 {
     if (clip == nullptr)
@@ -602,6 +630,10 @@ void NoteGridComponent::deleteAllSelected()
         }
     }
 }
+
+//==============================================================================
+// Data Access
+//==============================================================================
 
 // TODO: do we need this function?
 te::MidiList& NoteGridComponent::getSequence()
@@ -649,6 +681,10 @@ juce::Array<te::MidiNote*> NoteGridComponent::getSelectedModels()
     return noteModels;
 }
 
+//==============================================================================
+// Internal Methods
+//==============================================================================
+
 void NoteGridComponent::sendEdit()
 {
     if (this->onEdit != nullptr)
@@ -687,6 +723,10 @@ NoteComponent* NoteGridComponent::addNewNoteComponent (te::MidiNote* model)
     noteComps.push_back (std::move(newNote));
     return raw;
 }
+
+//==============================================================================
+// Coordinate Conversion Utilities
+//==============================================================================
 
 float NoteGridComponent::beatsToX (float beats)
 {
