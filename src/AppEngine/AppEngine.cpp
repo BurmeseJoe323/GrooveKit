@@ -557,9 +557,6 @@ void AppEngine::initialise()
             auto* fmt = tePM.pluginFormatManager.getFormat(i);
             if (!fmt) continue;
 
-            DBG("[TE-PM] Scan started for format: " + fmt->getName()
-                + " paths: " + searchPaths.toString());
-
             juce::PluginDirectoryScanner scanner(tePM.knownPluginList,
                                                  *fmt,
                                                  searchPaths,
@@ -575,8 +572,6 @@ void AppEngine::initialise()
                 DBG("[TE-PM] Scanner reported: " + err);
         }
 
-        DBG("[TE-PM] Scan finished. TE known types: "
-            + juce::String(tePM.knownPluginList.getNumTypes()));
     }
 
     // You can still keep your async scan/UI for your own list
@@ -1038,36 +1033,6 @@ void AppEngine::onFxInsertSlotClicked (int trackIndex,
     showFxInsertMenu (trackIndex, slotIndex, std::move (onSlotLabelChange));
 }
 
-static void debugPrintPluginChain (te::Track* track)
-{
-    DBG ("===================== Plugin Chain Dump =====================");
-
-    if (! track)
-    {
-        DBG ("(null track)");
-        DBG ("==============================================================");
-        return;
-    }
-
-    DBG ("Track: " << track->getName());
-
-    int i = 0;
-    for (auto* p : track->pluginList)
-    {
-        if (! p)
-        {
-            DBG ("  [" << i << "]  <null plugin>");
-        }
-        else
-        {
-            DBG ("  [" << i << "]  " << p->getPluginType() << " | " << p->getName());
-        }
-        ++i;
-    }
-
-    DBG ("==============================================================");
-}
-
 void AppEngine::showFxInsertMenu (int trackIndex,
                                   int slotIndex,
                                   std::function<void (const juce::String&)> onSlotLabelChange)
@@ -1185,7 +1150,6 @@ void AppEngine::showFxInsertMenu (int trackIndex,
             insertIndex);
 
         auto currentTrack = trackManager->getTrack (trackIndex);
-        debugPrintPluginChain (currentTrack);
 
         if (! plugin)
             return;
@@ -1226,6 +1190,9 @@ juce::String AppEngine::getInstrumentLabelForTrack (int trackIndex) const
 {
     if (!trackManager)
         return "Instrument";
+
+    if (isDrumTrack (trackIndex))
+        return "Sampler";
 
     if (auto* plug = trackManager->getInstrumentPluginOnTrack (trackIndex))
     {
@@ -1493,6 +1460,32 @@ bool AppEngine::canPasteToTrack (int trackIndex) const
     return lastCopiedClipWasDrum == targetIsDrum;
 }
 
+namespace
+{
+    void enableMidiClipProxiesForEdit (te::Edit& edit)
+    {
+        // Go through all tracks in the edit
+        auto allTracks = te::getAllTracks (edit);
+
+        for (auto* track : allTracks)
+        {
+            if (auto* audioTrack = dynamic_cast<te::AudioTrack*> (track))
+            {
+                auto clips = audioTrack->getClips();
+
+                for (auto* clip : clips)
+                {
+                    if (auto* midiClip = dynamic_cast<te::MidiClip*> (clip))
+                    {
+                        // This avoids the LoopingMidiNode issue in some TE versions
+                        midiClip->setUsesProxy (true);
+                    }
+                }
+            }
+        }
+    }
+}
+
 bool AppEngine::exportAudio (const juce::File& destFile)
 {
     if (edit == nullptr)
@@ -1521,8 +1514,6 @@ bool AppEngine::exportAudio (const juce::File& destFile)
     const bool usePlugins = true;
     const bool useThread  = false;
 
-    DBG ("[Export] Rendering audio to: " << destFile.getFullPathName());
-    DBG ("[Export] Edit length (seconds): " << length.inSeconds());
 
     const bool ok = te::Renderer::renderToFile ("Export audio",
                                                 destFile,
@@ -1536,7 +1527,6 @@ bool AppEngine::exportAudio (const juce::File& destFile)
     if (wasPlaying && ok)
         transport.play (false);
 
-    DBG (juce::String ("[Export] Render ") + (ok ? "OK" : "FAILED"));
 
     return ok;
 }

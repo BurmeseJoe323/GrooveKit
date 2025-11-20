@@ -5,6 +5,7 @@
 // ==============================================================================
 
 #include "MorphSynthPlugin.h"
+#include <algorithm>
 
 //------------------------------------------------------------------------------
 // Local sound type for JUCE Synthesiser
@@ -131,9 +132,6 @@ MorphSynthPlugin::MorphSynthPlugin (const te::PluginCreationInfo& info)
 
     // Timer available for future smoothing/polling if needed.
     startTimerHz (30);
-
-    DBG("[MorphSynth] morph=" << (morph ? morph->getCurrentValue() : -1.0f)
-    << " cutoff=" << (cutoff ? cutoff->getCurrentValue() : -1.0f));
 }
 
 MorphSynthPlugin::~MorphSynthPlugin() = default;
@@ -174,23 +172,50 @@ void MorphSynthPlugin::reset()
 
 void MorphSynthPlugin::applyToBuffer (const te::PluginRenderContext& rc)
 {
-    auto* audio = rc.destBuffer;
-    if (audio == nullptr)
+    if (rc.destBuffer == nullptr)
         return;
 
-    const int start   = rc.bufferStartSample;
-    const int numSamp = rc.bufferNumSamples;
+    int remaining = rc.bufferNumSamples;
+    int pos = rc.bufferStartSample;
 
-    // Collect MIDI
-    juce::MidiBuffer midi;
-    if (auto* mma = rc.bufferForMidiMessages)
-        for (auto& m : *mma)
-            midi.addEvent (m, 0);
+    while (remaining > 0)
+    {
+        const int block = std::min(32, remaining);
 
-    // Render synth then apply output gain
-    const float g = juce::Decibels::decibelsToGain (gain ? gain->getCurrentValue() : 0.0f);
-    synth.renderNextBlock (*audio, midi, start, numSamp);
-    audio->applyGain (start, numSamp, g);
+        juce::AudioBuffer<float> temp (2, block);
+        temp.clear();
+
+        juce::MidiBuffer midi;
+
+        // Pull MIDI directly from Tracktion's bufferForMidiMessages
+        if (rc.bufferForMidiMessages != nullptr)
+        {
+            for (auto meta : *rc.bufferForMidiMessages)
+            {
+                const juce::MidiMessage& m = meta;
+                int timestamp = int(m.getTimeStamp());
+
+                if (timestamp >= pos && timestamp < pos + block)
+                    midi.addEvent (m, timestamp - pos);
+            }
+        }
+
+        // render synth
+        synth.renderNextBlock (temp, midi, 0, block);
+
+        // copy into output buffer
+        rc.destBuffer->addFrom (0, pos, temp, 0, 0, block);
+        rc.destBuffer->addFrom (1, pos, temp, 1, 0, block);
+
+        remaining -= block;
+        pos += block;
+    }
+}
+void MorphSynthPlugin::applyToBuffer (juce::AudioBuffer<float>& audio,
+                                      juce::MidiBuffer& midi)
+{
+    synth.renderNextBlock(audio, midi, 0, audio.getNumSamples());
+    audio.applyGain(juce::Decibels::decibelsToGain(gain->getCurrentValue()));
 }
 
 //==============================================================================

@@ -54,10 +54,14 @@ public:
     juce::String getName() const override                   { return "MorphSynth"; }
     juce::String getPluginType() override                   { return pluginType; }
     juce::String getSelectableDescription() override        { return getName(); }
-    bool isInstrument() { return true; }
 
-    bool takesMidiInput() override                          { return true; }
-    bool producesAudioWhenNoAudioInput() override           { return true; }
+    bool isInstrument() const                         { return true; }
+    bool takesMidiInput() override                    { return true; }
+    bool takesAudioInput() override                   { return false; }
+    bool isSynth() override                           { return true; }
+    bool producesAudioWhenNoAudioInput() override     { return true; }
+    double getTailLength() const override             { return 0.0; }
+    bool wantsMidi() const { return true; }
 
     void initialise   (const te::PluginInitialisationInfo&) override;
     void deinitialise () override;
@@ -65,6 +69,7 @@ public:
 
     /** Main render entry point. */
     void applyToBuffer (const te::PluginRenderContext&) override;
+    void applyToBuffer (juce::AudioBuffer<float>&, juce::MidiBuffer&);
 
     //==============================================================================
     // Parameter access & persistence
@@ -122,6 +127,8 @@ private:
     // State
     //------------------------------------------------------------------------------
     juce::Synthesiser synth;
+    double currentSampleRate = 44100.0;
+
     static constexpr int numVoices = 8;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MorphSynthPlugin)
