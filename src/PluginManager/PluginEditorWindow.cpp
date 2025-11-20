@@ -68,12 +68,32 @@ PluginEditorWindow::PluginEditorWindow (AudioPluginInstance& instance,
     setWantsKeyboardFocus (true);
     grabKeyboardFocus ();
 
+    // Attach QWERTY key listener (MidiListenerKeyAdapter) directly to this window
+    // and the editor component so it sees key events while the plugin is open.
+    if (keyForwarder != nullptr)
+    {
+        addKeyListener (keyForwarder);
+
+        if (auto* c = getContentComponent())
+            c->addKeyListener (keyForwarder);
+    }
+
     // Let the editor request keyboard focus as well.
     if (auto* c = getContentComponent())
         c->setWantsKeyboardFocus (true);
 }
 
-PluginEditorWindow::~PluginEditorWindow() = default;
+PluginEditorWindow::~PluginEditorWindow()
+{
+    // Detach key listener to avoid dangling pointers.
+    if (keyForwarder != nullptr)
+    {
+        removeKeyListener (keyForwarder);
+
+        if (auto* c = getContentComponent())
+            c->removeKeyListener (keyForwarder);
+    }
+}
 
 //==============================================================================
 // Window behavior
@@ -89,20 +109,26 @@ void PluginEditorWindow::closeButtonPressed()
 //==============================================================================
 // Keyboard event forwarding
 
-bool PluginEditorWindow::keyPressed (const KeyPress& kp)
+bool PluginEditorWindow::keyPressed (const juce::KeyPress& key)
 {
-    // First allow external listener to consume the key if desired.
-    if (keyForwarder != nullptr && keyForwarder->keyPressed (kp, this))
-        return true;
+    // Forward to the adapter if it exists, using this window as the originating component.
+    if (keyForwarder != nullptr)
+    {
+        if (keyForwarder->keyPressed (key, this))
+            return true; // event handled by the adapter
+    }
 
-    // Otherwise let JUCE/DocumentWindow handle it.
-    return DocumentWindow::keyPressed (kp);
+    return DocumentWindow::keyPressed (key);
 }
 
 bool PluginEditorWindow::keyStateChanged (bool isDown)
 {
-    if (keyForwarder != nullptr && keyForwarder->keyStateChanged (isDown, this))
-        return true;
+    // Forward state changes too.
+    if (keyForwarder != nullptr)
+    {
+        if (keyForwarder->keyStateChanged (isDown, this))
+            return true;
+    }
 
     return DocumentWindow::keyStateChanged (isDown);
 }
