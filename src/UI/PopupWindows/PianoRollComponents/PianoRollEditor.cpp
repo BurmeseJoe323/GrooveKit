@@ -124,10 +124,10 @@ void PianoRollEditor::resized()
     timelineView.setBounds (gridView.getX(), 5, gridView.getWidth() - 10, gridView.getY() - 5);
     keyboardView.setBounds (5, gridView.getY(), 70, gridView.getHeight() - 10);
 
-    noteGrid.setBounds (0, 0, 4000, 20 * 127);
     noteGrid.setupGrid (pixelsPerBar, noteHeight, numBars);
     timeline.setBounds (0, 0, noteGrid.getWidth(), timelineView.getHeight());
     timeline.setup (numBars, pixelsPerBar);
+    keyboard.setNoteHeight (noteHeight);  // Sync keyboard note height with grid
     keyboard.setBounds (0, 0, keyboardView.getWidth(), noteGrid.getHeight());
 
     controlPanel.setBounds (5, gridView.getBottom() + 5, getWidth() - 10, 80);
@@ -248,7 +248,10 @@ void PianoRollEditor::setClip (te::MidiClip* c)
     // Hand off to the note grid to swap its data model.
     noteGrid.setClip(c);
 
-    // If your timeline width depends on clip length, you can also refresh it here.
-    // For now, a repaint is enough; the grid will trigger a resized() on us.
+    // Update keyboard dimming for drum tracks (Written by Claude Code)
+    keyboard.setIsDrumTrack (noteGrid.getIsDrumTrack());
+
+    // Trigger resized() to update grid bounds for drum vs instrument tracks (Written by Claude Code)
+    resized();
     repaint();
 }

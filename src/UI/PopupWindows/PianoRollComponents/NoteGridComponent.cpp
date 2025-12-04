@@ -37,6 +37,25 @@ NoteGridComponent::NoteGridComponent (GridStyleSheet& sheet, AppEngine& engine, 
         return;
     }
 
+    // Detect if this clip belongs to a drum track (Written by Claude Code)
+    // Used for highlighting drum sampler note range (MIDI 36-51)
+    if (currentClip)
+    {
+        if (auto* clipTrack = dynamic_cast<te::AudioTrack*> (currentClip->getTrack()))
+        {
+            auto& edit = appEngine.getEdit();
+            auto tracks = te::getAudioTracks (edit);
+            for (int i = 0; i < tracks.size(); ++i)
+            {
+                if (tracks[i] == clipTrack)
+                {
+                    isDrumTrack = appEngine.isDrumTrack (i);
+                    break;
+                }
+            }
+        }
+    }
+
     // Add all existing notes from clip
     for (te::MidiNote* note : currentClip->getSequence().getNotes())
         addNewNoteComponent (note);
@@ -62,13 +81,21 @@ void NoteGridComponent::paint (juce::Graphics& g)
     // Draw the background first
     float line = 0;
 
-    for (int i = 127; i >= 0; i--)
+    // For drum tracks, only draw 16 rows (MIDI 36-51)
+    // For instrument tracks, draw all 128 rows (MIDI 0-127)
+    const int startNote = isDrumTrack ? 51 : 127;
+    const int endNote = isDrumTrack ? 36 : 0;
+
+    for (int i = startNote; i >= endNote; i--)
     {
         const int pitch = i % 12;
-        g.setColour (blackPitches.contains (pitch)
-                         ? juce::Colours::darkgrey.withAlpha (0.5f)
-                         : juce::Colours::lightgrey.darker().withAlpha (0.5f));
 
+        // Determine base color for this note row (Written by Claude Code)
+        juce::Colour baseColor = blackPitches.contains (pitch)
+            ? juce::Colours::darkgrey.withAlpha (0.5f)
+            : juce::Colours::lightgrey.darker().withAlpha (0.5f);
+
+        g.setColour (baseColor);
         g.fillRect (0, juce::detail::floorAsInt (line), getWidth(), juce::detail::floorAsInt (noteCompHeight));
 
         line += noteCompHeight;
@@ -157,7 +184,9 @@ void NoteGridComponent::setupGrid (float pixelsPerBar, float compHeight, const i
 {
     this->pixelsPerBar = pixelsPerBar;
     noteCompHeight = compHeight;
-    setSize (pixelsPerBar * bars, compHeight * 128); //we have 128 slots for notes
+    // For drum tracks, only 16 rows (MIDI 36-51); for instruments, all 128 rows
+    const int numRows = isDrumTrack ? 16 : 128;
+    setSize (pixelsPerBar * bars, compHeight * numRows);
 }
 
 void NoteGridComponent::setQuantisation (float newVal)
@@ -657,8 +686,24 @@ void NoteGridComponent::setClip (te::MidiClip* newClip)
 
     clip = newClip;
 
+    // Update drum track detection when clip changes (Written by Claude Code)
+    isDrumTrack = false;  // Reset to false
     if (clip != nullptr)
     {
+        if (auto* clipTrack = dynamic_cast<te::AudioTrack*> (clip->getTrack()))
+        {
+            auto& edit = appEngine.getEdit();
+            auto tracks = te::getAudioTracks (edit);
+            for (int i = 0; i < tracks.size(); ++i)
+            {
+                if (tracks[i] == clipTrack)
+                {
+                    isDrumTrack = appEngine.isDrumTrack (i);
+                    break;
+                }
+            }
+        }
+
         for (te::MidiNote* note : clip->getSequence().getNotes())
             addNewNoteComponent (note);
     }
@@ -736,8 +781,10 @@ float NoteGridComponent::beatsToX (float beats)
 
 float NoteGridComponent::pitchToY (float pitch)
 {
+    // For drum tracks, offset pitch by 36 (C1) since we only show MIDI 36-51
+    const float adjustedPitch = isDrumTrack ? (pitch - 36.0f) : pitch;
     const float gridHeight = static_cast<float> (getHeight());
-    return gridHeight - pitch * noteCompHeight - noteCompHeight;
+    return gridHeight - adjustedPitch * noteCompHeight - noteCompHeight;
 }
 
 float NoteGridComponent::xToBeats (float x)
@@ -749,6 +796,12 @@ float NoteGridComponent::xToBeats (float x)
 int NoteGridComponent::yToPitch (float y)
 {
     const int row = (int) std::floor(y / noteCompHeight);
+    // For drum tracks, we only show 16 rows (MIDI 36-51), so offset the result
+    if (isDrumTrack)
+    {
+        const int pitch = 51 - row;  // Top row is 51 (D#2), bottom row is 36 (C1)
+        return juce::jlimit(36, 51, pitch);
+    }
     return juce::jlimit(0, 127, 127 - row);
 }
 

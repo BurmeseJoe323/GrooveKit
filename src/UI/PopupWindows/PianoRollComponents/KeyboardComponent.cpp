@@ -17,13 +17,25 @@ KeyboardComponent::KeyboardComponent() {
 //==============================================================================
 
 void KeyboardComponent::paint(juce::Graphics &g) {
-    const float noteCompHeight = getHeight() / 128.0;
-    float line = 0; // noteCompHeight;
+    // For drum tracks, only show 16 keys (MIDI 36-51)
+    // For instrument tracks, show all 128 keys (MIDI 0-127)
+    const int startNote = isDrumTrack ? 51 : 127;
+    const int endNote = isDrumTrack ? 36 : 0;
+
+    // Use the noteHeight synchronized from NoteGridComponent
+    const float noteCompHeight = noteHeight;
+    float line = 0;
 
     // Draw keys first
-    for (int i = 127; i >= 0; i--) {
+    for (int i = startNote; i >= endNote; i--) {
         const int pitch = i % 12;
-        g.setColour(blackPitches.contains(pitch) ? (juce::Colours::black) : juce::Colours::white.darker(0.1));
+
+        // Determine key color (Written by Claude Code)
+        juce::Colour keyColor = blackPitches.contains(pitch)
+            ? juce::Colours::black
+            : juce::Colours::white.darker(0.1);
+
+        g.setColour(keyColor);
 
         // "Cast" to int using JUCE's floorAsInt function
         g.fillRect(0, juce::detail::floorAsInt(line), getWidth(), juce::detail::floorAsInt(noteCompHeight));
@@ -41,7 +53,7 @@ void KeyboardComponent::paint(juce::Graphics &g) {
 
     // Draw lines in between keys
     line = 0;
-    for (int i = 127; i >= 0; i--) {
+    for (int i = startNote; i >= endNote; i--) {
         g.setColour(juce::Colours::black);
         g.drawLine(0, floor(line), getWidth(), floor(line)); // Floor these values to be consistent with keys
 

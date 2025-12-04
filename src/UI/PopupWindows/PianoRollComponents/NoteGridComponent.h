@@ -143,6 +143,15 @@ public:
     void setTimeSignature (unsigned int beatsPerBar, unsigned int beatValue);
 
     /**
+     * @brief Returns whether this grid is editing a drum track.
+     *
+     * Used by PianoRollEditor to synchronize keyboard highlighting. (Written by Claude Code)
+     *
+     * @return True if editing a drum track
+     */
+    bool getIsDrumTrack() const { return isDrumTrack; }
+
+    /**
      * @brief Gets the current time signature's beats per bar.
      *
      * @return Number of beats per measure.
@@ -427,6 +436,7 @@ private:
     std::vector<std::unique_ptr<NoteComponent>> noteComps; ///< Visual components for each MIDI note.
 
     std::set<int> blackPitches = { 1, 3, 6, 8, 10 }; ///< MIDI note offsets for black piano keys (within octave).
+    bool isDrumTrack = false;         ///< True if editing a drum track (for note highlighting). (Written by Claude Code)
 
     float noteCompHeight;             ///< Vertical zoom level (pixels per MIDI note).
     float pixelsPerBar;               ///< Horizontal zoom level (pixels per bar).

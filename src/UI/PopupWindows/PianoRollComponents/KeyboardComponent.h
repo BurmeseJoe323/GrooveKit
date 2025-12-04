@@ -56,11 +56,32 @@ public:
      */
     void paint (juce::Graphics& g) override;
 
+    //==============================================================================
+    // Drum Track Support (Written by Claude Code)
+
+    /**
+     * @brief Sets whether this keyboard should dim non-drum notes.
+     *
+     * When true, MIDI notes outside 36-51 are dimmed to indicate they're not used.
+     *
+     * @param isDrum True if editing a drum track
+     */
+    void setIsDrumTrack (bool isDrum) { isDrumTrack = isDrum; repaint(); }
+
+    /**
+     * @brief Sets the note component height to match the note grid.
+     *
+     * @param height Height in pixels per MIDI note (must match NoteGridComponent)
+     */
+    void setNoteHeight (float height) { noteHeight = height; repaint(); }
+
 private:
     //==============================================================================
     // Private Members
 
     juce::Array<int> blackPitches; ///< Pitch classes for black keys (1=C#, 3=D#, 6=F#, 8=G#, 10=A#)
+    bool isDrumTrack = false;      ///< True if editing a drum track (dims non-drum notes). (Written by Claude Code)
+    float noteHeight = 20.0f;      ///< Height per MIDI note, synchronized with NoteGridComponent. (Written by Claude Code)
 };
 
 #endif //KEYBOARDCOMPONENT_H
