@@ -299,7 +299,14 @@ void TrackListComponent::resized()
 
     const int bodyMinW = std::max({ widthByEdit, rightmostClipPx, parentW - headerWidth });
     const int desiredW = headerWidth + std::max(bodyMinW, 800);
-    const int desiredH = std::max(contentH, getParentHeight());
+
+    // Calculate total height needed: timeline + tracks + button space
+    // Use the GREATER of contentH+timeline or parent height to:
+    // - Fill viewport when few tracks exist (prevents grey gap, playhead fills space)
+    // - Extend beyond viewport when many tracks exist (prevents squishing)
+    const int totalContentH = timelineHeight + contentH;
+    const int parentH = getParentComponent() ? getParentComponent()->getHeight() : getHeight();
+    const int desiredH = std::max(totalContentH, parentH);
 
     if (desiredW != getWidth() || desiredH != getHeight())
     {
@@ -364,6 +371,7 @@ void TrackListComponent::addNewTrack (int engineIdx)
             tracks.remove (uiIndex);
             appEngine->deleteMidiTrack (uiIndex);
             updateTrackIndexes();
+            refreshTrackStates(); // Refresh solo/mute/arm states after track deletion
             resized();
         }
 
