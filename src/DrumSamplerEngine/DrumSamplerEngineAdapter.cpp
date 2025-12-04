@@ -9,6 +9,24 @@ DrumSamplerEngineAdapter::DrumSamplerEngineAdapter (te::Engine& eng,
       track (trk)
 {
     sampler = findOrCreateSampler();
+
+    // Initialize slot names from existing sampler sounds (for loading saved projects)
+    if (sampler != nullptr)
+    {
+        for (int pad = 0; pad < 16; ++pad)
+        {
+            const int note = padToMidiNote(pad);
+            const int soundIdx = findSoundForNote(note);
+
+            if (soundIdx >= 0)
+            {
+                // Sample exists for this pad - use its name
+                juce::String sampleName = sampler->getSoundName(soundIdx);
+                if (sampleName.isNotEmpty())
+                    slotNames.set(pad, sampleName);
+            }
+        }
+    }
 }
 
 //==============================================================================
