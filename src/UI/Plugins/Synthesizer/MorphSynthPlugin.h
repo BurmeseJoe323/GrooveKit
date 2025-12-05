@@ -71,6 +71,7 @@ public:
     void applyToBuffer (const te::PluginRenderContext&) override;
     void applyToBuffer (juce::AudioBuffer<float>&, juce::MidiBuffer&);
 
+
     //==============================================================================
     // Parameter access & persistence
     //------------------------------------------------------------------------------
@@ -109,6 +110,7 @@ public:
     // Output
     te::AutomatableParameter *gain = nullptr;
 
+
 private:
     //==============================================================================
     // MorphVoice::ParamsView implementation
@@ -128,8 +130,13 @@ private:
     //------------------------------------------------------------------------------
     juce::Synthesiser synth;
     double currentSampleRate = 44100.0;
+    double sampleRate = 44100.0;
+
 
     static constexpr int numVoices = 8;
+
+    void renderSynth (juce::AudioBuffer<float>& audio,
+                      juce::MidiBuffer& midi);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MorphSynthPlugin)
 };

@@ -142,22 +142,32 @@ MorphSynthPlugin::~MorphSynthPlugin() = default;
 
 void MorphSynthPlugin::initialise (const te::PluginInitialisationInfo& info)
 {
-    const double sr       = info.sampleRate;
-    const int    maxBlock = (info.blockSizeSamples > 0 ? (int) info.blockSizeSamples : 512);
+    sampleRate = info.sampleRate; // store it for timestamp→sample conversion
+    const int maxBlock = (info.blockSizeSamples > 0 ? (int) info.blockSizeSamples : 512);
 
-    synth.setCurrentPlaybackSampleRate (sr);
+    // Ensure voices & sound exist every time we're initialised
+    if (synth.getNumVoices() == 0)
+    {
+        for (int i = 0; i < numVoices; ++i)
+            synth.addVoice (new MorphVoice());
+    }
+
+    if (synth.getNumSounds() == 0)
+    {
+        synth.addSound (new MorphSound());
+    }
+
+    synth.setCurrentPlaybackSampleRate (sampleRate);
     synth.setNoteStealingEnabled (true);
 
-    // Prepare voices with engine parameters/ptrs
     for (int i = 0; i < synth.getNumVoices(); ++i)
         if (auto* v = dynamic_cast<MorphVoice*> (synth.getVoice (i)))
-            v->prepare (sr, maxBlock, this);
+            v->prepare (sampleRate, maxBlock, this);
 }
 
 void MorphSynthPlugin::deinitialise()
 {
     stopAllNotes();
-    synth.clearSounds();
     synth.setCurrentPlaybackSampleRate (0.0);
 }
 
@@ -166,56 +176,81 @@ void MorphSynthPlugin::reset()
     stopAllNotes();
 }
 
+int countMidiEvents (juce::MidiBuffer* buf)
+{
+    if (buf == nullptr)
+        return -1;
+
+    int count = 0;
+    for (auto it = buf->begin(); it != buf->end(); ++it)
+        ++count;
+
+    return count;
+}
+
 //==============================================================================
 // Rendering
 //==============================================================================
 
 void MorphSynthPlugin::applyToBuffer (const te::PluginRenderContext& rc)
 {
-    if (rc.destBuffer == nullptr)
+    auto* destBuffer = rc.destBuffer;
+    if (destBuffer == nullptr || rc.bufferNumSamples <= 0)
         return;
 
-    int remaining = rc.bufferNumSamples;
-    int pos = rc.bufferStartSample;
+    const int numChannels  = destBuffer->getNumChannels();
+    const int numSamples   = rc.bufferNumSamples;
+    const int startSample  = rc.bufferStartSample;
 
-    while (remaining > 0)
+    // Build a juce::MidiBuffer from Tracktion's MidiMessageArray
+    juce::MidiBuffer midi;
+
+    if (rc.bufferForMidiMessages != nullptr && rc.bufferForMidiMessages->isNotEmpty())
     {
-        const int block = std::min(32, remaining);
+        auto& srcMidi = *rc.bufferForMidiMessages;
 
-        juce::AudioBuffer<float> temp (2, block);
-        temp.clear();
-
-        juce::MidiBuffer midi;
-
-        // Pull MIDI directly from Tracktion's bufferForMidiMessages
-        if (rc.bufferForMidiMessages != nullptr)
+        for (const auto& msgWithSource : srcMidi)
         {
-            for (auto meta : *rc.bufferForMidiMessages)
-            {
-                const juce::MidiMessage& m = meta;
-                int timestamp = int(m.getTimeStamp());
+            // MidiMessageWithSource derives from juce::MidiMessage
+            const juce::MidiMessage& m = msgWithSource;
 
-                if (timestamp >= pos && timestamp < pos + block)
-                    midi.addEvent (m, timestamp - pos);
-            }
+            // Timestamp is in seconds relative to the start of this block
+            double tsSeconds = m.getTimeStamp();
+            if (tsSeconds < 0.0)
+                tsSeconds = 0.0;
+
+            int sampleOffset = (int) std::round (tsSeconds * sampleRate);
+            sampleOffset = juce::jlimit (0, numSamples - 1, sampleOffset);
+
+            // Position is within the overall destination buffer
+            midi.addEvent (m, startSample + sampleOffset);
         }
-
-        // render synth
-        synth.renderNextBlock (temp, midi, 0, block);
-
-        // copy into output buffer
-        rc.destBuffer->addFrom (0, pos, temp, 0, 0, block);
-        rc.destBuffer->addFrom (1, pos, temp, 1, 0, block);
-
-        remaining -= block;
-        pos += block;
     }
+
+    // Render MorphSynth into a temp buffer and mix into dest
+    juce::AudioBuffer<float> temp (numChannels, numSamples);
+    temp.clear();
+
+    synth.renderNextBlock (temp, midi, 0, numSamples);
+
+    for (int ch = 0; ch < numChannels; ++ch)
+        destBuffer->addFrom (ch, startSample, temp, ch, 0, numSamples);
 }
-void MorphSynthPlugin::applyToBuffer (juce::AudioBuffer<float>& audio,
-                                      juce::MidiBuffer& midi)
+
+void MorphSynthPlugin::applyToBuffer (juce::AudioBuffer<float>& buffer,
+                                      juce::MidiBuffer& midiBuffer)
 {
-    synth.renderNextBlock(audio, midi, 0, audio.getNumSamples());
-    audio.applyGain(juce::Decibels::decibelsToGain(gain->getCurrentValue()));
+    synth.renderNextBlock (buffer, midiBuffer, 0, buffer.getNumSamples());
+    buffer.applyGain (juce::Decibels::decibelsToGain (gain->getCurrentValue()));
+}
+
+
+
+void MorphSynthPlugin::renderSynth (juce::AudioBuffer<float>& audio,
+                                    juce::MidiBuffer& midi)
+{
+    synth.renderNextBlock (audio, midi, 0, audio.getNumSamples());
+    audio.applyGain (juce::Decibels::decibelsToGain (gain->getCurrentValue()));
 }
 
 //==============================================================================
