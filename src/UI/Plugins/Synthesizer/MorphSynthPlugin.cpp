@@ -159,7 +159,7 @@ void MorphSynthPlugin::initialise (const te::PluginInitialisationInfo& info)
 void MorphSynthPlugin::deinitialise()
 {
     stopAllNotes();
-    synth.clearSounds();
+    // synth.clearSounds();
     synth.setCurrentPlaybackSampleRate (0.0);
 }
 
