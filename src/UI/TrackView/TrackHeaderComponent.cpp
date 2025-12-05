@@ -184,6 +184,14 @@ void TrackHeaderComponent::refreshInstrumentButton()
         return;
     }
 
+    // For drum tracks, always show "Drum Sampler"
+    if (trackType == TrackType::Drum)
+    {
+        instrumentButton.setButtonText ("Drum Sampler");
+        return;
+    }
+
+    // For instrument tracks, use the dynamic label from engine
     instrumentButton.setButtonText (
         appEngine->getInstrumentLabelForTrack (trackIndex));
 }
@@ -217,12 +225,26 @@ void TrackHeaderComponent::resized()
 
     // Split button row
     auto row  = area.removeFromTop (buttonH);
-    auto left = row.removeFromLeft (row.getWidth() - menuW);
-    //row.removeFromLeft (gap);
-    auto right = row.removeFromLeft (menuW);
 
-    instrumentButton.setBounds (left);
-    instrumentMenuButton.setBounds (right);
+    // For drum tracks, hide the dropdown menu button (instrument cannot be changed)
+    const bool isDrum = (trackType == TrackType::Drum);
+    if (isDrum)
+    {
+        instrumentButton.setBounds (row);
+        instrumentMenuButton.setVisible (false);
+        // Clear connected edges so drum sampler button has rounded corners on all sides
+        instrumentButton.setConnectedEdges (0);
+    }
+    else
+    {
+        auto left = row.removeFromLeft (row.getWidth() - menuW);
+        auto right = row.removeFromLeft (menuW);
+        instrumentButton.setBounds (left);
+        instrumentMenuButton.setBounds (right);
+        instrumentMenuButton.setVisible (true);
+        // Restore connected edges for instrument tracks (button connects to dropdown)
+        instrumentButton.setConnectedEdges (juce::Button::ConnectedOnRight);
+    }
 
     // Remaining controls stacked in the leftover area
     juce::FlexBox fb;

@@ -69,8 +69,8 @@ int TrackManager::addDrumTrack()
     auto* track = te::getAudioTracks(edit)[(size_t) newIndex];
     track->state.setProperty (GKIDs::isDrum, true, nullptr);           // <-- persist
 
-    // Set default drum track name (Written by Claude Code)
-    track->setName ("Drums");
+    // Name based on overall track position (1-indexed)
+    track->setName ("Drums " + juce::String (newIndex + 1));
 
     auto adapter = std::make_unique<DrumSamplerEngineAdapter>(edit.engine, *track);
 

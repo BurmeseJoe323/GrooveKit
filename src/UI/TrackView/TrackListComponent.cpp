@@ -335,9 +335,13 @@ void TrackListComponent::addNewTrack (int engineIdx)
     // Load track name from engine (Written by Claude Code)
     const bool isDrum = appEngine->isDrumTrack (newTrack->getTrackIndex());
     juce::String trackName = appEngine->getTrackName (engineIdx);
-    // Fallback to default names if engine doesn't have a name set
+    // Fallback to default names if engine doesn't have a name set (shouldn't happen now)
     if (trackName.isEmpty())
-        trackName = isDrum ? "Drums" : ("Track " + juce::String (tracks.size() + 1));
+    {
+        // Use overall track position for numbering (1-indexed)
+        trackName = isDrum ? ("Drums " + juce::String (engineIdx + 1))
+                           : ("Track " + juce::String (engineIdx + 1));
+    }
     header->setTrackName (trackName);
 
     headers.add (header);
