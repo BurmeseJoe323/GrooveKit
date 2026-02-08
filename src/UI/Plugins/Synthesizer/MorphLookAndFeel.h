@@ -172,7 +172,7 @@ public:
      */
     juce::Font getComboBoxFont (juce::ComboBox&) override
     {
-        return juce::Font (14.0f);
+        return juce::Font (juce::FontOptions (14.0f));
     }
 
 private:

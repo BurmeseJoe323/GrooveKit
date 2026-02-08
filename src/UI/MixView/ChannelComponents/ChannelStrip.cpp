@@ -31,7 +31,11 @@ ChannelStrip::ChannelStrip (juce::Colour color)
     insertsLabel.setText ("Inserts", juce::dontSendNotification);
     insertsLabel.setJustificationType (juce::Justification::centred);
     insertsLabel.setColour (juce::Label::textColourId, juce::Colour (0xFF212529));
-    insertsLabel.setFont (juce::Font (12.0f).boldened());
+    {
+        juce::Font f (juce::FontOptions (12.0f));
+        f.setBold (true);
+        insertsLabel.setFont (f);
+    }
 
     //==========================================================================
     // FX insert slots (4)

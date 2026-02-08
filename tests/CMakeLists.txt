@@ -18,7 +18,6 @@ add_executable(groovekit_tests
 # Link against project libraries and Catch2
 target_link_libraries(groovekit_tests
     PRIVATE
-    app_engine
     app_ui
     Catch2::Catch2WithMain
 )

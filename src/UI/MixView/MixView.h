@@ -45,7 +45,7 @@ public:
     MixView(AppEngine& engine, TransportBar& transport, GrooveKitMenuBar& menuBar);
 
     /** Destructor. */
-    ~MixView();
+    ~MixView() override;
 
     //==============================================================================
     // Component Overrides

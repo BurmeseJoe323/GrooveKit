@@ -73,9 +73,8 @@ target_compile_definitions(GrooveKit
 )
 
 
-# ---- Link once (cleaned)
+# ---- Link external libs only (avoid duplicates)
 target_link_libraries(GrooveKit
         PRIVATE
-        GrooveKitResources
         melatonin_inspector
 )

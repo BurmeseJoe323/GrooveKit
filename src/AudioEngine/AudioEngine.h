@@ -247,6 +247,7 @@ private:
         void handleIncomingMidiMessage(juce::MidiInput* source,
                                        const juce::MidiMessage& message) override
         {
+            juce::ignoreUnused (source);
             if (!enabled)
                 return;
 

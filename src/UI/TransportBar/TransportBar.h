@@ -20,7 +20,8 @@ class TransportBarLookAndFeel : public juce::LookAndFeel_V4
 public:
     juce::Font getToggleButtonFont(juce::ToggleButton&, int height)
     {
-        return juce::FontOptions(14.0f);
+        juce::ignoreUnused (height);
+        return juce::Font (juce::FontOptions (14.0f));
     }
 };
 

@@ -14,7 +14,6 @@ target_compile_definitions(GrooveKit PRIVATE
 
 target_link_libraries(GrooveKit
         PRIVATE
-        app_engine
         app_ui
         tracktion_engine
         juce::juce_recommended_config_flags

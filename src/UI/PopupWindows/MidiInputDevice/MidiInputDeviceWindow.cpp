@@ -7,7 +7,7 @@ MidiInputDeviceWindow::MidiInputDeviceWindow (AppEngine& appEng) : app (appEng)
 {
     addAndMakeVisible (title);
     title.setJustificationType (Justification::centredLeft);
-    title.setFont (Font (14.0f, Font::bold));
+    title.setFont (Font (FontOptions (14.0f, Font::bold)));
 
     addAndMakeVisible (devices);
     devices.addListener (this);

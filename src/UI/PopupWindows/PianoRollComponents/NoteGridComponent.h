@@ -81,6 +81,8 @@ public:
 class NoteGridComponent : public juce::Component, public juce::KeyListener
 {
 public:
+    // Avoid hiding base overload when providing a 2-arg keyPressed below
+    using juce::Component::keyPressed;
     //==============================================================================
     // Data Structures
 

@@ -252,7 +252,7 @@ private:
     //==============================================================================
     // Private Members
 
-    GridStyleSheet &styleSheet;              ///< Reference to shared style configuration
+    GridStyleSheet styleSheet;               ///< Copy of style configuration (safe ownership)
     juce::ResizableEdgeComponent edgeResizer; ///< Right-edge resize handle component
 
     bool mouseOver;        ///< True when mouse is hovering over this note

@@ -143,7 +143,7 @@ public:
         g.drawRoundedRectangle (r.reduced (1.5f), 10.0f, 2.0f);
 
         // Label
-        juce::Font font (13.0f);
+        juce::Font font (juce::FontOptions (13.0f));
         font.setBold (true);
         g.setFont (font);
 

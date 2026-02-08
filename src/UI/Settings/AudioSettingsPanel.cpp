@@ -10,7 +10,7 @@ AudioSettingsPanel::AudioSettingsPanel (AppEngine& engine)
     // Output device controls
     addAndMakeVisible (deviceLabel);
     deviceLabel.setJustificationType (Justification::centredLeft);
-    deviceLabel.setFont (Font (14.0f, Font::bold));
+    deviceLabel.setFont (Font (FontOptions (14.0f, Font::bold)));
 
     addAndMakeVisible (deviceCombo);
     deviceCombo.addListener (this);
@@ -30,7 +30,7 @@ AudioSettingsPanel::AudioSettingsPanel (AppEngine& engine)
     // Sample rate controls
     addAndMakeVisible (sampleRateLabel);
     sampleRateLabel.setJustificationType (Justification::centredLeft);
-    sampleRateLabel.setFont (Font (14.0f, Font::bold));
+    sampleRateLabel.setFont (Font (FontOptions (14.0f, Font::bold)));
 
     addAndMakeVisible (sampleRateCombo);
     sampleRateCombo.addListener (this);
@@ -38,14 +38,14 @@ AudioSettingsPanel::AudioSettingsPanel (AppEngine& engine)
     // Buffer size controls
     addAndMakeVisible (bufferSizeLabel);
     bufferSizeLabel.setJustificationType (Justification::centredLeft);
-    bufferSizeLabel.setFont (Font (14.0f, Font::bold));
+    bufferSizeLabel.setFont (Font (FontOptions (14.0f, Font::bold)));
 
     addAndMakeVisible (bufferSizeCombo);
     bufferSizeCombo.addListener (this);
 
     addAndMakeVisible (latencyLabel);
     latencyLabel.setJustificationType (Justification::centredLeft);
-    latencyLabel.setFont (Font (13.0f));
+    latencyLabel.setFont (Font (FontOptions (13.0f)));
     latencyLabel.setColour (Label::textColourId, Colours::lightgrey);
 
     // Initialize with current settings

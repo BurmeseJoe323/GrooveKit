@@ -45,7 +45,7 @@ public:
         titleLabel.setJustificationType (juce::Justification::centred);
 
         {
-            juce::Font f (18.0f);
+            juce::Font f (juce::FontOptions (18.0f));
             f.setBold (true);
             titleLabel.setFont (f);
         }

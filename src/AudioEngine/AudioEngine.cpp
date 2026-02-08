@@ -33,15 +33,12 @@ void AudioEngine::play()
 }
 
 void AudioEngine::stop() {
-    if (&edit)
-    {
-        // First param = false: DON'T discard recordings (keep them!)
-        // Second param = false: Don't clear devices
-        edit.getTransport().stop(false, false);
-        for (auto* plugin : te::getAllPlugins (edit, false))
-            if (auto* morph = dynamic_cast<MorphSynthPlugin*>(plugin))
-                morph->stopAllNotes();
-    }
+    // First param = false: DON'T discard recordings (keep them!)
+    // Second param = false: Don't clear devices
+    edit.getTransport().stop(false, false);
+    for (auto* plugin : te::getAllPlugins (edit, false))
+        if (auto* morph = dynamic_cast<MorphSynthPlugin*>(plugin))
+            morph->stopAllNotes();
 }
 
 bool AudioEngine::isPlaying() const { return edit.getTransport().isPlaying(); }

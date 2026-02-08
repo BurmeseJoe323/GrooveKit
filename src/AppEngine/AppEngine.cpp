@@ -530,11 +530,11 @@ void AppEngine::initialise()
 
     // Add formats we intend to host (guarded by JUCE host flags)
    #if JUCE_PLUGINHOST_AU
-    tePM.pluginFormatManager.addFormat(new juce::AudioUnitPluginFormat());
-   #endif
-   #if JUCE_PLUGINHOST_VST3
-    tePM.pluginFormatManager.addFormat(new juce::VST3PluginFormat());
-   #endif
+    tePM.pluginFormatManager.addFormat(std::make_unique<juce::AudioUnitPluginFormat>());
+  #endif
+  #if JUCE_PLUGINHOST_VST3
+    tePM.pluginFormatManager.addFormat(std::make_unique<juce::VST3PluginFormat>());
+  #endif
 
     // Do a quick blocking scan once so TE's knownPluginList is populated.
     // ExternalPlugin resolves/instantiates using *this* list+formats.

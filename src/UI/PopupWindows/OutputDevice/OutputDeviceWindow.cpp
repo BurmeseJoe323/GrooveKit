@@ -19,7 +19,7 @@ OutputDeviceWindow::OutputDeviceWindow (AppEngine& appEng)
     // Title label
     addAndMakeVisible (title);
     title.setJustificationType (Justification::centredLeft);
-    title.setFont (Font (14.0f, Font::bold));
+    title.setFont (Font (FontOptions (14.0f, Font::bold)));
 
     // Device dropdown
     addAndMakeVisible (devices);

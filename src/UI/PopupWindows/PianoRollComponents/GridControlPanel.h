@@ -81,7 +81,7 @@ public:
     /**
      * @brief Destructor (cleans up UI controls).
      */
-    ~GridControlPanel ();
+    ~GridControlPanel () override;
 
     //==============================================================================
     // Component Overrides

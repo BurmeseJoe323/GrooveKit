@@ -25,7 +25,7 @@ public:
                        : juce::Colours::transparentBlack);
 
         g.setColour (juce::Colours::white);
-        g.setFont   (juce::Font (13.0f, juce::Font::bold));
+        g.setFont   (juce::Font (juce::FontOptions (13.0f, juce::Font::bold)));
 
         g.drawFittedText (file.getFileNameWithoutExtension(),
                           getLocalBounds().reduced (8, 2),

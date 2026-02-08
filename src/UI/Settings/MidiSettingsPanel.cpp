@@ -9,11 +9,11 @@ MidiSettingsPanel::MidiSettingsPanel (AppEngine& engine)
 {
     addAndMakeVisible (titleLabel);
     titleLabel.setJustificationType (Justification::centredLeft);
-    titleLabel.setFont (Font (14.0f, Font::bold));
+    titleLabel.setFont (Font (FontOptions (14.0f, Font::bold)));
 
     addAndMakeVisible (infoLabel);
     infoLabel.setJustificationType (Justification::centredLeft);
-    infoLabel.setFont (Font (12.0f));
+    infoLabel.setFont (Font (FontOptions (12.0f)));
     infoLabel.setColour (Label::textColourId, Colours::grey);
 
     addAndMakeVisible (deviceViewport);
@@ -70,7 +70,7 @@ void MidiSettingsPanel::refreshDeviceList()
         auto* noDeviceLabel = new Label();
         noDeviceLabel->setText ("No devices found", dontSendNotification);
         noDeviceLabel->setJustificationType (Justification::centredLeft);
-        noDeviceLabel->setFont (Font (13.0f));
+        noDeviceLabel->setFont (Font (FontOptions (13.0f)));
         noDeviceLabel->setColour (Label::textColourId, Colours::grey);
 
         deviceContainer.addAndMakeVisible (noDeviceLabel);
@@ -87,7 +87,7 @@ void MidiSettingsPanel::refreshDeviceList()
         auto* label = new Label();
         label->setText ("• " + deviceName, dontSendNotification);
         label->setJustificationType (Justification::centredLeft);
-        label->setFont (Font (13.0f));
+        label->setFont (Font (FontOptions (13.0f)));
         label->setColour (Label::textColourId, Colours::white);
 
         deviceContainer.addAndMakeVisible (label);
